@@ -1,0 +1,70 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  PROD_DEPLOY_PATH: /var/www/book
+  PROD_COMPOSE_ENV_FILE: /var/www/book/.env.compose
+  PROD_PUBLIC_HEALTHCHECK_URL: https://bookgenerator.net/api/auth/state
+
+jobs:
+  deploy:
+    name: Deploy To Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://bookgenerator.net
+
+    steps:
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PROD_SSH_KEY }}
+
+      - name: Add production host key
+        env:
+          PROD_SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "$PROD_SSH_HOST" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy commit on server
+        env:
+          PROD_SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          ssh "$PROD_SSH_USER@$PROD_SSH_HOST" /bin/bash <<EOF_REMOTE
+          set -euo pipefail
+          export PROD_DEPLOY_PATH="${PROD_DEPLOY_PATH}"
+          export PROD_COMPOSE_ENV_FILE="${PROD_COMPOSE_ENV_FILE}"
+          export DEPLOY_SHA="${DEPLOY_SHA}"
+
+          cd "$PROD_DEPLOY_PATH"
+          git fetch --depth 1 origin "$DEPLOY_SHA"
+          git checkout main
+          git reset --hard "$DEPLOY_SHA"
+
+          BOOK_COMPOSE_ENV_FILE="$PROD_COMPOSE_ENV_FILE" "$PROD_DEPLOY_PATH/scripts/deploy_update.sh" --skip-pull
+          EOF_REMOTE
+
+      - name: Public smoke check
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 30 "$PROD_PUBLIC_HEALTHCHECK_URL" >/dev/null

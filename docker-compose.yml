@@ -1,70 +1,98 @@
-version: '3.8'
+name: book-generator
 
 services:
-  # Next.js Web Application
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: web
-    container_name: boo-web
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=file:./dev.db
-    env_file:
-      - .env.local
-    volumes:
-      - ./web/public:/app/public
-    networks:
-      - boo-network
-    depends_on:
-      - dashboard
-
-  # Python Dashboard Server
   dashboard:
     build:
       context: .
       dockerfile: Dockerfile
       target: dashboard
-    container_name: boo-dashboard
+    container_name: book-dashboard
     restart: unless-stopped
-    ports:
-      - "8765:8765"
-    environment:
-      - BOOK_DASHBOARD_HOST=0.0.0.0
-      - BOOK_DASHBOARD_PORT=8765
     env_file:
-      - .env.local
-    volumes:
-      - ./book_outputs:/app/book_outputs
-      - ./multi_provider_logs:/app/multi_provider_logs
-    networks:
-      - boo-network
-
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: boo-nginx
-    restart: unless-stopped
+      - ${BOOK_DASHBOARD_ENV_FILE:-./deploy/docker/dashboard.env.example}
+    environment:
+      HOME: /home/app
+      BOOK_DASHBOARD_HOST: 0.0.0.0
+      BOOK_DASHBOARD_PORT: 8765
+      OLLAMA_DISABLED: ${OLLAMA_DISABLED:-1}
     ports:
-      - "80:80"
-      - "443:443"
+      - "127.0.0.1:${BOOK_DASHBOARD_BIND_PORT:-8765}:8765"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    networks:
-      - boo-network
+      - type: bind
+        source: ${BOOK_OUTPUTS_DIR:-./book_outputs}
+        target: /app/book_outputs
+      - type: bind
+        source: ${BOOK_LOGS_DIR:-./multi_provider_logs}
+        target: /app/multi_provider_logs
+      - type: bind
+        source: ${BOOK_SETTINGS_FILE:-./dashboard_settings.json}
+        target: /app/dashboard_settings.json
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/health', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web-builder
+    profiles: ["ops"]
+    env_file:
+      - ${BOOK_WEB_ENV_FILE:-./deploy/docker/web.env.example}
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: file:/data/prod.db
+      DASHBOARD_ORIGIN: http://dashboard:8765
+      NEXT_PUBLIC_DASHBOARD_ORIGIN: http://dashboard:8765
+    volumes:
+      - type: bind
+        source: ${BOOK_SQLITE_DIR:-./runtime/sqlite}
+        target: /data
+    command: ["sh", "-lc", "pnpm exec prisma generate && pnpm exec prisma db push"]
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    container_name: book-web
+    restart: unless-stopped
     depends_on:
-      - web
-      - dashboard
-
-networks:
-  boo-network:
-    driver: bridge
-
-volumes:
-  book_outputs:
-  multi_provider_logs:
+      dashboard:
+        condition: service_healthy
+    env_file:
+      - ${BOOK_WEB_ENV_FILE:-./deploy/docker/web.env.example}
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: file:/data/prod.db
+      DASHBOARD_ORIGIN: http://dashboard:8765
+      NEXT_PUBLIC_DASHBOARD_ORIGIN: http://dashboard:8765
+    ports:
+      - "127.0.0.1:${BOOK_WEB_BIND_PORT:-3000}:3000"
+    volumes:
+      - type: bind
+        source: ${BOOK_SQLITE_DIR:-./runtime/sqlite}
+        target: /data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/auth/state').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s

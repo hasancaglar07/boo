@@ -42,6 +42,7 @@ web/node_modules/
 .env.local
 .env.codefast.local
 .env
+.env.compose
 
 # AI/Agent tools
 .agent/
@@ -51,6 +52,7 @@ web/node_modules/
 
 # Logs
 multi_provider_logs/
+runtime/
 
 # IDE
 .vscode/

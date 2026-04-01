@@ -1,326 +1,135 @@
-# 🚀 BOOK Projesi Docker Deployment Rehberi
+# Book Generator Deployment
 
-## 📋 Ön Hazırlık
+## Production shape
+- Cloudflare handles DNS, TLS edge, and proxying.
+- Host `nginx` + `certbot` stay on the VPS.
+- Docker Compose runs the application services:
+  - `book-web`
+  - `book-dashboard`
+- SQLite, `book_outputs`, and `dashboard_settings.json` remain persistent on the host.
 
-### VPS Gereksinimleri
-- **Minimum:** CPX21 (2 vCPU, 4GB RAM, 80GB Disk)
-- **Önerilen:** CPX31 (4 vCPU, 8GB RAM, 160GB Disk)
-- **İşletim Sistemi:** Ubuntu 22.04/24.04 veya Debian 12
-
-### Domain (Opsiyonel)
-- Domain satın alın (örn: cloudflare, namecheap)
-- DNS'te VPS IP'sine A record ekleyin
-
----
-
-## 🛠️ Adım 1: VPS Kurulumu
-
-### 1.1 Sistem Güncelleme
+## Server prerequisites
 ```bash
-# SSH ile VPS'e bağlanın
-ssh root@your-vps-ip
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg
 
-# Sistemi güncelleyin
-apt update && apt upgrade -y
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-# Zaman dilimini ayarlayın
-timedatectl set-timezone Europe/Istanbul
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker
 ```
 
-### 1.2 Docker ve Docker Compose Kurulumu
-```bash
-# Docker kurulumu
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
+## Compose files
+- Compose: [docker-compose.yml](/mnt/c/Users/ihsan/Desktop/BOOK/docker-compose.yml)
+- Images: [Dockerfile](/mnt/c/Users/ihsan/Desktop/BOOK/Dockerfile)
+- Dashboard bootstrap: [dashboard-entrypoint.sh](/mnt/c/Users/ihsan/Desktop/BOOK/docker/dashboard-entrypoint.sh)
+- Migration helper: [migrate_to_docker_compose.sh](/mnt/c/Users/ihsan/Desktop/BOOK/scripts/migrate_to_docker_compose.sh)
 
-# Docker'ı başlatın ve enable edin
-systemctl start docker
-systemctl enable docker
+## Env files
+Create `/var/www/book/.env.compose` from [compose.env.example](/mnt/c/Users/ihsan/Desktop/BOOK/deploy/docker/compose.env.example):
 
-# Docker Compose kurulumu
-curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-
-# Kurulumu doğrulayın
-docker --version
-docker-compose --version
-```
-
-### 1.3 Firewall Ayarları
-```bash
-# UFW kurulumu ve yapılandırma
-apt install -y ufw
-ufw allow 22/tcp    # SSH
-ufw allow 80/tcp    # HTTP
-ufw allow 443/tcp   # HTTPS
-ufw --force enable
-```
-
----
-
-## 📦 Adım 2: Projeyi Deploy Edin
-
-### 2.1 Projeyi İndirin
-```bash
-# Proje dizini oluşturun
-mkdir -p /var/www/boo
-cd /var/www/boo
-
-# Repo'yu clone edın
-git clone https://github.com/hasancaglar07/boo.git .
-
-# .env.local dosyası oluşturun
-cp .env.codefast.example .env.local
-nano .env.local
-```
-
-### 2.2 Environment Variables
-`.env.local` dosyasını düzenleyin:
 ```env
-# Database
-DATABASE_URL="file:./dev.db"
+BOOK_WEB_ENV_FILE=/etc/book-generator/web.env
+BOOK_DASHBOARD_ENV_FILE=/etc/book-generator/dashboard.env
 
-# NextAuth
-NEXTAUTH_URL="http://your-domain.com"
-NEXTAUTH_SECRET="your-random-secret-key"
+BOOK_WEB_BIND_PORT=3000
+BOOK_DASHBOARD_BIND_PORT=8765
 
-# AI API Keys
-OPENAI_API_KEY="sk-..."
-GEMINI_API_KEY="AI..."
-GROQ_API_KEY="gsk_..."
-
-# Email (Opsiyonel)
-RESEND_API_KEY="re_..."
-SMTP_HOST="smtp.resend.com"
-SMTP_PORT="587"
-SMTP_USER="resend"
-SMTP_PASSWORD="your-api-key"
-
-# Stripe (Opsiyonel)
-STRIPE_PUBLIC_KEY="pk_..."
-STRIPE_SECRET_KEY="sk_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
+BOOK_SQLITE_DIR=/var/www/book/runtime/sqlite
+BOOK_OUTPUTS_DIR=/var/www/book/book_outputs
+BOOK_LOGS_DIR=/var/www/book/multi_provider_logs
+BOOK_SETTINGS_FILE=/var/www/book/dashboard_settings.json
 ```
 
-**Secret Key Oluşturma:**
+Keep secrets in:
+- `/etc/book-generator/web.env`
+- `/etc/book-generator/dashboard.env`
+
+## First migration from native systemd
 ```bash
-openssl rand -base64 32
+cd /var/www/book
+mkdir -p runtime/sqlite book_outputs multi_provider_logs
+cp /var/lib/book-generator/prod.db /var/www/book/runtime/sqlite/prod.db
+touch /var/www/book/dashboard_settings.json
+docker compose --env-file .env.compose build
+docker compose --env-file .env.compose --profile ops run --rm web-migrate
+sudo systemctl stop book-web book-dashboard
+docker compose --env-file .env.compose up -d dashboard web
+docker compose --env-file .env.compose ps
 ```
 
-### 2.3 Docker Container'ları Başlatın
+Or use:
 ```bash
-# Docker image'leri build edin
-docker-compose build
-
-# Container'ları başlatın
-docker-compose up -d
-
-# Logları kontrol edin
-docker-compose logs -f
+sudo BOOK_COMPOSE_ENV_FILE=/var/www/book/.env.compose /var/www/book/scripts/migrate_to_docker_compose.sh
 ```
 
-### 2.4 Container Durumunu Kontrol Edin
+## Daily operations
 ```bash
-# Tüm container'ların durumunu görün
-docker-compose ps
-
-# Beklenen çıktı:
-# NAME              STATUS         PORTS
-# boo-web           Up             0.0.0.0:3000->3000/tcp
-# boo-dashboard     Up             0.0.0.0:8765->8765/tcp
-# boo-nginx         Up             0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp
+cd /var/www/book
+docker compose --env-file .env.compose ps
+docker compose --env-file .env.compose logs -f web
+docker compose --env-file .env.compose logs -f dashboard
+docker compose --env-file .env.compose restart web
+docker compose --env-file .env.compose restart dashboard
 ```
 
----
-
-## 🔒 Adım 3: SSL Sertifikası (Let's Encrypt)
-
-### 3.1 Certbot Kurulumu
+## Deploy update
 ```bash
-# Certbot ve Docker plugin'ini kurun
-apt install -y certbot python3-certbot-nginx
-
-# SSL sertifikası alın
-certbot --nginx -d your-domain.com
-
-# Email girin ve terms kabul edin
+cd /var/www/book
+sudo BOOK_COMPOSE_ENV_FILE=/var/www/book/.env.compose /var/www/book/scripts/deploy_update.sh
 ```
 
-### 3.2 Nginx Konfigürasyonunu Güncelleyin
+If you already updated files manually and want to deploy the current checkout without `git pull`:
 ```bash
-# nginx.conf dosyasını düzenleyin
-nano /var/www/boo/nginx.conf
-
-# HTTPS bölümünü uncomment edin ve domain'i güncelleyin
+cd /var/www/book
+sudo BOOK_COMPOSE_ENV_FILE=/var/www/book/.env.compose /var/www/book/scripts/deploy_update.sh --skip-pull
 ```
 
-### 3.3 Docker'ı Restart Edin
+## GitHub auto deploy
+The production workflow is [.github/workflows/deploy-production.yml](/mnt/c/Users/ihsan/Desktop/BOOK/.github/workflows/deploy-production.yml).
+
+It deploys every `push` to `main` and on manual `workflow_dispatch`.
+
+Required GitHub repository secrets:
+- `PROD_SSH_HOST`
+- `PROD_SSH_USER`
+- `PROD_SSH_KEY`
+
+Recommended values for the current server:
+- `PROD_SSH_HOST=91.98.22.149`
+- `PROD_SSH_USER=root`
+- `PROD_SSH_KEY=<the private key paired with the server authorized key>`
+
+Current workflow defaults:
+- deploy path: `/var/www/book`
+- compose env file: `/var/www/book/.env.compose`
+- public smoke check: `https://bookgenerator.net/api/auth/state`
+
+Deploy behavior:
+- fetch the exact pushed commit SHA on the server
+- reset the server checkout to that SHA
+- run `scripts/deploy_update.sh --skip-pull`
+- verify public health before marking the workflow successful
+
+## Rollback
 ```bash
-docker-compose restart nginx
+cd /var/www/book
+docker compose --env-file .env.compose down
+sudo systemctl start book-dashboard book-web
+sudo systemctl status book-dashboard book-web
 ```
 
----
-
-## 🔄 Adım 4: Yönetim ve Bakım
-
-### 4.1 Container Yönetimi
+## Health checks
 ```bash
-# Container'ları durdurun
-docker-compose stop
-
-# Container'ları başlatın
-docker-compose start
-
-# Container'ları restart edin
-docker-compose restart
-
-# Container'ları ve volume'ları silin
-docker-compose down -v
+curl http://127.0.0.1:3000/api/auth/state
+curl http://127.0.0.1:8765/api/health
+curl -I https://bookgenerator.net
 ```
-
-### 4.2 Logları Görüntüleme
-```bash
-# Tüm loglar
-docker-compose logs -f
-
-# Sadece web logları
-docker-compose logs -f web
-
-# Sadece dashboard logları
-docker-compose logs -f dashboard
-
-# Son 100 satır
-docker-compose logs --tail=100
-```
-
-### 4.3 Container İçine Girme
-```bash
-# Web container'ı
-docker-compose exec web sh
-
-# Dashboard container'ı
-docker-compose exec dashboard bash
-
-# Nginx container'ı
-docker-compose exec nginx sh
-```
-
-### 4.4 Güncelleme
-```bash
-# En son kodu çekin
-git pull origin main
-
-# Docker image'leri rebuild edin
-docker-compose build
-
-# Container'ları restart edin
-docker-compose down
-docker-compose up -d
-```
-
----
-
-## 📊 Adım 5: Monitoring
-
-### 5.1 Kaynak Kullanımı
-```bash
-# Docker istatistikleri
-docker stats
-
-# Disk kullanımı
-df -h
-
-# RAM kullanımı
-free -h
-
-# CPU kullanımı
-top
-```
-
-### 5.2 Health Check
-```bash
-# Health check endpoint
-curl http://localhost/health
-
-# Web uygulaması
-curl http://localhost:3000
-
-# Dashboard API
-curl http://localhost:8765/api/health
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Sorun: Container başlamıyor
-```bash
-# Logları kontrol edin
-docker-compose logs
-
-# Container detaylarını görün
-docker inspect boo-web
-```
-
-### Sorun: Port zaten kullanımda
-```bash
-# Hangi process port kullanıyor kontrol edin
-netstat -tulpn | grep :3000
-
-# Process'i öldürün
-kill -9 <PID>
-```
-
-### Sorun: Database hatası
-```bash
-# Volume'ları silin ve yeniden başlatın
-docker-compose down -v
-docker-compose up -d
-```
-
-### Sorun: SSL sertifikası yenileme
-```bash
-# Sertifikayı manuel yenileyin
-certbot renew
-
-# Docker'ı restart edin
-docker-compose restart nginx
-```
-
----
-
-## 🔐 Güvenlik İpuçları
-
-1. **SSH Key Kullanımı:** Password yerine SSH key kullanın
-2. **Fail2Ban Kurulumu:** Brute force saldırılarını engelleyin
-3. **Regular Updates:** Sistemi düzenli güncelleyin
-4. **Backup:** Database ve dosyaları düzenli yedekleyin
-5. **Monitor Logs:** Logları düzenli kontrol edin
-
----
-
-## 📞 Destek
-
-Sorun yaşarsanız:
-1. Logları kontrol edin: `docker-compose logs`
-2. GitHub Issues: https://github.com/hasancaglar07/boo/issues
-3. Dokümantasyon: README.md
-
----
-
-## ✅ Deployment Checklist
-
-- [ ] VPS satın alındı
-- [ ] Domain ayarlandı (opsiyonel)
-- [ ] Docker ve Docker Compose kuruldu
-- [ ] Projeyi indirildi
-- [ ] .env.local dosyası oluşturuldu
-- [ ] API keys girildi
-- [ ] Docker container'ları başlatıldı
-- [ ] Uygulama çalışıyor (http://your-vps-ip)
-- [ ] SSL sertifikası alındı
-- [ ] HTTPS çalışıyor
-- [ ] Health check başarılı
-- [ ] Monitor sistemi kuruldu
-
-**Tebrikler! 🎉 Projeniz canlıda!**
