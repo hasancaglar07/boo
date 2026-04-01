@@ -1,3 +1,4 @@
+# Output directories
 book_outputs
 quality_reports
 v1
@@ -6,8 +7,54 @@ v3
 v4
 v5
 v6
-/venv
-.kdp_cache
 files
-.DS_Store
+
+# Python
+/venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Cache
+.kdp_cache
+.codex
 temp_appendices
+
+# Logs
+.dashboard-server.log
+.dashboard-server.pid
+.web-server.log
+.web-server.pid
+dashboard.log
+dashboard_settings.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node.js
+next-app/
+web/.next/
+web/node_modules/
+
+# Environment files
+.env.local
+.env.codefast.local
+.env
+
+# AI/Agent tools
+.agent/
+.agents/
+.claude/
+.tools/
+
+# Logs
+multi_provider_logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

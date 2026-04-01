@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-# Generate appendices and extras for a book using Gemini (shell-only)
+# Generate appendices and extras for a book using the shared smart provider layer.
 # Usage: generate_appendices.sh /path/to/book
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" && pwd)"
 BOOK_DIR="${1:-.}"
-GEMINI_MODEL="${GEMINI_MODEL:-gemini-1.5-pro}"
-GEMINI_KEY="${GEMINI_API_KEY:-}" # must be exported by caller/user
 COOLDOWN_BASE=${COOLDOWN_BASE:-60}   # base seconds
 COOLDOWN_JITTER=${COOLDOWN_JITTER:-10} # random jitter max
 MAX_RETRIES=${MAX_RETRIES:-2}
@@ -14,10 +12,10 @@ MAX_RETRIES=${MAX_RETRIES:-2}
 MAX_TOKENS=65000
 TEMP_DIR="$BOOK_DIR/temp_appendices"
 BOOK_TITLE=""
+APPENDICES_OVERWRITE="${APPENDICES_OVERWRITE:-0}"
 
 command -v jq >/dev/null 2>&1 || { echo "jq is required" >&2; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo "curl is required" >&2; exit 1; }
-[ -n "$GEMINI_KEY" ] || { echo "GEMINI_API_KEY environment variable must be set" >&2; exit 1; }
 
 mkdir -p "$TEMP_DIR"
 
@@ -64,6 +62,8 @@ else
   log "ERROR: multi_provider_ai_simple.sh not found; this script requires smart_api_call. Please place multi_provider_ai_simple.sh alongside this script."
   exit 1
 fi
+
+has_any_smart_provider || { echo "A shared Codefast key or enabled Ollama fallback is required" >&2; exit 1; }
 
 random_sleep() {
   local jitter=$((RANDOM % COOLDOWN_JITTER))
@@ -501,7 +501,11 @@ for section in "${sections[@]}"; do
     # Check if file already exists
     if [ -f "$output_file" ]; then
         log "File already exists for $section: $output_file"
-        read -p "Overwrite? (y/n): " -r overwrite
+        if [ "$APPENDICES_OVERWRITE" = "1" ]; then
+            overwrite="y"
+        else
+            read -p "Overwrite? (y/n): " -r overwrite
+        fi
         if [[ ! $overwrite =~ ^[Yy]$ ]]; then
             log "Skipping $section generation"
             continue

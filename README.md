@@ -23,10 +23,10 @@ This repository contains a set of shell scripts and helper tools that together c
 
 ### ✨ Key Points
 - Designed to use free tools and services where possible. When AI APIs are used, the
-	project supports Gemini (recommended), Ollama, Groq and OpenAI as configurable
-	providers via environment variables. If you do not set API keys the scripts will
-	fall back to purely local tools (ImageMagick, Pandoc, TeX) for compilation and
-	simple auto-generated covers.
+	project now supports a Codefast-first shared-key setup with automatic fallback
+	across Claude, GPT-5.4, Gemini, GLM, Qwen and Grok, plus local Ollama as the last
+	resort. If you do not set API keys the scripts will fall back to purely local tools
+	(ImageMagick, Pandoc, TeX) for compilation and simple auto-generated covers.
 - Created the final front/back covers and an author picture manually using the free
 	ChatGPT web UI (no paid API) to avoid API costs for the cover artwork.
 - Conducted a proof-of-concept to test whether a high-quality book could be
@@ -102,19 +102,17 @@ pip3 install requests beautifulsoup4
 
 🔑 Environment Variables / API Keys
 --------------------------------
-The scripts support multiple AI providers. Set the corresponding environment
-variables to enable them:
+The recommended setup is a single shared `CODEFAST_API_KEY`. The scripts will use
+it to fan out across the configured Codefast endpoints and move to the next provider
+when a daily limit or rate restriction is hit.
 
-- `GEMINI_API_KEY` — (recommended) Use Gemini for text-generation tasks (outlines,
-	chapters, appendices, references). The code targets Gemini models and includes
-	rate-limit handling.
-- `OPENAI_API_KEY` — Optional, used by some cover-generation and provider fallbacks.
-- `GROQ_API_KEY` — Optional alternative provider.
-- `OLLAMA` — If you run Ollama locally the scripts will try to call it for local
-	LLM generations.
+- `CODEFAST_API_KEY` — Primary shared key for text generation and AI cover generation.
+- `codefast` — Optional lowercase alias used by Codex CLI-style configs.
+- `OLLAMA_BASE_URL` / `OLLAMA_PREFERRED_MODEL` — Optional local fallback.
 
-If none of the above keys are present the generator will still run but rely on
-local tools and the basic ImageMagick cover-generator fallback.
+For local development, copy `.env.codefast.example` to `.env.codefast.local` and set
+your key there. `book-generator-env.sh` auto-loads that file. See `CODEFAST_SETUP.md`
+for the full provider list, limits, and fallback order.
 
 🚀 Typical Workflow (High-level)
 -----------------------------
@@ -144,7 +142,7 @@ local tools and the basic ImageMagick cover-generator fallback.
 # Compile a given book as final version, attach a local cover and back cover:
 ./compile_book.sh ./book_outputs/my-book all 3 --cover "/path/to/cover.png" --backcover "/path/to/back.png" --isbn "978-1-2345-6789-7"
 
-# Generate appendices and extras for a book (requires GEMINI_API_KEY):
+# Generate appendices and extras for a book (shared Codefast key recommended):
 ./generate_appendices.sh ./book_outputs/my-book
 
 # Run a quick provider status and tests using the multi-provider helper:
@@ -326,4 +324,3 @@ toolkit, feel free to open an issue in this repository or reach out in the proje
 channels.
 
 Enjoy exploring what automated tools can build — responsibly.
-

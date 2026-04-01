@@ -24,12 +24,12 @@ check_requirements() {
     fi
     
     # For better PDF output
-    if ! command -v pdflatex &> /dev/null && ! command -v xelatex &> /dev/null; then
+    if ! command -v pdflatex &> /dev/null && ! command -v xelatex &> /dev/null && ! command -v lualatex &> /dev/null && ! command -v tectonic &> /dev/null; then
         missing_tools+=("texlive")
     fi
     
     # For cover generation
-    if ! command -v convert &> /dev/null; then
+    if ! command -v convert &> /dev/null && ! command -v magick &> /dev/null; then
         missing_tools+=("imagemagick")
     fi
     
@@ -43,6 +43,20 @@ check_requirements() {
         return 1
     fi
     return 0
+}
+
+select_pdf_engine() {
+    if command -v lualatex &> /dev/null; then
+        echo "lualatex"
+    elif command -v xelatex &> /dev/null; then
+        echo "xelatex"
+    elif command -v pdflatex &> /dev/null; then
+        echo "pdflatex"
+    elif command -v tectonic &> /dev/null; then
+        echo "tectonic"
+    else
+        return 1
+    fi
 }
 
 # Animation functions
@@ -118,6 +132,99 @@ PUBLISHER="Speedy Quick Publishing"
 PUBLICATION_YEAR=$(date +"%Y")
 GENERATE_COVER=false
 ATTACH_COVER=false
+BOOK_LANGUAGE="English"
+PANDOC_LANGUAGE="en-US"
+EBOOK_LANGUAGE="en"
+TOC_TITLE="Table of Contents"
+CHAPTER_LABEL="Chapter"
+AUTHOR_CREDIT_PREFIX="By "
+
+normalize_book_language() {
+    local raw
+    raw="$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]' | sed 's/^ *//; s/ *$//')"
+    case "$raw" in
+        tr*|turkish|türkçe|turkce|turk)
+            echo "Turkish"
+            ;;
+        en*|english|ingilizce)
+            echo "English"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
+detect_book_language() {
+    local sample="$*"
+    local lowered
+    local turkish_hits
+    local english_hits
+
+    if [ -z "${sample// /}" ]; then
+        echo ""
+        return 0
+    fi
+
+    if printf '%s' "$sample" | grep -qi '[çğıöşüÇĞİÖŞÜ]'; then
+        echo "Turkish"
+        return 0
+    fi
+
+    lowered="$(printf '%s' "$sample" | tr '[:upper:]' '[:lower:]')"
+    turkish_hits="$(printf '%s' "$lowered" | grep -Eio '\b(ve|ile|için|icin|bu|bir|kitap|rehber|oyun|bölüm|bolum|başlangıç|baslangic|nasıl|nasil|oyuncu|adım|adim)\b' | wc -l | tr -d ' ')"
+    english_hits="$(printf '%s' "$lowered" | grep -Eio '\b(the|and|with|for|chapter|guide|book|game|player|step|tips|build|craft|survival)\b' | wc -l | tr -d ' ')"
+
+    if [ "${turkish_hits:-0}" -gt "${english_hits:-0}" ]; then
+        echo "Turkish"
+    elif [ "${english_hits:-0}" -gt "${turkish_hits:-0}" ]; then
+        echo "English"
+    else
+        echo ""
+    fi
+}
+
+configure_book_language() {
+    local book_dir="$1"
+    local title_hint="$2"
+    local subtitle_hint="$3"
+    local outline_file="$4"
+    local meta_file="$book_dir/dashboard_meta.json"
+    local raw=""
+    local detected=""
+
+    if [ -f "$meta_file" ]; then
+        if command -v jq >/dev/null 2>&1; then
+            raw="$(jq -r '.language // empty' "$meta_file" 2>/dev/null || true)"
+        else
+            raw="$(grep -Eo '"language"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed 's/.*"language"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || true)"
+        fi
+    fi
+
+    BOOK_LANGUAGE="$(normalize_book_language "$raw")"
+    if [ -z "$BOOK_LANGUAGE" ]; then
+        detected="$(detect_book_language "$title_hint" "$subtitle_hint" "$(sed -n '1,80p' "$outline_file" 2>/dev/null || true)")"
+        BOOK_LANGUAGE="${detected:-English}"
+    fi
+
+    case "$BOOK_LANGUAGE" in
+        Turkish)
+            PANDOC_LANGUAGE="tr-TR"
+            EBOOK_LANGUAGE="tr"
+            TOC_TITLE="İçindekiler"
+            CHAPTER_LABEL="Bölüm"
+            AUTHOR_CREDIT_PREFIX="Yazar: "
+            ;;
+        *)
+            BOOK_LANGUAGE="English"
+            PANDOC_LANGUAGE="en-US"
+            EBOOK_LANGUAGE="en"
+            TOC_TITLE="Table of Contents"
+            CHAPTER_LABEL="Chapter"
+            AUTHOR_CREDIT_PREFIX="By "
+            ;;
+    esac
+}
 
 # Function to generate book metadata
 generate_metadata() {
@@ -139,9 +246,9 @@ title: "$title"
 subtitle: "$SUB_TITLE"
 author: "$AUTHOR"
 rights: "Copyright © $PUBLICATION_YEAR $AUTHOR"
-language: "en-US"
+language: "$PANDOC_LANGUAGE"
 publisher: "$PUBLISHER"
-toc-title: "Table of Contents"
+toc-title: "$TOC_TITLE"
 papersize: 6in,9in
 geometry: "top=2in, bottom=2in, inner=2in, outer=2in"
 identifier:
@@ -228,6 +335,20 @@ generate_book_cover() {
         echo "⚠️ ImageMagick not found. Cannot generate cover."
         return 1
     fi
+
+    local -a font_args=()
+    local font_path=""
+    if command -v fc-match &> /dev/null; then
+        for candidate in "DejaVu Sans" "Ubuntu" "Arial"; do
+            font_path="$(fc-match -f '%{file}\n' "$candidate" 2>/dev/null | head -n 1)"
+            if [ -n "$font_path" ] && [ -f "$font_path" ]; then
+                break
+            fi
+        done
+    fi
+    if [ -n "$font_path" ]; then
+        font_args=(-font "$font_path")
+    fi
     
     # Create a directory for assets if it doesn't exist
     local assets_dir="${output_dir}/assets"
@@ -254,6 +375,7 @@ generate_book_cover() {
             echo "⚠️ Publisher logo not found, creating a placeholder"
             # Create a placeholder logo
             $img_cmd -size 300x100 xc:white -gravity center \
+                "${font_args[@]}" \
                 -pointsize 24 -fill black -annotate +0+0 "$PUBLISHER" \
                 "$logo_exports_path"
         fi
@@ -274,6 +396,7 @@ generate_book_cover() {
             echo "⚠️ Author photo not found, creating a placeholder"
             # Create a placeholder author photo
             $img_cmd -size 300x300 xc:white -gravity center \
+                "${font_args[@]}" \
                 -pointsize 24 -fill black -annotate +0+0 "Author Photo" \
                 "$author_photo_exports_path"
         fi
@@ -286,6 +409,7 @@ generate_book_cover() {
         echo "⚠️ Publisher logo not found, creating a placeholder"
         # Create a placeholder logo
         $img_cmd -size 300x100 xc:white -gravity center \
+            "${font_args[@]}" \
             -pointsize 24 -fill black -annotate +0+0 "$PUBLISHER" \
             "$logo_exports_path"
     fi
@@ -317,19 +441,14 @@ generate_book_cover() {
         main_pt=60
     fi
     # Draw main title and subtitle explicitly so they appear reliably
-    local font_arg=""
-    if $img_cmd -list font | grep -iq "arial" 2>/dev/null; then
-        font_arg="-font Arial"
-    fi
-
     # Place main title slightly above center
-    $img_cmd "$front_file" -gravity center $font_arg -pointsize $main_pt -fill black -annotate +0-120 "$main_title" "$front_file"
+    $img_cmd "$front_file" -gravity center "${font_args[@]}" -pointsize $main_pt -fill black -annotate +0-120 "$main_title" "$front_file"
 
     # Place subtitle under the main title
     local sub_pt
     if [ -n "$last_sub_title" ]; then
         sub_pt=$((main_pt / 2 + 8))
-        $img_cmd "$front_file" -gravity center $font_arg -pointsize $sub_pt -fill black -annotate +0+60 "$last_sub_title" "$front_file"
+        $img_cmd "$front_file" -gravity center "${font_args[@]}" -pointsize $sub_pt -fill black -annotate +0+60 "$last_sub_title" "$front_file"
     else
         # fallback subtitle size
         sub_pt=$((main_pt / 2 + 4))
@@ -337,7 +456,7 @@ generate_book_cover() {
 
     # Add author above the bottom and make it match the subtitle size (bigger)
     if [ -n "$AUTHOR" ]; then
-        $img_cmd "$front_file" -gravity South $font_arg -pointsize $sub_pt -fill black -annotate +0+220 "By $AUTHOR" "$front_file"
+        $img_cmd "$front_file" -gravity South "${font_args[@]}" -pointsize $sub_pt -fill black -annotate +0+220 "By $AUTHOR" "$front_file"
     fi
 
     # Replace publisher text with the publisher logo at the bottom center
@@ -359,11 +478,11 @@ generate_book_cover() {
         # Composite the logo slightly above the bottom center
         $img_cmd "$back_file" "$logo_tmp" -gravity South -geometry +0+80 -compose over -composite "$back_file"
         # Add copyright line under the logo (closer to the bottom)
-        $img_cmd "$back_file" -gravity South -pointsize 18 -fill black -annotate +0+75 "Copyright © $PUBLICATION_YEAR" "$back_file"
+        $img_cmd "$back_file" -gravity South "${font_args[@]}" -pointsize 18 -fill black -annotate +0+75 "Copyright © $PUBLICATION_YEAR" "$back_file"
         rm -f "$logo_tmp" 2>/dev/null || true
     else
         # Fallback: add publisher name centered
-        $img_cmd "$back_file" -gravity center -pointsize 28 -fill black -annotate +0+0 "$PUBLISHER" "$back_file"
+        $img_cmd "$back_file" -gravity center "${font_args[@]}" -pointsize 28 -fill black -annotate +0+0 "$PUBLISHER" "$back_file"
     fi
 
     COVER_IMAGE="$front_file"
@@ -453,6 +572,43 @@ generate_book_covers() {
     local DESCRIPTION="$3"
     local NUM_IMAGES="${4:-3}"
     local OUTPUT_DIR="${5:-.}"
+    local CODEFAST_SHARED_KEY="${CODEFAST_API_KEY:-${codefast:-}}"
+
+    if [ -n "$CODEFAST_SHARED_KEY" ]; then
+        local runtime_dir="$OUTPUT_DIR/.codefast_cover_runtime"
+        local config_file="$runtime_dir/cover_config.json"
+        mkdir -p "$runtime_dir"
+
+        jq -n \
+            --arg service "auto" \
+            --arg title "$BOOK_TITLE" \
+            --arg author "$AUTHOR" \
+            --arg genre "non-fiction" \
+            --arg theme_summary "$DESCRIPTION" \
+            --arg back_cover_blurb "$DESCRIPTION" \
+            '{
+                service: $service,
+                book_title: $title,
+                author_name: $author,
+                genre: $genre,
+                theme_summary: $theme_summary,
+                back_cover_blurb: $back_cover_blurb
+            }' > "$config_file"
+
+        BOOK_COVER_CONFIG_FILE="$config_file" \
+        BOOK_COVERS_DIR="$runtime_dir" \
+        BOOK_COVER_SERVICE="auto" \
+        bash "$SCRIPT_DIR/generate_covers.sh" --front-only >/dev/null 2>&1 || return 1
+
+        local latest_front=""
+        latest_front="$(find "$runtime_dir/front" -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) 2>/dev/null | sort | tail -1 || true)"
+        if [ -n "$latest_front" ] && [ -f "$latest_front" ]; then
+            COVER_IMAGE="$latest_front"
+            return 0
+        fi
+
+        return 1
+    fi
 
     if [ -z "$OPENAI_API_KEY" ]; then
         echo "⚠️ OPENAI_API_KEY not set; cannot generate AI covers."
@@ -727,6 +883,8 @@ fi
 echo "📖 Book title: $BOOK_TITLE"
 echo "👤 Author: $AUTHOR"
 echo "🏢 Publisher: $PUBLISHER"
+SUB_TITLE=$(head -n 2 "$OUTLINE_FILE" | tail -n 1 | sed 's/^## //; s/^SUBTITLE:[[:space:]]*//' | tr -d '\r')
+configure_book_language "$BOOK_DIR" "$BOOK_TITLE" "$SUB_TITLE" "$OUTLINE_FILE"
 
 # Determine chapter file pattern based on version
 case $VERSION in
@@ -747,7 +905,7 @@ echo "🔎 Looking for $VERSION_NAME chapters..."
 # Extract chapter numbers from outline
 # -----------------------------
 echo "🔍 Extracting chapter numbers from outline..."
-CHAPTER_NUMS_LIST=$(grep -oE 'Chapter[[:space:]]+[0-9]+' "$OUTLINE_FILE" \
+CHAPTER_NUMS_LIST=$(grep -oEi '(Chapter|Bölüm)[[:space:]]+[0-9]+' "$OUTLINE_FILE" \
     | awk '{print $2}' \
     | sort -n -u | paste -sd, -)
 
@@ -839,6 +997,7 @@ if [ -z "$BOOK_TITLE" ]; then
 fi
 # Extract subtitle for layout
 SUB_TITLE=$(head -n 2 "$OUTLINE_FILE" | tail -n 1 | sed 's/^## //; s/^SUBTITLE:[[:space:]]*//' | tr -d '\r')
+configure_book_language "$BOOK_DIR" "$BOOK_TITLE" "$SUB_TITLE" "$OUTLINE_FILE"
 
 # Create manuscript
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -921,8 +1080,8 @@ elif [ "$ATTACH_COVER" = true ]; then
         fi
     fi
 elif [ "$GENERATE_COVER" = true ]; then
-    # Prefer AI-generated multiple covers if OpenAI key and jq are available
-    if [ -n "$OPENAI_API_KEY" ] && command -v jq >/dev/null 2>&1; then
+    # Prefer AI-generated cover if Codefast or legacy OpenAI image key is available.
+    if command -v jq >/dev/null 2>&1; then
         # DESCRIPTION: use SUMMARY or a short excerpt as prompt description if available
         DESC="${SUMMARY:-$BOOK_TITLE}"
         generate_book_covers "$BOOK_TITLE" "$AUTHOR" "$DESC" 3 "$EXPORTS_DIR"
@@ -953,7 +1112,9 @@ fi
 # Process back cover image if provided
 if [ -n "$BACK_COVER_IMAGE" ] && [ -f "$BACK_COVER_IMAGE" ]; then
     echo "🖼️ Using provided back cover: $BACK_COVER_IMAGE"
-    cp "$BACK_COVER_IMAGE" "$EXPORTS_DIR/$(basename "$BACK_COVER_IMAGE")"
+    if [ "$BACK_COVER_IMAGE" != "$EXPORTS_DIR/$(basename "$BACK_COVER_IMAGE")" ]; then
+        cp "$BACK_COVER_IMAGE" "$EXPORTS_DIR/$(basename "$BACK_COVER_IMAGE")"
+    fi
     BACK_COVER_IMAGE="$EXPORTS_DIR/$(basename "$BACK_COVER_IMAGE")"
 elif [ "$ATTACH_BACK_COVER" = true ]; then
     # Attempt to attach the provided cover image (path was set during args parsing)
@@ -986,11 +1147,50 @@ SUB_TITLE=$(head -n 2 "$OUTLINE_FILE" | tail -n 1 | sed 's/^## //; s/^SUBTITLE:[
 # Extract keywords for layout
 # KEYWORDS=$(head -n 3 "$OUTLINE_FILE" | tail -n 1 | sed 's/^## //; s/^KEYWORDS:[[:space:]]*//' | tr -d '\r')
 
+build_back_cover_manuscript_block() {
+    local images=()
+
+    if [ -n "$BACK_COVER_IMAGE" ] && [ -f "$BACK_COVER_IMAGE" ]; then
+        images+=("$(basename "$BACK_COVER_IMAGE")")
+    else
+        for candidate in "${BACK_COVER1_BASENAME:-}" "${BACK_COVER_PDF_BASENAME:-}"; do
+            if [ -n "$candidate" ] && [ -f "$EXPORTS_DIR/$candidate" ]; then
+                images+=("$candidate")
+            fi
+        done
+    fi
+
+    [ ${#images[@]} -eq 0 ] && return 0
+
+    {
+        echo "<!-- LaTeX/PDF only - back covers -->"
+        echo "\\pagenumbering{gobble}"
+        echo "\\newgeometry{margin=0mm,top=0mm,bottom=0mm,left=0mm,right=0mm}"
+        echo "\\begin{center}"
+        for image in "${images[@]}"; do
+            echo "\\includegraphics[width=\\paperwidth,height=\\paperheight,keepaspectratio=false]{$image}"
+        done
+        echo "\\end{center}"
+        echo "\\restoregeometry"
+        echo
+        echo "<!-- EPUB_ONLY_BEGIN -->"
+        for image in "${images[@]}"; do
+            echo "<div class=\"backcover-container\">"
+            echo "![]($image){width=100% height=100vh}"
+            echo "</div>"
+            echo
+        done
+        echo "<!-- EPUB_ONLY_END -->"
+    }
+}
+
+BACK_COVER_MANUSCRIPT_BLOCK="$(build_back_cover_manuscript_block)"
+
 cat << EOF > "$MANUSCRIPT_FILE"
 <!-- EPUB_ONLY_BEGIN -->
 # $BOOK_TITLE {.unnumbered .unlisted}
 <!-- EPUB_ONLY_END -->
-\renewcommand{\contentsname}{\Huge Table of Contents}
+\renewcommand{\contentsname}{\Huge $TOC_TITLE}
 \thispagestyle{empty}
 \newpage
 \thispagestyle{empty}
@@ -1015,7 +1215,7 @@ $(if [ -f "$EXPORTS_DIR/$ICON_BASENAME" ]; then echo "![]($ICON_BASENAME){ width
 \end{center}
 \vspace{2em}
 \begin{center}
-{\fontsize{18}{20}\selectfont\bfseries By $AUTHOR}
+{\fontsize{18}{20}\selectfont\bfseries ${AUTHOR_CREDIT_PREFIX}$AUTHOR}
 \end{center}
 \begin{center}
 {\fontsize{14}{16}\selectfont\bfseries Copyright © $PUBLICATION_YEAR}
@@ -1023,7 +1223,7 @@ $(if [ -f "$EXPORTS_DIR/$ICON_BASENAME" ]; then echo "![]($ICON_BASENAME){ width
 
 <!-- EPUB_ONLY_BEGIN -->
 ## $SUB_TITLE {.unnumbered .unlisted}
-### By $AUTHOR {.unnumbered .unlisted}
+### ${AUTHOR_CREDIT_PREFIX}$AUTHOR {.unnumbered .unlisted}
 #### Copyright © $PUBLICATION_YEAR {.unnumbered .unlisted}
 <!-- EPUB_ONLY_END -->
 
@@ -1102,7 +1302,7 @@ for CHAPTER_FILE in "${CHAPTER_FILES[@]}"; do
     # Extract chapter number
     CHAPTER_NUM=$(basename "$CHAPTER_FILE" | sed -E 's/chapter_([0-9]+).*/\1/')
 
-    echo "📝 Processing Chapter $CHAPTER_NUM..."
+    echo "📝 Processing ${CHAPTER_LABEL} $CHAPTER_NUM..."
 
     # Add chapter anchor and proper page break for ebook formats
     # For first chapter, don't add extra newpage since we're coming from TOC
@@ -1119,12 +1319,12 @@ for CHAPTER_FILE in "${CHAPTER_FILES[@]}"; do
     fi
 
     # Look up chapter display title from the outline to avoid duplicated titles
-    # First try markdown format (### Chapter N: Title)
-    outline_line=$(grep -i -m1 -E "^###[[:space:]]+Chapter[[:space:]]+${CHAPTER_NUM}[:\. ]" "$OUTLINE_FILE" || true)
+    # First try markdown format (### Chapter/Bölüm N: Title)
+    outline_line=$(grep -i -m1 -E "^###[[:space:]]+(Chapter|Bölüm)[[:space:]]+${CHAPTER_NUM}[:\. ]" "$OUTLINE_FILE" || true)
     
     # If not found, try older formats
     if [ -z "$outline_line" ]; then
-        outline_line=$(grep -i -m1 -E "Chapter[[:space:]]+${CHAPTER_NUM}[:\. -]*.*" "$OUTLINE_FILE" || true)
+        outline_line=$(grep -i -m1 -E "(Chapter|Bölüm)[[:space:]]+${CHAPTER_NUM}[:\. -]*.*" "$OUTLINE_FILE" || true)
     fi
     
     if [ -n "$outline_line" ]; then
@@ -1132,14 +1332,14 @@ for CHAPTER_FILE in "${CHAPTER_FILES[@]}"; do
         DISPLAY_TITLE=$(echo "$outline_line" | sed 's/^###[[:space:]]*//')
         
         # Then clean up the title
-        DISPLAY_TITLE=$(echo "$DISPLAY_TITLE" | sed -E 's/^[[:space:]]*[Cc]hapter[[:space:]]+'${CHAPTER_NUM}'[:\. -]*//; s/^[[:space:]]*'${CHAPTER_NUM}'[\.)[:space:]-]*//')
-        DISPLAY_TITLE=$(echo "$DISPLAY_TITLE" | sed -E 's/^[[:space:]]*[Cc]hapter[[:space:]]*[0-9]+[:\. -]*//i; s/^[[:space:]]*[0-9]+[\.)[:space:]-]*//')
+        DISPLAY_TITLE=$(echo "$DISPLAY_TITLE" | sed -E 's/^[[:space:]]*(Chapter|Bölüm)[[:space:]]+'${CHAPTER_NUM}'[:\. -]*//I; s/^[[:space:]]*'${CHAPTER_NUM}'[\.)[:space:]-]*//')
+        DISPLAY_TITLE=$(echo "$DISPLAY_TITLE" | sed -E 's/^[[:space:]]*(Chapter|Bölüm)[[:space:]]*[0-9]+[:\. -]*//I; s/^[[:space:]]*[0-9]+[\.)[:space:]-]*//')
         DISPLAY_TITLE=$(echo "$DISPLAY_TITLE" | sed 's/^ *//; s/ *$//')
-        [ -z "$DISPLAY_TITLE" ] && DISPLAY_TITLE="Chapter ${CHAPTER_NUM}"
+        [ -z "$DISPLAY_TITLE" ] && DISPLAY_TITLE="${CHAPTER_LABEL} ${CHAPTER_NUM}"
     else
-        DISPLAY_TITLE="Chapter ${CHAPTER_NUM}"
+        DISPLAY_TITLE="${CHAPTER_LABEL} ${CHAPTER_NUM}"
     fi
-    CLEAN_CHAPTER_TITLE=$(echo "$DISPLAY_TITLE" | sed -e "s/^Chapter $CHAPTER_NUM: //; s/^Chapter $CHAPTER_NUM //")
+    CLEAN_CHAPTER_TITLE=$(echo "$DISPLAY_TITLE" | sed -E "s/^(Chapter|Bölüm) ${CHAPTER_NUM}: //; s/^(Chapter|Bölüm) ${CHAPTER_NUM} //")
 
     # Split chapter title at first colon to create H1/H2/H3 structure
     if [[ "$CLEAN_CHAPTER_TITLE" == *":"* ]]; then
@@ -1148,7 +1348,7 @@ for CHAPTER_FILE in "${CHAPTER_FILES[@]}"; do
         CHAPTER_SUBTITLE=$(echo "$CLEAN_CHAPTER_TITLE" | cut -d: -f2- | sed 's/^ *//; s/ *$//')
 
         # Use a single heading section for all title information
-        echo "# Chapter $CHAPTER_NUM {.chapter-title}" >> "$MANUSCRIPT_FILE"
+        echo "# ${CHAPTER_LABEL} $CHAPTER_NUM {.chapter-title}" >> "$MANUSCRIPT_FILE"
         echo "## $CHAPTER_MAIN_TITLE {.chapter-main-title}" >> "$MANUSCRIPT_FILE"
         echo "" >> "$MANUSCRIPT_FILE"
         # H3: subtitle (optional)
@@ -1157,7 +1357,7 @@ for CHAPTER_FILE in "${CHAPTER_FILES[@]}"; do
         fi
     else
         # No colon found: Use CLEAN_CHAPTER_TITLE as the main title
-        echo "# Chapter $CHAPTER_NUM {.chapter-title}" >> "$MANUSCRIPT_FILE"
+        echo "# ${CHAPTER_LABEL} $CHAPTER_NUM {.chapter-title}" >> "$MANUSCRIPT_FILE"
         echo "## $CLEAN_CHAPTER_TITLE {.chapter-main-title}" >> "$MANUSCRIPT_FILE"
     fi
     echo "" >> "$MANUSCRIPT_FILE"
@@ -1220,13 +1420,13 @@ for CHAPTER_FILE in "${CHAPTER_FILES[@]}"; do
     # Remove duplicate chapter titles, including the formats we've seen in the example
     FORMATTED_CONTENT=$(echo "$CLEAN_CONTENT" | 
         # First, remove headings in the first few lines
-        sed '1,5{/^# /d; /^\*\*/d; /^Chapter [0-9]/d;}' |
+        sed '1,5{/^# /d; /^\*\*/d; /^Chapter [0-9]/d; /^Bölüm [0-9]/d;}' |
         # Remove any line that contains the full chapter title
         grep -v -F "$CLEAN_CHAPTER_TITLE" |
         # Remove any line that contains "Chapter N:" followed by the title
-        grep -v -E "^Chapter ${CHAPTER_NUM}:.*${CLEAN_CHAPTER_TITLE}" |
+        grep -v -E "^(Chapter|Bölüm) ${CHAPTER_NUM}:.*${CLEAN_CHAPTER_TITLE}" |
         # Remove lines with just the chapter number and title
-        grep -v -E "^Chapter ${CHAPTER_NUM}[[:space:]]+${CLEAN_CHAPTER_TITLE}"
+        grep -v -E "^(Chapter|Bölüm) ${CHAPTER_NUM}[[:space:]]+${CLEAN_CHAPTER_TITLE}"
     )
 
     # Further formatting for subsections
@@ -1245,7 +1445,7 @@ for CHAPTER_FILE in "${CHAPTER_FILES[@]}"; do
     echo "$CHAPTER_NUM:$CHAPTER_WORDS" >> "$CHAPTER_WORD_COUNTS_FILE"
     TOTAL_WORDS=$((TOTAL_WORDS + CHAPTER_WORDS))
     
-    echo "✅ Chapter $CHAPTER_NUM added ($CHAPTER_WORDS words)"
+    echo "✅ ${CHAPTER_LABEL} $CHAPTER_NUM added ($CHAPTER_WORDS words)"
 done
 
 # Function: insert extra sections (epilogue, glossary, discussion, appendices)
@@ -1391,11 +1591,8 @@ BIB_FILE="$BOOK_DIR/final_bibliography.md"
 if [ -f "$BIB_FILE" ]; then
     # Copy the original bibliography into the exports directory for convenience
     cp -f "$BIB_FILE" "$EXPORTS_DIR/" 2>/dev/null || true
-else
-    echo "ℹ️ No generated bibliography found at $BIB_FILE"
-fi
 
-cat << EOF >> "$MANUSCRIPT_FILE"
+    cat << EOF >> "$MANUSCRIPT_FILE"
 \pagebreak
 \newpage
 
@@ -1408,8 +1605,10 @@ cat << EOF >> "$MANUSCRIPT_FILE"
 
 EOF
 
-
-cat "$BIB_FILE" >> "$MANUSCRIPT_FILE"
+    cat "$BIB_FILE" >> "$MANUSCRIPT_FILE"
+else
+    echo "ℹ️ No generated bibliography found at $BIB_FILE"
+fi
 
 cat << EOF >> "$MANUSCRIPT_FILE"
 \begin{center}
@@ -1493,24 +1692,7 @@ All intellectual property rights, including copyrights, in this book are owned b
 ::: {.pagebreak}
 :::
 
-<!-- LaTeX/PDF only - back covers -->
-\pagenumbering{gobble}
-\newgeometry{margin=0mm,top=0mm,bottom=0mm,left=0mm,right=0mm}
-\begin{center}
-\includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio=false]{back-cover-1.png}
-\includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio=false]{back-cover.png}
-\end{center}
-\restoregeometry
-
-<!-- EPUB_ONLY_BEGIN -->
-<div class="backcover-container">
-![](back-cover-1.png){width=100% height=100vh}
-</div>
-
-<div class="backcover-container">
-![](back-cover.png){width=100% height=100vh}
-</div>
-<!-- EPUB_ONLY_END -->
+$BACK_COVER_MANUSCRIPT_BLOCK
 
 EOF
 
@@ -1833,11 +2015,16 @@ generate_ebook_format() {
 
 
             # Run pandoc from the output directory so image paths resolve correctly. Use --toc and set chapter level
+            local epub_cover_image="$cover_basename"
+            if [ -z "$epub_cover_image" ] && [ -n "${COVER1_BASENAME:-}" ] && [ -f "$output_dir/$COVER1_BASENAME" ]; then
+                epub_cover_image="$COVER1_BASENAME"
+            fi
+
             (cd "$output_dir" && {
-                if [ -n "$cover_basename" ]; then
+                if [ -n "$epub_cover_image" ]; then
                     if [ -n "$back_md" ]; then
                         pandoc -f markdown -t epub3 \
-                            --epub-cover-image="$COVER1_BASENAME" \
+                            --epub-cover-image="$epub_cover_image" \
                             --css="$css_basename" \
                             --metadata-file="$metadata_basename" \
                             --toc --toc-depth=2 --resource-path=. \
@@ -1845,7 +2032,7 @@ generate_ebook_format() {
                             --split-level=1 -o "$(basename "$output_file")" "$input_basename"
                     else
                         pandoc -f markdown -t epub3 \
-                            --epub-cover-image="$COVER1_BASENAME" \
+                            --epub-cover-image="$epub_cover_image" \
                             --css="$css_basename" \
                             --metadata-file="$metadata_basename" \
                             --toc --toc-depth=2 --resource-path=. \
@@ -1966,17 +2153,29 @@ EOF
 
             # -H cover.tex \
             # -H back-cover.tex \
-            # Try direct PDF generation first (run lualatex non-interactively to avoid hangs)
-            (cd "$output_dir" && pandoc -f markdown -t pdf \
-                --pdf-engine=lualatex \
-                --pdf-engine-opt='-interaction=nonstopmode' \
-                --pdf-engine-opt='-halt-on-error' \
+            # Try direct PDF generation first. Prefer a local TeX engine when present,
+            # but fall back to tectonic for user-scoped installs.
+            local pdf_engine
+            if pdf_engine="$(select_pdf_engine)"; then
+                local pdf_engine_args=("--pdf-engine=$pdf_engine")
+                if [ "$pdf_engine" != "tectonic" ]; then
+                    pdf_engine_args+=(
+                        "--pdf-engine-opt=-interaction=nonstopmode"
+                        "--pdf-engine-opt=-halt-on-error"
+                    )
+                fi
+            else
+                pdf_engine=""
+            fi
+
+            if [ -n "$pdf_engine" ] && (cd "$output_dir" && pandoc -f markdown -t pdf \
+                "${pdf_engine_args[@]}" \
                 --metadata-file="$(basename "$metadata")" \
                 -H titles.tex \
-                -o "$(basename "$output_file")" "$(basename "$input_file")") && {
+                -o "$(basename "$output_file")" "$(basename "$input_file")"); then
                 echo "✅ PDF created: $(basename "$output_file")"
                 return 0
-            }
+            fi
             
             echo "⚠️  Standard PDF generation failed, creating print-friendly HTML instead..."
             html_output="${output_dir}/$(basename "$input_file" .md)_print.html"
@@ -2060,7 +2259,7 @@ EOF
                     --title=\"$title\" \
                     --authors=\"$AUTHOR\" \
                     --publisher=\"$PUBLISHER\" \
-                    --language=\"en\""
+                    --language=\"$EBOOK_LANGUAGE\""
                 
                 # Only add cover parameter if the file actually exists
                 if [ -n "$cover" ] && [ -f "$cover" ]; then
@@ -2102,7 +2301,7 @@ EOF
                     --title=\"$title\" \
                     --authors=\"$AUTHOR\" \
                     --publisher=\"$PUBLISHER\" \
-                    --language=\"en\""
+                    --language=\"$EBOOK_LANGUAGE\""
                 
                 # Only add cover parameter if the file actually exists
                 if [ -n "$cover" ] && [ -f "$cover" ]; then

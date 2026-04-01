@@ -7,7 +7,7 @@ set -e  # Exit on any error
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OUTPUT_DIR="$SCRIPT_DIR/keyword_results"
+OUTPUT_DIR="${KEYWORD_OUTPUT_DIR:-$SCRIPT_DIR/keyword_results}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 CSV_OUTPUT="$OUTPUT_DIR/kdp_keywords_$TIMESTAMP.csv"
 

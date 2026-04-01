@@ -1,0 +1,162 @@
+"use client";
+
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { MetricCard } from "@/components/admin/metric-card";
+import { NotConfiguredCard } from "@/components/admin/not-configured-card";
+import { useAdminResource } from "@/lib/admin/client";
+import { formatAdminCurrency, formatAdminNumber } from "@/lib/admin/format";
+
+type FunnelPayload = {
+  stages: Array<{
+    name: string;
+    count: number;
+    conversionRate: number;
+    dropOffRate: number;
+    avgTimeToNext: number;
+  }>;
+};
+
+type CohortPayload = Array<{
+  cohort: string;
+  size: number;
+  retention: number[];
+  revenue: number[];
+}>;
+
+type ChurnPayload = {
+  byMonth: Array<{
+    month: string;
+    active: number;
+    churned: number;
+    churnRate: number;
+  }>;
+};
+
+type RevenuePayload = {
+  totalRevenue: number;
+  mrr: number;
+  arr: number;
+  revenueTrend: Array<{ label: string; amount: number }>;
+};
+
+const funnelConfig = {
+  count: {
+    label: "Count",
+    color: "#1e40af",
+  },
+};
+
+const churnConfig = {
+  churnRate: {
+    label: "Churn",
+    color: "#dc2626",
+  },
+};
+
+const revenueConfig = {
+  amount: {
+    label: "Revenue",
+    color: "#1e40af",
+  },
+};
+
+export default function AdminAnalyticsPage() {
+  const funnel = useAdminResource<FunnelPayload>("/api/admin/analytics/funnel");
+  const cohort = useAdminResource<CohortPayload>("/api/admin/analytics/cohort");
+  const churn = useAdminResource<ChurnPayload>("/api/admin/analytics/churn");
+  const revenue = useAdminResource<RevenuePayload>("/api/admin/analytics/revenue");
+  const performance = useAdminResource<{ code?: string; feature?: string }>("/api/admin/analytics/performance", {
+    allowErrorPayload: true,
+  });
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Analytics & reports</h1>
+        <p className="mt-1 text-sm admin-muted">Funnel, cohort, revenue ve churn görünümü.</p>
+      </div>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <MetricCard title="Total revenue" value={revenue.data ? formatAdminCurrency(revenue.data.totalRevenue) : "—"} />
+        <MetricCard title="MRR" value={revenue.data ? formatAdminCurrency(revenue.data.mrr) : "—"} color="success" />
+        <MetricCard title="Cohorts" value={cohort.data ? formatAdminNumber(cohort.data.length) : "—"} color="warning" />
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <div className="admin-panel rounded-[28px] p-5">
+          <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Conversion funnel</div>
+          <ChartContainer className="h-[280px] w-full" config={funnelConfig}>
+            <BarChart data={funnel.data?.stages || []}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="name" tickLine={false} axisLine={false} />
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+              <Bar dataKey="count" fill="var(--color-count)" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ChartContainer>
+        </div>
+
+        <div className="admin-panel rounded-[28px] p-5">
+          <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Revenue trend</div>
+          <ChartContainer className="h-[280px] w-full" config={revenueConfig}>
+            <AreaChart data={revenue.data?.revenueTrend || []}>
+              <XAxis dataKey="label" tickLine={false} axisLine={false} />
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+              <Area type="monotone" dataKey="amount" stroke="var(--color-amount)" fill="var(--color-amount)" fillOpacity={0.18} />
+            </AreaChart>
+          </ChartContainer>
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <div className="admin-panel rounded-[28px] p-5">
+          <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Cohort retention</div>
+          <div className="space-y-3">
+            {(cohort.data || []).map((item) => (
+              <div key={item.cohort} className="rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-semibold text-[color:var(--admin-text)]">{item.cohort}</div>
+                  <div className="text-xs admin-muted">{item.size} kullanıcı</div>
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {item.retention.map((value, index) => (
+                    <div key={index} className="rounded-xl bg-black/5 px-3 py-2 text-center dark:bg-white/8">
+                      <div className="text-[10px] uppercase tracking-[0.14em] admin-muted">M{index + 1}</div>
+                      <div className="mt-1 text-sm font-semibold text-[color:var(--admin-text)]">%{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="admin-panel rounded-[28px] p-5">
+          <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Churn by month</div>
+          <ChartContainer className="h-[280px] w-full" config={churnConfig}>
+            <BarChart data={churn.data?.byMonth || []}>
+              <XAxis dataKey="month" tickLine={false} axisLine={false} />
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+              <Bar dataKey="churnRate" fill="var(--color-churnRate)" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ChartContainer>
+        </div>
+      </section>
+
+      {performance.data?.code === "NOT_CONFIGURED" ? (
+        <NotConfiguredCard
+          title="Performance metrics not configured"
+          description="p95/p99, worker utilization ve infrastructure-level monitoring bu fazda bağlı değil."
+        />
+      ) : null}
+    </div>
+  );
+}

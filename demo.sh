@@ -5,6 +5,10 @@
 
 set -e
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./book-generator-env.sh
+source "$ROOT_DIR/book-generator-env.sh"
+
 echo "======================================="
 echo "  Book Generator Demo"
 echo "  Automated Technical Documentation"

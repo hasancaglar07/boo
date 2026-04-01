@@ -6,8 +6,9 @@
 set -e
 
 # Configuration
-CONFIG_FILE="$HOME/book-generator/book_research_config"
-DATA_DIR="$HOME/book-generator/book_research_data"
+DEFAULT_BOOK_RESEARCH_HOME="${HOME}/book-generator"
+CONFIG_FILE="${BOOK_RESEARCH_CONFIG_FILE:-${DEFAULT_BOOK_RESEARCH_HOME}/book_research_config}"
+DATA_DIR="${BOOK_RESEARCH_DATA_DIR:-${DEFAULT_BOOK_RESEARCH_HOME}/book_research_data}"
 CACHE_DIR="$DATA_DIR/cache"
 RESULTS_FILE="$DATA_DIR/market_analysis.json"
 
@@ -1242,7 +1243,8 @@ monitor_trends() {
     cat > "$DATA_DIR/trend_monitor.sh" << 'EOF'
 #!/bin/bash
 
-TRENDS_DIR="$HOME/book-generator/book_research_data/trend_monitoring"
+DATA_DIR="__BOOK_RESEARCH_DATA_DIR__"
+TRENDS_DIR="$DATA_DIR/trend_monitoring"
 mkdir -p "$TRENDS_DIR"
 
 # Topics to monitor (add your own)
@@ -1254,10 +1256,10 @@ for topic in "${TOPICS[@]}"; do
     echo "Monitoring: $topic"
     
     # Analyze current trends
-    python3 "$HOME/book-generator/book_research_data/trends_analyzer.py" "$topic" > "$TRENDS_DIR/${topic// /_}_$(date +%Y%m%d).json"
+    python3 "$DATA_DIR/trends_analyzer.py" "$topic" > "$TRENDS_DIR/${topic// /_}_$(date +%Y%m%d).json"
     
     # Quick market check
-    python3 "$HOME/book-generator/book_research_data/market_analyzer.py" search "$topic" 10 > /dev/null 2>&1
+    python3 "$DATA_DIR/market_analyzer.py" search "$topic" 10 > /dev/null 2>&1
     
     if [[ -f "market_analysis.json" ]]; then
         mv "market_analysis.json" "$TRENDS_DIR/${topic// /_}_market_$(date +%Y%m%d).json"
@@ -1268,6 +1270,8 @@ done
 
 echo "$(date): Trend monitoring complete" >> "$TRENDS_DIR/monitor.log"
 EOF
+
+    sed -i "s|__BOOK_RESEARCH_DATA_DIR__|$DATA_DIR|g" "$DATA_DIR/trend_monitor.sh"
 
     chmod +x "$DATA_DIR/trend_monitor.sh"
     

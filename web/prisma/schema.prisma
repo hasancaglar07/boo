@@ -1,0 +1,286 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum EntitlementStatus {
+  active
+  canceled
+  past_due
+  trialing
+  replaced
+  refunded
+}
+
+enum BillingRecordKind {
+  subscription
+  one_time_book_unlock
+  manual_adjustment
+  refund
+}
+
+enum BillingRecordStatus {
+  draft
+  open
+  paid
+  void
+  refunded
+}
+
+enum ModerationStatus {
+  pending
+  approved
+  rejected
+  revision_requested
+}
+
+model User {
+  id                    String                   @id @default(cuid())
+  email                 String                   @unique
+  name                  String?
+  goal                  String                   @default("")
+  role                  UserRole                 @default(USER)
+  passwordHash          String?
+  emailVerified         DateTime?
+  image                 String?
+  lastLoginAt           DateTime?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  accounts              Account[]
+  sessions              Session[]
+  guestClaims           GuestIdentity[]          @relation("GuestClaims")
+  ownedBooks            BookRecord[]             @relation("UserBooks")
+  entitlements          Entitlement[]
+  auditLogs             AuditLog[]
+  analyticsEvents       AnalyticsEvent[]
+  emailVerification     EmailVerificationToken[]
+  passwordResetTokens   PasswordResetToken[]
+  createdAdminNotes     AdminNote[]              @relation("AdminNoteAuthor")
+  billingRecords        BillingRecord[]
+  moderationReviews     ModerationReview[]       @relation("ModerationReviewer")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analytics    AnalyticsEvent[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model GuestIdentity {
+  id               String      @id @default(cuid())
+  cookieTokenHash  String      @unique
+  createdAt        DateTime    @default(now())
+  lastSeenAt       DateTime    @default(now())
+  claimedByUserId  String?
+  claimedAt        DateTime?
+  claimedByUser    User?       @relation("GuestClaims", fields: [claimedByUserId], references: [id], onDelete: SetNull)
+  books            BookRecord[] @relation("GuestBooks")
+  auditLogs        AuditLog[]
+  analyticsEvents  AnalyticsEvent[]
+}
+
+model BookRecord {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  ownerUserId     String?
+  guestIdentityId String?
+  origin          String
+  statusSnapshot  Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  claimedAt       DateTime?
+  ownerUser       User?         @relation("UserBooks", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  guestIdentity   GuestIdentity? @relation("GuestBooks", fields: [guestIdentityId], references: [id], onDelete: SetNull)
+}
+
+model Entitlement {
+  id        String   @id @default(cuid())
+  userId    String
+  planId    String
+  kind      String
+  status    EntitlementStatus
+  bookSlug  String?
+  startsAt  DateTime @default(now())
+  endsAt    DateTime?
+  provider  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  billingRecords BillingRecord[]
+
+  @@index([userId, status])
+  @@index([bookSlug, status])
+}
+
+model AuditLog {
+  id              String        @id @default(cuid())
+  actorUserId     String?
+  guestIdentityId String?
+  action          String
+  entityType      String
+  entityId        String?
+  ipHash          String?
+  userAgent       String?
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  actorUser       User?         @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  guestIdentity   GuestIdentity? @relation(fields: [guestIdentityId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([entityType, entityId])
+}
+
+model AnalyticsEvent {
+  id              String        @id @default(cuid())
+  userId          String?
+  guestIdentityId String?
+  sessionId       String?
+  eventName       String
+  pathname        String?
+  properties      Json?
+  createdAt       DateTime      @default(now())
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestIdentity   GuestIdentity? @relation(fields: [guestIdentityId], references: [id], onDelete: SetNull)
+  session         Session?      @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([eventName, createdAt])
+  @@index([userId, createdAt])
+}
+
+model RateLimitCounter {
+  id         String   @id @default(cuid())
+  scope      String
+  key        String
+  windowStart DateTime
+  count      Int      @default(0)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([scope, key, windowStart])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  consumedAt DateTime?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model AdminNote {
+  id              String   @id @default(cuid())
+  entityType      String
+  entityId        String
+  body            String
+  createdByUserId String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdByUser   User     @relation("AdminNoteAuthor", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId, createdAt])
+}
+
+model BillingRecord {
+  id            String              @id @default(cuid())
+  userId        String?
+  entitlementId String?
+  planId        String
+  kind          BillingRecordKind
+  status        BillingRecordStatus @default(paid)
+  amount        Int
+  currency      String              @default("USD")
+  description   String?
+  bookSlug      String?
+  metadata      Json?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  user          User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  entitlement   Entitlement?        @relation(fields: [entitlementId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt, planId, status])
+  @@index([userId, createdAt])
+  @@index([bookSlug, createdAt])
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  label       String
+  description String   @default("")
+  enabled     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ModerationReview {
+  id               String           @id @default(cuid())
+  bookSlug         String
+  status           ModerationStatus @default(pending)
+  qualityScore     Int?
+  plagiarismScore  Int?
+  notes            String           @default("")
+  reviewerUserId   String?
+  reviewedAt       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  reviewerUser     User?            @relation("ModerationReviewer", fields: [reviewerUserId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([bookSlug, createdAt])
+}

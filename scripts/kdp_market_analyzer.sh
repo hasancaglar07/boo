@@ -6,7 +6,7 @@
 set -e
 
 TOPIC="$1"
-RESULTS_DIR="kdp_analysis_$(date +%Y%m%d)"
+RESULTS_DIR="${KDP_ANALYZER_RESULTS_DIR:-kdp_analysis_$(date +%Y%m%d)}"
 
 # Colors
 GREEN='\033[0;32m'

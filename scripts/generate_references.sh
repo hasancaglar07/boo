@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-# Generate references for a book using Gemini (shell-only)
+# Generate references for a book using the shared smart provider layer.
 # Usage: generate_references.sh /path/to/book [batch_size]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" && pwd)"
 BOOK_DIR="${1:-.}"
 BATCH_SIZE="${2:-2}"
-GEMINI_MODEL="${GEMINI_MODEL:-gemini-1.5-pro}"
-GEMINI_KEY="${GEMINI_API_KEY:-}" # must be exported by caller/user
 COOLDOWN_BASE=${COOLDOWN_BASE:-60}   # base seconds
 COOLDOWN_JITTER=${COOLDOWN_JITTER:-10} # random jitter max
 MAX_RETRIES=${MAX_RETRIES:-2}
@@ -21,7 +19,6 @@ FINAL_MD="$BOOK_DIR/final_bibliography.md"
 command -v jq >/dev/null 2>&1 || { echo "jq is required" >&2; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo "curl is required" >&2; exit 1; }
 command -v shasum >/dev/null 2>&1 || command -v sha1sum >/dev/null 2>&1 || { echo "shasum/sha1sum required" >&2; exit 1; }
-[ -n "$GEMINI_KEY" ] || { echo "GEMINI_API_KEY environment variable must be set" >&2; exit 1; }
 
 mkdir -p "$SOURCES_DIR" "$TEMP_DIR" "$SEEN_DIR"
 
@@ -62,6 +59,8 @@ else
   log "ERROR: multi_provider_ai_simple.sh not found; this script now requires smart_api_call. Please place multi_provider_ai_simple.sh alongside this script."
   exit 1
 fi
+
+has_any_smart_provider || { echo "A shared Codefast key or enabled Ollama fallback is required" >&2; exit 1; }
 
 random_sleep() {
   local jitter=$((RANDOM % COOLDOWN_JITTER))
