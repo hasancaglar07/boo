@@ -7,6 +7,7 @@ const projectRoot = dirname(fileURLToPath(import.meta.url));
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
+  output: "standalone",
   images: {
     remotePatterns: [
       {

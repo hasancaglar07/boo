@@ -1,0 +1,66 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+*.md
+LICENSE
+
+# AI/Agent tools
+.agent/
+.agents/
+.claude/
+.tools/
+
+# Logs
+*.log
+multi_provider_logs/
+
+# Outputs
+book_outputs/
+quality_reports/
+v1/
+v2/
+v3/
+v4/
+v5/
+v6/
+files/
+
+# Cache
+.kdp_cache
+.codex
+temp_appendices
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment
+.env.local
+.env.codefast.local
+.env
+
+# Node.js
+web/node_modules/
+web/.next/
+next-app/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+tests/
