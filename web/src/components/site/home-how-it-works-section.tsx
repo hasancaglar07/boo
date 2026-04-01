@@ -10,7 +10,7 @@ export function HomeHowItWorksSection() {
         <SectionHeading
           badge="Nasıl Çalışır"
           title="5 adımda ilk kitabın hazır."
-          description="Brief'ten yayına kadar her adım birbirine bağlı. Ayrı araç, ayrı sekme yok — tek akış."
+          description="Konudan yayına kadar her adım birbirine bağlı. Ayrı araç, ayrı sekme yok — tek akış."
         />
 
         <div className="relative mt-12">

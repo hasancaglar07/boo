@@ -527,8 +527,13 @@ def read_metadata(book_dir: Path) -> dict[str, Any]:
         "cover_brief": "",
         "language": "",
         "generate_cover": True,
+        "cover_art_image": "",
         "cover_image": "",
         "back_cover_image": "",
+        "cover_template": "",
+        "cover_variant_count": 0,
+        "cover_generation_provider": "",
+        "cover_composed": False,
         "isbn": "",
         "year": "",
         "fast": False,
@@ -1178,8 +1183,13 @@ def read_book(book_dir: Path) -> dict[str, Any]:
         "branding_logo_url": metadata.get("branding_logo_url", ""),
         "cover_brief": metadata.get("cover_brief", ""),
         "generate_cover": bool(metadata.get("generate_cover", True)),
+        "cover_art_image": metadata.get("cover_art_image", ""),
         "cover_image": metadata.get("cover_image", ""),
         "back_cover_image": metadata.get("back_cover_image", ""),
+        "cover_template": metadata.get("cover_template", ""),
+        "cover_variant_count": metadata.get("cover_variant_count", 0),
+        "cover_generation_provider": metadata.get("cover_generation_provider", ""),
+        "cover_composed": bool(metadata.get("cover_composed", False)),
         "isbn": metadata.get("isbn", ""),
         "year": metadata.get("year", ""),
         "fast": bool(metadata.get("fast", False)),
@@ -1227,8 +1237,13 @@ def list_books() -> list[dict[str, Any]]:
                 "branding_mark": book.get("branding_mark", ""),
                 "branding_logo_url": book.get("branding_logo_url", ""),
                 "cover_brief": book.get("cover_brief", ""),
+                "cover_art_image": book.get("cover_art_image", ""),
                 "cover_image": book.get("cover_image", ""),
                 "back_cover_image": book.get("back_cover_image", ""),
+                "cover_template": book.get("cover_template", ""),
+                "cover_variant_count": book.get("cover_variant_count", 0),
+                "cover_generation_provider": book.get("cover_generation_provider", ""),
+                "cover_composed": bool(book.get("cover_composed", False)),
                 "chapter_count": len(book["chapters"]),
                 "artifacts": book["artifacts"],
                 "status": book["status"],
@@ -1277,8 +1292,13 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
     default_title = "Başlangıç" if language == "Turkish" else "Getting Started"
     chapters = payload.get("chapters") or [{"title": default_title, "content": ""}]
     generate_cover = bool(payload.get("generate_cover", True))
+    cover_art_image = str(payload.get("cover_art_image", "")).strip()
     cover_image = str(payload.get("cover_image", "")).strip()
     back_cover_image = str(payload.get("back_cover_image", "")).strip()
+    cover_template = str(payload.get("cover_template", "")).strip()
+    cover_variant_count = int(payload.get("cover_variant_count", 0) or 0)
+    cover_generation_provider = str(payload.get("cover_generation_provider", "")).strip()
+    cover_composed = bool(payload.get("cover_composed", False))
     isbn = str(payload.get("isbn", "")).strip()
     year = str(payload.get("year", "")).strip()
     fast = bool(payload.get("fast", False))
@@ -1314,8 +1334,13 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
             "cover_brief": cover_brief,
             "language": language,
             "generate_cover": generate_cover,
+            "cover_art_image": cover_art_image,
             "cover_image": cover_image,
             "back_cover_image": back_cover_image,
+            "cover_template": cover_template,
+            "cover_variant_count": cover_variant_count,
+            "cover_generation_provider": cover_generation_provider,
+            "cover_composed": cover_composed,
             "isbn": isbn,
             "year": year,
             "fast": fast,
@@ -1440,8 +1465,13 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     branding_logo_url = str(payload.get("branding_logo_url") or metadata.get("branding_logo_url") or "").strip()
     cover_brief = str(payload.get("cover_brief") or metadata.get("cover_brief") or "").strip()
     generate_cover = bool(payload.get("generate_cover", metadata.get("generate_cover", True)))
+    cover_art_image = str(payload.get("cover_art_image") or metadata.get("cover_art_image") or "").strip()
     cover_image = str(payload.get("cover_image") or metadata.get("cover_image") or "").strip()
     back_cover_image = str(payload.get("back_cover_image") or metadata.get("back_cover_image") or "").strip()
+    cover_template = str(payload.get("cover_template") or metadata.get("cover_template") or "").strip()
+    cover_variant_count = int(payload.get("cover_variant_count") or metadata.get("cover_variant_count") or 0)
+    cover_generation_provider = str(payload.get("cover_generation_provider") or metadata.get("cover_generation_provider") or "").strip()
+    cover_composed = bool(payload.get("cover_composed", metadata.get("cover_composed", False)))
     isbn = str(payload.get("isbn") or metadata.get("isbn") or "").strip()
     year = str(payload.get("year") or metadata.get("year") or "").strip()
     fast = bool(payload.get("fast", metadata.get("fast", False)))
@@ -1456,8 +1486,13 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             "branding_logo_url": branding_logo_url,
             "cover_brief": cover_brief,
             "generate_cover": generate_cover,
+            "cover_art_image": cover_art_image,
             "cover_image": cover_image,
             "back_cover_image": back_cover_image,
+            "cover_template": cover_template,
+            "cover_variant_count": cover_variant_count,
+            "cover_generation_provider": cover_generation_provider,
+            "cover_composed": cover_composed,
             "isbn": isbn,
             "year": year,
             "fast": fast,
@@ -1933,20 +1968,44 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         save_metadata(
             book_dir,
             {
-                "cover_image": "assets/generated_front_cover.png",
-                "back_cover_image": "assets/generated_back_cover.png",
+                "cover_image": "assets/front_cover_final.png",
+                "back_cover_image": "assets/back_cover_final.png",
+                "cover_template": "local-compositor",
+                "cover_variant_count": 1,
+                "cover_generation_provider": "local-compositor",
+                "cover_composed": True,
             },
         )
         response["book"] = read_book(book_dir)
     if action == "cover_script" and result.returncode == 0:
         assets = collect_assets(book_dir, read_metadata(book_dir))
-        front = next((path for path in assets if path.name.startswith("ai_front_cover")), None)
-        back = next((path for path in assets if path.name.startswith("ai_back_cover")), None)
-        updates: dict[str, str] = {}
+        front = next(
+            (
+                path
+                for path in assets
+                if path.name.startswith("front_cover_final")
+                or path.name.startswith("ai_front_cover")
+                or path.name.startswith("generated_front_cover")
+            ),
+            None,
+        )
+        back = next(
+            (
+                path
+                for path in assets
+                if path.name.startswith("back_cover_final")
+                or path.name.startswith("ai_back_cover")
+                or path.name.startswith("generated_back_cover")
+            ),
+            None,
+        )
+        updates: dict[str, Any] = {}
         if front:
             updates["cover_image"] = f"assets/{front.name}"
         if back:
             updates["back_cover_image"] = f"assets/{back.name}"
+        if front:
+            updates["cover_composed"] = True
         if updates:
             save_metadata(book_dir, updates)
             response["book"] = read_book(book_dir)

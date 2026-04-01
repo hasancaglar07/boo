@@ -1,292 +1,75 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronRight, BookOpen, Image as ImageIcon, Download, Target, User, Sparkles, ArrowRight } from "lucide-react";
+import {
+  CheckCircle2,
+  LogOut,
+  Mail,
+  ShieldAlert,
+  Sparkles,
+  User2,
+} from "lucide-react";
 import { signOut } from "next-auth/react";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { clearClientAuthState, getAccount, getPlan, hasPremiumAccess } from "@/lib/preview-auth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  clearClientAuthState,
+  persistViewer,
+} from "@/lib/preview-auth";
+import { compactNumber } from "@/lib/utils";
 import { useSessionGuard } from "@/lib/use-session-guard";
-import { isBackendUnavailableError, loadBooks, type Book } from "@/lib/dashboard-api";
-import { compactNumber, cn } from "@/lib/utils";
-import { trackEvent } from "@/lib/analytics";
+import { useAuthenticatedViewer } from "@/lib/use-authenticated-viewer";
+import {
+  isBackendUnavailableError,
+  loadBooks,
+  type Book,
+} from "@/lib/dashboard-api";
 
-// ─── Profile Completion Checklist ────────────────────────────────────────────
-
-const PROFILE_STORAGE_KEY = "book_generator_profile_checklist";
-
-type ChecklistItem = {
-  id: string;
-  label: string;
-  description: string;
-  icon: React.ReactNode;
-  completed: boolean;
-  action?: { label: string; href: string };
+const PLAN_LABELS: Record<string, string> = {
+  free: "Free",
+  starter: "Starter",
+  creator: "Yazar",
+  pro: "Stüdyo",
+  premium: "Tek Kitap",
 };
 
-function buildChecklistItems(
-  account: { name: string; email: string; goal: string },
-  books: Book[],
-  plan: string,
-): ChecklistItem[] {
-  const exports = books.reduce((t, b) => t + Number(b.status?.export_count || 0), 0);
-  const hasBook = books.length > 0;
-  const hasExport = exports > 0;
-  const hasPremium = hasPremiumAccess(plan);
-  const hasGoal = !!account.goal && account.goal.trim().length > 0;
-  const hasName = !!account.name && account.name !== "Book Creator";
-
-  return [
-    {
-      id: "account_created",
-      label: "Hesap oluştur",
-      description: "E-posta ile kayıt oldun",
-      icon: <User className="size-4" />,
-      completed: true, // always true if viewing this page
-    },
-    {
-      id: "profile_name",
-      label: "İsim ekle",
-      description: hasName ? account.name : "Profiline gerçek adını ekle",
-      icon: <User className="size-4" />,
-      completed: hasName,
-      action: hasName ? undefined : { label: "Düzenle", href: "/app/settings/profile" },
-    },
-    {
-      id: "set_goal",
-      label: "Hedef belirle",
-      description: hasGoal ? account.goal.slice(0, 60) + (account.goal.length > 60 ? "…" : "") : "Ne yazmak istediğini tarif et",
-      icon: <Target className="size-4" />,
-      completed: hasGoal,
-      action: hasGoal ? undefined : { label: "Hedef Ekle", href: "/app/settings/profile" },
-    },
-    {
-      id: "first_book",
-      label: "İlk kitabı oluştur",
-      description: hasBook ? `${books.length} kitap oluşturdun` : "Wizard ile ilk kitabını yaz",
-      icon: <BookOpen className="size-4" />,
-      completed: hasBook,
-      action: hasBook ? undefined : { label: "Başla", href: "/app/new" },
-    },
-    {
-      id: "cover_generated",
-      label: "Kapak tasarla",
-      description: "AI ile kitap kapağı oluştur",
-      icon: <ImageIcon className="size-4" />,
-      completed: hasBook, // proxy: if they have a book they've seen cover step
-      action: hasBook ? undefined : { label: "Kitap Oluştur", href: "/app/new" },
-    },
-    {
-      id: "first_export",
-      label: "PDF / EPUB dışa aktar",
-      description: hasExport ? `${exports} dışa aktarım yaptın` : "Kitabını indirilebilir formata çevir",
-      icon: <Download className="size-4" />,
-      completed: hasExport,
-      action: hasExport ? undefined : { label: "Kütüphaneye Git", href: "/app/library" },
-    },
-    {
-      id: "upgrade_plan",
-      label: "Premium'a geç",
-      description: hasPremium ? `${plan} planındasın` : "Tam erişim için planını yükselt",
-      icon: <Sparkles className="size-4" />,
-      completed: hasPremium,
-      action: hasPremium ? undefined : { label: "Planları Gör", href: "/pricing" },
-    },
-  ];
-}
-
-function loadStoredCompletions(): Record<string, boolean> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
-  } catch {
-    return {};
+function displayName(name?: string | null, email?: string | null) {
+  const normalizedName = String(name || "").trim();
+  if (normalizedName && normalizedName !== "Book Creator") {
+    return normalizedName;
   }
+  return String(email || "").split("@")[0] || "Book Creator";
 }
-
-function saveStoredCompletions(data: Record<string, boolean>) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data));
-  } catch {
-    // ignore
-  }
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function ProfileProgressBar({ pct }: { pct: number }) {
-  return (
-    <div className="mb-2">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-muted-foreground">Profil tamamlanma</span>
-        <span className="text-xs font-semibold text-foreground">{pct}%</span>
-      </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function EmptyStateMessage({ label, actionLabel, href }: { label: string; actionLabel?: string; href?: string }) {
-  const router = useRouter();
-  return (
-    <span className="text-muted-foreground italic text-sm">
-      {label}
-      {actionLabel && href && (
-        <>
-          {" "}
-          <button
-            onClick={() => router.push(href)}
-            className="text-primary underline-offset-2 hover:underline font-medium not-italic"
-          >
-            {actionLabel}
-          </button>
-        </>
-      )}
-    </span>
-  );
-}
-
-function CelebrationBanner({ onDismiss }: { onDismiss: () => void }) {
-  return (
-    <div className="rounded-[20px] border border-primary/30 bg-gradient-to-br from-primary/15 to-primary/5 px-5 py-5">
-      <div className="flex items-start gap-4">
-        <div className="text-3xl select-none">🎉</div>
-        <div className="flex-1">
-          <p className="text-base font-bold text-foreground">Profilin %100 tamamlandı!</p>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Harika iş! Tüm adımları tamamladın. Artık kitap yazma yolculuğuna tam hazırsın.
-          </p>
-          <div className="mt-3 flex gap-2">
-            <Button size="sm" onClick={() => void 0}>
-              Kitap Yaz
-            </Button>
-            <Button size="sm" variant="ghost" onClick={onDismiss}>
-              Kapat
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NextStepSuggestions({ items }: { items: ChecklistItem[] }) {
-  const router = useRouter();
-  const incomplete = items.filter((i) => !i.completed && i.action);
-  if (incomplete.length === 0) return null;
-
-  const next = incomplete.slice(0, 2);
-
-  return (
-    <div className="mt-6">
-      <h3 className="mb-3 text-sm font-semibold text-foreground">Sıradaki adımlar</h3>
-      <div className="flex flex-col gap-2">
-        {next.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => {
-              trackEvent("profile_next_step_clicked", { step_id: item.id });
-              if (item.action?.href) router.push(item.action.href);
-            }}
-            className="group flex items-center gap-3 rounded-[14px] border border-border/60 bg-background/60 px-4 py-3 text-left transition-all hover:border-primary/30 hover:bg-accent/40"
-          >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              {item.icon}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-foreground">{item.label}</div>
-              <div className="text-xs text-muted-foreground truncate">{item.description}</div>
-            </div>
-            <ArrowRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ProfileChecklist({ items, onToggle }: { items: ChecklistItem[]; onToggle: (id: string) => void }) {
-  const router = useRouter();
-
-  return (
-    <div className="space-y-2">
-      {items.map((item) => (
-        <div
-          key={item.id}
-          className={cn(
-            "group flex w-full items-center gap-3 rounded-[16px] border px-4 py-3 transition-all",
-            item.completed
-              ? "border-primary/20 bg-primary/6"
-              : "border-border/60 bg-background/60",
-          )}
-        >
-          <button
-            onClick={() => onToggle(item.id)}
-            className={cn(
-              "flex size-5 shrink-0 items-center justify-center rounded-full border transition-all",
-              item.completed
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-muted-foreground hover:border-primary/50",
-            )}
-          >
-            {item.completed ? <Check className="size-3" /> : null}
-          </button>
-
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-            {item.icon}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div
-              className={cn(
-                "text-sm font-medium",
-                item.completed ? "text-foreground line-through opacity-50" : "text-foreground",
-              )}
-            >
-              {item.label}
-            </div>
-            <div className="text-xs text-muted-foreground truncate">{item.description}</div>
-          </div>
-
-          {!item.completed && item.action && (
-            <button
-              onClick={() => {
-                trackEvent("profile_next_step_clicked", { step_id: item.id });
-                router.push(item.action!.href);
-              }}
-              className="flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
-            >
-              {item.action.label}
-              <ChevronRight className="size-3" />
-            </button>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function AccountScreen() {
   const ready = useSessionGuard();
   const router = useRouter();
+  const { viewer, setViewer, refreshViewer } = useAuthenticatedViewer(ready);
   const [books, setBooks] = useState<Book[]>([]);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
-  const [manualCompletions, setManualCompletions] = useState<Record<string, boolean>>({});
-  const [celebrationDismissed, setCelebrationDismissed] = useState(false);
-  const [prevPct, setPrevPct] = useState<number | null>(null);
+  const sourceName = viewer?.name && viewer.name !== "Book Creator" ? viewer.name : "";
+  const sourceGoal = viewer?.goal || "";
+  const sourceKey = `${viewer?.id || "guest"}:${sourceName}:${sourceGoal}`;
+  const [draft, setDraft] = useState<{
+    key: string;
+    name: string;
+    goal: string;
+  } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [verificationSending, setVerificationSending] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState("");
+  const activeDraft = draft?.key === sourceKey ? draft : null;
+  const name = activeDraft?.name ?? sourceName;
+  const goal = activeDraft?.goal ?? sourceGoal;
 
   async function refreshBooks() {
     try {
@@ -304,172 +87,359 @@ export function AccountScreen() {
 
   useEffect(() => {
     if (!ready) return;
-    void refreshBooks();
-    setManualCompletions(loadStoredCompletions());
+    let active = true;
+
+    void (async () => {
+      try {
+        const loaded = await loadBooks();
+        if (!active) return;
+        setBooks(loaded);
+        setBackendUnavailable(false);
+      } catch (error) {
+        if (!active) return;
+        if (isBackendUnavailableError(error)) {
+          setBackendUnavailable(true);
+          return;
+        }
+        console.error(error);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
   }, [ready]);
 
-  // Compute derived values unconditionally (before early returns)
-  const account = getAccount();
-  const plan = getPlan();
-  const exports = books.reduce((total, book) => total + Number(book.status?.export_count || 0), 0);
+  function updateDraft(patch: Partial<{ name: string; goal: string }>) {
+    setDraft({
+      key: sourceKey,
+      name: patch.name ?? name,
+      goal: patch.goal ?? goal,
+    });
+  }
 
-  const baseItems = buildChecklistItems(account, books, plan);
-  const items: ChecklistItem[] = baseItems.map((item) => ({
-    ...item,
-    completed: item.completed || !!manualCompletions[item.id],
-  }));
-
-  const completedCount = items.filter((i) => i.completed).length;
-  const pct = Math.round((completedCount / items.length) * 100);
-  const isComplete = completedCount === items.length;
-
-  // Track completion rate when pct changes — must be before early returns
-  useEffect(() => {
-    if (!ready || pct === prevPct) return;
-    setPrevPct(pct);
-    trackEvent("profile_completion_rate", { rate: pct, completed: completedCount, total: items.length });
-    if (isComplete) {
-      trackEvent("profile_celebration_shown", {});
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pct, ready]);
+  const exports = useMemo(
+    () => books.reduce((total, book) => total + Number(book.status?.export_count || 0), 0),
+    [books],
+  );
 
   if (!ready) return null;
+
   if (backendUnavailable) {
     return (
-      <AppFrame current="account" title="Hesap" subtitle="Bağlantı sorunu oluştu." books={[]}>
+      <AppFrame
+        current="account"
+        title="Profil ayarları"
+        subtitle="Bağlantı sorunu oluştu."
+        books={[]}
+        viewer={viewer}
+      >
         <BackendUnavailableState onRetry={() => void refreshBooks()} />
       </AppFrame>
     );
   }
 
-  function handleToggle(id: string) {
-    const item = items.find((i) => i.id === id);
-    if (!item) return;
-    // Only allow manual toggle for non-auto-detected items
-    if (item.completed && !manualCompletions[id]) return; // auto-completed, can't untoggle
-    const newCompletions = { ...manualCompletions, [id]: !manualCompletions[id] };
-    setManualCompletions(newCompletions);
-    saveStoredCompletions(newCompletions);
-    if (!item.completed) {
-      trackEvent("profile_checklist_item_completed", { step_id: id });
+  async function handleSave() {
+    setSaving(true);
+    setSaveMessage("");
+    setSaveError("");
+
+    const response = await fetch("/api/account/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(),
+        goal: goal.trim(),
+      }),
+    }).catch(() => null);
+
+    const payload = response
+      ? ((await response.json().catch(() => null)) as {
+          ok?: boolean;
+          error?: string;
+          viewer?: NonNullable<typeof viewer>;
+        } | null)
+      : null;
+
+    if (!response?.ok || !payload?.viewer) {
+      setSaveError(payload?.error || "Profil güncellenemedi.");
+      setSaving(false);
+      return;
     }
+
+    persistViewer(payload.viewer);
+    setViewer(payload.viewer);
+    setDraft(null);
+    setSaveMessage("Profil ayarları kaydedildi.");
+    setSaving(false);
+  }
+
+  async function handleResendVerification() {
+    setVerificationSending(true);
+    setVerificationMessage("");
+
+    const response = await fetch("/api/auth/verify-email/resend", {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => null);
+
+    const payload = response
+      ? ((await response.json().catch(() => null)) as { error?: string } | null)
+      : null;
+
+    if (!response?.ok) {
+      setVerificationMessage(payload?.error || "Doğrulama maili tekrar gönderilemedi.");
+      setVerificationSending(false);
+      return;
+    }
+
+    setVerificationMessage("Doğrulama maili tekrar gönderildi.");
+    setVerificationSending(false);
+    await refreshViewer();
+  }
+
+  async function handleLogout() {
+    await signOut({ redirect: false, callbackUrl: "/" });
+    clearClientAuthState();
+    router.push("/");
+    router.refresh();
   }
 
   return (
     <AppFrame
       current="account"
-      title="Hesap"
-      subtitle="Profil ve kullanım özeti."
+      title="Profil ayarları"
+      subtitle="Adını, yazım hedefini ve hesap durumunu yönet."
       books={books}
-      primaryAction={{
-        label: "Çıkış yap",
-        onClick: async () => {
-          await signOut({ redirect: false, callbackUrl: "/" });
-          clearClientAuthState();
-          router.push("/");
-        },
-      }}
+      viewer={viewer}
     >
-      {/* ── Stats Row ── */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">Ad</div>
-            {account.name && account.name !== "Book Creator" ? (
-              <div className="mt-3 text-xl font-medium text-foreground">{account.name}</div>
-            ) : (
-              <div className="mt-3">
-                <EmptyStateMessage label="İsim eklenmemiş." actionLabel="Ekle" href="/app/settings/profile" />
+      <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+        <div className="space-y-6">
+          <Card className="overflow-hidden border-primary/15 bg-[radial-gradient(circle_at_top_right,_rgba(188,104,67,0.12),_transparent_52%)]">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
+                  {viewer ? displayName(viewer.name, viewer.email).slice(0, 2).toUpperCase() : "BG"}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm text-muted-foreground">Aktif hesap</div>
+                  <div className="truncate text-2xl font-semibold text-foreground">
+                    {displayName(viewer?.name, viewer?.email)}
+                  </div>
+                  <div className="mt-1 truncate text-sm text-muted-foreground">{viewer?.email}</div>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">E-posta</div>
-            <div className="mt-3 text-xl font-medium text-foreground">{account.email}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">Plan</div>
-            <div className="mt-3 text-xl font-medium text-foreground capitalize">{plan}</div>
-          </CardContent>
-        </Card>
-      </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent>
-            <div className="text-4xl font-semibold text-foreground">{books.length}</div>
-            <div className="mt-2 text-sm text-muted-foreground">
-              {books.length === 0 ? (
-                <EmptyStateMessage label="Henüz kitap yok." actionLabel="İlk kitabını oluştur →" href="/app/new" />
-              ) : (
-                "Toplam kitap"
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <div className="text-4xl font-semibold text-foreground">{compactNumber(exports)}</div>
-            <div className="mt-2 text-sm text-muted-foreground">
-              {exports === 0 ? (
-                <EmptyStateMessage label="Henüz dışa aktarım yok." actionLabel="PDF oluştur →" href="/app/library" />
-              ) : (
-                "Toplam çıktı"
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">Hedef</div>
-            {account.goal ? (
-              <div className="mt-3 text-base leading-7 text-foreground">{account.goal}</div>
-            ) : (
-              <div className="mt-3">
-                <EmptyStateMessage label="Hedef belirlenmemiş." actionLabel="Hedef ekle →" href="/app/settings/profile" />
+              <div className="mt-5 flex flex-wrap gap-2">
+                <span className="rounded-full border border-border/70 bg-card/75 px-3 py-1 text-xs font-medium text-foreground">
+                  Plan: {PLAN_LABELS[viewer?.planId || "free"] || "Free"}
+                </span>
+                <span
+                  className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                    viewer?.emailVerified
+                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                      : "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                  }`}
+                >
+                  {viewer?.emailVerified ? "E-posta doğrulandı" : "Doğrulama bekleniyor"}
+                </span>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
 
-      {/* ── Profile Completion Section ── */}
-      <div className="mt-8">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground">Profil Tamamlama</h2>
-          <span className="rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
-            {completedCount}/{items.length} tamamlandı
-          </span>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+            <Card>
+              <CardContent className="p-5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Kitaplar
+                </div>
+                <div className="mt-3 text-4xl font-bold text-foreground">{books.length}</div>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  Bu hesapla oluşturulmuş toplam kitap.
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Çıktılar
+                </div>
+                <div className="mt-3 text-4xl font-bold text-foreground">{compactNumber(exports)}</div>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  PDF / EPUB ve diğer export toplamı.
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {!viewer?.emailVerified ? (
+            <Card className="border-amber-500/20 bg-amber-500/5">
+              <CardContent className="p-5">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                    <ShieldAlert className="size-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-foreground">E-posta doğrulaması gerekli</div>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      Ödeme, tam erişim ve export akışı için hesabını doğrula.
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void handleResendVerification()}
+                        disabled={verificationSending}
+                      >
+                        {verificationSending ? "Gönderiliyor..." : "Doğrulama Mailini Gönder"}
+                      </Button>
+                    </div>
+                    {verificationMessage ? (
+                      <p className="mt-3 text-xs font-medium text-primary">{verificationMessage}</p>
+                    ) : null}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-emerald-500/20 bg-emerald-500/5">
+              <CardContent className="p-5">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle2 className="size-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">E-posta doğrulandı</div>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      Hesabın ödeme, export ve tam erişim akışları için hazır.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        <ProfileProgressBar pct={pct} />
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <User2 className="size-4" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Profil bilgileri</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Kütüphane karşılama alanı ve wizard varsayımları bu bilgilerden beslenir.
+                  </p>
+                </div>
+              </div>
 
-        {/* Celebration */}
-        {isComplete && !celebrationDismissed ? (
-          <div className="mt-4 mb-4">
-            <CelebrationBanner onDismiss={() => setCelebrationDismissed(true)} />
-          </div>
-        ) : (
-          <div className="mb-4 mt-2 rounded-[12px] border border-border/50 bg-background/40 px-3 py-2">
-            <p className="text-xs text-muted-foreground">
-              {completedCount === 0
-                ? "Profil tamamlamaya başlamak için aşağıdaki adımları takip et."
-                : completedCount < 4
-                ? `İyi gidiyorsun! ${items.length - completedCount} adım kaldı.`
-                : `Neredeyse bitti! Son ${items.length - completedCount} adımı tamamla.`}
-            </p>
-          </div>
-        )}
+              <div className="mt-6 grid gap-5 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="profile-name">Görünen ad</Label>
+                  <Input
+                    id="profile-name"
+                    value={name}
+                    onChange={(event) => updateDraft({ name: event.target.value })}
+                    placeholder="Adını gir"
+                    autoComplete="name"
+                  />
+                </div>
 
-        <ProfileChecklist items={items} onToggle={handleToggle} />
+                <div>
+                  <Label htmlFor="profile-email">E-posta</Label>
+                  <div className="flex h-14 items-center rounded-[20px] border border-input bg-card px-5 text-[15px] text-muted-foreground shadow-[0_1px_0_rgba(255,255,255,0.35)_inset]">
+                    <Mail className="mr-2 size-4 text-muted-foreground" />
+                    {viewer?.email || "—"}
+                  </div>
+                </div>
+              </div>
 
-        {/* Next Steps */}
-        {!isComplete && <NextStepSuggestions items={items} />}
+              <div className="mt-5">
+                <Label htmlFor="profile-goal">Yazım hedefi</Label>
+                <Textarea
+                  id="profile-goal"
+                  value={goal}
+                  onChange={(event) => updateDraft({ goal: event.target.value })}
+                  placeholder="Örnek: B2B ekipler için pratik bir prompting rehberi üretmek istiyorum."
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Bu alan hero mesajlarını ve ilk wizard varsayımlarını netleştirir.
+                </p>
+              </div>
+
+              {saveError ? <p className="mt-4 text-sm text-destructive">{saveError}</p> : null}
+              {saveMessage ? <p className="mt-4 text-sm text-primary">{saveMessage}</p> : null}
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button onClick={() => void handleSave()} isLoading={saving}>
+                  Kaydet
+                </Button>
+                {!viewer?.emailVerified ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => void handleResendVerification()}
+                    disabled={verificationSending}
+                  >
+                    {verificationSending ? "Gönderiliyor..." : "Doğrulama Mailini Tekrar Gönder"}
+                  </Button>
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Sparkles className="size-4" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Hesap özeti</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Bu alanlar salt-okunurdur; plan ve email değiştirme bu iterasyonun dışında.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                <div className="rounded-[20px] border border-border/70 bg-background/65 p-4">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Plan
+                  </div>
+                  <div className="mt-2 text-lg font-semibold text-foreground">
+                    {PLAN_LABELS[viewer?.planId || "free"] || "Free"}
+                  </div>
+                </div>
+                <div className="rounded-[20px] border border-border/70 bg-background/65 p-4">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Doğrulama
+                  </div>
+                  <div className="mt-2 text-lg font-semibold text-foreground">
+                    {viewer?.emailVerified ? "Tamam" : "Bekleniyor"}
+                  </div>
+                </div>
+                <div className="rounded-[20px] border border-border/70 bg-background/65 p-4">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Hedef
+                  </div>
+                  <div className="mt-2 text-sm font-medium leading-6 text-foreground">
+                    {viewer?.goal?.trim() ? viewer.goal : "Henüz hedef eklenmedi."}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 border-t border-border/60 pt-5">
+                <Button variant="ghost" onClick={() => void handleLogout()}>
+                  <LogOut className="mr-2 size-4" />
+                  Çıkış yap
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AppFrame>
   );

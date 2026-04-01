@@ -7,9 +7,13 @@ import json
 import math
 import re
 import shutil
+import struct
+import subprocess
+import sys
 import textwrap
 import unicodedata
 import zipfile
+import zlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,6 +23,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "data" / "showcase-portfolio.json"
 BOOK_OUTPUTS_DIR = ROOT / "book_outputs"
+COVER_RENDER_SCRIPT = ROOT / "scripts" / "render_showcase_cover.mjs"
+AI_COVER_BATCH_SCRIPT = ROOT / "scripts" / "generate_showcase_ai_covers.py"
 SUPPORTED_LANGUAGES = {
     "English",
     "Turkish",
@@ -34,6 +40,172 @@ SUPPORTED_LANGUAGES = {
 RTL_LANGUAGES = {"Arabic"}
 HERO_EXPORT_FORMATS = {"html", "epub", "pdf"}
 PREVIEW_EXPORT_FORMATS = {"html"}
+INTRODUCTION_HEADINGS = {
+    "English": "Introduction",
+    "Turkish": "Giriş",
+    "Spanish": "Introducción",
+    "German": "Einführung",
+    "French": "Introduction",
+    "Portuguese": "Introdução",
+    "Italian": "Introduzione",
+    "Dutch": "Inleiding",
+    "Arabic": "مقدمة",
+    "Japanese": "はじめに",
+}
+READER_OUTPUT_REFERENCES = {
+    "English": "a framework, checklist, or decision rule",
+    "Turkish": "bir çerçeve, kontrol listesi ya da karar cümlesi",
+    "Spanish": "un marco, una lista o una regla de decisión",
+    "German": "ein Gerüst, eine Checkliste oder eine Entscheidungsregel",
+    "French": "un cadre, une liste ou une règle de décision",
+    "Portuguese": "um quadro, uma lista ou uma regra de decisão",
+    "Italian": "una struttura, una checklist o una regola decisionale",
+    "Dutch": "een kader, checklist of beslisregel",
+    "Arabic": "إطاراً عملياً أو قائمة تحقق أو قاعدة قرار",
+    "Japanese": "フレーム、チェックリスト、または判断基準",
+}
+CHAPTER_BODY_STRUCTURES = {
+    "English": [
+        [
+            "This chapter turns {primary_focus} into a working advantage inside a book about {topic}. For {audience}, trust usually grows when one move becomes easier to repeat. {tone_signal}",
+            "The hidden risk here is neglecting {secondary_focus} while trying to sound complete. That creates pages that feel informed but do not move the reader closer to {promise}.",
+            "The practical aim is simple: leave this section with {reader_output}. If the idea can be reused in a draft, workshop, or client conversation, the chapter is earning its place.",
+            "{title} therefore works as leverage, not decoration. Once the logic is easier to explain and demonstrate, the rest of the manuscript feels tighter and more commercially convincing.",
+        ],
+        [
+            "Readers rarely fail from lack of effort first; they fail from sequence. {title} matters because it organizes {primary_focus} before the draft gets heavier than it needs to be.",
+            "In books about {topic}, clarity appears when {audience} stop polishing too early and inspect {secondary_focus} with more honesty. That is where weak explanation turns into durable authority.",
+            "A strong pass through this chapter produces {reader_output} and a clearer sense of why the promise works. The reader should feel less noise, more control, and a more obvious next move.",
+            "That is why this section keeps returning to transferability. If the method is teachable here, the book starts behaving like an asset that supports demand instead of merely describing expertise.",
+        ],
+    ],
+    "Turkish": [
+        [
+            "Bu bölüm, {topic} bağlamında {primary_focus} etrafında gerçek bir avantaj kurar. {audience} için güven çoğu zaman tek bir hamlenin tekrar edilebilir hale gelmesiyle büyür. {tone_signal}",
+            "Buradaki gizli risk, metni eksiksiz göstermek isterken {secondary_focus} geri plana itmektir. O zaman sayfalar bilgili görünür ama okuru {promise} hedefine yaklaştırmaz.",
+            "Bu kısmın pratik hedefi nettir: okurun elinde {reader_output} kalmalıdır. Fikir taslağa, atölyeye ya da müşteri konuşmasına taşınabiliyorsa bölüm görevini yapıyor demektir.",
+            "{title} bu yüzden süs değil kaldıraç görevi görür. Mantık daha kolay anlatılır ve gösterilir hale geldiğinde kitabın geri kalanı da daha sıkı ve daha ikna edici görünür.",
+        ],
+        [
+            "Okur çoğu zaman emek eksikliğinden değil, sıra hatasından zorlanır. {title}, {primary_focus} unsurunu taslak gereksiz ağırlık kazanmadan yerli yerine koyduğu için önemlidir.",
+            "{topic} gibi kitaplarda netlik, {audience} erken cilalamayı bırakıp {secondary_focus} katmanına daha dürüst baktığında belirginleşir. Zayıf anlatım burada kalıcı otoriteye dönüşür.",
+            "Bu bölümden iyi bir geçiş, okurun elinde {reader_output} ve vaadin neden çalıştığına dair daha berrak bir kavrayış bırakır. Gürültü azalmalı, kontrol hissi artmalı, sonraki adım görünürleşmelidir.",
+            "Bu nedenle bu kısım sürekli aktarılabilirliğe döner. Metot burada öğretilebilir hale gelirse kitap yalnızca uzmanlığı anlatan değil, talebi destekleyen bir varlığa dönüşmeye başlar.",
+        ],
+    ],
+    "Spanish": [
+        [
+            "Este capítulo convierte {primary_focus} en una ventaja utilizable dentro de {topic}. Para {audience}, la confianza suele crecer cuando un movimiento se vuelve fácil de repetir. {tone_signal}",
+            "El riesgo oculto aquí es descuidar {secondary_focus} por intentar sonar completo. Así nacen páginas informadas que no acercan al lector a {promise}.",
+            "La meta práctica es simple: salir de esta sección con {reader_output}. Si la idea puede reutilizarse en un borrador, un taller o una conversación comercial, el capítulo está cumpliendo.",
+            "{title} funciona entonces como palanca y no como adorno. Cuando la lógica se vuelve más fácil de explicar y demostrar, el resto del manuscrito gana tensión y credibilidad comercial.",
+        ],
+        [
+            "Los lectores rara vez fallan primero por falta de esfuerzo; fallan por secuencia. {title} importa porque organiza {primary_focus} antes de que el borrador se vuelva más pesado de lo necesario.",
+            "En libros sobre {topic}, la claridad aparece cuando {audience} deja de pulir demasiado pronto y examina {secondary_focus} con más honestidad. Ahí la explicación débil se vuelve autoridad duradera.",
+            "Una buena pasada por este capítulo deja {reader_output} y una comprensión más clara de por qué funciona la promesa. El lector debería sentir menos ruido, más control y un siguiente paso más visible.",
+            "Por eso esta sección vuelve una y otra vez a la transferibilidad. Si el método se puede enseñar aquí, el libro empieza a comportarse como un activo que impulsa demanda y no solo como una descripción de experiencia.",
+        ],
+    ],
+    "German": [
+        [
+            "Dieses Kapitel verwandelt {primary_focus} innerhalb von {topic} in einen nutzbaren Vorteil. Für {audience} wächst Vertrauen oft dann, wenn ein Schritt leichter wiederholbar wird. {tone_signal}",
+            "Das verdeckte Risiko besteht hier darin, {secondary_focus} zu vernachlässigen, nur um vollständig zu wirken. So entstehen Seiten, die informiert klingen, den Leser aber nicht näher an {promise} bringen.",
+            "Das praktische Ziel ist klar: Am Ende dieses Abschnitts sollte {reader_output} vorliegen. Wenn die Idee in einem Entwurf, Workshop oder Kundengespräch weiterverwendet werden kann, erfüllt das Kapitel seine Aufgabe.",
+            "{title} wirkt deshalb als Hebel und nicht als Schmuck. Sobald die Logik leichter zu erklären und zu zeigen ist, wirkt der Rest des Manuskripts straffer und geschäftlich überzeugender.",
+        ],
+        [
+            "Leser scheitern selten zuerst an fehlendem Einsatz, sondern an der Reihenfolge. {title} ist wichtig, weil es {primary_focus} sortiert, bevor der Entwurf schwerer wird als nötig.",
+            "In Büchern über {topic} entsteht Klarheit dann, wenn {audience} zu frühes Polieren stoppt und {secondary_focus} ehrlicher prüft. Genau dort wird schwache Erklärung zu belastbarer Autorität.",
+            "Ein starker Durchgang durch dieses Kapitel hinterlässt {reader_output} und ein klareres Gefühl dafür, warum das Versprechen trägt. Weniger Rauschen, mehr Kontrolle und ein sichtbarer nächster Schritt sind das Ziel.",
+            "Darum kehrt dieser Teil immer wieder zur Übertragbarkeit zurück. Wenn die Methode hier lehrbar wird, beginnt das Buch wie ein Asset zu wirken, das Nachfrage unterstützt, statt Erfahrung nur zu beschreiben.",
+        ],
+    ],
+    "French": [
+        [
+            "Ce chapitre transforme {primary_focus} en avantage exploitable à l'intérieur de {topic}. Pour {audience}, la confiance grandit souvent lorsqu'un mouvement devient simple à répéter. {tone_signal}",
+            "Le risque caché ici consiste à négliger {secondary_focus} au moment même où l'on veut paraître complet. On obtient alors des pages informées qui ne rapprochent pas vraiment le lecteur de {promise}.",
+            "L'objectif pratique est net: quitter cette section avec {reader_output}. Si l'idée peut être réutilisée dans un brouillon, un atelier ou une conversation commerciale, le chapitre joue son rôle.",
+            "{title} agit donc comme un levier et non comme un ornement. Quand la logique devient plus facile à expliquer et à démontrer, le reste du manuscrit gagne en tenue et en force commerciale.",
+        ],
+        [
+            "Les lecteurs échouent rarement d'abord par manque d'effort; ils échouent par ordre. {title} compte parce qu'il organise {primary_focus} avant que le manuscrit ne devienne plus lourd que nécessaire.",
+            "Dans les livres sur {topic}, la clarté apparaît quand {audience} cesse de polir trop tôt et observe {secondary_focus} avec davantage de franchise. C'est là qu'une explication faible devient une autorité durable.",
+            "Une bonne traversée de ce chapitre laisse {reader_output} ainsi qu'une compréhension plus précise de la promesse. Le lecteur doit sentir moins de bruit, davantage de maîtrise et une prochaine action plus visible.",
+            "C'est pour cela que cette partie revient sans cesse à la transférabilité. Si la méthode devient transmissible ici, le livre commence à agir comme un actif qui nourrit la demande au lieu de simplement raconter une expertise.",
+        ],
+    ],
+    "Portuguese": [
+        [
+            "Este capítulo transforma {primary_focus} em uma vantagem utilizável dentro de {topic}. Para {audience}, a confiança costuma crescer quando um movimento fica fácil de repetir. {tone_signal}",
+            "O risco escondido aqui é abandonar {secondary_focus} no momento em que se tenta soar completo. Assim surgem páginas que parecem informadas, mas não aproximam o leitor de {promise}.",
+            "O objetivo prático é claro: sair desta seção com {reader_output}. Se a ideia puder ser reutilizada em um rascunho, workshop ou conversa comercial, o capítulo está cumprindo seu papel.",
+            "{title} funciona, então, como alavanca e não como enfeite. Quando a lógica fica mais fácil de explicar e demonstrar, o restante do manuscrito ganha firmeza e força comercial.",
+        ],
+        [
+            "O leitor raramente trava primeiro por falta de esforço; trava por sequência. {title} importa porque organiza {primary_focus} antes que o rascunho fique mais pesado do que deveria.",
+            "Em livros sobre {topic}, a clareza aparece quando {audience} para de polir cedo demais e encara {secondary_focus} com mais honestidade. É aí que uma explicação fraca vira autoridade durável.",
+            "Uma boa passagem por este capítulo deixa {reader_output} e uma percepção mais nítida de por que a promessa funciona. O leitor deve sentir menos ruído, mais controle e um próximo passo mais visível.",
+            "Por isso esta seção volta sempre à ideia de transferência. Se o método se torna ensinável aqui, o livro começa a agir como um ativo que apoia demanda em vez de apenas descrever experiência.",
+        ],
+    ],
+    "Italian": [
+        [
+            "Questo capitolo trasforma {primary_focus} in un vantaggio utilizzabile dentro {topic}. Per {audience}, la fiducia cresce spesso quando un passaggio diventa facile da ripetere. {tone_signal}",
+            "Il rischio nascosto qui è trascurare {secondary_focus} proprio mentre si prova a sembrare completi. Così nascono pagine informate che però non avvicinano il lettore a {promise}.",
+            "L'obiettivo pratico è chiaro: uscire da questa sezione con {reader_output}. Se l'idea può essere riutilizzata in una bozza, in un workshop o in una conversazione commerciale, il capitolo sta funzionando.",
+            "{title} agisce quindi come leva e non come ornamento. Quando la logica diventa più facile da spiegare e dimostrare, il resto del manoscritto acquista compattezza e forza commerciale.",
+        ],
+        [
+            "I lettori raramente falliscono prima per mancanza di impegno; falliscono per sequenza. {title} conta perché ordina {primary_focus} prima che la bozza diventi più pesante del necessario.",
+            "Nei libri su {topic}, la chiarezza emerge quando {audience} smette di rifinire troppo presto e guarda {secondary_focus} con più onestà. È lì che una spiegazione debole diventa autorevolezza durevole.",
+            "Una buona lettura di questo capitolo lascia {reader_output} e una comprensione più nitida del perché la promessa funzioni. Il lettore dovrebbe sentire meno rumore, più controllo e un passo successivo più evidente.",
+            "Per questo la sezione torna continuamente alla trasferibilità. Se qui il metodo diventa insegnabile, il libro inizia a comportarsi come un asset che sostiene la domanda invece di limitarsi a descrivere competenza.",
+        ],
+    ],
+    "Dutch": [
+        [
+            "Dit hoofdstuk maakt van {primary_focus} een bruikbaar voordeel binnen {topic}. Voor {audience} groeit vertrouwen vaak wanneer één beweging gemakkelijker te herhalen wordt. {tone_signal}",
+            "Het verborgen risico hier is dat {secondary_focus} wordt verwaarloosd terwijl de tekst volledig probeert te klinken. Dan ontstaan pagina's die slim ogen, maar de lezer niet dichter bij {promise} brengen.",
+            "Het praktische doel is helder: deze sectie verlaten met {reader_output}. Als het idee bruikbaar is in een concept, workshop of klantgesprek, doet het hoofdstuk zijn werk.",
+            "{title} werkt daarom als hefboom en niet als versiering. Zodra de logica eenvoudiger uit te leggen en te tonen is, voelt de rest van het manuscript strakker en commercieel overtuigender.",
+        ],
+        [
+            "Lezers lopen zelden eerst vast door gebrek aan inzet; ze lopen vast op volgorde. {title} is belangrijk omdat het {primary_focus} ordent voordat het concept zwaarder wordt dan nodig.",
+            "In boeken over {topic} verschijnt helderheid wanneer {audience} te vroeg polijsten loslaat en {secondary_focus} eerlijker onderzoekt. Daar verandert zwakke uitleg in blijvend gezag.",
+            "Een sterke doorgang door dit hoofdstuk laat {reader_output} achter en een scherper gevoel voor waarom de belofte werkt. Minder ruis, meer grip en een zichtbaarder volgende stap zijn het doel.",
+            "Daarom keert dit deel steeds terug naar overdraagbaarheid. Als de methode hier leerbaar wordt, begint het boek zich te gedragen als een asset dat vraag ondersteunt in plaats van alleen expertise te beschrijven.",
+        ],
+    ],
+    "Arabic": [
+        [
+            "يحوّل هذا الفصل {primary_focus} إلى أفضلية عملية داخل {topic}. بالنسبة إلى {audience}، تنمو الثقة غالباً حين يصبح أحد التحركات أسهل في التكرار. {tone_signal}",
+            "الخطر الخفي هنا هو إهمال {secondary_focus} أثناء محاولة الظهور بصورة مكتملة. عندها تبدو الصفحات مثقفة، لكنها لا تقرّب القارئ من {promise}.",
+            "الهدف العملي واضح: يجب أن يخرج القارئ من هذا الجزء ومعه {reader_output}. إذا أمكن إعادة استخدام الفكرة في المسودة أو الورشة أو محادثة بيع، فهذا يعني أن الفصل يؤدي وظيفته.",
+            "لهذا يعمل {title} كنقطة رافعة لا كزينة. وعندما تصبح الفكرة أسهل في الشرح والإظهار، يبدو بقية المخطوط أكثر إحكاماً وأكثر إقناعاً من الناحية التجارية.",
+        ],
+        [
+            "نادراً ما يتعثر القارئ أولاً بسبب نقص الجهد؛ بل يتعثر بسبب الترتيب. تبرز أهمية {title} لأنه ينظم {primary_focus} قبل أن تصبح المسودة أثقل مما ينبغي.",
+            "في الكتب التي تدور حول {topic}، يظهر الوضوح عندما يتوقف {audience} عن التلميع المبكر وينظرون إلى {secondary_focus} بصدق أكبر. هنا بالذات تتحول الشروحات الضعيفة إلى سلطة قابلة للاستمرار.",
+            "المرور الجيد على هذا الفصل يجب أن يترك لدى القارئ {reader_output} وفهماً أوضح لسبب نجاح الوعد. المطلوب ضجيج أقل، وتحكم أكبر، وخطوة تالية أكثر ظهوراً.",
+            "ولهذا يعود هذا الجزء دائماً إلى قابلية النقل والتعليم. فإذا أصبحت الطريقة قابلة للتعليم هنا، بدأ الكتاب يتصرف كأصل يدعم الطلب بدلاً من مجرد وصف الخبرة.",
+        ],
+    ],
+    "Japanese": [
+        [
+            "この章は、{primary_focus} を {topic} の中で使える強みに変えるための章です。{audience} にとって信頼は、一つの動きが繰り返しやすくなったときに大きく育ちます。{tone_signal}",
+            "ここで見落とされやすいのは、全体を整えようとするあまり {secondary_focus} を後回しにすることです。すると情報量はあっても、読者を {promise} に近づけないページになります。",
+            "実務的な目標は明快です。この節を読み終える頃には、読者の手元に {reader_output} が残っていること。草稿、ワークショップ、商談で再利用できるなら、この章は役割を果たしています。",
+            "だからこそ {title} は飾りではなくレバレッジとして機能します。論理が説明しやすく、見せやすくなるほど、原稿全体は引き締まり、商業的な説得力も高まります。",
+        ],
+        [
+            "読者が最初につまずく理由は、努力不足より順序の乱れであることが少なくありません。{title} が重要なのは、原稿が不必要に重くなる前に {primary_focus} を整理できるからです。",
+            "{topic} を扱う本では、{audience} が早すぎる磨き込みをやめ、{secondary_focus} をもう一段正直に見直したときに明瞭さが生まれます。弱い説明が持続する権威に変わるのはその地点です。",
+            "この章をしっかり通過すると、読者の手元には {reader_output} と、なぜ約束が機能するのかという理解が残ります。ノイズが減り、コントロール感が増し、次の一手が見えやすくなるべきです。",
+            "そのためこのパートは何度も再利用性へ戻ってきます。ここで方法が教えられる形になれば、本は知識を述べるだけでなく、需要を支える資産として振る舞い始めます。",
+        ],
+    ],
+}
 
 
 @dataclass
@@ -66,6 +238,12 @@ class BookEntry:
     accentColor: str
     textAccent: str
     year: str
+    coverPrompt: str = ""
+    openingNote: str = ""
+    readerHook: str = ""
+    coverTemplateHint: str = ""
+    titleTone: str = ""
+    coverHierarchy: str = ""
 
 
 LANGUAGE_PACKS: dict[str, dict[str, Any]] = {
@@ -1043,7 +1221,7 @@ def ensure(condition: bool, message: str) -> None:
 
 def load_manifest() -> list[BookEntry]:
     raw = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    entries = [BookEntry(**item) for item in raw]
+    entries = [BookEntry(**normalize_manifest_item(item)) for item in raw]
     ensure(len(entries) == 30, "Manifest must contain exactly 30 entries.")
     slugs = {entry.slug for entry in entries}
     ensure(len(slugs) == len(entries), "Manifest has duplicate slugs.")
@@ -1056,6 +1234,51 @@ def load_manifest() -> list[BookEntry]:
         ensure(10 <= entry.chapterCount <= 60, f"Invalid chapter count for {entry.slug}")
         ensure(entry.exportTarget in {"hero", "preview"}, f"Invalid export target for {entry.slug}")
     return sorted(entries, key=lambda item: item.heroRank)
+
+
+def derive_cover_template_hint(item: dict[str, Any]) -> str:
+    category = str(item.get("category") or "").lower()
+    tone = str(item.get("toneArchetype") or "").lower()
+    if "story" in tone:
+        return "narrative-story"
+    if "calm executive" in tone or "executive" in tone:
+        return "executive-minimal"
+    if "education" in category:
+        return "education-workbook"
+    if "personal" in category:
+        return "personal-growth"
+    if "expertise" in category or "uzman" in category:
+        return "expertise-authority"
+    return "business-playbook"
+
+
+def derive_title_tone(item: dict[str, Any]) -> str:
+    language = str(item.get("languageCode") or "")
+    if language == "Japanese":
+        return "cjk"
+    if language == "Arabic":
+        return "rtl"
+    tone = str(item.get("toneArchetype") or "").lower()
+    if "operator" in tone or "systems" in tone or "executive" in tone:
+        return "sharp"
+    return "classic"
+
+
+def derive_cover_hierarchy(item: dict[str, Any]) -> str:
+    tone = str(item.get("toneArchetype") or "").lower()
+    if "story" in tone:
+        return "title-subtitle-emotive"
+    if "executive" in tone:
+        return "title-author-minimal"
+    return "title-first"
+
+
+def normalize_manifest_item(item: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(item)
+    normalized.setdefault("coverTemplateHint", derive_cover_template_hint(normalized))
+    normalized.setdefault("titleTone", derive_title_tone(normalized))
+    normalized.setdefault("coverHierarchy", derive_cover_hierarchy(normalized))
+    return normalized
 
 
 def phase_for(index: int, total: int) -> str:
@@ -1108,21 +1331,64 @@ def tone_signal(entry: BookEntry) -> str:
     return str(LANGUAGE_PACKS[entry.languageCode]["toneSignals"][entry.toneArchetype])
 
 
+def focus_for(entry: BookEntry, phase: str, index: int) -> str:
+    values = list(LANGUAGE_PACKS[entry.languageCode][phase])
+    return values[index % len(values)]
+
+
+def next_phase(phase: str) -> str:
+    order = ["foundation", "system", "execution", "scale", "closing"]
+    idx = order.index(phase)
+    return order[min(idx + 1, len(order) - 1)]
+
+
 def chapter_body(entry: BookEntry, number: int, title: str) -> str:
-    pack = LANGUAGE_PACKS[entry.languageCode]
-    paragraphs = []
-    for template in pack["paragraphs"]:
-        paragraphs.append(
-            template.format(
-                title=title,
-                title_lower=title[:1].lower() + title[1:] if title else title,
-                topic=entry.topic,
-                audience=entry.audience,
-                promise=entry.promise,
-                tone_signal=tone_signal(entry),
-            ).strip()
-        )
-    return "\n\n".join(paragraphs)
+    phase = phase_for(number, entry.chapterCount)
+    current_focus = focus_for(entry, phase, number - 1)
+    follow_focus = focus_for(entry, next_phase(phase), number + 2)
+    structure_set = CHAPTER_BODY_STRUCTURES[entry.languageCode]
+    structure = structure_set[(number + entry.heroRank) % len(structure_set)]
+    variables = {
+        "title": title,
+        "title_lower": title[:1].lower() + title[1:] if title else title,
+        "topic": entry.topic,
+        "audience": entry.audience,
+        "promise": entry.promise,
+        "tone_signal": tone_signal(entry),
+        "primary_focus": current_focus,
+        "secondary_focus": follow_focus,
+        "reader_output": READER_OUTPUT_REFERENCES[entry.languageCode],
+    }
+    return "\n\n".join(template.format(**variables).strip() for template in structure)
+
+
+def introduction_markdown(entry: BookEntry) -> str:
+    heading = INTRODUCTION_HEADINGS[entry.languageCode]
+    paragraphs = [entry.openingNote.strip(), entry.summary.strip(), entry.readerHook.strip()]
+    cleaned = [paragraph for paragraph in paragraphs if paragraph]
+    return f"# {heading}\n\n" + "\n\n".join(cleaned) + "\n"
+
+
+def render_raster_cover(entry: BookEntry, output_path: Path) -> None:
+    payload = {
+        "slug": entry.slug,
+        "category": entry.category,
+        "type": entry.type,
+        "topic": entry.topic,
+        "brandingMark": entry.brandingMark,
+        "coverBrief": entry.coverBrief,
+        "coverPrompt": entry.coverPrompt,
+        "coverGradient": entry.coverGradient,
+        "accentColor": entry.accentColor,
+        "textAccent": entry.textAccent,
+    }
+    subprocess.run(
+        ["node", str(COVER_RENDER_SCRIPT), str(output_path)],
+        input=json.dumps(payload, ensure_ascii=False),
+        text=True,
+        check=True,
+        cwd=ROOT,
+    )
 
 
 def gradient_colors(gradient: str) -> tuple[str, str, str]:
@@ -1227,10 +1493,18 @@ def dashboard_meta(entry: BookEntry, timestamp: str) -> dict[str, Any]:
         "branding_mark": entry.brandingMark,
         "branding_logo_url": "assets/publisher_logo.svg",
         "cover_brief": entry.coverBrief,
+        "cover_prompt": entry.coverPrompt,
+        "opening_note": entry.openingNote,
+        "reader_hook": entry.readerHook,
         "language": entry.languageCode,
         "generate_cover": True,
-        "cover_image": "assets/showcase_front_cover.svg",
-        "back_cover_image": "assets/showcase_back_cover.svg",
+        "cover_art_image": "",
+        "cover_image": "assets/front_cover_final.png",
+        "back_cover_image": "assets/back_cover_final.svg",
+        "cover_template": entry.coverTemplateHint,
+        "cover_variant_count": 0,
+        "cover_generation_provider": "showcase-generator",
+        "cover_composed": True,
         "isbn": "",
         "year": entry.year,
         "fast": False,
@@ -1316,7 +1590,7 @@ def html_export(entry: BookEntry, chapters: list[dict[str, str]]) -> str:
   <body>
     <header class="hero">
       <div class="wrap hero-grid">
-        <div class="cover"><img src="../assets/showcase_front_cover.svg" alt="{html.escape(entry.title)}" /></div>
+        <div class="cover"><img src="../assets/front_cover_final.png" alt="{html.escape(entry.title)}" /></div>
         <div>
           <div class="eyebrow">{html.escape(entry.category)} · {html.escape(entry.languageLabel)}</div>
           <h1>{html.escape(entry.title)}</h1>
@@ -1341,8 +1615,10 @@ def html_export(entry: BookEntry, chapters: list[dict[str, str]]) -> str:
                 <div>{html.escape(entry.author)}</div>
               </div>
             </div>
+            <p><strong>{html.escape(entry.openingNote)}</strong></p>
             <p>{html.escape(entry.summary)}</p>
             <p>{html.escape(entry.authorBio)}</p>
+            <p>{html.escape(entry.readerHook)}</p>
             <p><strong>{html.escape(entry.coverBrief)}</strong></p>
           </article>
           <aside class="card">
@@ -1374,9 +1650,12 @@ def epub_text_page(title: str, body_html: str, direction: str) -> str:
 """
 
 
-def epub_export(entry: BookEntry, export_dir: Path, chapters: list[dict[str, str]]) -> None:
+def epub_export(entry: BookEntry, book_dir: Path, export_dir: Path, chapters: list[dict[str, str]]) -> None:
     epub_path = export_dir / f"{entry.slug}.epub"
     direction = "rtl" if entry.languageCode in RTL_LANGUAGES else "ltr"
+    cover_path = book_dir / "assets" / "front_cover_final.png"
+    if not cover_path.exists():
+        cover_path = book_dir / "assets" / "showcase_front_cover.png"
     with zipfile.ZipFile(epub_path, "w") as archive:
         archive.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
         archive.writestr(
@@ -1400,7 +1679,7 @@ h1, h2 { line-height: 1.2; }
 .cover img { width: 100%; max-width: 480px; display: block; margin: 0 auto 24px; }
 """.strip(),
         )
-        archive.writestr("OEBPS/cover.svg", front_cover_svg(entry))
+        archive.writestr("OEBPS/cover.png", cover_path.read_bytes())
         archive.writestr("OEBPS/logo.svg", entry.brandingLogoSvg)
         archive.writestr(
             "OEBPS/nav.xhtml",
@@ -1421,7 +1700,7 @@ h1, h2 { line-height: 1.2; }
                 entry.title,
                 f"""
                 <section class="cover">
-                  <img src="cover.svg" alt="{html.escape(entry.title)}" />
+                  <img src="cover.png" alt="{html.escape(entry.title)}" />
                   <div class="eyebrow">{html.escape(entry.category)}</div>
                   <h1>{html.escape(entry.title)}</h1>
                   <p>{html.escape(entry.subtitle)}</p>
@@ -1434,7 +1713,7 @@ h1, h2 { line-height: 1.2; }
         manifest_items = [
             "<item id='nav' href='nav.xhtml' media-type='application/xhtml+xml' properties='nav'/>",
             "<item id='cover-page' href='cover.xhtml' media-type='application/xhtml+xml'/>",
-            "<item id='cover-image' href='cover.svg' media-type='image/svg+xml' properties='cover-image'/>",
+            "<item id='cover-image' href='cover.png' media-type='image/png' properties='cover-image'/>",
             "<item id='logo-image' href='logo.svg' media-type='image/svg+xml'/>",
             "<item id='styles' href='styles.css' media-type='text/css'/>",
         ]
@@ -1487,7 +1766,83 @@ def pdf_escape(value: str) -> str:
     return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
 
 
-def simple_pdf(entry: BookEntry, export_dir: Path, chapters: list[dict[str, str]]) -> None:
+def paeth_predictor(left: int, up: int, up_left: int) -> int:
+    prediction = left + up - up_left
+    left_distance = abs(prediction - left)
+    up_distance = abs(prediction - up)
+    up_left_distance = abs(prediction - up_left)
+    if left_distance <= up_distance and left_distance <= up_left_distance:
+        return left
+    if up_distance <= up_left_distance:
+        return up
+    return up_left
+
+
+def read_png_for_pdf(png_path: Path) -> tuple[int, int, bytes, bytes | None]:
+    data = png_path.read_bytes()
+    signature = b"\x89PNG\r\n\x1a\n"
+    if not data.startswith(signature):
+        raise ValueError(f"Unsupported cover image for PDF: {png_path}")
+
+    offset = len(signature)
+    width = 0
+    height = 0
+    bit_depth = 8
+    color_type = 6
+    interlace = 0
+    idat_chunks: list[bytes] = []
+    while offset < len(data):
+        length = struct.unpack(">I", data[offset : offset + 4])[0]
+        chunk_type = data[offset + 4 : offset + 8]
+        chunk_data = data[offset + 8 : offset + 8 + length]
+        offset += 12 + length
+        if chunk_type == b"IHDR":
+            width, height, bit_depth, color_type, _compression, _filtering, interlace = struct.unpack(">IIBBBBB", chunk_data)
+        elif chunk_type == b"IDAT":
+            idat_chunks.append(chunk_data)
+        elif chunk_type == b"IEND":
+            break
+
+    if bit_depth != 8 or interlace != 0 or color_type not in {2, 6}:
+        raise ValueError(f"Unsupported PNG profile for PDF: {png_path}")
+
+    raw = zlib.decompress(b"".join(idat_chunks))
+    channels = 4 if color_type == 6 else 3
+    stride = width * channels
+    previous = bytearray(stride)
+    rgb = bytearray()
+    alpha = bytearray() if color_type == 6 else None
+    cursor = 0
+
+    for _row in range(height):
+        filter_type = raw[cursor]
+        cursor += 1
+        current = bytearray(raw[cursor : cursor + stride])
+        cursor += stride
+        for index, value in enumerate(current):
+            left = current[index - channels] if index >= channels else 0
+            up = previous[index]
+            up_left = previous[index - channels] if index >= channels else 0
+            if filter_type == 1:
+                current[index] = (value + left) & 0xFF
+            elif filter_type == 2:
+                current[index] = (value + up) & 0xFF
+            elif filter_type == 3:
+                current[index] = (value + ((left + up) // 2)) & 0xFF
+            elif filter_type == 4:
+                current[index] = (value + paeth_predictor(left, up, up_left)) & 0xFF
+        previous = current
+        if color_type == 6:
+            for pixel in range(0, len(current), 4):
+                rgb.extend(current[pixel : pixel + 3])
+                alpha.append(current[pixel + 3])
+        else:
+            rgb.extend(current)
+
+    return width, height, bytes(rgb), bytes(alpha) if alpha is not None else None
+
+
+def simple_pdf(entry: BookEntry, book_dir: Path, export_dir: Path, chapters: list[dict[str, str]]) -> None:
     pdf_path = export_dir / f"{entry.slug}.pdf"
     title = safe_ascii(entry.title, entry.slug.replace("-", " ").title())
     subtitle = safe_ascii(entry.subtitle, entry.promise)
@@ -1528,6 +1883,50 @@ def simple_pdf(entry: BookEntry, export_dir: Path, chapters: list[dict[str, str]
     pages_id = add_object("<< /Type /Pages /Kids [] /Count 0 >>")
     page_ids: list[int] = []
     content_ids: list[int] = []
+    cover_path = book_dir / "assets" / "front_cover_final.png"
+    if cover_path.exists():
+        cover_width, cover_height, cover_rgb, cover_alpha = read_png_for_pdf(cover_path)
+        alpha_object_id = None
+        if cover_alpha:
+            alpha_compressed = zlib.compress(cover_alpha)
+            alpha_object_id = add_object(
+                (
+                    f"<< /Type /XObject /Subtype /Image /Width {cover_width} /Height {cover_height} "
+                    f"/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /Length {len(alpha_compressed)} >>\nstream\n"
+                ).encode("latin-1")
+                + alpha_compressed
+                + b"\nendstream"
+            )
+        cover_compressed = zlib.compress(cover_rgb)
+        image_dict = (
+            f"<< /Type /XObject /Subtype /Image /Width {cover_width} /Height {cover_height} "
+            f"/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length {len(cover_compressed)}"
+        )
+        if alpha_object_id:
+            image_dict += f" /SMask {alpha_object_id} 0 R"
+        image_dict += " >>\nstream\n"
+        image_object_id = add_object(image_dict.encode("latin-1") + cover_compressed + b"\nendstream")
+
+        page_width = 612.0
+        page_height = 792.0
+        scale = min(page_width / cover_width, page_height / cover_height)
+        display_width = cover_width * scale
+        display_height = cover_height * scale
+        x = (page_width - display_width) / 2
+        y = (page_height - display_height) / 2
+        cover_stream = f"q {display_width:.2f} 0 0 {display_height:.2f} {x:.2f} {y:.2f} cm /ImCover Do Q".encode(
+            "latin-1"
+        )
+        cover_content_id = add_object(
+            f"<< /Length {len(cover_stream)} >>\nstream\n".encode("latin-1") + cover_stream + b"\nendstream"
+        )
+        cover_page_id = add_object(
+            f"<< /Type /Page /Parent {pages_id} 0 R /MediaBox [0 0 612 792] "
+            f"/Resources << /XObject << /ImCover {image_object_id} 0 R >> >> /Contents {cover_content_id} 0 R >>"
+        )
+        page_ids.append(cover_page_id)
+        content_ids.append(cover_content_id)
+
     for page_lines in pages:
         content_stream = ["BT", "/F1 12 Tf", "72 770 Td", "16 TL"]
         for index, line in enumerate(page_lines):
@@ -1587,6 +1986,17 @@ def build_chapters(entry: BookEntry) -> list[dict[str, str]]:
     return chapters
 
 
+def write_exports(entry: BookEntry, book_dir: Path, chapters: list[dict[str, str]]) -> None:
+    export_dir = book_dir / "exports_showcase"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    (export_dir / "index.html").write_text(html_export(entry, chapters), encoding="utf-8")
+    export_formats = HERO_EXPORT_FORMATS if entry.exportTarget == "hero" else PREVIEW_EXPORT_FORMATS
+    if "epub" in export_formats:
+        epub_export(entry, book_dir, export_dir, chapters)
+    if "pdf" in export_formats:
+        simple_pdf(entry, book_dir, export_dir, chapters)
+
+
 def write_book(entry: BookEntry) -> None:
     timestamp = datetime.now(timezone.utc).isoformat()
     book_dir = BOOK_OUTPUTS_DIR / entry.slug
@@ -1596,6 +2006,7 @@ def write_book(entry: BookEntry) -> None:
     chapters = build_chapters(entry)
     outline_path = book_dir / f"book_outline_final_{entry.slug}.md"
     outline_path.write_text(outline_markdown(entry, chapters), encoding="utf-8")
+    (book_dir / "introduction_final.md").write_text(introduction_markdown(entry), encoding="utf-8")
 
     for item in chapters:
         chapter_path = book_dir / f"chapter_{item['num']}_final.md"
@@ -1605,21 +2016,19 @@ def write_book(entry: BookEntry) -> None:
         )
 
     (book_dir / "assets" / "publisher_logo.svg").write_text(entry.brandingLogoSvg, encoding="utf-8")
-    (book_dir / "assets" / "showcase_front_cover.svg").write_text(front_cover_svg(entry), encoding="utf-8")
-    (book_dir / "assets" / "showcase_back_cover.svg").write_text(back_cover_svg(entry), encoding="utf-8")
+    render_raster_cover(entry, book_dir / "assets" / "front_cover_final.png")
+    front_svg = front_cover_svg(entry)
+    back_svg = back_cover_svg(entry)
+    (book_dir / "assets" / "front_cover_final.svg").write_text(front_svg, encoding="utf-8")
+    (book_dir / "assets" / "back_cover_final.svg").write_text(back_svg, encoding="utf-8")
+    shutil.copyfile(book_dir / "assets" / "front_cover_final.png", book_dir / "assets" / "showcase_front_cover.png")
+    (book_dir / "assets" / "showcase_front_cover.svg").write_text(front_svg, encoding="utf-8")
+    (book_dir / "assets" / "showcase_back_cover.svg").write_text(back_svg, encoding="utf-8")
     (book_dir / "dashboard_meta.json").write_text(
         json.dumps(dashboard_meta(entry, timestamp), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-
-    export_dir = book_dir / "exports_showcase"
-    export_dir.mkdir(parents=True, exist_ok=True)
-    (export_dir / "index.html").write_text(html_export(entry, chapters), encoding="utf-8")
-    export_formats = HERO_EXPORT_FORMATS if entry.exportTarget == "hero" else PREVIEW_EXPORT_FORMATS
-    if "epub" in export_formats:
-        epub_export(entry, export_dir, chapters)
-    if "pdf" in export_formats:
-        simple_pdf(entry, export_dir, chapters)
+    write_exports(entry, book_dir, chapters)
 
 
 def validate_outputs(entries: list[BookEntry]) -> None:
@@ -1628,13 +2037,20 @@ def validate_outputs(entries: list[BookEntry]) -> None:
         ensure(book_dir.exists(), f"Missing book dir for {entry.slug}")
         outline_files = list(book_dir.glob("book_outline_final_*.md"))
         ensure(len(outline_files) == 1, f"Outline mismatch for {entry.slug}")
+        ensure((book_dir / "introduction_final.md").exists(), f"Missing introduction for {entry.slug}")
         chapter_files = sorted(book_dir.glob("chapter_*_final.md"))
         ensure(len(chapter_files) == entry.chapterCount, f"Chapter count mismatch for {entry.slug}")
         meta = json.loads((book_dir / "dashboard_meta.json").read_text(encoding="utf-8"))
         ensure(meta.get("language") == entry.languageCode, f"Language mismatch in metadata for {entry.slug}")
         ensure(meta.get("branding_mark") == entry.brandingMark, f"Branding mismatch for {entry.slug}")
-        ensure((book_dir / "assets" / "showcase_front_cover.svg").exists(), f"Missing front cover for {entry.slug}")
-        ensure((book_dir / "assets" / "showcase_back_cover.svg").exists(), f"Missing back cover for {entry.slug}")
+        ensure(meta.get("cover_image") == "assets/front_cover_final.png", f"Primary cover metadata mismatch for {entry.slug}")
+        ensure(bool(meta.get("cover_composed")), f"Composed cover flag missing for {entry.slug}")
+        ensure(bool(meta.get("cover_template")), f"Cover template missing for {entry.slug}")
+        if meta.get("cover_art_image"):
+            ensure(int(meta.get("cover_variant_count") or 0) == 3, f"Variant count mismatch for {entry.slug}")
+        ensure((book_dir / "assets" / "front_cover_final.png").exists(), f"Missing raster front cover for {entry.slug}")
+        ensure((book_dir / "assets" / "front_cover_final.svg").exists(), f"Missing front cover SVG for {entry.slug}")
+        ensure((book_dir / "assets" / "back_cover_final.svg").exists(), f"Missing back cover for {entry.slug}")
         ensure((book_dir / "assets" / "publisher_logo.svg").exists(), f"Missing logo for {entry.slug}")
         export_dir = book_dir / "exports_showcase"
         ensure((export_dir / "index.html").exists(), f"Missing HTML export for {entry.slug}")
@@ -1646,12 +2062,21 @@ def validate_outputs(entries: list[BookEntry]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate multilingual showcase books.")
     parser.add_argument("--validate-only", action="store_true", help="Only validate existing outputs.")
+    parser.add_argument(
+        "--ai-covers",
+        action="store_true",
+        help="Generate real AI front covers after writing showcase outputs.",
+    )
     args = parser.parse_args()
 
     entries = load_manifest()
     if not args.validate_only:
         for entry in entries:
             write_book(entry)
+        if args.ai_covers:
+            subprocess.run([sys.executable, str(AI_COVER_BATCH_SCRIPT)], check=True)
+            for entry in entries:
+                write_exports(entry, BOOK_OUTPUTS_DIR / entry.slug, build_chapters(entry))
     validate_outputs(entries)
     print(f"showcase portfolio ready: {len(entries)} books")
 

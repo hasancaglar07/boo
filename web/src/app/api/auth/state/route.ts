@@ -8,6 +8,18 @@ export async function GET() {
   const session = await auth();
   const guest = await getGuestIdentityFromCookies();
   const state = await getAuthStateForUser(session?.user?.id || null, session?.user?.email || null);
+  const viewer =
+    state.authenticated && session?.user?.id
+      ? {
+          id: session.user.id,
+          name: state.account.name,
+          email: state.account.email,
+          goal: state.account.goal,
+          planId: state.planId,
+          emailVerified: state.emailVerified,
+          role: state.role,
+        }
+      : null;
 
   return NextResponse.json({
     authenticated: state.authenticated,
@@ -28,5 +40,6 @@ export async function GET() {
       emailVerified: state.emailVerified,
     }),
     providers: getAuthProviderAvailability(),
+    viewer,
   });
 }

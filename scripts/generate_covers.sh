@@ -89,6 +89,7 @@ load_config() {
         PUBLISHER_NAME="$(jq -r '.publisher_name // ""' "$CONFIG_FILE")"
         PUBLICATION_YEAR="$(jq -r '.publication_year // ""' "$CONFIG_FILE")"
         LABEL_LINE="$(jq -r '.label_line // ""' "$CONFIG_FILE")"
+        COVER_PROMPT="$(jq -r '.cover_prompt // ""' "$CONFIG_FILE")"
     else
         SERVICE="$DEFAULT_SERVICE"
         BOOK_TITLE=""
@@ -101,6 +102,7 @@ load_config() {
         PUBLISHER_NAME=""
         PUBLICATION_YEAR=""
         LABEL_LINE=""
+        COVER_PROMPT=""
     fi
 }
 
@@ -117,7 +119,8 @@ save_config() {
   "author_bio": "$AUTHOR_BIO",
   "publisher_name": "$PUBLISHER_NAME",
   "publication_year": "$PUBLICATION_YEAR",
-  "label_line": "$LABEL_LINE"
+  "label_line": "$LABEL_LINE",
+  "cover_prompt": "$COVER_PROMPT"
 }
 EOF
 }
@@ -155,6 +158,11 @@ generate_prompts() {
     local keyword_source=""
     local keyword_hints=()
     local joined_hints=""
+
+    if [[ "$cover_type" == "front" && -n "$COVER_PROMPT" ]]; then
+        printf '%s\n' "$COVER_PROMPT"
+        return 0
+    fi
 
     genre_label="$GENRE"
     if [[ -z "$genre_label" ]]; then

@@ -19,6 +19,12 @@ export type ShowcasePortfolioEntry = {
   brandingMark: string;
   brandingLogoSvg: string;
   coverBrief: string;
+  coverPrompt: string;
+  openingNote: string;
+  readerHook: string;
+  coverTemplateHint?: string;
+  titleTone?: string;
+  coverHierarchy?: string;
   chapterCount: number;
   heroRank: number;
   exportTarget: "hero" | "preview";

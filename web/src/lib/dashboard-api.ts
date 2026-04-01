@@ -54,8 +54,13 @@ export type Book = {
   branding_logo_url?: string;
   cover_brief?: string;
   generate_cover?: boolean;
+  cover_art_image?: string;
   cover_image?: string;
   back_cover_image?: string;
+  cover_template?: string;
+  cover_variant_count?: number;
+  cover_generation_provider?: string;
+  cover_composed?: boolean;
   isbn?: string;
   year?: string;
   fast?: boolean;

@@ -2,24 +2,25 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   ArrowRight,
   BookOpen,
+  CheckCircle2,
   ChevronRight,
   Download,
   Eye,
   FileText,
   Globe,
   Layers,
-  X,
-  CheckCircle2,
   Sparkles,
+  X,
 } from "lucide-react";
-import Link from "next/link";
 
-import type { ExampleAsset, ExampleEntry } from "@/lib/examples-shared";
+import type { ExampleAsset, ExampleCardEntry } from "@/lib/examples-shared";
 import { SectionHeading } from "@/components/site/section-heading";
+import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 const pipeline = [
@@ -44,13 +45,13 @@ const pipeline = [
   {
     step: "04",
     title: "Kapak",
-    description: "Ön ve arka kapak seçenekleri. KDP boyutlarında hazır.",
+    description: "API ile üretilen ön kapak ve branded teslim yüzeyi.",
     icon: BookOpen,
   },
   {
     step: "05",
     title: "Export",
-    description: "EPUB, PDF ve HTML teslimi. Anında indirilebilir.",
+    description: "EPUB, PDF ve HTML teslimi. Anında açılabilir.",
     icon: Download,
   },
 ];
@@ -62,22 +63,22 @@ function formatBytes(size?: number) {
   return `${size} B`;
 }
 
-function availableFormats(item: ExampleEntry) {
+function availableFormats(item: ExampleCardEntry) {
   return (["epub", "pdf", "html"] as const)
     .filter((key) => item.exports[key])
     .map((key) => key.toUpperCase());
 }
 
-function exportSummary(item: ExampleEntry) {
+function exportSummary(item: ExampleCardEntry) {
   const formats = availableFormats(item);
   return formats.length ? formats.join(" + ") : "Yakında";
 }
 
-function publicationMeta(item: ExampleEntry) {
+function publicationMeta(item: ExampleCardEntry) {
   return [item.publisher, item.year].filter(Boolean).join(" · ");
 }
 
-function creatorMeta(item: ExampleEntry) {
+function creatorMeta(item: ExampleCardEntry) {
   return [item.author, item.publisher].filter(Boolean).join(" · ");
 }
 
@@ -85,14 +86,20 @@ function BookCover({
   item,
   size = "md",
 }: {
-  item: ExampleEntry;
+  item: ExampleCardEntry;
   size?: "sm" | "md" | "lg";
 }) {
+  const [primaryFailed, setPrimaryFailed] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
   const dims = {
     sm: { w: "w-16", h: "h-[88px]", spine: "w-3" },
     md: { w: "w-24", h: "h-[136px]", spine: "w-4" },
     lg: { w: "w-32", h: "h-[184px]", spine: "w-5" },
   }[size];
+
+  const primaryUrl = !primaryFailed ? item.coverImages.primaryUrl : undefined;
+  const fallbackUrl = !fallbackFailed ? item.coverImages.fallbackUrl : undefined;
+  const activeSrc = primaryUrl || fallbackUrl;
 
   return (
     <div className="flex">
@@ -111,12 +118,16 @@ function BookCover({
           transformOrigin: "left center",
         }}
       >
-        {item.coverImageUrl ? (
+        {activeSrc ? (
           <>
             <img
-              src={item.coverImageUrl}
+              src={activeSrc}
               alt={`${item.title} cover`}
               className="absolute inset-0 h-full w-full object-cover"
+              onError={() => {
+                if (activeSrc === item.coverImages.primaryUrl) setPrimaryFailed(true);
+                if (activeSrc === item.coverImages.fallbackUrl) setFallbackFailed(true);
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-white/10" />
             <div
@@ -127,7 +138,7 @@ function BookCover({
                 backgroundColor: "rgba(0,0,0,0.28)",
               }}
             >
-              Real Output
+              AI COVER
             </div>
           </>
         ) : (
@@ -148,7 +159,7 @@ function BookCover({
               >
                 {item.title}
               </div>
-              {item.brandingMark && (
+              {item.brandingMark ? (
                 <div
                   className="self-start rounded-full border px-1.5 py-0.5 text-[5px] font-semibold uppercase tracking-[0.22em]"
                   style={{
@@ -159,12 +170,12 @@ function BookCover({
                 >
                   {item.brandingMark}
                 </div>
-              )}
+              ) : null}
               <div
                 className="text-[6px] uppercase tracking-widest opacity-60"
                 style={{ color: item.textAccent }}
               >
-                REAL OUTPUT
+                SHOWCASE
               </div>
             </div>
             <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent" />
@@ -182,7 +193,7 @@ function ExportCard({
   asset,
   icon: Icon,
 }: {
-  item: ExampleEntry;
+  item: ExampleCardEntry;
   format: "EPUB" | "PDF" | "HTML";
   description: string;
   asset?: ExampleAsset;
@@ -206,7 +217,7 @@ function ExportCard({
         >
           <Icon className="size-4 text-white" />
         </div>
-        {asset && <CheckCircle2 className="size-4 text-emerald-500" />}
+        {asset ? <CheckCircle2 className="size-4 text-emerald-500" /> : null}
       </div>
       <div className="mt-3">
         <div className="text-sm font-bold text-foreground">.{format.toLowerCase()}</div>
@@ -216,18 +227,25 @@ function ExportCard({
         <span className="text-xs font-medium text-muted-foreground">
           {asset ? formatBytes(asset.size) : "Henüz yok"}
         </span>
-        {asset && (
+        {asset ? (
           <a
             href={asset.url}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
             style={{ backgroundColor: item.spineColor }}
+            onClick={() =>
+              trackEvent("examples_export_clicked", {
+                slug: item.slug,
+                format: format.toLowerCase(),
+                location: "preview_modal",
+              })
+            }
           >
             <Download className="size-3" />
             {isHtml ? "Aç" : "İndir"}
           </a>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -237,7 +255,7 @@ function OutlineModal({
   item,
   onClose,
 }: {
-  item: ExampleEntry;
+  item: ExampleCardEntry;
   onClose: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<"outline" | "chapter" | "export">("outline");
@@ -275,11 +293,11 @@ function OutlineModal({
             <p className="mt-1 text-xs leading-relaxed opacity-80" style={{ color: item.textAccent }}>
               {item.subtitle}
             </p>
-            {creatorLine && (
+            {creatorLine ? (
               <p className="mt-2 text-[11px] opacity-75" style={{ color: item.textAccent }}>
                 {creatorLine}
               </p>
-            )}
+            ) : null}
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {item.brandingLogoUrl ? (
                 <img
@@ -299,7 +317,7 @@ function OutlineModal({
                   {item.brandingMark}
                 </div>
               ) : null}
-              {item.toneArchetype && (
+              {item.toneArchetype ? (
                 <div
                   className="rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]"
                   style={{
@@ -310,10 +328,11 @@ function OutlineModal({
                 >
                   {item.toneArchetype}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="relative flex-shrink-0 rounded-full p-2 transition hover:bg-black/20"
             style={{ color: item.textAccent }}
@@ -324,10 +343,11 @@ function OutlineModal({
 
         <div className="flex border-b border-border/60 bg-background/50">
           {(["outline", "chapter", "export"] as const).map((tab) => {
-            const labels = { outline: "İçindekiler", chapter: "Bölüm Önizleme", export: "Export" };
+            const labels = { outline: "İçindekiler", chapter: "İlk Bölüm", export: "Export" };
             return (
               <button
                 key={tab}
+                type="button"
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   "flex-1 border-b-2 py-3 text-xs font-semibold tracking-wide transition-colors",
@@ -343,23 +363,25 @@ function OutlineModal({
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {activeTab === "outline" && (
+          {activeTab === "outline" ? (
             <div className="p-6">
               <div className="mb-4 flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 rounded-full border border-border/80 bg-background px-3 py-1.5">
                   <Layers className="size-3 text-primary" />
-                  <span className="text-xs font-medium text-foreground">{item.chapters} bölüm</span>
+                  <span className="text-xs font-medium text-foreground">
+                    {item.chapters} {item.chapterLabel.toLowerCase()}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 rounded-full border border-border/80 bg-background px-3 py-1.5">
                   <Globe className="size-3 text-primary" />
                   <span className="text-xs font-medium text-foreground">{item.language}</span>
                 </div>
-                {publicationLine && (
+                {publicationLine ? (
                   <div className="flex items-center gap-2 rounded-full border border-border/80 bg-background px-3 py-1.5">
                     <BookOpen className="size-3 text-primary" />
                     <span className="text-xs font-medium text-foreground">{publicationLine}</span>
                   </div>
-                )}
+                ) : null}
               </div>
               <div className="mb-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
@@ -367,7 +389,9 @@ function OutlineModal({
                     Yazar
                   </div>
                   <div className="mt-2 text-sm font-semibold text-foreground">{item.author}</div>
-                  {item.authorBio && <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.authorBio}</p>}
+                  {item.authorBio ? (
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.authorBio}</p>
+                  ) : null}
                 </div>
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -385,7 +409,9 @@ function OutlineModal({
                       <div className="text-sm font-semibold text-foreground">
                         {item.brandingMark || item.publisher || "Brand"}
                       </div>
-                      {item.coverBrief && <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.coverBrief}</p>}
+                      {item.coverBrief ? (
+                        <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.coverBrief}</p>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -404,7 +430,7 @@ function OutlineModal({
                         {chapter.num}
                       </span>
                       <span className="flex-1 text-sm font-medium text-foreground">{chapter.title}</span>
-                      {chapter.pages && <span className="text-xs text-muted-foreground">{chapter.pages}</span>}
+                      {chapter.pages ? <span className="text-xs text-muted-foreground">{chapter.pages}</span> : null}
                     </div>
                   ))}
                 </div>
@@ -414,9 +440,9 @@ function OutlineModal({
                 </div>
               )}
             </div>
-          )}
+          ) : null}
 
-          {activeTab === "chapter" && (
+          {activeTab === "chapter" ? (
             <div className="p-6">
               <div className="mb-4">
                 <div
@@ -454,9 +480,9 @@ function OutlineModal({
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
-          {activeTab === "export" && (
+          {activeTab === "export" ? (
             <div className="p-6">
               <div className="mb-4">
                 <h4 className="font-serif text-lg font-semibold text-foreground">Teslim Formatları</h4>
@@ -497,18 +523,33 @@ function OutlineModal({
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="border-t border-border/60 bg-background/80 p-4">
-          <Link
-            href="/start/topic"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:opacity-90"
-            style={{ backgroundColor: item.spineColor }}
-            onClick={onClose}
-          >
-            Bunu sen yaz <ArrowRight className="size-4" />
-          </Link>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link
+              href={`/examples/${item.slug}`}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border/80 bg-background px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-accent"
+              onClick={() => {
+                trackEvent("examples_book_clicked", { slug: item.slug, location: "preview_modal_primary" });
+                onClose();
+              }}
+            >
+              Tam kitabı oku <ArrowRight className="size-4" />
+            </Link>
+            <Link
+              href="/start/topic"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:opacity-90"
+              style={{ backgroundColor: item.spineColor }}
+              onClick={() => {
+                trackEvent("examples_sticky_cta_clicked", { slug: item.slug, location: "preview_modal_secondary" });
+                onClose();
+              }}
+            >
+              Bunu sen yaz <ArrowRight className="size-4" />
+            </Link>
+          </div>
         </div>
       </div>
     </div>
@@ -520,13 +561,13 @@ export function ExamplesShowcase({
   categories,
   languages,
 }: {
-  items: ExampleEntry[];
+  items: ExampleCardEntry[];
   categories: string[];
   languages: string[];
 }) {
   const [activeCategory, setActiveCategory] = useState("Tümü");
   const [activeLang, setActiveLang] = useState("Tümü");
-  const [previewItem, setPreviewItem] = useState<ExampleEntry | null>(null);
+  const [previewItem, setPreviewItem] = useState<ExampleCardEntry | null>(null);
   const [topic, setTopic] = useState("");
 
   const filtered = items.filter((item) => {
@@ -547,6 +588,7 @@ export function ExamplesShowcase({
               {categories.map((category) => (
                 <button
                   key={category}
+                  type="button"
                   onClick={() => setActiveCategory(category)}
                   className={cn(
                     "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all",
@@ -567,6 +609,7 @@ export function ExamplesShowcase({
               {languages.map((language) => (
                 <button
                   key={language}
+                  type="button"
                   onClick={() => setActiveLang(language)}
                   className={cn(
                     "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all",
@@ -630,9 +673,7 @@ export function ExamplesShowcase({
                         className="size-10 rounded-xl border border-border/80 bg-background p-1.5"
                       />
                     ) : item.brandingMark ? (
-                      <div
-                        className="inline-flex size-10 items-center justify-center rounded-xl border border-border/80 bg-background text-[10px] font-bold uppercase tracking-[0.18em] text-foreground"
-                      >
+                      <div className="inline-flex size-10 items-center justify-center rounded-xl border border-border/80 bg-background text-[10px] font-bold uppercase tracking-[0.18em] text-foreground">
                         {item.brandingMark}
                       </div>
                     ) : null}
@@ -662,13 +703,13 @@ export function ExamplesShowcase({
                     ))}
                   </div>
 
-                  {publicationMeta(item) && (
+                  {publicationMeta(item) ? (
                     <p className="mt-3 text-[11px] text-muted-foreground">{publicationMeta(item)}</p>
-                  )}
+                  ) : null}
 
-                  {item.coverBrief && (
+                  {item.coverBrief ? (
                     <p className="mt-2 text-[11px] leading-5 text-muted-foreground line-clamp-2">{item.coverBrief}</p>
-                  )}
+                  ) : null}
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {item.tags.map((tag) => (
@@ -683,18 +724,20 @@ export function ExamplesShowcase({
 
                   <div className="mt-4 flex gap-2 border-t border-border/60 pt-4">
                     <button
+                      type="button"
                       onClick={() => setPreviewItem(item)}
                       className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border/80 bg-background px-3 py-2.5 text-xs font-semibold text-foreground transition hover:bg-accent"
                     >
                       <Eye className="size-3.5" />
-                      Önizle
+                      Hızlı bak
                     </button>
                     <Link
-                      href="/start/topic"
+                      href={`/examples/${item.slug}`}
                       className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
                       style={{ backgroundColor: item.spineColor }}
+                      onClick={() => trackEvent("examples_book_clicked", { slug: item.slug, location: "grid_primary" })}
                     >
-                      Yaz <ArrowRight className="size-3.5" />
+                      Oku <ArrowRight className="size-3.5" />
                     </Link>
                   </div>
                 </div>
@@ -702,13 +745,13 @@ export function ExamplesShowcase({
             ))}
           </div>
 
-          {filtered.length === 0 && (
+          {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="mb-4 text-5xl">📚</div>
               <p className="text-base font-medium text-foreground">Bu filtre için örnek yok</p>
               <p className="mt-2 text-sm text-muted-foreground">Farklı bir kategori veya dil seç.</p>
             </div>
-          )}
+          ) : null}
         </div>
       </section>
 
@@ -768,14 +811,14 @@ export function ExamplesShowcase({
                     </div>
                     <h4 className="text-sm font-semibold text-foreground">{step.title}</h4>
                     <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{step.description}</p>
-                    {index === pipeline.length - 1 && (
+                    {index === pipeline.length - 1 ? (
                       <Link
                         href="/start/topic"
                         className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                       >
                         Başla <ChevronRight className="size-3" />
                       </Link>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               ))}
@@ -784,7 +827,7 @@ export function ExamplesShowcase({
         </div>
       </section>
 
-      {previewItem && <OutlineModal item={previewItem} onClose={() => setPreviewItem(null)} />}
+      {previewItem ? <OutlineModal item={previewItem} onClose={() => setPreviewItem(null)} /> : null}
     </>
   );
 }

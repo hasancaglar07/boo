@@ -116,9 +116,9 @@ export function HomeProductOverviewSection() {
                   <span className="h-2.5 w-2.5 rounded-full bg-white/10" />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <BoardPill active>Brief</BoardPill>
-                  <BoardPill>Outline</BoardPill>
-                  <BoardPill>Publish</BoardPill>
+                  <BoardPill active>Konu</BoardPill>
+                  <BoardPill>Taslak</BoardPill>
+                  <BoardPill>Yayın</BoardPill>
                 </div>
               </div>
 
@@ -192,7 +192,7 @@ export function HomeProductOverviewSection() {
                   Ne alırsın
                 </div>
                 <div className="mt-4 space-y-2">
-                  {["Outline", "Chapter drafts", "Cover flow", "EPUB export"].map((item) => (
+                  {["Taslak", "Bölüm içerikleri", "Kapak akışı", "EPUB çıktısı"].map((item) => (
                     <div
                       key={item}
                       className="rounded-2xl border border-white/8 bg-black/16 px-3 py-2 text-xs text-stone-300"

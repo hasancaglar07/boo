@@ -21,8 +21,9 @@ import {
   Clock,
 } from "lucide-react";
 
+import type { ExampleCardEntry } from "@/lib/examples-shared";
+import { ExampleCoverArtwork } from "@/components/site/example-cover-artwork";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 // Shared decorative floating book mini cards for hero backgrounds
 function FloatingBookAccent({
@@ -235,7 +236,7 @@ export const PricingPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Bir kitap için ajans $500–$5,000 alır. Book Generator ile aynı çıktıyı, kendi kontrolünde, tek seferlik $4'e üretirsin.
+          Bir kitap için ajans $500–$5,000 alır. Book Generator ile aynı çıktıyı, kendi kontrolünde, tek seferlik $4&apos;e üretirsin.
           Önce kitabını gör — beğenmezsen ödemezsin.
         </motion.p>
 
@@ -297,17 +298,58 @@ PricingPageHero.displayName = "PricingPageHero";
 
 interface ExamplesPageHeroProps {
   className?: string;
+  items?: ExampleCardEntry[];
 }
+
+type HeroExampleCard = Pick<
+  ExampleCardEntry,
+  "slug" | "title" | "category" | "coverGradient" | "spineColor" | "textAccent" | "coverImages" | "brandingMark" | "language"
+>;
 
 export const ExamplesPageHero = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & ExamplesPageHeroProps
 >(({ className, ...props }, ref) => {
-  const examples = [
-    { title: "Practical Prompting", category: "Rehber Kitap", gradient: "linear-gradient(135deg,#c96442,#8e4a30)" },
-    { title: "Niche Offer OS", category: "Business", gradient: "linear-gradient(135deg,#312e81,#4338ca)" },
-    { title: "Coaching Program", category: "Uzmanlık", gradient: "linear-gradient(135deg,#14532d,#15803d)" },
+  const { items, ...rest } = props;
+  const fallbackExamples: HeroExampleCard[] = [
+    {
+      slug: "example-one",
+      title: "Practical Prompting",
+      category: "Rehber Kitap",
+      coverGradient: "linear-gradient(135deg,#c96442,#8e4a30)",
+      spineColor: "#8e4a30",
+      textAccent: "#fff8ef",
+      coverImages: { primaryUrl: undefined, fallbackUrl: undefined, backUrl: undefined },
+      brandingMark: "PP",
+      language: "English",
+    },
+    {
+      slug: "example-two",
+      title: "Niche Offer OS",
+      category: "Business",
+      coverGradient: "linear-gradient(135deg,#312e81,#4338ca)",
+      spineColor: "#4338ca",
+      textAccent: "#f8f8ff",
+      coverImages: { primaryUrl: undefined, fallbackUrl: undefined, backUrl: undefined },
+      brandingMark: "NO",
+      language: "English",
+    },
+    {
+      slug: "example-three",
+      title: "Coaching Program",
+      category: "Uzmanlık",
+      coverGradient: "linear-gradient(135deg,#14532d,#15803d)",
+      spineColor: "#15803d",
+      textAccent: "#f3fff6",
+      coverImages: { primaryUrl: undefined, fallbackUrl: undefined, backUrl: undefined },
+      brandingMark: "CP",
+      language: "Türkçe",
+    },
   ];
+  const examples: HeroExampleCard[] =
+    items?.slice(0, 3).length
+      ? items.slice(0, 3)
+      : fallbackExamples;
 
   return (
     <section
@@ -316,7 +358,7 @@ export const ExamplesPageHero = React.forwardRef<
         "relative flex min-h-[680px] w-full items-center justify-center overflow-hidden border-b border-border/80",
         className,
       )}
-      {...props}
+      {...rest}
     >
       <div className="absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_6%,var(--background)),var(--background)_60%)]" />
       <div className="hero-glow" />
@@ -348,7 +390,7 @@ export const ExamplesPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Gerçek brief'lerden üretilmiş kitap başlıkları, outline yapıları ve EPUB export örnekleri.
+          Gerçek konulardan üretilmiş kitap başlıkları, taslak yapıları ve EPUB çıktı örnekleri.
         </motion.p>
 
         {/* Example Cards */}
@@ -360,25 +402,30 @@ export const ExamplesPageHero = React.forwardRef<
         >
           {examples.map((example, index) => (
             <motion.div
-              key={example.title}
+              key={example.slug}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
               className="group relative overflow-hidden rounded-[28px] border border-border/80 bg-card/80 p-6 text-left backdrop-blur-sm transition-shadow hover:shadow-lg"
             >
-              <div
-                className="mb-4 h-12 w-10 overflow-hidden rounded-[10px] shadow-md"
-                style={{ background: example.gradient }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-              </div>
+              <ExampleCoverArtwork
+                title={example.title}
+                brandingMark={example.brandingMark}
+                primaryUrl={example.coverImages.primaryUrl}
+                fallbackUrl={example.coverImages.fallbackUrl}
+                spineColor={example.spineColor}
+                coverGradient={example.coverGradient}
+                textAccent={example.textAccent}
+                className="mb-4 h-[88px] w-[62px]"
+                coverClassName="h-full"
+              />
               <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                 {example.category}
               </span>
               <h3 className="mt-3 text-base font-semibold text-foreground">{example.title}</h3>
               <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                 <Download className="h-4 w-4" />
-                <span>EPUB + PDF</span>
+                <span>{example.language}</span>
               </div>
             </motion.div>
           ))}
@@ -405,11 +452,11 @@ export const HowItWorksPageHero = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & HowItWorksPageHeroProps
 >(({ className, ...props }, ref) => {
   const steps = [
-    { number: "01", title: "Brief", icon: FileText, description: "Konu ve hedef okur" },
-    { number: "02", title: "Outline", icon: Settings, description: "Bölüm mimarisi" },
+    { number: "01", title: "Konu", icon: FileText, description: "Konu ve hedef okur" },
+    { number: "02", title: "Taslak", icon: Settings, description: "Bölüm mimarisi" },
     { number: "03", title: "Üretim", icon: Sparkles, description: "Bölüm yazımı" },
     { number: "04", title: "Kapak", icon: BookOpen, description: "Görsel akış" },
-    { number: "05", title: "Export", icon: Download, description: "EPUB + PDF" },
+    { number: "05", title: "Çıktı", icon: Download, description: "EPUB + PDF" },
   ];
 
   return (
@@ -452,7 +499,7 @@ export const HowItWorksPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Fikirden ilk EPUB'a{" "}
+          Fikirden ilk EPUB&apos;a{" "}
           <span className="text-primary">tek net yol.</span>
         </motion.h1>
 

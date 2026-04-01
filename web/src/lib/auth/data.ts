@@ -193,6 +193,7 @@ export async function getAuthStateForUser(userId: string | null, email?: string 
       authenticated: false,
       planId: "free" as BookPlanId,
       emailVerified: false,
+      role: "USER" as const,
       account: {
         name: "Book Creator",
         email: "demo@example.com",
@@ -209,6 +210,7 @@ export async function getAuthStateForUser(userId: string | null, email?: string 
       email: true,
       goal: true,
       emailVerified: true,
+      role: true,
     },
   });
 
@@ -217,6 +219,7 @@ export async function getAuthStateForUser(userId: string | null, email?: string 
       authenticated: false,
       planId: "free" as BookPlanId,
       emailVerified: false,
+      role: "USER" as const,
       account: {
         name: "Book Creator",
         email: normalizeEmail(email),
@@ -229,6 +232,7 @@ export async function getAuthStateForUser(userId: string | null, email?: string 
     authenticated: true,
     planId: await getEffectivePlanId(user.id),
     emailVerified: Boolean(user.emailVerified),
+    role: user.role,
     account: {
       name: user.name || "Book Creator",
       email: user.email,

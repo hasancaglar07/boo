@@ -11,10 +11,25 @@ export type ExampleOutlineItem = {
   pages?: string;
 };
 
+export type ExampleChapterContent = {
+  num: number;
+  reference: string;
+  title: string;
+  pages?: string;
+  text: string;
+  anchorId: string;
+};
+
 export type ExampleChapterPreview = {
   chapter: string;
   title: string;
   text: string;
+};
+
+export type ExampleCoverImages = {
+  primaryUrl?: string;
+  fallbackUrl?: string;
+  backUrl?: string;
 };
 
 export type ExampleExports = {
@@ -23,7 +38,7 @@ export type ExampleExports = {
   html?: ExampleAsset;
 };
 
-export type ExampleEntry = {
+type ExampleBase = {
   id: string;
   slug: string;
   order: number;
@@ -37,6 +52,7 @@ export type ExampleEntry = {
   title: string;
   subtitle: string;
   summary: string;
+  readerHook: string;
   author: string;
   authorBio?: string;
   tags: string[];
@@ -49,10 +65,17 @@ export type ExampleEntry = {
   coverBrief?: string;
   publisher?: string;
   year?: string;
-  coverImageUrl?: string;
-  backCoverImageUrl?: string;
   chapters: number;
   outline: ExampleOutlineItem[];
   chapterPreview: ExampleChapterPreview;
+  coverImages: ExampleCoverImages;
   exports: ExampleExports;
+};
+
+export type ExampleCardEntry = ExampleBase;
+
+export type ExampleReaderEntry = ExampleBase & {
+  openingNote: string;
+  introductionText: string;
+  chaptersContent: ExampleChapterContent[];
 };

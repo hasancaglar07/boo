@@ -31,7 +31,10 @@
     "accentColor": "#f3c37a",
     "textAccent": "#fff8ef",
     "coverGradient": "linear-gradient(145deg,#f3c37a 0%,#7a4a2f 52%,#23130e 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a business nonfiction book about turning expertise into an authority book. Use editorial strategy cover with warm brass geometry and decisive negative space, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "This book is built for consultants, coaches, and niche operators who want to package one proven method into a short book that earns trust before the sales call. It begins with clarity, moves through usable structure, and keeps every page focused on a result the reader can apply immediately.",
+    "readerHook": "On this page, the reader can move from the cover to the introduction, contents, and every chapter in one uninterrupted reading flow."
   },
   {
     "slug": "silent-offers",
@@ -65,7 +68,10 @@
     "accentColor": "#86c6ff",
     "textAccent": "#f3f9ff",
     "coverGradient": "linear-gradient(145deg,#86c6ff 0%,#21405f 52%,#09141f 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a business nonfiction book about creating demand through positioning and narrative offers. Use moody editorial cover with quiet contrast, soft motion blur, and luxury spacing, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "This book is built for creators and solo marketers who want to shape offers that feel inevitable to the right buyer before any aggressive pitch. It begins with clarity, moves through usable structure, and keeps every page focused on a result the reader can apply immediately.",
+    "readerHook": "On this page, the reader can move from the cover to the introduction, contents, and every chapter in one uninterrupted reading flow."
   },
   {
     "slug": "prompt-systems-for-small-teams",
@@ -99,7 +105,10 @@
     "accentColor": "#7de2b8",
     "textAccent": "#f1fff9",
     "coverGradient": "linear-gradient(145deg,#7de2b8 0%,#284b3f 52%,#0d1715 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about building repeatable AI prompting systems. Use refined tech-editorial cover with layered grids and calm cyan highlights, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "This book is built for small teams, agencies, and ops leads who want to turn scattered AI usage into a documented system that improves speed and quality. It begins with clarity, moves through usable structure, and keeps every page focused on a result the reader can apply immediately.",
+    "readerHook": "On this page, the reader can move from the cover to the introduction, contents, and every chapter in one uninterrupted reading flow."
   },
   {
     "slug": "parent-friendly-stem-at-home",
@@ -133,7 +142,10 @@
     "accentColor": "#d8a6ff",
     "textAccent": "#fbf4ff",
     "coverGradient": "linear-gradient(145deg,#d8a6ff 0%,#6d3f7e 52%,#1d1122 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a education nonfiction book about teaching STEM through home routines. Use bright premium education cover with tactile shapes and optimistic room to breathe, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "This book is built for parents of curious children aged 7 to 13 who want to make science practice calm, practical, and confidence-building at home. It begins with clarity, moves through usable structure, and keeps every page focused on a result the reader can apply immediately.",
+    "readerHook": "On this page, the reader can move from the cover to the introduction, contents, and every chapter in one uninterrupted reading flow."
   },
   {
     "slug": "focus-by-design",
@@ -167,7 +179,10 @@
     "accentColor": "#ff9db4",
     "textAccent": "#fff5f8",
     "coverGradient": "linear-gradient(145deg,#ff9db4 0%,#8a3b4b 52%,#250d13 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a personal development nonfiction book about designing an environment for sustained focus. Use elegant minimal cover with architectural shadows and disciplined cream accents, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "This book is built for knowledge workers and founders who want to build a calm operating system for deep work without depending on motivation. It begins with clarity, moves through usable structure, and keeps every page focused on a result the reader can apply immediately.",
+    "readerHook": "On this page, the reader can move from the cover to the introduction, contents, and every chapter in one uninterrupted reading flow."
   },
   {
     "slug": "quiet-leadership-for-remote-teams",
@@ -201,7 +216,10 @@
     "accentColor": "#a8bcff",
     "textAccent": "#f5f7ff",
     "coverGradient": "linear-gradient(145deg,#a8bcff 0%,#3a4b8f 52%,#10142a 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about leading remote teams with clarity and trust. Use structured leadership cover with muted navy layers and understated authority, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "This book is built for remote managers and team leads who want to replace reactive management with written systems that build trust across distance. It begins with clarity, moves through usable structure, and keeps every page focused on a result the reader can apply immediately.",
+    "readerHook": "On this page, the reader can move from the cover to the introduction, contents, and every chapter in one uninterrupted reading flow."
   },
   {
     "slug": "uzmanligini-kitaba-donustur",
@@ -235,7 +253,10 @@
     "accentColor": "#ffc872",
     "textAccent": "#fff9ef",
     "coverGradient": "linear-gradient(145deg,#ffc872 0%,#8c5a21 52%,#261707 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about uzmanlığı yapılandırılmış kitaba çevirmek. Use premium editorial kapak; sıcak bakır çizgiler ve güçlü yayın hissi, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Bu kitap, danışmanlar, eğitmenler ve bağımsız uzmanlar için bilgiyi satıştan önce güven üreten bir kitap varlığına dönüştürmek hedefiyle kuruldu. Açılışı netlikle yapar, sonra uygulanabilir yapıya geçer ve her sayfayı okurun hemen kullanabileceği bir sonuca bağlar.",
+    "readerHook": "Bu sayfada okur, kapaktan girişe, içindekilerden tüm bölümlere kadar kitabın tamamını kesintisiz bir akışla görebilir."
   },
   {
     "slug": "tek-kisilik-egitim-imparatorlugu",
@@ -269,7 +290,10 @@
     "accentColor": "#7be6f1",
     "textAccent": "#effeff",
     "coverGradient": "linear-gradient(145deg,#7be6f1 0%,#0f5f6a 52%,#072026 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a business nonfiction book about tek kişilik eğitim işini sistemleştirmek. Use sıcak ama ciddi business kapağı; derin lacivert ve altın turuncu dengesi, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Bu kitap, eğitmenler, koçlar ve course creatorlar için tek ürün etrafında ölçeklenebilir eğitim geliri kurmak hedefiyle kuruldu. Açılışı netlikle yapar, sonra uygulanabilir yapıya geçer ve her sayfayı okurun hemen kullanabileceği bir sonuca bağlar.",
+    "readerHook": "Bu sayfada okur, kapaktan girişe, içindekilerden tüm bölümlere kadar kitabın tamamını kesintisiz bir akışla görebilir."
   },
   {
     "slug": "yapay-zeka-ile-premium-hizmet-sistemi",
@@ -303,7 +327,10 @@
     "accentColor": "#c7ef76",
     "textAccent": "#f9ffe9",
     "coverGradient": "linear-gradient(145deg,#c7ef76 0%,#4d5f23 52%,#172008 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about AI destekli premium hizmet operasyonu kurmak. Use keskin ama sakin ai-service kapak; petrol mavisi zemin ve ışıklı çizgisel katmanlar, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Bu kitap, ajans sahipleri, freelancerlar ve hizmet işletmecileri için yapay zekayı kaliteyi koruyan operasyon katmanına dönüştürmek hedefiyle kuruldu. Açılışı netlikle yapar, sonra uygulanabilir yapıya geçer ve her sayfayı okurun hemen kullanabileceği bir sonuca bağlar.",
+    "readerHook": "Bu sayfada okur, kapaktan girişe, içindekilerden tüm bölümlere kadar kitabın tamamını kesintisiz bir akışla görebilir."
   },
   {
     "slug": "sessiz-disiplin-rehberi",
@@ -337,7 +364,10 @@
     "accentColor": "#f88ec3",
     "textAccent": "#fff4fa",
     "coverGradient": "linear-gradient(145deg,#f88ec3 0%,#7c2c52 52%,#230b16 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a personal development nonfiction book about sakin ama tutarlı disiplin sistemi kurmak. Use dingin kişisel gelişim kapağı; koyu erik tonları ve yumuşak ışık geçişleri, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Bu kitap, yaratıcı profesyoneller ve odaklanmak isteyen bilgi çalışanları için yüksek baskı olmadan sürdürülebilir üretim ritmi inşa etmek hedefiyle kuruldu. Açılışı netlikle yapar, sonra uygulanabilir yapıya geçer ve her sayfayı okurun hemen kullanabileceği bir sonuca bağlar.",
+    "readerHook": "Bu sayfada okur, kapaktan girişe, içindekilerden tüm bölümlere kadar kitabın tamamını kesintisiz bir akışla görebilir."
   },
   {
     "slug": "tu-metodo-hecho-libro",
@@ -371,7 +401,10 @@
     "accentColor": "#7fcde7",
     "textAccent": "#f2fbff",
     "coverGradient": "linear-gradient(145deg,#7fcde7 0%,#23556f 52%,#091822 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about convertir un método experto en un libro de autoridad. Use portada editorial cálida con profundidad suave y contraste de cobre elegante, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Este libro fue diseñado para consultores, formadores y especialistas independientes que quiere transformar un método probado en un libro que venda confianza antes de la reunión. Empieza con claridad, avanza hacia una estructura utilizable y mantiene cada página conectada con un resultado aplicable de inmediato.",
+    "readerHook": "En esta página, el lector puede pasar de la portada a la introducción, al índice y a todos los capítulos dentro de un flujo de lectura completo."
   },
   {
     "slug": "el-negocio-experto-sin-agencia",
@@ -405,7 +438,10 @@
     "accentColor": "#e6b37e",
     "textAccent": "#fff8f0",
     "coverGradient": "linear-gradient(145deg,#e6b37e 0%,#5b4127 52%,#1f140b 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a business nonfiction book about crear un negocio experto ligero y rentable. Use portada business con líneas precisas, azul profundo y acentos de arena, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Este libro fue diseñado para especialistas, coaches y consultores en crecimiento que quiere construir un negocio experto rentable sin copiar la estructura de una agencia. Empieza con claridad, avanza hacia una estructura utilizable y mantiene cada página conectada con un resultado aplicable de inmediato.",
+    "readerHook": "En esta página, el lector puede pasar de la portada a la introducción, al índice y a todos los capítulos dentro de un flujo de lectura completo."
   },
   {
     "slug": "productividad-profunda-con-ia",
@@ -439,7 +475,10 @@
     "accentColor": "#89e3ce",
     "textAccent": "#effffb",
     "coverGradient": "linear-gradient(145deg,#89e3ce 0%,#214f45 52%,#081915 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about usar IA para trabajo profundo y productividad. Use portada tecnológica editorial con capas cian y estructura limpia, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Este libro fue diseñado para profesionales del conocimiento y pequeños equipos que quiere convertir la IA en un sistema de enfoque y producción con menos caos. Empieza con claridad, avanza hacia una estructura utilizable y mantiene cada página conectada con un resultado aplicable de inmediato.",
+    "readerHook": "En esta página, el lector puede pasar de la portada a la introducción, al índice y a todos los capítulos dentro de un flujo de lectura completo."
   },
   {
     "slug": "hablar-para-ensenar",
@@ -473,7 +512,10 @@
     "accentColor": "#f5da73",
     "textAccent": "#fffced",
     "coverGradient": "linear-gradient(145deg,#f5da73 0%,#7a5c15 52%,#231904 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a education nonfiction book about enseñar con más claridad oral y escrita. Use portada educativa brillante con geometría amable y aire premium, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Este libro fue diseñado para docentes, facilitadores y expertos que imparten talleres que quiere crear sesiones más claras, memorables y accionables. Empieza con claridad, avanza hacia una estructura utilizable y mantiene cada página conectada con un resultado aplicable de inmediato.",
+    "readerHook": "En esta página, el lector puede pasar de la portada a la introducción, al índice y a todos los capítulos dentro de un flujo de lectura completo."
   },
   {
     "slug": "expertenwissen-als-bestseller",
@@ -507,7 +549,10 @@
     "accentColor": "#c4b0ff",
     "textAccent": "#f8f5ff",
     "coverGradient": "linear-gradient(145deg,#c4b0ff 0%,#57428e 52%,#171126 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about Fachwissen in ein Autoritätsbuch verwandeln. Use ruhiges deutsches editorial-cover mit tiefer struktur und bernsteinfarbenem akzent, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Dieses Buch richtet sich an Berater, Trainer und spezialisierte Dienstleister, die ein Buch schaffen, das Fachlichkeit sichtbar macht und Kaufvertrauen erhöht wollen. Es beginnt mit Klarheit, geht dann in nutzbare Struktur über und verbindet jede Seite mit einem sofort einsetzbaren Ergebnis.",
+    "readerHook": "Auf dieser Seite kann der Leser vom Cover über die Einführung und das Inhaltsverzeichnis bis zu allen Kapiteln in einem einzigen Lesefluss gehen."
   },
   {
     "slug": "klare-systeme-fur-kleine-teams",
@@ -541,7 +586,10 @@
     "accentColor": "#ffbf93",
     "textAccent": "#fff7f1",
     "coverGradient": "linear-gradient(145deg,#ffbf93 0%,#8a4d2d 52%,#24120a 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a business nonfiction book about Systeme und Übergaben in kleinen Teams klären. Use präzises system-cover mit technischer ruhe und kühlem blau, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Dieses Buch richtet sich an Teamleiter, Operator und kleine Agenturen, die aus impliziten Gewohnheiten belastbare Team-Systeme machen wollen. Es beginnt mit Klarheit, geht dann in nutzbare Struktur über und verbindet jede Seite mit einem sofort einsetzbaren Ergebnis.",
+    "readerHook": "Auf dieser Seite kann der Leser vom Cover über die Einführung und das Inhaltsverzeichnis bis zu allen Kapiteln in einem einzigen Lesefluss gehen."
   },
   {
     "slug": "ruhige-fuhrung-in-lauten-zeiten",
@@ -575,7 +623,10 @@
     "accentColor": "#9dc3ff",
     "textAccent": "#f6f9ff",
     "coverGradient": "linear-gradient(145deg,#9dc3ff 0%,#324f7a 52%,#101827 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a personal development nonfiction book about ruhige und klare Führung unter Druck. Use executive-cover mit dunkler tiefe, weichen flächen und stiller stärke, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Dieses Buch richtet sich an Führungskräfte und erfahrene Projektleiter, die eine ruhige Führungspräsenz aufbauen, die Orientierung statt Lärm erzeugt wollen. Es beginnt mit Klarheit, geht dann in nutzbare Struktur über und verbindet jede Seite mit einem sofort einsetzbaren Ergebnis.",
+    "readerHook": "Auf dieser Seite kann der Leser vom Cover über die Einführung und das Inhaltsverzeichnis bis zu allen Kapiteln in einem einzigen Lesefluss gehen."
   },
   {
     "slug": "votre-methode-devient-un-livre",
@@ -609,7 +660,10 @@
     "accentColor": "#9de3b8",
     "textAccent": "#f4fff7",
     "coverGradient": "linear-gradient(145deg,#9de3b8 0%,#3e6f54 52%,#111e16 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about transformer une méthode experte en livre de référence. Use couverture éditoriale raffinée, contrastes doux et structure premium, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Ce livre a été conçu pour consultants, formateurs et indépendants experts qui veulent faire d’une méthode utile un actif éditorial qui inspire confiance. Il ouvre avec de la clarté, avance vers une structure utilisable et relie chaque page à un résultat immédiatement mobilisable.",
+    "readerHook": "Sur cette page, le lecteur peut parcourir la couverture, l’introduction, le sommaire et tous les chapitres dans une seule expérience de lecture continue."
   },
   {
     "slug": "le-playbook-du-formateur-moderne",
@@ -643,7 +697,10 @@
     "accentColor": "#ff9bc8",
     "textAccent": "#fff5fa",
     "coverGradient": "linear-gradient(145deg,#ff9bc8 0%,#8b345e 52%,#250b18 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a education nonfiction book about concevoir des formations modernes et vendables. Use couverture éducation-business avec rythme visuel clair et lumière chaude, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Ce livre a été conçu pour formateurs, coachs et créateurs de programmes qui veulent structurer une pédagogie qui améliore à la fois l’apprentissage et la valeur perçue. Il ouvre avec de la clarté, avance vers une structure utilisable et relie chaque page à un résultat immédiatement mobilisable.",
+    "readerHook": "Sur cette page, le lecteur peut parcourir la couverture, l’introduction, le sommaire et tous les chapitres dans une seule expérience de lecture continue."
   },
   {
     "slug": "clarte-calme-execution",
@@ -677,7 +734,10 @@
     "accentColor": "#7bdde6",
     "textAccent": "#effeff",
     "coverGradient": "linear-gradient(145deg,#7bdde6 0%,#1b5960 52%,#071c1f 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a personal development nonfiction book about retrouver une exécution calme et régulière. Use couverture minimaliste haut de gamme avec violet sombre et lumière satinée, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Ce livre a été conçu pour professionnels surchargés et créatifs exigeants qui veulent mettre en place un système de clarté qui protège l’exécution. Il ouvre avec de la clarté, avance vers une structure utilisable et relie chaque page à un résultat immédiatement mobilisable.",
+    "readerHook": "Sur cette page, le lecteur peut parcourir la couverture, l’introduction, le sommaire et tous les chapitres dans une seule expérience de lecture continue."
   },
   {
     "slug": "seu-conhecimento-vira-receita",
@@ -711,7 +771,10 @@
     "accentColor": "#efc48d",
     "textAccent": "#fff9f2",
     "coverGradient": "linear-gradient(145deg,#efc48d 0%,#785127 52%,#211407 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about transformar conhecimento em livro de autoridade e receita. Use capa editorial quente com profundidade suave e acabamento premium, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Este livro foi construído para consultores, mentores e especialistas independentes que deseja usar um livro para converter conhecimento em confiança e novos negócios. Ele começa com clareza, avança para uma estrutura utilizável e mantém cada página ligada a um resultado aplicável de imediato.",
+    "readerHook": "Nesta página, o leitor consegue ir da capa à introdução, ao sumário e a todos os capítulos em um fluxo contínuo de leitura."
   },
   {
     "slug": "ia-pratica-para-negocios-pequenos",
@@ -745,7 +808,10 @@
     "accentColor": "#9eb4ff",
     "textAccent": "#f3f6ff",
     "coverGradient": "linear-gradient(145deg,#9eb4ff 0%,#384989 52%,#10142a 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about aplicar IA de forma prática em pequenos negócios. Use capa tech editorial com verde petróleo, luz fria e estruturas precisas, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Este livro foi construído para donos de pequenos negócios e operadores enxutos que deseja fazer a IA trabalhar na rotina real sem complicação desnecessária. Ele começa com clareza, avança para uma estrutura utilizável e mantém cada página ligada a um resultado aplicável de imediato.",
+    "readerHook": "Nesta página, o leitor consegue ir da capa à introdução, ao sumário e a todos os capítulos em um fluxo contínuo de leitura."
   },
   {
     "slug": "energia-calma-resultados-grandes",
@@ -779,7 +845,10 @@
     "accentColor": "#cda1ff",
     "textAccent": "#faf3ff",
     "coverGradient": "linear-gradient(145deg,#cda1ff 0%,#5a2f7a 52%,#190d22 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a personal development nonfiction book about combinar energia calma com alta execução. Use capa emocional com camadas suaves, rosa profundo e brilho controlado, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Este livro foi construído para profissionais criativos e operadores cansados do excesso que deseja gerar resultados grandes sem viver em estado de urgência constante. Ele começa com clareza, avança para uma estrutura utilizável e mantém cada página ligada a um resultado aplicável de imediato.",
+    "readerHook": "Nesta página, o leitor consegue ir da capa à introdução, ao sumário e a todos os capítulos em um fluxo contínuo de leitura."
   },
   {
     "slug": "il-libro-che-vende-la-tua-competenza",
@@ -813,7 +882,10 @@
     "accentColor": "#8ae1c8",
     "textAccent": "#f1fff9",
     "coverGradient": "linear-gradient(145deg,#8ae1c8 0%,#2a6758 52%,#0c1d18 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about trasformare competenza in libro autorevole. Use copertina editoriale elegante con rame caldo e profondità controllata, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Questo libro è stato costruito per consulenti, coach e professionisti indipendenti che vogliono usare un libro per far percepire meglio il valore prima della call. Parte dalla chiarezza, passa a una struttura utilizzabile e collega ogni pagina a un risultato che il lettore può applicare subito.",
+    "readerHook": "In questa pagina il lettore può passare dalla copertina all’introduzione, all’indice e a tutti i capitoli in un unico flusso di lettura continuo."
   },
   {
     "slug": "metodo-profondo-per-lavorare-meglio",
@@ -847,7 +919,10 @@
     "accentColor": "#ffaf84",
     "textAccent": "#fff6f1",
     "coverGradient": "linear-gradient(145deg,#ffaf84 0%,#7a3b23 52%,#230f08 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a personal development nonfiction book about costruire un metodo calmo e profondo di lavoro. Use copertina sobria con blu ardesia, luce laterale e senso di disciplina, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Questo libro è stato costruito per professionisti della conoscenza e freelance che vogliono lavorare meglio con meno rumore e più continuità. Parte dalla chiarezza, passa a una struttura utilizzabile e collega ogni pagina a un risultato che il lettore può applicare subito.",
+    "readerHook": "In questa pagina il lettore può passare dalla copertina all’introduzione, all’indice e a tutti i capitoli in un unico flusso di lettura continuo."
   },
   {
     "slug": "van-expertise-naar-boekmerk",
@@ -881,7 +956,10 @@
     "accentColor": "#97d3ff",
     "textAccent": "#f2fbff",
     "coverGradient": "linear-gradient(145deg,#97d3ff 0%,#2d5f8a 52%,#0b1b28 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about expertise omzetten in een boekmerk. Use nederlandse editorial cover met rustige diepte en helder koperaccent, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Dit boek is gebouwd voor adviseurs, trainers en zelfstandige experts die kennis verpakken in een boek dat merk en vertrouwen tegelijk versterkt willen. Het begint met helderheid, gaat daarna naar bruikbare structuur en koppelt elke pagina aan een resultaat dat direct toepasbaar is.",
+    "readerHook": "Op deze pagina kan de lezer van omslag naar introductie, inhoudsopgave en alle hoofdstukken gaan in één doorlopende leeservaring."
   },
   {
     "slug": "rust-ritme-resultaat",
@@ -915,7 +993,10 @@
     "accentColor": "#bfe47f",
     "textAccent": "#f9ffef",
     "coverGradient": "linear-gradient(145deg,#bfe47f 0%,#4e6830 52%,#151e0d 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a personal development nonfiction book about een rustig ritme voor duurzaam resultaat bouwen. Use minimal cover met heldere vlakken, koele blauwen en stille luxe, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "Dit boek is gebouwd voor kenniswerkers en creatieve professionals die resultaat koppelen aan rust en ritme in plaats van stress willen. Het begint met helderheid, gaat daarna naar bruikbare structuur en koppelt elke pagina aan een resultaat dat direct toepasbaar is.",
+    "readerHook": "Op deze pagina kan de lezer van omslag naar introductie, inhoudsopgave en alle hoofdstukken gaan in één doorlopende leeservaring."
   },
   {
     "slug": "khibratuka-tusbihu-kitaban-yabie",
@@ -949,7 +1030,10 @@
     "accentColor": "#f29db7",
     "textAccent": "#fff5f8",
     "coverGradient": "linear-gradient(145deg,#f29db7 0%,#6e2f46 52%,#1f0b12 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about تحويل الخبرة إلى كتاب سلطة ومبيعات. Use غلاف عربي تحريري فاخر مع عمق هادئ وتباين نحاسي أنيق, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "صُمم هذا الكتاب من أجل المدربون والمستشارون وأصحاب الخبرة المستقلة الذين يريدون استخدام كتاب واضح لبناء الثقة قبل أي مكالمة بيع. يبدأ بالوضوح، ثم ينتقل إلى بنية قابلة للاستخدام، ويجعل كل صفحة مرتبطة بنتيجة يمكن تطبيقها فوراً.",
+    "readerHook": "في هذه الصفحة يستطيع القارئ الانتقال من الغلاف إلى المقدمة والفهرس وجميع الفصول ضمن تجربة قراءة كاملة ومتواصلة."
   },
   {
     "slug": "nizam-al-amal-al-hadi",
@@ -983,7 +1067,10 @@
     "accentColor": "#9ec4df",
     "textAccent": "#f4f9fd",
     "coverGradient": "linear-gradient(145deg,#9ec4df 0%,#35506a 52%,#101922 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about بناء نظام عمل هادئ مدعوم بالذكاء الاصطناعي. Use غلاف تقني هادئ مع طبقات بترولية وخطوط ضوء دقيقة, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "صُمم هذا الكتاب من أجل أصحاب الأعمال الصغيرة والفرق المرنة الذين يريدون تحويل الذكاء الاصطناعي إلى نظام عمل منظم وواضح. يبدأ بالوضوح، ثم ينتقل إلى بنية قابلة للاستخدام، ويجعل كل صفحة مرتبطة بنتيجة يمكن تطبيقها فوراً.",
+    "readerHook": "في هذه الصفحة يستطيع القارئ الانتقال من الغلاف إلى المقدمة والفهرس وجميع الفصول ضمن تجربة قراءة كاملة ومتواصلة."
   },
   {
     "slug": "senmon-chishiki-o-issatsu-ni-kaeru",
@@ -1017,6 +1104,9 @@
     "accentColor": "#f0d27c",
     "textAccent": "#fffdf1",
     "coverGradient": "linear-gradient(145deg,#f0d27c 0%,#5f4c1f 52%,#1c1608 100%)",
-    "year": "2026"
+    "year": "2026",
+    "coverPrompt": "Create premium portrait editorial background artwork for a expertise nonfiction book about 専門知識を信頼資産になる本へ変える. Use 静かな高級感を持つ和文ノンフィクション表紙。深い藍と柔らかな金の余白。, layered composition, tactile paper grain, cinematic lighting, atmospheric depth, and calm negative space near the top and bottom. Make it feel like a high-end global bestseller cover. No words, no letters, no numbers, no symbols, no logos, no watermarks.",
+    "openingNote": "この本は、コンサルタント、講師、独立した専門家が知見を整理し、商談前に信頼を生む本に変えるために設計されています。導入は明快さから始まり、すぐ使える構造へ進み、各ページを読者がすぐ実行できる結果へ結びつけます。",
+    "readerHook": "このページでは、カバー、導入、目次、そして全章までを一つの連続した読書体験として読むことができます。"
   }
 ]

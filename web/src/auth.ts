@@ -108,7 +108,7 @@ export const { handlers, auth, signIn, signOut } = nextAuth({
   adapter: PrismaAdapter(prisma) as any,
   secret: authSecret,
   session: {
-    strategy: "database",
+    strategy: "jwt",
   },
   trustHost: true,
   pages: {
@@ -123,10 +123,21 @@ export const { handlers, auth, signIn, signOut } = nextAuth({
       }
       return true;
     },
-    async session({ session, user }: { session: any; user: any }) {
-      const dbUser = user?.id
+    async jwt({ token, user }: { token: any; user: any }) {
+      if (user?.id) {
+        token.sub = user.id;
+        token.goal = user.goal || "";
+        token.role = user.role || "USER";
+        token.emailVerified = user.emailVerified ? user.emailVerified.toISOString() : null;
+      }
+
+      return token;
+    },
+    async session({ session, user, token }: { session: any; user: any; token: any }) {
+      const userId = user?.id || token?.sub || null;
+      const dbUser = userId
         ? await prisma.user.findUnique({
-            where: { id: user.id },
+            where: { id: userId },
             select: {
               id: true,
               goal: true,
@@ -137,14 +148,14 @@ export const { handlers, auth, signIn, signOut } = nextAuth({
         : null;
 
       if (session.user) {
-        session.user.id = user.id;
-        session.user.goal = dbUser?.goal || user.goal || "";
+        session.user.id = userId || "";
+        session.user.goal = dbUser?.goal || user?.goal || token?.goal || "";
         session.user.emailVerified = dbUser?.emailVerified
           ? dbUser.emailVerified.toISOString()
-          : user.emailVerified
+          : user?.emailVerified
             ? user.emailVerified.toISOString()
-            : null;
-        session.user.role = ((dbUser?.role || user.role || "USER") as UserRole);
+            : (token?.emailVerified ?? null);
+        session.user.role = ((dbUser?.role || user?.role || token?.role || "USER") as UserRole);
       }
       return session;
     },

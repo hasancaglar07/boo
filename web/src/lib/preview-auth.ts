@@ -1,3 +1,5 @@
+import type { UserRole } from "@prisma/client";
+
 export type PreviewAccount = {
   name: string;
   email: string;
@@ -19,6 +21,27 @@ export type PreviewAuthProviders = {
   credentials: boolean;
 };
 
+export type PreviewViewer = {
+  id: string;
+  name: string;
+  email: string;
+  goal: string;
+  planId: PreviewPlan;
+  emailVerified: boolean;
+  role: UserRole;
+};
+
+export type PreviewAuthStatePayload = {
+  authenticated: boolean;
+  session: PreviewSession | null;
+  account: PreviewAccount;
+  planId: PreviewPlan;
+  emailVerified: boolean;
+  providers?: PreviewAuthProviders;
+  anonymousId?: string | null;
+  viewer: PreviewViewer | null;
+};
+
 export const DEFAULT_PREVIEW_GOAL = "İlk kitabımı hızlıca üretmek istiyorum.";
 export const DEFAULT_PREVIEW_ACCOUNT = {
   name: "Book Creator",
@@ -29,6 +52,7 @@ export const DEFAULT_PREVIEW_ACCOUNT = {
 const SESSION_KEY = "book-product-session";
 const ACCOUNT_KEY = "book-product-account";
 const PLAN_KEY = "book-product-plan";
+const VIEWER_KEY = "book-product-viewer";
 const WIZARD_PREFIX = "book-dashboard-wizard:";
 
 function safeParse<T>(value: string | null, fallback: T): T {
@@ -71,6 +95,7 @@ export function clearSession() {
 export function clearClientAuthState() {
   if (!canUseStorage()) return;
   clearSession();
+  clearViewer();
   localStorage.removeItem(ACCOUNT_KEY);
   localStorage.setItem(PLAN_KEY, "free");
 }
@@ -95,6 +120,40 @@ export function getPlan() {
 export function setPlan(planId: PreviewPlan) {
   if (!canUseStorage()) return;
   localStorage.setItem(PLAN_KEY, planId);
+}
+
+export function getViewer() {
+  if (!canUseStorage()) return null;
+  return safeParse<PreviewViewer | null>(localStorage.getItem(VIEWER_KEY), null);
+}
+
+export function setViewer(payload: PreviewViewer) {
+  if (!canUseStorage()) return;
+  localStorage.setItem(VIEWER_KEY, JSON.stringify(payload));
+}
+
+export function clearViewer() {
+  if (!canUseStorage()) return;
+  localStorage.removeItem(VIEWER_KEY);
+}
+
+export function persistViewer(payload: PreviewViewer) {
+  setViewer(payload);
+  setAccount({
+    name: payload.name,
+    email: payload.email,
+    goal: payload.goal,
+  });
+  setPlan(payload.planId);
+
+  const session = getSession();
+  if (session) {
+    setSession({
+      ...session,
+      email: payload.email,
+      emailVerified: payload.emailVerified,
+    });
+  }
 }
 
 export function hasPremiumAccess(planId?: string | null) {
@@ -133,15 +192,7 @@ export async function syncPreviewAuthState() {
       return null;
     }
 
-    const payload = (await response.json()) as {
-      authenticated: boolean;
-      session: PreviewSession | null;
-      account: PreviewAccount;
-      planId: PreviewPlan;
-      emailVerified: boolean;
-      providers?: PreviewAuthProviders;
-      anonymousId?: string | null;
-    };
+    const payload = (await response.json()) as PreviewAuthStatePayload;
 
     const currentAccount = getAccount();
     if (payload.authenticated || !hasCustomPreviewAccount(currentAccount)) {
@@ -154,8 +205,12 @@ export async function syncPreviewAuthState() {
         ...payload.session,
         emailVerified: payload.emailVerified,
       });
+      if (payload.viewer) {
+        setViewer(payload.viewer);
+      }
     } else {
       clearSession();
+      clearViewer();
     }
 
     return payload;

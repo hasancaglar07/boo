@@ -23,25 +23,23 @@ export default async function ExamplesPage() {
 
   return (
     <MarketingPage>
-      <ExamplesPageHero />
+      <ExamplesPageHero items={items} />
 
-      {/* Header */}
       <section className="border-b border-border/80 py-20">
         <div className="shell">
           <SectionHeading
             badge="Örnekler"
             title="Vaat değil, görülebilir çıktı."
-            description="Bu sayfa ürünün gerçek teslim yüzeyini gösterir: çok dilli branded kitaplar, kapaklar, bölüm yapısı ve export zinciri."
+            description="Bu sayfa ürünün gerçek teslim yüzeyini gösterir: çok dilli branded kitaplar, gerçek kapaklar, bölüm yapısı ve export zinciri."
           />
         </div>
       </section>
 
-      {/* Filter + showcase + pipeline (client) */}
       <ExamplesShowcase items={items} categories={categories} languages={languages} />
 
       <MarketingCtaSection
         title="Örnekleri gördüysen şimdi kendi kitabını başlat."
-        description="Aynı akışı kendi konu brief'inle dene: wizard, outline, bölüm ve export."
+        description="Aynı akışı kendi konu brief'inle dene: wizard, outline, bölüm, kapak ve export."
         items={[
           "5 soruluk hızlı wizard",
           "Outline + bölüm üretimi",

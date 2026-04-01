@@ -59,11 +59,11 @@ const whoForItems = [
     title: "İlk kez deneyen",
     description:
       "Uzmanlığın kitap olur mu diye merak ediyorsun. $4 ile gir, tüm süreci yaşa, kitabını çıkar. Beğenmezsen 30 gün içinde iade.",
-    bullets: ["Yazarlık deneyimi gerekmiyor", "5 dakikada outline hazır", "Risk sıfır"],
+    bullets: ["Yazarlık deneyimi gerekmiyor", "5 dakikada taslak hazır", "Risk sıfır"],
   },
   {
     icon: Sparkles,
-    plan: "Starter — $19/ay",
+    plan: "Temel — $19/ay",
     title: "Düzenli içerik üreten",
     description:
       "Her ay yeni bilgi ürünü çıkarmak istiyorsun. 10 kitap/ay ile serini oluştur, KDP'de nişini genişlet.",
@@ -278,7 +278,7 @@ export default function PricingPage() {
       <section className="border-b border-border/80 bg-[linear-gradient(180deg,rgba(233,230,220,0.3),transparent)] py-14">
         <div className="shell">
           <h2 className="mb-8 text-center text-base font-medium text-muted-foreground">
-            Kanıtlanmış pipeline — 2 kitap KDP&apos;de canlı
+            Kanıtlanmış süreç — 2 kitap KDP&apos;de canlı
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
             {[
