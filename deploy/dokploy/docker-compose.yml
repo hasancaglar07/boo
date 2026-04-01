@@ -1,0 +1,82 @@
+services:
+  dashboard:
+    build:
+      context: ../../
+      dockerfile: ../../Dockerfile
+      target: dashboard
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      HOME: /home/app
+      BOOK_DASHBOARD_HOST: 0.0.0.0
+      BOOK_DASHBOARD_PORT: 8765
+      OLLAMA_DISABLED: ${OLLAMA_DISABLED:-1}
+    volumes:
+      - ../files/book_outputs:/app/book_outputs
+      - ../files/multi_provider_logs:/app/multi_provider_logs
+      - ../files/dashboard_settings.json:/app/dashboard_settings.json
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/health', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web-migrate:
+    build:
+      context: ../../
+      dockerfile: ../../Dockerfile
+      target: web-builder
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: file:/data/prod.db
+      DASHBOARD_ORIGIN: http://dashboard:8765
+      NEXT_PUBLIC_DASHBOARD_ORIGIN: http://dashboard:8765
+    volumes:
+      - ../files/sqlite:/data
+    command: ["sh", "-lc", "pnpm exec prisma generate && pnpm exec prisma db push"]
+
+  web:
+    build:
+      context: ../../
+      dockerfile: ../../Dockerfile
+      target: web
+    restart: unless-stopped
+    depends_on:
+      dashboard:
+        condition: service_healthy
+      web-migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: file:/data/prod.db
+      DASHBOARD_ORIGIN: http://dashboard:8765
+      NEXT_PUBLIC_DASHBOARD_ORIGIN: http://dashboard:8765
+    volumes:
+      - ../files/sqlite:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/auth/state').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
