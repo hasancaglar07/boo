@@ -55,6 +55,30 @@ normalize_book_language() {
         en*|english|ingilizce)
             printf '%s\n' "English"
             ;;
+        german|deutsch|almanca)
+            printf '%s\n' "German"
+            ;;
+        french|français|francais|fransızca)
+            printf '%s\n' "French"
+            ;;
+        spanish|español|espanol|ispanyolca)
+            printf '%s\n' "Spanish"
+            ;;
+        italian|italiano|italyanca)
+            printf '%s\n' "Italian"
+            ;;
+        portuguese|português|portugues|portekizce)
+            printf '%s\n' "Portuguese"
+            ;;
+        dutch|nederlands|hollandaca)
+            printf '%s\n' "Dutch"
+            ;;
+        arabic|العربية|arapça|arapca)
+            printf '%s\n' "Arabic"
+            ;;
+        japanese|日本語|japonca)
+            printf '%s\n' "Japanese"
+            ;;
         *)
             printf '%s\n' ""
             ;;
@@ -134,10 +158,29 @@ infer_book_language_for_dir() {
 }
 
 chapter_label_for_language() {
-    if [ "$(normalize_book_language "$1")" = "Turkish" ]; then
-        printf '%s\n' "Bölüm"
+    case "$(normalize_book_language "$1")" in
+        Turkish) printf '%s\n' "Bölüm" ;;
+        English) printf '%s\n' "Chapter" ;;
+        Spanish) printf '%s\n' "Capítulo" ;;
+        German) printf '%s\n' "Kapitel" ;;
+        French) printf '%s\n' "Chapitre" ;;
+        Portuguese) printf '%s\n' "Capítulo" ;;
+        Italian) printf '%s\n' "Capitolo" ;;
+        Dutch) printf '%s\n' "Hoofdstuk" ;;
+        Arabic) printf '%s\n' "الفصل" ;;
+        Japanese) printf '%s\n' "第n章" ;;
+        *) printf '%s\n' "Chapter" ;;
+    esac
+}
+
+chapter_heading_prefix() {
+    local language
+    language="$(normalize_book_language "$1")"
+    local number="$2"
+    if [ "$language" = "Japanese" ]; then
+        printf '第%s章\n' "$number"
     else
-        printf '%s\n' "Chapter"
+        printf '%s %s\n' "$(chapter_label_for_language "$language")" "$number"
     fi
 }
 
@@ -262,10 +305,10 @@ chapter_generate() {
     local content
     content="$(generate_chapter_with_smart_api "$chapter_num" "$chapter_title" "$existing_chapters" "$outline_content" "$min_words" "$max_words" "$style" "$tone" "$language")"
     local chapter_path
-    local chapter_label
-    chapter_label="$(chapter_label_for_language "$language")"
+    local chapter_prefix
+    chapter_prefix="$(chapter_heading_prefix "$language" "$chapter_num")"
     chapter_path="$(chapter_file_for "$book_dir" "$chapter_num")"
-    printf '# %s %s: %s\n\n%s\n' "$chapter_label" "$chapter_num" "$chapter_title" "$(clean_llm_output "$content")" > "$chapter_path"
+    printf '# %s: %s\n\n%s\n' "$chapter_prefix" "$chapter_title" "$(clean_llm_output "$content")" > "$chapter_path"
     echo "Saved chapter to $chapter_path"
 }
 

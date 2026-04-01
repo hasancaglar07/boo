@@ -9,7 +9,7 @@ import { SectionHeading } from "@/components/site/section-heading";
 import { Features11 } from "@/components/ui/features-11";
 import { Card, CardContent } from "@/components/ui/card";
 import { deliverables, howItWorksPageSteps } from "@/lib/marketing-data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, absoluteUrl, siteConfig } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Book Generator Nasıl Çalışır? 3 Adımda Kitap Üretimi",
@@ -21,7 +21,7 @@ export const metadata: Metadata = buildPageMetadata({
 
 const workflowCards = [
   {
-    eyebrow: "Brief",
+    eyebrow: "Konu Özeti",
     title: "Kısa cevaplardan net kitap yönü",
     description:
       "Kime yazdığını, hangi sonucu vaat ettiğini ve hangi dilde üretmek istediğini sisteme verirsin. Geri kalan akışı sistem toplar.",
@@ -36,14 +36,14 @@ const workflowCards = [
   },
   {
     eyebrow: "Araştırma",
-    title: "Outline ve keyword aynı mantıkta ilerler",
+    title: "Taslak ve anahtar kelimeler aynı mantıkta ilerler",
     description:
-      "Konu araştırması ve bölüm mantığı kopuk kalmaz. Okur ihtiyacı doğrudan outline sistemine taşınır.",
+      "Konu araştırması ve bölüm mantığı kopuk kalmaz. Okur ihtiyacı doğrudan taslak sistemine taşınır.",
     visual: "outline",
   },
   {
     eyebrow: "Yayın",
-    title: "Export dosyaları sonradan değil, baştan düşünülür",
+    title: "Çıktı dosyaları sonradan değil, baştan düşünülür",
     description:
       "EPUB, PDF ve metadata akışı kitap üretiminin ayrılmaz parçası olarak ilerler.",
     visual: "exports",
@@ -51,6 +51,23 @@ const workflowCards = [
 ] as const;
 
 export default function HowItWorksPage() {
+  const howToSchema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "Book Generator ile Nasıl Kitap Üretilir?",
+    description: "AI destekli Book Generator ile 3 adımda kitap üretin: konu özetini girin, taslağı onaylayın, EPUB/PDF alın.",
+    inLanguage: "tr-TR",
+    totalTime: "PT30M",
+    url: absoluteUrl("/how-it-works"),
+    supply: deliverables.map((d) => ({ "@type": "HowToSupply", name: d })),
+    step: howItWorksPageSteps.map((s) => ({
+      "@type": "HowToStep",
+      position: Number(s.step),
+      name: s.title,
+      text: s.text,
+    })),
+  };
+
   return (
     <MarketingPage>
       <HowItWorksPageHero />
@@ -144,6 +161,10 @@ export default function HowItWorksPage() {
           "Araştırma ve kapak destekleri",
           "EPUB önce teslim mantığı",
         ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
       />
     </MarketingPage>
   );

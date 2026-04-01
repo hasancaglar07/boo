@@ -10,13 +10,13 @@ const primaryNav = [
   { href: "/how-it-works", label: "Nasıl Çalışır" },
   { href: "/examples", label: "Örnekler" },
   { href: "/pricing", label: "Fiyatlar" },
+  { href: "/compare", label: "Karşılaştır" },
   { href: "/faq", label: "SSS" },
-  { href: "/blog", label: "Blog" },
 ];
 
 const secondaryNav = [
   { href: "/resources", label: "Kaynaklar" },
-  { href: "/compare", label: "Karşılaştır" },
+  { href: "/blog", label: "Blog" },
   { href: "/use-cases", label: "Kullanım Alanları" },
 ];
 

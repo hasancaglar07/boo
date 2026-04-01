@@ -52,6 +52,7 @@ import {
   type FunnelStep,
   type FunnelTone,
 } from "@/lib/funnel-draft";
+import { formatChapterReference } from "@/lib/book-language";
 import { PUBLISHER_LOGO_PRESETS, pickRandomPublisherLogo } from "@/lib/publisher-logo-library";
 import { getAccount, getSession, syncPreviewAuthState } from "@/lib/preview-auth";
 import { cn } from "@/lib/utils";
@@ -125,8 +126,8 @@ function defaultAudience(language: FunnelLanguage) {
   return isTurkishLanguage(language) ? "genel okur" : "general readers";
 }
 
-function defaultChapterLabel(language: FunnelLanguage) {
-  return isTurkishLanguage(language) ? "Bölüm" : "Chapter";
+function defaultChapterReference(language: FunnelLanguage, number: number) {
+  return formatChapterReference(language, number);
 }
 
 function randomCoverBrief() {
@@ -493,7 +494,7 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
           | undefined;
         if (generated?.chapters?.length) {
           chapters = generated.chapters.map((item, index) => ({
-            title: String(item.title || `${defaultChapterLabel(draft.language)} ${index + 1}`).trim(),
+            title: String(item.title || defaultChapterReference(draft.language, index + 1)).trim(),
             summary: String(item.summary || "").trim(),
           }));
           maybeTitle = String(generated.title || maybeTitle || "").trim();
@@ -848,7 +849,7 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
                   outline: [
                     ...draft.outline,
                     {
-                      title: `${isTurkishLanguage(draft.language) ? "Yeni Bölüm" : "New Section"} ${draft.outline.length + 1}`,
+                      title: defaultChapterReference(draft.language, draft.outline.length + 1),
                       summary: isTurkishLanguage(draft.language) ? "Bu bölümün kısa amacı." : "Short purpose of this section.",
                     },
                   ],

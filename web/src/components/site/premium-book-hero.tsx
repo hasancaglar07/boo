@@ -275,12 +275,12 @@ export const PremiumBookHero = React.forwardRef<
 >((
   {
     className,
-    title = "Kitabını bir türlü çıkaramamana son.",
-    subtitle = "Outline'ını ücretsiz gör — 10 dakika, kredi kartı yok.",
-    ctaText = "Outline'ımı Ücretsiz Gör",
+    title = "Kitabını bugün çıkar.",
+    subtitle = "Konunu gir, taslağını gör, beğenirsen $4 ile tam kitabı al.",
+    ctaText = "Taslağımı Ücretsiz Gör",
     ctaHref = "/start/topic",
     badge = "✨ Ücretsiz Başla",
-    trustNote = "✓ Kredi kartı gerekmez · ✓ Kayıt zorunlu değil · ✓ %20 ücretsiz önizleme",
+    trustNote = "✓ Kredi kartı gerekmez · ✓ Kayıt zorunlu değil · ✓ 30 saniye",
     socialProof = { count: "4.291 kitap üretildi", rating: "Amazon'da satışta" },
     secondaryCtaText = "Örnekleri Gör",
     secondaryCtaHref = "/examples",
@@ -301,7 +301,7 @@ export const PremiumBookHero = React.forwardRef<
       ref={ref}
       onMouseMove={handleMouseMove}
       className={cn(
-        "relative flex min-h-[820px] w-full items-center justify-center overflow-hidden border-b border-border/80",
+        "relative flex min-h-[600px] md:min-h-[820px] w-full items-center justify-center overflow-hidden border-b border-border/80",
         className,
       )}
       {...props}
@@ -330,8 +330,8 @@ export const PremiumBookHero = React.forwardRef<
       {/* Hero glow */}
       <div className="hero-glow" />
 
-      {/* Floating Books */}
-      <div className="absolute inset-0">
+      {/* Floating Books — masaüstünde görünür, mobilde gizli */}
+      <div className="absolute inset-0 hidden md:block">
         {premiumBooks.map((book, index) => (
           <PremiumBookCard
             key={book.id}
@@ -378,7 +378,7 @@ export const PremiumBookHero = React.forwardRef<
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.8 }}
-          className="mx-auto max-w-5xl text-balance font-serif text-6xl font-bold tracking-tight text-foreground md:text-7xl lg:text-8xl"
+          className="mx-auto max-w-5xl text-balance font-serif text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-7xl lg:text-8xl"
         >
           {title}
         </motion.h1>
@@ -403,7 +403,7 @@ export const PremiumBookHero = React.forwardRef<
           <Button
             asChild
             size="lg"
-            className="h-16 px-10 text-lg font-bold shadow-2xl transition-all hover:scale-105 hover:shadow-3xl"
+            className="h-12 px-7 text-base font-bold shadow-2xl transition-all hover:scale-105 hover:shadow-3xl md:h-16 md:px-10 md:text-lg"
           >
             <a
               href={ctaHref}
@@ -420,7 +420,7 @@ export const PremiumBookHero = React.forwardRef<
               asChild 
               size="lg" 
               variant="outline" 
-              className="h-16 px-10 text-lg font-semibold backdrop-blur-sm hover:bg-primary/10"
+              className="h-12 px-7 text-base font-semibold backdrop-blur-sm hover:bg-primary/10 md:h-16 md:px-10 md:text-lg"
             >
               <a href={secondaryCtaHref} className="inline-flex items-center gap-2">
                 {secondaryCtaText}

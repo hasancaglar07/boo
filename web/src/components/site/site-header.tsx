@@ -19,8 +19,8 @@ const nav: NavItem[] = [
   { type: "link", href: "/how-it-works", label: "Nasıl Çalışır" },
   { type: "link", href: "/examples", label: "Örnekler" },
   { type: "link", href: "/pricing", label: "Fiyatlar" },
+  { type: "link", href: "/compare", label: "Karşılaştır" },
   { type: "link", href: "/faq", label: "SSS" },
-  { type: "link", href: "/blog", label: "Blog" },
 ];
 
 /* ─── Main header ────────────────────────────────────────── */

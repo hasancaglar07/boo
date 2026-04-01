@@ -7,7 +7,7 @@ import { MarketingPage } from "@/components/site/marketing-page";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Kimler İçin? | Book Generator",
@@ -141,6 +141,21 @@ const segments = [
 ] as const;
 
 export default function UseCasesPage() {
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Book Generator Kullanım Senaryoları",
+    description: "Yazarlar, danışmanlar, eğitimciler ve KDP yayıncıları için AI destekli kitap üretimi kullanım senaryoları.",
+    numberOfItems: segments.length,
+    itemListElement: segments.map((seg, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: seg.title,
+      description: seg.description,
+      url: absoluteUrl(`/use-cases#${seg.badge.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, "ve")}`),
+    })),
+  };
+
   return (
     <MarketingPage>
       {/* Hero */}
@@ -236,6 +251,10 @@ export default function UseCasesPage() {
           "EPUB/PDF çıktısı",
           "14 gün ücretsiz",
         ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
       />
     </MarketingPage>
   );

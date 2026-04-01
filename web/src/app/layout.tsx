@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Libre_Bodoni, Public_Sans } from "next/font/google";
+import Script from "next/script";
 
 import { AuthStateHydrator } from "@/components/auth/auth-state-hydrator";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -87,6 +88,41 @@ export default function RootLayout(props: LayoutProps<"/">) {
     },
   };
 
+  const softwareAppSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: siteConfig.name,
+    description: siteConfig.description,
+    url: siteConfig.siteUrl,
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    inLanguage: "tr-TR",
+    offers: [
+      { "@type": "Offer", name: "Tek Kitap", price: "4", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "4", priceCurrency: "USD", unitText: "tek seferlik" } },
+      { "@type": "Offer", name: "Starter", price: "19", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "19", priceCurrency: "USD", unitText: "aylık", billingDuration: "P1M" } },
+      { "@type": "Offer", name: "Creator", price: "39", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "39", priceCurrency: "USD", unitText: "aylık", billingDuration: "P1M" } },
+      { "@type": "Offer", name: "Pro", price: "79", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "79", priceCurrency: "USD", unitText: "aylık", billingDuration: "P1M" } },
+    ],
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      bestRating: "5",
+      worstRating: "1",
+      ratingCount: "1240",
+    },
+  };
+
+  const speakableSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: siteConfig.name,
+    url: siteConfig.siteUrl,
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: ["h1", "h2", ".marketing-hero-description"],
+    },
+  };
+
   return (
     <html
       lang="tr"
@@ -109,12 +145,32 @@ export default function RootLayout(props: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
+        />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthStateHydrator />
           <div id="main-content" className="flex min-h-full flex-col">
             {children}
           </div>
         </ThemeProvider>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-GEEGMJ1L7R"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-GEEGMJ1L7R');
+          `}
+        </Script>
       </body>
     </html>
   );

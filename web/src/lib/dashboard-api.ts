@@ -1,3 +1,4 @@
+import { chapterLabelForLanguage, formatChapterReference } from "@/lib/book-language";
 import { slugify, titleCase } from "@/lib/utils";
 
 export type Artifact = {
@@ -478,7 +479,7 @@ export function createFallbackBookPayload(input: {
   const chapterCount = input.depth === "hizli" ? 5 : input.depth === "detayli" ? 9 : 7;
   const title = titleCase(input.topic);
   const language = normalizeBookLanguage(input.language);
-  const chapterLabel = language === "Turkish" ? "Bölüm" : "Chapter";
+  const chapterLabel = chapterLabelForLanguage(language);
   const subtitleMap: Record<string, Record<string, string>> = {
     Turkish: {
       rehber: "Başlangıçtan ileri seviyeye adım adım uygulanabilir rehber",
@@ -495,6 +496,7 @@ export function createFallbackBookPayload(input: {
       diger: "A focused book built from one clear idea",
     },
   };
+  const subtitleSet = subtitleMap[language] || subtitleMap.English;
   const description =
     language === "Turkish"
       ? `${input.audience} için ${input.topic} konusunda hazırlanmış ${input.language} bir kitap.`
@@ -503,7 +505,7 @@ export function createFallbackBookPayload(input: {
   return {
     slug: slugify(title),
     title,
-    subtitle: subtitleMap[language][input.type] || subtitleMap[language].diger,
+    subtitle: subtitleSet[input.type] || subtitleSet.diger,
     language,
     author: input.author,
     publisher: "Book Generator",
@@ -512,7 +514,7 @@ export function createFallbackBookPayload(input: {
     generate_cover: true,
     fast: input.depth === "hizli",
     chapters: Array.from({ length: chapterCount }, (_, index) => ({
-      title: `${chapterLabel} ${index + 1}`,
+      title: formatChapterReference(language, index + 1) || `${chapterLabel} ${index + 1}`,
       content:
         language === "Turkish"
           ? `${input.topic} konusunda ${input.audience} için odaklı bir bölüm taslağı.`

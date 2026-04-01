@@ -19,7 +19,7 @@ import { buildPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = buildPageMetadata({
   title: "AI Kitap Yazma Aracı: Fikirden EPUB’a Book Generator",
   description:
-    "Book Generator ile fikirden outline’a, bölüm yazımından EPUB/PDF çıktısına kadar tüm kitap üretim sürecini tek akışta yönet. İlk kitabını daha hızlı çıkar.",
+    "Book Generator ile fikirden taslağa, bölüm yazımından EPUB/PDF çıktısına kadar tüm kitap üretim sürecini tek akışta yönet. İlk kitabını daha hızlı çıkar.",
   path: "/",
   keywords: [
     "ai kitap yazma",
@@ -42,7 +42,7 @@ export default function HomePage() {
     ],
     [
       "Baştan sona ne kadar sürer?",
-      "Brief'ten ilk EPUB'a kadar kısa bir oturum yeterlidir. Bölüm sayısına göre çıktı hızı değişir.",
+      "Konunu gir, bir oturumda ilk EPUB'a ulaş. Bölüm sayısına göre çıktı hızı değişir.",
     ],
     [
       "Çıktıyı KDP'ye direkt yükleyebilir miyim?",
@@ -58,7 +58,7 @@ export default function HomePage() {
     ],
     [
       "Taslağı beğenmezsem ne yaparım?",
-      "Outline üzerinde değişiklik yap, bölümleri yeniden üret ya da direkt çalışma alanında düzenle — yeniden başlamak zorunda değilsin.",
+      "Taslak üzerinde değişiklik yap, bölümleri yeniden üret ya da direkt çalışma alanında düzenle — yeniden başlamak zorunda değilsin.",
     ],
   ];
 
@@ -74,13 +74,13 @@ export default function HomePage() {
             Book Generator ne yapar? Bir cümlede.
           </h2>
           <p className="mt-4 max-w-3xl text-base leading-8 text-muted-foreground">
-            Konu fikrinden yayına hazır EPUB/PDF dosyasına kadar tüm süreci tek akışta yönetirsin — outline, bölüm yazımı, kapak ve export ayrı araçlara dağılmaz.
+            Konu fikrinden yayına hazır EPUB/PDF dosyasına kadar tüm süreci tek akışta yönetirsin — taslak, bölüm yazımı, kapak ve çıktı ayrı araçlara dağılmaz.
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-[24px] border border-border/80 bg-card/80 px-5 py-5 shadow-sm">
               <h3 className="text-base font-semibold text-foreground">Kimler için?</h3>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                Uzmanlığını rehber kitaba çevirmek isteyen eğitmenler, danışmanlar ve ilk kitabını çıkarmak isteyen creator’lar.
+                Uzmanlığını rehber kitaba çevirmek isteyen eğitmenler, danışmanlar ve ilk kitabını çıkarmak isteyen içerik üreticileri.
               </p>
               <Link href="/use-cases" className="mt-3 inline-block text-xs font-medium text-primary/80 underline-offset-4 hover:underline">
                 Tüm kullanım alanlarını gör →

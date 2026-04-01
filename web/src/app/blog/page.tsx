@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpenText, BriefcaseBusiness, FileType2, KeyRound, Palette, SearchCheck } from "lucide-react";
+import { ArrowRight, BookOpenText, BriefcaseBusiness, FileType2, KeyRound, Palette, SearchCheck } from "lucide-react";
 
 import { MarketingCtaSection } from "@/components/site/marketing-cta-section";
 import { MarketingPage } from "@/components/site/marketing-page";
@@ -52,6 +52,14 @@ const blogFeatureItems = [
   },
 ] as const;
 
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("tr-TR", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function BlogPage() {
   const [featured, ...restPosts] = blogPosts;
 
@@ -100,29 +108,49 @@ export default function BlogPage() {
             description="Once ana itirazlari, sonra daha detayli karar noktalarini ele alan sade icerikler."
           />
 
+          {/* Featured post */}
           <div className="grid gap-4 lg:grid-cols-3">
-            <Link href={`/blog/${featured.slug}`} className="lg:col-span-2">
-              <Card className="h-full border-primary/20 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_8%,transparent),transparent_55%)]">
-                <CardContent className="space-y-5">
-                  <Badge>{featured.category}</Badge>
+            <Link href={`/blog/${featured.slug}`} className="group lg:col-span-2">
+              <Card className="h-full border-primary/20 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_8%,transparent),transparent_55%)] transition-shadow hover:shadow-md">
+                <CardContent className="flex h-full flex-col space-y-5">
+                  <div className="flex items-center gap-2">
+                    <Badge>{featured.category}</Badge>
+                    <span className="text-xs text-muted-foreground/70">Öne Çıkan</span>
+                  </div>
                   <h2 className="max-w-2xl text-balance font-serif text-4xl font-semibold tracking-tight text-foreground">
                     {featured.title}
                   </h2>
-                  <p className="max-w-2xl text-base leading-8 text-muted-foreground">{featured.summary}</p>
-                  <div className="text-sm text-muted-foreground">{featured.readTime}</div>
+                  <p className="max-w-2xl flex-1 text-base leading-8 text-muted-foreground">{featured.summary}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <time dateTime={featured.datePublished}>{formatDate(featured.datePublished)}</time>
+                      <span className="size-1 rounded-full bg-border" />
+                      <span>{featured.readTime} okuma</span>
+                    </div>
+                    <span className="flex items-center gap-1 text-sm font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                      Oku <ArrowRight className="size-3.5" />
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
             </Link>
 
             <div className="grid gap-4">
               {restPosts.slice(0, 2).map((post) => (
-                <Link key={post.slug} href={`/blog/${post.slug}`}>
-                  <Card className="h-full transition hover:bg-accent">
-                    <CardContent className="space-y-4">
+                <Link key={post.slug} href={`/blog/${post.slug}`} className="group">
+                  <Card className="h-full transition hover:bg-accent hover:shadow-sm">
+                    <CardContent className="flex h-full flex-col space-y-3">
                       <Badge>{post.category}</Badge>
-                      <h2 className="text-2xl font-semibold tracking-tight text-foreground">{post.title}</h2>
-                      <p className="text-sm leading-8 text-muted-foreground">{post.summary}</p>
-                      <div className="text-sm text-muted-foreground">{post.readTime}</div>
+                      <h2 className="flex-1 text-xl font-semibold tracking-tight text-foreground">{post.title}</h2>
+                      <p className="line-clamp-2 text-sm leading-7 text-muted-foreground">{post.summary}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <time dateTime={post.datePublished}>{formatDate(post.datePublished)}</time>
+                          <span className="size-1 rounded-full bg-border" />
+                          <span>{post.readTime}</span>
+                        </div>
+                        <ArrowRight className="size-3.5 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>
@@ -130,15 +158,23 @@ export default function BlogPage() {
             </div>
           </div>
 
+          {/* Remaining posts */}
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {restPosts.slice(2).map((post) => (
-              <Link key={post.slug} href={`/blog/${post.slug}`}>
-                <Card className="h-full transition hover:bg-accent">
-                  <CardContent className="space-y-4">
+              <Link key={post.slug} href={`/blog/${post.slug}`} className="group">
+                <Card className="h-full transition hover:bg-accent hover:shadow-sm">
+                  <CardContent className="flex h-full flex-col space-y-3">
                     <Badge>{post.category}</Badge>
-                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">{post.title}</h2>
-                    <p className="text-sm leading-8 text-muted-foreground">{post.summary}</p>
-                    <div className="text-sm text-muted-foreground">{post.readTime}</div>
+                    <h2 className="flex-1 text-xl font-semibold tracking-tight text-foreground">{post.title}</h2>
+                    <p className="line-clamp-2 text-sm leading-7 text-muted-foreground">{post.summary}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <time dateTime={post.datePublished}>{formatDate(post.datePublished)}</time>
+                        <span className="size-1 rounded-full bg-border" />
+                        <span>{post.readTime}</span>
+                      </div>
+                      <ArrowRight className="size-3.5 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                    </div>
                   </CardContent>
                 </Card>
               </Link>

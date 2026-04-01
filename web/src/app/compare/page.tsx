@@ -26,8 +26,8 @@ interface CompareRow {
 }
 
 const rows: CompareRow[] = [
-  { feature: "Kitap odaklı brief sistemi", bookGenerator: "yes", manualAI: "no", generalTools: "no", note: "Diğer araçlar genel prompt kabul eder; kitap yapısı bilmez." },
-  { feature: "Otomatik outline üretimi", bookGenerator: "yes", manualAI: "partial", generalTools: "partial" },
+  { feature: "Kitap odaklı konu giriş sistemi", bookGenerator: "yes", manualAI: "no", generalTools: "no", note: "Diğer araçlar genel komut kabul eder; kitap yapısı bilmez." },
+  { feature: "Otomatik taslak üretimi", bookGenerator: "yes", manualAI: "partial", generalTools: "partial" },
   { feature: "Bölüm bölüm tutarlı üretim", bookGenerator: "yes", manualAI: "no", generalTools: "no", note: "Uzun içeriklerde bağlam kopukluğu yaşanır." },
   { feature: "EPUB çıktısı", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
   { feature: "KDP uyumlu PDF", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
@@ -53,7 +53,7 @@ const alternatives = [
     pros: ["Güçlü dil modeli", "Esneklik"],
     cons: [
       "Kitap yapısı yok",
-      "Her bölüm için yeni prompt yazman gerek",
+      "Her bölüm için yeni komut yazman gerek",
       "Bağlam sürüklenmesi ile tutarsızlık",
       "EPUB/PDF çıktısı yok",
       "Uzun kitaplarda token maliyeti yüksek",

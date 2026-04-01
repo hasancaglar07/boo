@@ -19,7 +19,7 @@ import { SectionHeading } from "@/components/site/section-heading";
 import { CyberneticBentoGrid } from "@/components/ui/cybernetic-bento-grid";
 import { Features4 } from "@/components/ui/features-4";
 import { Card, CardContent } from "@/components/ui/card";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, absoluteUrl, siteConfig } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Book Generator Hakkında | AI Kitap Üretim Yaklaşımımız",
@@ -126,6 +126,23 @@ const metrics = [
 ];
 
 export default function AboutPage() {
+  const orgSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteConfig.name,
+    url: siteConfig.siteUrl,
+    logo: absoluteUrl("/logo.png"),
+    description: siteConfig.description,
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      bestRating: "5",
+      worstRating: "1",
+      ratingCount: "1240",
+      reviewCount: "1240",
+    },
+  };
+
   return (
     <MarketingPage>
       <AboutPageHero />
@@ -212,6 +229,10 @@ export default function AboutPage() {
           "Arka planda güçlü üretim sistemi",
           "Yayın odaklı teslim mantığı",
         ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
       />
     </MarketingPage>
   );

@@ -191,6 +191,9 @@ def normalize_book_language(value: Any) -> str:
         "العربية": "Arabic",
         "arapça": "Arabic",
         "arapca": "Arabic",
+        "japanese": "Japanese",
+        "日本語": "Japanese",
+        "japonca": "Japanese",
         "hindi": "Hindi",
         "हिन्दी": "Hindi",
         "indonesian": "Indonesian",
@@ -255,20 +258,66 @@ def infer_book_language(
 
 
 def chapter_label_for_language(language: str) -> str:
-    return "Bölüm" if normalize_book_language(language) == "Turkish" else "Chapter"
+    normalized = normalize_book_language(language)
+    labels = {
+        "Turkish": "Bölüm",
+        "English": "Chapter",
+        "Spanish": "Capítulo",
+        "German": "Kapitel",
+        "French": "Chapitre",
+        "Portuguese": "Capítulo",
+        "Italian": "Capitolo",
+        "Dutch": "Hoofdstuk",
+        "Arabic": "الفصل",
+        "Japanese": "第n章",
+    }
+    return labels.get(normalized, "Chapter")
+
+
+def chapter_heading_prefix(language: str, number: int) -> str:
+    normalized = normalize_book_language(language)
+    if normalized == "Japanese":
+        return f"第{number}章"
+    return f"{chapter_label_for_language(normalized)} {number}"
+
+
+def chapter_heading_pattern() -> str:
+    labels = [
+        "Chapter",
+        "Bölüm",
+        "Capítulo",
+        "Kapitel",
+        "Chapitre",
+        "Capitolo",
+        "Hoofdstuk",
+        "الفصل",
+    ]
+    return "|".join(re.escape(label) for label in labels)
 
 
 def strip_chapter_heading(heading: str) -> str:
-    return re.sub(r"^(?:Chapter|Bölüm)\s+\d+\b\s*[:.\-]?\s*", "", heading, flags=re.IGNORECASE).strip()
+    cleaned = str(heading or "").strip()
+    if not cleaned:
+        return ""
+    japanese = re.sub(r"^第\s*\d+\s*章\s*[:.\-]?\s*", "", cleaned).strip()
+    if japanese != cleaned:
+        return japanese
+    return re.sub(
+        rf"^(?:{chapter_heading_pattern()})\s+\d+\b\s*[:.\-]?\s*",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    ).strip()
 
 
 def normalize_structural_heading(title: str, language: str, number: int | None = None) -> str:
     chapter_label = chapter_label_for_language(language)
     cleaned = str(title or "").strip()
-    cleaned = re.sub(r"^(?:Chapter|Bölüm)\s+\d+\b\s*[:.\-]?\s*", "", cleaned, flags=re.IGNORECASE).strip()
-    cleaned = re.sub(r"^(?:Chapter|Bölüm)\s+\d+\b$", "", cleaned, flags=re.IGNORECASE).strip()
+    cleaned = strip_chapter_heading(cleaned)
+    cleaned = re.sub(r"^第\s*\d+\s*章$", "", cleaned).strip()
+    cleaned = re.sub(rf"^(?:{chapter_heading_pattern()})\s+\d+\b$", "", cleaned, flags=re.IGNORECASE).strip()
     if not cleaned:
-        return f"{chapter_label} {number}" if number else chapter_label
+        return chapter_heading_prefix(language, number) if number else chapter_label
     return cleaned
 
 
@@ -675,7 +724,7 @@ def run_preview_pipeline(slug: str) -> None:
         )
 
         if not first_preview_chapter_ready(book_dir):
-            first_title = "Bölüm 1"
+            first_title = chapter_heading_prefix(infer_book_language(book_dir, read_metadata(book_dir)), 1)
             chapters = read_book(book_dir).get("chapters") or []
             if chapters:
                 first_title = str(chapters[0].get("title") or first_title).strip() or first_title
@@ -1065,7 +1114,6 @@ def collect_chapters(book_dir: Path) -> list[dict[str, Any]]:
     chapters = []
     metadata = read_metadata(book_dir)
     language = infer_book_language(book_dir, metadata)
-    chapter_label = chapter_label_for_language(language)
     for chapter_path in sorted(book_dir.glob("chapter_*_final.md"), key=chapter_number):
         lines = chapter_path.read_text(encoding="utf-8", errors="replace").splitlines()
         heading = ""
@@ -1198,12 +1246,11 @@ def write_outline(
 ) -> Path:
     ensure_book_layout(book_dir)
     slug = slugify(title or book_dir.name)
-    chapter_label = chapter_label_for_language(language)
     for old_outline in book_dir.glob("book_outline_final_*.md"):
         old_outline.unlink()
     outline_path = book_dir / f"book_outline_final_{slug}.md"
     chapter_lines = [
-        f"### {chapter_label} {index}: {normalize_structural_heading(str(chapter.get('title') or ''), language, index)}"
+        f"### {chapter_heading_prefix(language, index)}: {normalize_structural_heading(str(chapter.get('title') or ''), language, index)}"
         for index, chapter in enumerate(chapters, start=1)
     ]
     outline_content = "\n".join([f"# {title}", f"## {subtitle}" if subtitle else "##", "", *chapter_lines, ""])
@@ -1235,7 +1282,6 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
     isbn = str(payload.get("isbn", "")).strip()
     year = str(payload.get("year", "")).strip()
     fast = bool(payload.get("fast", False))
-    chapter_label = chapter_label_for_language(language)
 
     book_dir = BOOK_OUTPUTS_DIR / slug
     ensure_book_layout(book_dir)
@@ -1247,7 +1293,7 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
         chapter_content = str(chapter.get("content") or "").strip()
         chapter_path = book_dir / f"chapter_{index}_final.md"
         chapter_path.write_text(
-            f"# {chapter_label} {index}: {chapter_title}\n\n{chapter_content}\n",
+            f"# {chapter_heading_prefix(language, index)}: {chapter_title}\n\n{chapter_content}\n",
             encoding="utf-8",
         )
         kept.add(chapter_path.name)
@@ -1705,7 +1751,6 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
             payload.get("description"),
             topic,
         ) or "English"
-        chapter_label = chapter_label_for_language(language)
         before = file_snapshot(BOOK_OUTPUTS_DIR / slug) if slug and (BOOK_OUTPUTS_DIR / slug).exists() else set()
         result = run_dashboard_action(
             "outline-json",
@@ -1791,7 +1836,7 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
             "chapter-generate",
             str(book_dir),
             str(payload.get("chapter_number") or 1),
-            str(payload.get("chapter_title") or ("Yeni Bölüm" if book_language == "Turkish" else "New Chapter")),
+            str(payload.get("chapter_title") or normalize_structural_heading("", book_language, int(payload.get("chapter_number") or 1))),
             str(payload.get("min_words") or 1800),
             str(payload.get("max_words") or 2400),
             str(payload.get("style") or "clear"),

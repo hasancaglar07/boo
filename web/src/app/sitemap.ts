@@ -23,11 +23,22 @@ const staticRoutes = [
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
+  const priorityMap: Record<string, number> = {
+    "/": 1.0,
+    "/pricing": 0.95,
+    "/how-it-works": 0.9,
+    "/use-cases": 0.88,
+    "/compare": 0.88,
+    "/faq": 0.85,
+    "/blog": 0.82,
+    "/about": 0.75,
+  };
+
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
     url: absoluteUrl(route),
     lastModified: now,
     changeFrequency: route === "/" ? "daily" : "weekly",
-    priority: route === "/" ? 1 : route === "/pricing" ? 0.9 : 0.8,
+    priority: priorityMap[route] ?? 0.7,
   }));
 
   const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => ({

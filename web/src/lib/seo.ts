@@ -7,6 +7,7 @@ type PageMetadataInput = {
   keywords?: string[];
   noIndex?: boolean;
   type?: "website" | "article";
+  ogImage?: string;
 };
 
 const fallbackSiteUrl = "http://localhost:3000";
@@ -38,9 +39,10 @@ export function buildPageMetadata({
   keywords,
   noIndex = false,
   type = "website",
+  ogImage: ogImageOverride,
 }: PageMetadataInput): Metadata {
   const canonical = absoluteUrl(path);
-  const ogImage = absoluteUrl(siteConfig.defaultOgImage);
+  const ogImage = ogImageOverride ?? absoluteUrl(siteConfig.defaultOgImage);
 
   return {
     title,
@@ -82,7 +84,20 @@ export function buildPageMetadata({
       description,
       images: [ogImage],
     },
+    other: {
+      "ai-content-type": "saas-product",
+      "ai-locale": "tr-TR",
+      "ai-topic": "ai-book-generation",
+      "ai-product-name": siteConfig.name,
+    },
   };
+}
+
+export function buildOgImageUrl(title: string, description: string): string {
+  const url = new URL(absoluteUrl("/api/og"));
+  url.searchParams.set("title", title);
+  url.searchParams.set("description", description.slice(0, 120));
+  return url.toString();
 }
 
 export function metadataBaseUrl() {

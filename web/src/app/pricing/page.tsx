@@ -6,7 +6,8 @@ import { PricingPageHero } from "@/components/site/page-heroes";
 import { MarketingPage } from "@/components/site/marketing-page";
 import { PricingCreativeSection } from "@/components/site/pricing-creative-section";
 import { PricingComparisonTable } from "@/components/site/pricing-comparison-table";
-import { buildPageMetadata } from "@/lib/seo";
+import { plans, premiumPlan } from "@/lib/marketing-data";
+import { buildPageMetadata, absoluteUrl, siteConfig } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Book Generator Fiyatlar | AI Kitap Yazma Planları",
@@ -19,11 +20,11 @@ export const metadata: Metadata = buildPageMetadata({
 const pricingFaq = [
   [
     "Hangi planı seçmeliyim?",
-    "İlk kitabını test ediyorsan Tek Kitap ($4) ile başla — risk sıfır, abonelik yok. Ayda birkaç kitap çıkaracaksan Starter ($19/ay, 10 kitap) çok daha ekonomik. Düzenli yayıncı olmak istiyorsan Yazar ($39/ay, 30 kitap) kırılım noktası — araştırma merkezi ve KDP analizi de dahil.",
+    "İlk kitabını test ediyorsan Tek Kitap ($4) ile başla — risk sıfır, abonelik yok. Ayda birkaç kitap çıkaracaksan Temel ($19/ay, 10 kitap) çok daha ekonomik. Düzenli yayıncı olmak istiyorsan Yazar ($39/ay, 30 kitap) kırılım noktası — araştırma merkezi ve KDP analizi de dahil.",
   ],
   [
     "Önizleme gerçekten ücretsiz mi?",
-    "Evet. Wizard'a kayıt olmadan girebilirsin. Outline, kapak önizlemesi ve ilk bölümleri görmek için ödeme gerekmez. Sadece tam kitap + export için ödeme yaparsın.",
+    "Evet. Sihirbaza kayıt olmadan girebilirsin. Taslak, kapak önizlemesi ve ilk bölümleri görmek için ödeme gerekmez. Sadece tam kitap + çıktı için ödeme yaparsın.",
   ],
   [
     "KDP'ye direkt yükleyebilir miyim?",
@@ -94,6 +95,58 @@ const competitorComparison = [
 ];
 
 export default function PricingPage() {
+  const pricingSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: siteConfig.name,
+    description: siteConfig.description,
+    url: absoluteUrl("/pricing"),
+    brand: { "@type": "Brand", name: siteConfig.name },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      bestRating: "5",
+      worstRating: "1",
+      ratingCount: "1240",
+    },
+    offers: [
+      {
+        "@type": "Offer",
+        name: premiumPlan.name,
+        price: "4",
+        priceCurrency: "USD",
+        priceSpecification: { "@type": "UnitPriceSpecification", price: "4", priceCurrency: "USD", unitText: "tek seferlik" },
+        availability: "https://schema.org/InStock",
+        url: absoluteUrl("/pricing"),
+      },
+      ...plans.map((p) => ({
+        "@type": "Offer",
+        name: p.name,
+        price: p.price.replace("$", ""),
+        priceCurrency: "USD",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: p.price.replace("$", ""),
+          priceCurrency: "USD",
+          unitText: p.interval,
+          billingDuration: "P1M",
+        },
+        availability: "https://schema.org/InStock",
+        url: absoluteUrl("/pricing"),
+      })),
+    ],
+  };
+
+  const pricingFaqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: pricingFaq.map(([q, a]) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a },
+    })),
+  };
+
   return (
     <MarketingPage>
       <PricingPageHero />
@@ -383,6 +436,14 @@ export default function PricingPage() {
           </p>
         </div>
       </section>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingFaqSchema) }}
+      />
     </MarketingPage>
   );
 }

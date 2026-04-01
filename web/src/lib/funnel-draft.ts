@@ -27,6 +27,7 @@ export const SUPPORTED_LANGUAGES = [
   { value: "Russian", label: "Русский", description: "Daha güçlü bilgi yoğunluğu ve bölümlenme." },
   { value: "Ukrainian", label: "Українська", description: "Ukraynaca genişletilmiş non-fiction yapı." },
   { value: "Arabic", label: "العربية", description: "Arapça pazarı için yüksek erişilebilirlik." },
+  { value: "Japanese", label: "日本語", description: "Japonca uzmanlık ve eğitim kitapları için güçlü editoryal akış." },
   { value: "Hindi", label: "हिन्दी", description: "Hint okur kitlesi için geniş kapsamlı dil seçeneği." },
   { value: "Indonesian", label: "Bahasa Indonesia", description: "SEA pazarı için hızlı ve okunabilir akış." },
   { value: "Malay", label: "Bahasa Melayu", description: "Malayca sade rehber ve iş kitabı kurgusu." },
