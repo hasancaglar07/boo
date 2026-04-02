@@ -4,14 +4,21 @@ import Image from "next/image";
 import {
   ArrowRight,
   BookOpen,
+  Check,
   CheckCircle2,
   Clock,
   Download,
   FileText,
   Loader2,
   Lock,
+  Mail,
+  Palette,
+  RefreshCw,
   Shield,
   Sparkles,
+  TimerReset,
+  TrendingUp,
+  Wand2,
   Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -23,19 +30,32 @@ import { BackendUnavailableState } from "@/components/app/backend-unavailable-st
 import { BookMockup } from "@/components/books/book-mockup";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { trackEvent } from "@/lib/analytics";
 import {
   buildBookAssetUrl,
   isBackendUnavailableError,
   loadBookPreview,
   loadBooks,
+  runWorkflow,
+  selectBookCoverVariant,
   startBookPreviewPipeline,
   type Book,
   type BookPreview,
+  type BookPreviewCommerce,
+  type BookPreviewCoverLab,
   type BookStatus,
 } from "@/lib/dashboard-api";
 import { languageLabel } from "@/lib/funnel-draft";
 import { loadFunnelDraft } from "@/lib/funnel-draft";
+import { syncPreviewAuthState } from "@/lib/preview-auth";
 import { cn } from "@/lib/utils";
 
 const EMPTY_GENERATION: BookStatus = {
@@ -65,49 +85,80 @@ function normalizeLogoUrl(slug: string, value: string) {
   return /^(https?:\/\/|data:)/.test(value) ? value : buildBookAssetUrl(slug, value);
 }
 
+function formatUsd(cents = 0) {
+  return `$${Math.round(cents / 100)}`;
+}
+
+function bonusDeadlineLabel(iso?: string | null) {
+  if (!iso) return "";
+  const diff = new Date(iso).getTime() - Date.now();
+  if (diff <= 0) return "";
+  const days = Math.ceil(diff / (24 * 60 * 60 * 1000));
+  if (days <= 1) return "Bugün bitiyor";
+  return `${days} gün kaldı`;
+}
+
+function readableGenerationError(error?: string) {
+  const value = String(error || "").trim();
+  if (!value) return "";
+  if (value.includes("/book_outputs/") || value.includes("\\book_outputs\\")) {
+    return "Kapak üretimi tamamlanamadı. Mevcut preview ile devam edebilir veya cover lab’den yeni varyasyon üretebilirsin.";
+  }
+  return value;
+}
+
 // ─── Generation Status Banner ────────────────────────────────────────────────
 
 function GenerationBanner({
   generation,
   coverReady,
+  recoveryEmailEnabled,
 }: {
   generation: BookStatus;
   coverReady: boolean;
+  recoveryEmailEnabled: boolean;
 }) {
-  if (generation.product_ready) return null;
   if (generation.stage === "error") return null;
 
-  // Clamp progress: if backend sends 0 or nothing, show a minimum of 25
-  // so the user always sees forward motion immediately after preview loads.
   const rawProgress = Math.max(0, Math.min(100, Number(generation.progress || 0)));
-  const progress = rawProgress === 0 ? 25 : rawProgress;
+  const progress = generation.product_ready ? 100 : rawProgress === 0 ? 25 : rawProgress;
 
   const steps = [
     {
       label: "Kapak görseli",
       done: coverReady,
+      live: generation.cover_state === "running" || generation.cover_state === "queued",
     },
     {
       label: "İlk okunabilir bölüm",
       done: Boolean(generation.preview_ready),
+      live: generation.first_chapter_state === "running" || generation.first_chapter_state === "queued",
     },
     {
       label: "Tam kitap",
       done: Boolean(generation.product_ready),
+      live: Boolean(generation.active) && !generation.product_ready,
     },
   ];
 
   return (
-    <div className="rounded-[20px] border border-primary/15 bg-primary/5 px-5 py-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
-          <span className="relative flex size-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-            <span className="relative inline-flex size-2 rounded-full bg-primary" />
-          </span>
-          Tam kitap hazırlanıyor
+    <div className="rounded-[24px] border border-primary/15 bg-[linear-gradient(135deg,rgba(188,104,67,0.09),rgba(188,104,67,0.02))] px-5 py-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
+            <span className="relative flex size-2 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+              <span className="relative inline-flex size-2 rounded-full bg-primary" />
+            </span>
+            {generation.product_ready ? "Üretim tamamlandı" : "Publishing stüdyosu çalışıyor"}
+          </div>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            {generation.product_ready
+              ? "Preview, kapak ve tam kitap akışı hazır. Aynı sayfadan kapağı seçip satın alma kararını verebilirsin."
+              : "Bu sayfayı kapatsan da üretim devam eder. Preview hazır olduğunda ilgili sayfaya e-posta ile dönebilirsin."}
+          </p>
         </div>
-        <div className="shrink-0 text-sm font-bold tabular-nums text-primary">
+        <div className="shrink-0 rounded-full border border-primary/20 bg-background/80 px-3 py-1.5 text-sm font-bold tabular-nums text-primary">
           %{progress}
         </div>
       </div>
@@ -119,24 +170,44 @@ function GenerationBanner({
         />
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {steps.map((step) => (
-          <div key={step.label} className="flex items-center gap-1.5 text-xs">
+          <div
+            key={step.label}
+            className="rounded-[18px] border border-border/60 bg-background/75 px-3 py-3"
+          >
+            <div className="flex items-center gap-1.5 text-xs">
             {step.done ? (
               <CheckCircle2 className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
             ) : (
-              <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" />
+              <Loader2
+                className={cn(
+                  "size-3.5 shrink-0 text-muted-foreground",
+                  step.live ? "animate-spin" : "",
+                )}
+              />
             )}
             <span className={cn("font-medium", step.done ? "text-foreground" : "text-muted-foreground")}>
               {step.label}
             </span>
           </div>
+            <div className="mt-2 text-xs leading-5 text-muted-foreground">
+              {step.done ? "Hazır" : step.live ? "Şu an hazırlanıyor" : "Sırada"}
+            </div>
+          </div>
         ))}
       </div>
 
+      {recoveryEmailEnabled ? (
+        <div className="mt-4 flex items-start gap-2 rounded-[18px] border border-border/60 bg-background/70 px-4 py-3 text-sm text-muted-foreground">
+          <Mail className="mt-0.5 size-4 shrink-0 text-primary" />
+          Güvenle çıkabilirsin. Preview ve geri dönüş teklifleri hazır olunca seni doğrudan bu sayfaya getiren mail göndeririz.
+        </div>
+      ) : null}
+
       {generation.error && (
         <div className="mt-3 rounded-[14px] border border-destructive/20 bg-destructive/8 px-4 py-2.5 text-sm leading-6 text-destructive">
-          {generation.error}
+          {readableGenerationError(generation.error)}
         </div>
       )}
     </div>
@@ -147,15 +218,17 @@ function GenerationBanner({
 
 function PremiumCTA({
   premium,
-  slug,
+  commerce,
+  bonusLabel,
   onUpgrade,
+  onPrimaryAction,
 }: {
   premium: boolean;
-  slug: string;
+  commerce?: BookPreviewCommerce;
+  bonusLabel: string;
   onUpgrade: (trigger: "pdf" | "epub" | "full_unlock") => void;
+  onPrimaryAction: () => void;
 }) {
-  const router = useRouter();
-
   if (premium) {
     return (
       <Card className="border-emerald-500/25 bg-emerald-500/8">
@@ -170,9 +243,7 @@ function PremiumCTA({
           <Button
             size="lg"
             className="mt-4 w-full"
-            onClick={() =>
-              router.push(`/app/book/${encodeURIComponent(slug)}/workspace?tab=publish`)
-            }
+            onClick={onPrimaryAction}
           >
             <Download className="mr-2 size-4" aria-hidden="true" />
             PDF / EPUB İndir
@@ -184,28 +255,32 @@ function PremiumCTA({
 
   return (
     <div className="space-y-3">
-      {/* Main CTA card */}
       <Card className="overflow-hidden border-primary/30 shadow-lg shadow-primary/10">
-        {/* Anchor pricing header */}
         <div className="bg-primary px-5 py-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <span className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground/80">
-              Lansman fiyatı
+              {commerce?.primaryOffer.badge || "Lansman fiyatı"}
             </span>
-            <span className="rounded-full bg-primary-foreground/15 px-2 py-0.5 text-xs font-bold text-primary-foreground">
-              %86 indirim
-            </span>
+            {bonusLabel ? (
+              <span className="rounded-full bg-primary-foreground/15 px-2 py-0.5 text-xs font-bold text-primary-foreground">
+                {bonusLabel}
+              </span>
+            ) : null}
           </div>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-primary-foreground">$4</span>
-            <span className="text-sm text-primary-foreground/70 line-through">$29</span>
+            <span className="text-3xl font-bold text-primary-foreground">
+              {formatUsd(commerce?.primaryOffer.priceCents || 400)}
+            </span>
+            <span className="text-sm text-primary-foreground/70 line-through">
+              {formatUsd(commerce?.primaryOffer.originalPriceCents || 2900)}
+            </span>
             <span className="text-xs text-primary-foreground/70">tek seferlik</span>
           </div>
         </div>
 
         <CardContent className="p-5">
           <p className="text-sm font-semibold text-foreground">
-            Bu kitap için tam erişim — abonelik yok
+            {commerce?.primaryOffer.description || "Bu kitap için tam erişim — abonelik yok"}
           </p>
 
           <ul className="mt-4 space-y-2.5">
@@ -229,15 +304,13 @@ function PremiumCTA({
             onClick={() => onUpgrade("full_unlock")}
           >
             <Sparkles className="mr-2 size-4" aria-hidden="true" />
-            $4 ile Yayınla
+            {commerce?.primaryOffer.label || "Bu kitabı aç"}
             <ArrowRight className="ml-2 size-4" aria-hidden="true" />
           </Button>
 
           <p className="mt-2 text-center text-xs text-muted-foreground">
             Anında erişim · Kredi kartı güvenli
           </p>
-
-          {/* Secondary links */}
           <div className="mt-3 flex justify-center gap-4">
             <button
               type="button"
@@ -257,23 +330,397 @@ function PremiumCTA({
         </CardContent>
       </Card>
 
-      {/* Trust signals */}
       <div className="rounded-[18px] border border-border/60 bg-background/60 px-4 py-3">
         <div className="grid grid-cols-2 gap-2">
-          {[
-            { icon: Shield, text: "30 gün iade" },
-            { icon: Zap, text: "Anında teslim" },
-            { icon: BookOpen, text: "Abonelik yok" },
-            { icon: CheckCircle2, text: "KDP uyumlu" },
-          ].map(({ icon: Icon, text }) => (
+          {(commerce?.trustPoints || ["30 gün iade", "Anında teslim", "Abonelik yok", "KDP uyumlu"]).map((text) => {
+            const Icon =
+              text.includes("iade")
+                ? Shield
+                : text.includes("KDP")
+                  ? CheckCircle2
+                  : text.includes("Abonelik")
+                    ? BookOpen
+                    : Zap;
+            return (
             <div key={text} className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Icon className="size-3 shrink-0 text-primary" aria-hidden="true" />
               {text}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
+
+      <Card>
+        <CardContent className="space-y-3 p-5">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Alternatif yol
+          </div>
+          <div className="rounded-[16px] border border-border/60 bg-background/60 px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  {commerce?.secondaryOffer.label || "Starter"}
+                </div>
+                <div className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {commerce?.secondaryOffer.quotaLabel || "Ayda 10 kitap"}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-foreground">
+                  {formatUsd(commerce?.secondaryOffer.priceCents || 1900)}
+                </div>
+                <div className="text-[11px] text-muted-foreground">aylık</div>
+              </div>
+            </div>
+          </div>
+          <Button variant="outline" className="w-full" onClick={onPrimaryAction}>
+            Planları karşılaştır
+          </Button>
+        </CardContent>
+      </Card>
     </div>
+  );
+}
+
+function PaywallDialog({
+  open,
+  onOpenChange,
+  slug,
+  commerce,
+  authenticated,
+  onCheckoutSuccess,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  slug: string;
+  commerce?: BookPreviewCommerce;
+  authenticated: boolean;
+  onCheckoutSuccess: (planId?: string) => void;
+}) {
+  const router = useRouter();
+  const [submittingPlan, setSubmittingPlan] = useState<string>("");
+
+  async function handleBuy(planId: "premium" | "starter") {
+    trackEvent("paywall_cta_clicked", { slug, planId, surface: "preview_modal" });
+    trackEvent("checkout_started", { slug, planId, source: "preview_modal" });
+
+    if (!authenticated) {
+      router.push(
+        `/signup/continue?slug=${encodeURIComponent(slug)}&next=${encodeURIComponent(`/app/book/${slug}/preview?paywall=open`)}`,
+      );
+      return;
+    }
+
+    setSubmittingPlan(planId);
+    const response = await fetch("/api/stripe/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planId, bookSlug: planId === "premium" ? slug : undefined }),
+    }).catch(() => null);
+
+    const payload = response
+      ? ((await response.json().catch(() => null)) as { url?: string } | null)
+      : null;
+
+    if (payload?.url) {
+      window.location.href = payload.url;
+      return;
+    }
+
+    setSubmittingPlan("");
+    onCheckoutSuccess(planId);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Bu kitabı aç</DialogTitle>
+          <DialogDescription>
+            Preview’ı gördün. Şimdi aynı kitap için tam bölümleri, PDF/EPUB export’u ve workspace erişimini açabilirsin.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="rounded-[18px] border border-primary/25 bg-primary/6 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  {commerce?.primaryOffer.label || "Bu kitabı aç"}
+                </div>
+                <div className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {commerce?.primaryOffer.description ||
+                    "Tek kitap için tam erişim, PDF/EPUB export ve çalışma alanı."}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-foreground">
+                  {formatUsd(commerce?.primaryOffer.priceCents || 400)}
+                </div>
+                <div className="text-[11px] text-muted-foreground line-through">
+                  {formatUsd(commerce?.primaryOffer.originalPriceCents || 2900)}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-2">
+              {[
+                "Bu kitap için tüm bölümler",
+                "PDF + EPUB export",
+                "Kapak, arka kapak, workspace",
+                "30 gün iade garantisi",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-2 text-sm text-foreground">
+                  <Check className="size-3.5 text-primary" />
+                  {item}
+                </div>
+              ))}
+            </div>
+
+            <Button
+              className="mt-4 w-full"
+              size="lg"
+              onClick={() => void handleBuy("premium")}
+              disabled={Boolean(submittingPlan)}
+            >
+              {submittingPlan === "premium" ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Sparkles className="mr-2 size-4" />}
+              {formatUsd(commerce?.primaryOffer.priceCents || 400)} ile bu kitabı aç
+            </Button>
+          </div>
+
+          <div className="rounded-[18px] border border-border/70 bg-background/60 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  {commerce?.secondaryOffer.label || "Starter"}
+                </div>
+                <div className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {commerce?.secondaryOffer.description || "Her ay yeni kitaplar üretmek için aylık plan."}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl font-bold text-foreground">
+                  {formatUsd(commerce?.secondaryOffer.priceCents || 1900)}
+                </div>
+                <div className="text-[11px] text-muted-foreground">
+                  {commerce?.secondaryOffer.quotaLabel || "Ayda 10 kitap"}
+                </div>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={() => void handleBuy("starter")}
+              disabled={Boolean(submittingPlan)}
+            >
+              {submittingPlan === "starter" ? <Loader2 className="mr-2 size-4 animate-spin" /> : <TrendingUp className="mr-2 size-4" />}
+              Starter ile devam et
+            </Button>
+          </div>
+
+          <div className="rounded-[16px] border border-border/60 bg-background/50 px-4 py-3 text-sm text-muted-foreground">
+            Bonus: 3 cover concept, ekstra reroll ve KDP-ready export aynı checkout içinde açılır.
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Şimdilik preview’da kal
+          </Button>
+          <Button variant="outline" onClick={() => router.push(`/app/book/${encodeURIComponent(slug)}/upgrade`)}>
+            Tüm planları gör
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CoverLabCard({
+  slug,
+  title,
+  author,
+  logoText,
+  logoUrl,
+  coverBrief,
+  coverLab,
+  onSelect,
+  onGenerate,
+  selectingVariantId,
+  generating,
+}: {
+  slug: string;
+  title: string;
+  author: string;
+  logoText: string;
+  logoUrl?: string;
+  coverBrief: string;
+  coverLab?: BookPreviewCoverLab;
+  onSelect: (variantId: string) => void;
+  onGenerate: () => void;
+  selectingVariantId: string;
+  generating: boolean;
+}) {
+  const variants = coverLab?.variants || [];
+  const selectedVariantId = coverLab?.selectedVariantId || "";
+  const showSkeletons = generating || coverLab?.generationState === "running";
+
+  return (
+    <div className="space-y-4">
+      <Card className="overflow-hidden">
+        <CardContent className="p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Cover Lab
+              </div>
+              <div className="mt-1 text-sm font-semibold text-foreground">
+                {variants.length ? "Kapak konseptini seç" : "Kapak konseptleri hazırlanıyor"}
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onGenerate}
+              disabled={generating}
+            >
+              {generating ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <Wand2 className="mr-2 size-3.5" />}
+              AI ile oluştur
+            </Button>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            {Array.from({ length: 3 }).map((_, index) => {
+              const variant = variants[index];
+              const active = Boolean(variant && variant.id === selectedVariantId);
+              const readyImage = variant?.front_image
+                ? buildBookAssetUrl(slug, variant.front_image)
+                : "";
+
+              return (
+                <button
+                  type="button"
+                  key={variant?.id || `cover-slot-${index}`}
+                  className={cn(
+                    "rounded-[20px] border p-3 text-left transition",
+                    active
+                      ? "border-primary bg-primary/6 shadow-md shadow-primary/10"
+                      : "border-border/70 bg-background/60 hover:border-primary/25 hover:bg-accent/40",
+                    !variant && "cursor-default",
+                  )}
+                  onClick={() => (variant ? onSelect(variant.id) : undefined)}
+                  disabled={!variant || selectingVariantId === variant.id}
+                >
+                  <div className="relative overflow-hidden rounded-[16px] border border-border/60 bg-muted/20">
+                    {readyImage ? (
+                      <BookMockup
+                        title={title}
+                        subtitle=""
+                        author={author}
+                        brand={logoText}
+                        logoUrl={logoUrl}
+                        imageUrl={readyImage}
+                        accentLabel={coverBrief || variant.label}
+                        size="md"
+                      />
+                    ) : (
+                      <div className="aspect-[4/5] animate-pulse bg-muted/60" />
+                    )}
+                  </div>
+                  <div className="mt-3 flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">
+                        {variant?.label || `Concept ${index + 1}`}
+                      </div>
+                      <div className="mt-1 text-xs leading-5 text-muted-foreground">
+                        {variant ? `${variant.family} · ${variant.provider || "AI studio"}` : showSkeletons ? "Yolda" : "Hazır olduğunda burada görünür"}
+                      </div>
+                    </div>
+                    {variant ? (
+                      <div className="flex size-7 items-center justify-center rounded-full border border-border bg-background">
+                        {selectingVariantId === variant.id ? (
+                          <Loader2 className="size-3.5 animate-spin text-primary" />
+                        ) : active ? (
+                          <CheckCircle2 className="size-3.5 text-primary" />
+                        ) : (
+                          <Palette className="size-3.5 text-muted-foreground" />
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="mt-4 text-xs leading-5 text-muted-foreground">
+            Satın alma öncesinde cover concept’leri gezebilir ve favorini seçebilirsin. Seçimin export varsayılanı olur.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function NextStepsCard({
+  premium,
+  coverReady,
+  previewReady,
+  productReady,
+  onUnlock,
+}: {
+  premium: boolean;
+  coverReady: boolean;
+  previewReady: boolean;
+  productReady: boolean;
+  onUnlock: () => void;
+}) {
+  const items = premium
+    ? [
+        { label: "Tam kitabı workspace’te aç", ready: true },
+        { label: "PDF / EPUB export al", ready: true },
+        { label: "KDP yükleme dosyalarını indir", ready: true },
+      ]
+    : [
+        { label: "Kapak konseptini seç", ready: coverReady },
+        { label: "İlk okunabilir bölümü incele", ready: previewReady },
+        { label: "Tam kitabı aç ve export al", ready: productReady },
+      ];
+
+  return (
+    <Card>
+      <CardContent className="p-5">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Sonraki 3 adım
+        </div>
+        <div className="mt-4 space-y-3">
+          {items.map((item, index) => (
+            <div
+              key={item.label}
+              className="flex items-start gap-3 rounded-[16px] border border-border/60 bg-background/60 px-3 py-3"
+            >
+              <div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border border-border bg-background text-[11px] font-semibold text-muted-foreground">
+                {index + 1}
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-foreground">{item.label}</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {item.ready ? "Hazır" : "Hazırlanıyor"}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {!premium ? (
+          <Button className="mt-4 w-full" variant="outline" onClick={onUnlock}>
+            <Sparkles className="mr-2 size-4" />
+            Tam kitabı aç
+          </Button>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -433,13 +880,21 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const [books, setBooks] = useState<Book[]>([]);
   const [preview, setPreview] = useState<BookPreview | null>(null);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [coverGenerating, setCoverGenerating] = useState(false);
+  const [selectingVariantId, setSelectingVariantId] = useState("");
   const trackedRef = useRef(false);
   const bootstrapRequestedRef = useRef(false);
+  const previewReadyTrackedRef = useRef(false);
+  const coverLabRequestedRef = useRef(false);
 
   // Stripe başarılı ödeme sonrası auth state güncelle
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
-      void fetch("/api/auth/state").catch(() => null);
+      void syncPreviewAuthState().then((payload) => {
+        setAuthenticated(Boolean(payload?.authenticated));
+      });
       const url = new URL(window.location.href);
       url.searchParams.delete("checkout");
       url.searchParams.delete("session_id");
@@ -449,14 +904,23 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
   const hydrate = useCallback(async () => {
     try {
-      const [bookList, previewPayload] = await Promise.all([loadBooks(), loadBookPreview(slug)]);
-      setBooks(bookList);
+      const previewPayload = await loadBookPreview(slug);
       setPreview(previewPayload);
       setBackendUnavailable(false);
       if (!trackedRef.current) {
         trackedRef.current = true;
         trackEvent("preview_viewed", { slug });
       }
+      void loadBooks()
+        .then((bookList) => {
+          setBooks(bookList);
+        })
+        .catch((error) => {
+          if (isBackendUnavailableError(error)) {
+            return;
+          }
+          console.error(error);
+        });
     } catch (error) {
       if (isBackendUnavailableError(error)) {
         setBackendUnavailable(true);
@@ -485,7 +949,15 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   useEffect(() => {
     trackedRef.current = false;
     bootstrapRequestedRef.current = false;
+    previewReadyTrackedRef.current = false;
+    coverLabRequestedRef.current = false;
   }, [slug]);
+
+  useEffect(() => {
+    void syncPreviewAuthState().then((payload) => {
+      setAuthenticated(Boolean(payload?.authenticated));
+    });
+  }, []);
 
   useEffect(() => {
     const frame = window.setTimeout(() => {
@@ -521,6 +993,60 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     }, 3500);
     return () => window.clearInterval(timer);
   }, [hydrate, preview]);
+
+  useEffect(() => {
+    if (searchParams.get("paywall") === "open") {
+      setPaywallOpen(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!preview) return;
+    if (previewReadyTrackedRef.current) return;
+    if (preview.generation.preview_ready || preview.generation.product_ready) {
+      previewReadyTrackedRef.current = true;
+      trackEvent("preview_ready_seen", { slug });
+    }
+  }, [preview, slug]);
+
+  async function generateCoverLab(force = false) {
+    setCoverGenerating(true);
+    try {
+      await runWorkflow({
+        action: "cover_variants_generate",
+        slug,
+        force,
+      });
+      await hydrate();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCoverGenerating(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!preview || coverGenerating || coverLabRequestedRef.current) return;
+    if (!preview.book.cover_image) return;
+    if ((preview.coverLab?.readyCount || 0) > 0) return;
+    coverLabRequestedRef.current = true;
+    void generateCoverLab().finally(() => {
+      coverLabRequestedRef.current = false;
+    });
+  }, [preview, coverGenerating]);
+
+  async function handleSelectVariant(variantId: string) {
+    setSelectingVariantId(variantId);
+    try {
+      await selectBookCoverVariant(slug, variantId);
+      trackEvent("cover_variant_selected", { slug, variantId });
+      await hydrate();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSelectingVariantId("");
+    }
+  }
 
   if (backendUnavailable) {
     return (
@@ -596,6 +1122,9 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const backCoverUrl = preview.book.back_cover_image
     ? buildBookAssetUrl(slug, preview.book.back_cover_image)
     : "";
+  const coverLab = preview.coverLab;
+  const commerce = preview.commerce;
+  const bonusLabel = bonusDeadlineLabel(commerce?.bonusDeadlineAt);
 
   const pageSubtitle = premium
     ? "Tam erişim aktif. Kitap, kapak ve export yüzeyi açık."
@@ -612,7 +1141,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     if (trigger === "epub") trackEvent("paywall_epub_clicked", { slug });
     if (trigger === "full_unlock") trackEvent("paywall_full_unlock_clicked", { slug });
     trackEvent("paywall_viewed", { slug, trigger });
-    router.push(`/app/book/${encodeURIComponent(slug)}/upgrade`);
+    trackEvent("paywall_opened", { slug, trigger });
+    setPaywallOpen(true);
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -635,55 +1165,30 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         <span className="text-foreground font-medium truncate max-w-[200px]">{preview.book.title}</span>
       </nav>
 
-      {/* Generation banner — always full width at top */}
-      {!generation.product_ready && !premium && (
-        <GenerationBanner generation={generation} coverReady={Boolean(coverUrl)} />
-      )}
+      <GenerationBanner
+        generation={generation}
+        coverReady={Boolean(coverUrl)}
+        recoveryEmailEnabled={Boolean(commerce?.recoveryEmailEnabled)}
+      />
 
       {/* Main grid: cover | content | sidebar */}
       <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_272px]">
 
         {/* ── LEFT: Cover + TOC ─────────────────────────────────────────────── */}
         <div className="space-y-4 lg:sticky lg:top-6 lg:h-fit">
-          <Card className="overflow-hidden">
-            <CardContent className="p-5">
-              {/* Cover status pills */}
-              <div className="mb-4 flex flex-wrap gap-1.5">
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]",
-                    coverUrl
-                      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                      : "border-border bg-background text-muted-foreground",
-                  )}
-                >
-                  {coverUrl ? (
-                    <CheckCircle2 className="size-3" />
-                  ) : (
-                    <Loader2 className="size-3 animate-spin" />
-                  )}
-                  {coverUrl ? "Kapak hazır" : "Kapak üretiliyor"}
-                </span>
-              </div>
-
-              <BookMockup
-                title={preview.book.title}
-                subtitle={preview.book.subtitle}
-                author={authorName}
-                brand={logoText}
-                logoUrl={logoUrl || undefined}
-                imageUrl={coverUrl || undefined}
-                accentLabel={coverBrief || (coverUrl ? "Satışa hazır görünüm" : "Canlı kapak üretimi")}
-                size="xl"
-              />
-
-              {!coverUrl && (
-                <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
-                  Kapak arka planda üretiliyor. Hazır olunca burası güncellenir.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <CoverLabCard
+            slug={slug}
+            title={preview.book.title}
+            author={authorName}
+            logoText={logoText}
+            logoUrl={logoUrl || undefined}
+            coverBrief={coverBrief}
+            coverLab={coverLab}
+            onSelect={handleSelectVariant}
+            onGenerate={() => void generateCoverLab(true)}
+            selectingVariantId={selectingVariantId}
+            generating={coverGenerating}
+          />
 
           {/* Back cover */}
           {backCoverUrl && (
@@ -823,6 +1328,18 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   </Button>
                 )}
               </div>
+
+              {!premium ? (
+                <div className="mt-6 rounded-[18px] border border-border/70 bg-background/70 px-4 py-4">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    <TimerReset className="size-3.5 text-primary" />
+                    Stüdyo notu
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Preview’ı deneyimledin. Şimdi kapağı seç, ilk okunabilir bölümü incele ve hazır olduğunda aynı sayfadan tek-kitap unlock ya da Starter ile devam et.
+                  </p>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
 
@@ -886,7 +1403,47 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
         {/* ── RIGHT: Premium CTA + Author info ──────────────────────────────── */}
         <div className="space-y-4 xl:sticky xl:top-6 xl:h-fit">
-          <PremiumCTA premium={premium} slug={slug} onUpgrade={openUpgrade} />
+          <PremiumCTA
+            premium={premium}
+            commerce={commerce}
+            bonusLabel={bonusLabel}
+            onUpgrade={openUpgrade}
+            onPrimaryAction={() =>
+              premium
+                ? router.push(`/app/book/${encodeURIComponent(slug)}/workspace?tab=publish`)
+                : router.push(`/app/book/${encodeURIComponent(slug)}/upgrade`)
+            }
+          />
+
+          <NextStepsCard
+            premium={premium}
+            coverReady={Boolean(coverUrl)}
+            previewReady={Boolean(generation.preview_ready)}
+            productReady={Boolean(generation.product_ready)}
+            onUnlock={() => openUpgrade("full_unlock")}
+          />
+
+          {!premium ? (
+            <Card>
+              <CardContent className="space-y-3 p-5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Proof
+                </div>
+                {[
+                  "Bu ay 1.240+ kitap preview’ı üretildi",
+                  "Ajans / ghostwriter maliyetinin çok altında",
+                  "Kapağı seçip sonra ödeme yapabildiğin editorial akış",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-[16px] border border-border/60 bg-background/60 px-3 py-3 text-sm leading-6 text-foreground"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ) : null}
 
           {/* Author identity card */}
           {(authorBio || logoUrl || coverBrief) && (
@@ -949,7 +1506,9 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/97 px-4 pb-safe pt-3 pb-3 backdrop-blur-md xl:hidden">
           <div className="mx-auto flex max-w-lg items-center gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-foreground">$4 ile tam kitabı aç</p>
+              <p className="text-sm font-bold text-foreground">
+                {formatUsd(commerce?.primaryOffer.priceCents || 400)} ile tam kitabı aç
+              </p>
               <p className="text-xs text-muted-foreground">
                 PDF · EPUB · Tüm bölümler · 30 gün iade
               </p>
@@ -968,6 +1527,15 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
       {/* Bottom padding so content isn't hidden behind fixed bar */}
       {!premium && <div className="h-20 xl:hidden" />}
+
+      <PaywallDialog
+        open={paywallOpen}
+        onOpenChange={setPaywallOpen}
+        slug={slug}
+        commerce={commerce}
+        authenticated={authenticated}
+        onCheckoutSuccess={() => router.push(`/app/book/${encodeURIComponent(slug)}/upgrade`)}
+      />
     </AppFrame>
   );
 }

@@ -57,3 +57,56 @@ export async function sendPasswordResetEmail(to: string, token: string) {
     html: `<p>Şifreni sıfırlamak için aşağıdaki bağlantıyı aç.</p><p><a href="${url}">${url}</a></p><p>Bağlantı 30 dakika boyunca geçerlidir.</p>`,
   });
 }
+
+function previewCampaignUrl(token: string) {
+  return absoluteUrl(`/api/auth/preview-campaign/consume?token=${encodeURIComponent(token)}`);
+}
+
+export async function sendPreviewReadyEmail(input: {
+  to: string;
+  name?: string | null;
+  title: string;
+  slug: string;
+  token: string;
+}) {
+  const url = previewCampaignUrl(input.token);
+  await deliverEmail({
+    to: input.to,
+    subject: `${input.title} preview'ın hazır`,
+    html: `
+      <p>${input.name ? `${input.name}, ` : ""}kitabın için ilk okunabilir bölüm ve preview yüzeyi hazır.</p>
+      <p><strong>${input.title}</strong> için kapağı inceleyebilir, kilitli bölümleri görebilir ve tek tıkla kaldığın preview sayfasına dönebilirsin.</p>
+      <p><a href="${url}">Preview'a dön</a></p>
+      <p>Hazır olunca tam kitabı, PDF ve EPUB export'u aynı sayfadan açabilirsin.</p>
+    `,
+  });
+}
+
+export async function sendPreviewRecoveryEmail(input: {
+  to: string;
+  name?: string | null;
+  title: string;
+  token: string;
+  stage: "day10" | "monthly";
+}) {
+  const url = previewCampaignUrl(input.token);
+  const subject =
+    input.stage === "day10"
+      ? `${input.title} için bonus hâlâ aktif`
+      : `${input.title} preview'ın seni bekliyor`;
+  const bonusLine =
+    input.stage === "day10"
+      ? "Dönüşünde bonus cover reroll ve export paketi seni bekliyor."
+      : "Hazır preview'ına geri dönüp kapağı seçebilir ve kitabını tamamlayabilirsin.";
+
+  await deliverEmail({
+    to: input.to,
+    subject,
+    html: `
+      <p>${input.name ? `${input.name}, ` : ""}${input.title} için hazırladığın preview hâlâ hazır durumda.</p>
+      <p>${bonusLine}</p>
+      <p><a href="${url}">Preview'a geri dön</a></p>
+      <p>Bu e-postalar ayda en fazla bir kez gönderilir. İstersen hesap ayarlarından kapatabilirsin.</p>
+    `,
+  });
+}

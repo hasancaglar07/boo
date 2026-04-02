@@ -18,15 +18,15 @@ export function BackendUnavailableState({
             Servise şu an ulaşılamıyor
           </h2>
           <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-            Uygulama backend servisine bağlanamadı. Kısa süre sonra tekrar deneyebilir veya güvenli
-            başlangıç ekranına dönebilirsin.
+            Uygulama backend servisine bağlanamadı. Kısa süre sonra tekrar deneyebilir veya uygulama
+            içindeki yeni kitap akışına dönebilirsin.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
           <Button onClick={onRetry}>Yeniden dene</Button>
           <Button variant="outline" asChild>
-            <Link href="/start/topic">Başlangıç ekranına dön</Link>
+            <Link href="/app/new/topic">Yeni kitap akışına dön</Link>
           </Button>
           <Button variant="ghost" asChild>
             <Link href="/how-it-works">Nasıl çalıştığını incele</Link>

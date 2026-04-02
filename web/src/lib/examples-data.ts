@@ -74,6 +74,13 @@ const PRIMARY_COVER_CANDIDATES = [
   "assets/showcase_front_cover.jpg",
   "assets/showcase_front_cover.jpeg",
 ];
+const HERO_COVER_CANDIDATES = [
+  "assets/homepage_hero_cover.png",
+  "assets/homepage_hero_cover.webp",
+  "assets/homepage_hero_cover.jpg",
+  "assets/homepage_hero_cover.jpeg",
+  "assets/homepage_hero_cover.svg",
+];
 const FALLBACK_COVER_CANDIDATES = ["assets/showcase_front_cover.svg"];
 const BACK_COVER_CANDIDATES = [
   "assets/back_cover_final.svg",
@@ -311,8 +318,13 @@ async function resolveCoverPaths(bookDir: string, meta: DashboardMeta) {
     [normalizeSlashes(String(meta.branding_logo_url || "")), ...LOGO_CANDIDATES],
     /(?:publisher_logo|branding_logo)\.(svg|png|jpe?g|webp)$/i,
   );
+  const heroCover = await pickAssetPath(
+    bookDir,
+    HERO_COVER_CANDIDATES,
+    /homepage_hero_cover\.(png|webp|jpe?g|svg)$/i,
+  );
 
-  return { primaryCover, fallbackCover, backCover, brandingLogo };
+  return { primaryCover, fallbackCover, backCover, brandingLogo, heroCover };
 }
 
 async function resolveExports(bookDir: string, slug: string) {
@@ -423,6 +435,7 @@ async function buildResolvedExample(curated: ShowcasePortfolioEntry, repoRoot: s
     coverPaths.fallbackCover,
     coverPaths.backCover,
     coverPaths.brandingLogo,
+    coverPaths.heroCover,
   ].filter((value): value is string => Boolean(value));
 
   const common: ExampleCardEntry = {

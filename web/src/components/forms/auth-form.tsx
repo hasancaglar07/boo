@@ -22,7 +22,16 @@ import {
 
 const DEFAULT_GOAL = "İlk kitabımı hızlıca üretmek istiyorum.";
 
-async function finalizeAuth(next: string, account?: { name: string; email: string; goal: string }) {
+async function finalizeAuth(
+  next: string,
+  account?: {
+    name: string;
+    email: string;
+    goal: string;
+    publisherImprint: string;
+    publisherLogoUrl: string;
+  },
+) {
   if (account) {
     setAccount(account);
   }
@@ -107,6 +116,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         name: nameTrimmed || storedAccount.name || "Book Creator",
         email: emailTrimmed || storedAccount.email || "demo@example.com",
         goal: goalTrimmed || storedAccount.goal || DEFAULT_GOAL,
+        publisherImprint: storedAccount.publisherImprint || "",
+        publisherLogoUrl: storedAccount.publisherLogoUrl || "",
       });
       trackEvent("signup_google_clicked", { source: "auth_form" });
     } else {
@@ -142,6 +153,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         name: nameTrimmed || storedAccount.name || "Book Creator",
         email: emailTrimmed,
         goal: goalTrimmed || storedAccount.goal || DEFAULT_GOAL,
+        publisherImprint: storedAccount.publisherImprint || "",
+        publisherLogoUrl: storedAccount.publisherLogoUrl || "",
       });
       trackEvent("signup_magic_link_clicked", { source: "auth_form" });
     } else {
@@ -217,6 +230,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         name: nameTrimmed || storedAccount.name || "Book Creator",
         email: emailTrimmed,
         goal: goalTrimmed || storedAccount.goal || DEFAULT_GOAL,
+        publisherImprint: storedAccount.publisherImprint || "",
+        publisherLogoUrl: storedAccount.publisherLogoUrl || "",
       });
     } finally {
       setBusyMethod(null);

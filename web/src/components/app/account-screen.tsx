@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
+  ImagePlus,
   LogOut,
   Mail,
   ShieldAlert,
   Sparkles,
+  Trash2,
   User2,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -48,28 +50,45 @@ function displayName(name?: string | null, email?: string | null) {
   return String(email || "").split("@")[0] || "Book Creator";
 }
 
+function readImageAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Logo dosyası okunamadı."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function AccountScreen() {
   const ready = useSessionGuard();
   const router = useRouter();
   const { viewer, setViewer, refreshViewer } = useAuthenticatedViewer(ready);
   const [books, setBooks] = useState<Book[]>([]);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
   const sourceName = viewer?.name && viewer.name !== "Book Creator" ? viewer.name : "";
   const sourceGoal = viewer?.goal || "";
-  const sourceKey = `${viewer?.id || "guest"}:${sourceName}:${sourceGoal}`;
+  const sourceImprint = viewer?.publisherImprint || "";
+  const sourceLogoUrl = viewer?.publisherLogoUrl || "";
+  const sourceKey = `${viewer?.id || "guest"}:${sourceName}:${sourceGoal}:${sourceImprint}:${sourceLogoUrl}:${viewer?.planId || "free"}`;
   const [draft, setDraft] = useState<{
     key: string;
     name: string;
     goal: string;
+    publisherImprint: string;
+    publisherLogoUrl: string;
   } | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState("");
   const [verificationSending, setVerificationSending] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState("");
+  const canCustomizePublisherBrand = viewer?.planId === "pro";
   const activeDraft = draft?.key === sourceKey ? draft : null;
   const name = activeDraft?.name ?? sourceName;
   const goal = activeDraft?.goal ?? sourceGoal;
+  const publisherImprint = activeDraft?.publisherImprint ?? sourceImprint;
+  const publisherLogoUrl = activeDraft?.publisherLogoUrl ?? sourceLogoUrl;
 
   async function refreshBooks() {
     try {
@@ -110,11 +129,13 @@ export function AccountScreen() {
     };
   }, [ready]);
 
-  function updateDraft(patch: Partial<{ name: string; goal: string }>) {
+  function updateDraft(patch: Partial<{ name: string; goal: string; publisherImprint: string; publisherLogoUrl: string }>) {
     setDraft({
       key: sourceKey,
       name: patch.name ?? name,
       goal: patch.goal ?? goal,
+      publisherImprint: patch.publisherImprint ?? publisherImprint,
+      publisherLogoUrl: patch.publisherLogoUrl ?? publisherLogoUrl,
     });
   }
 
@@ -144,13 +165,25 @@ export function AccountScreen() {
     setSaveMessage("");
     setSaveError("");
 
+    const requestBody: {
+      name: string;
+      goal: string;
+      publisherImprint?: string;
+      publisherLogoUrl?: string;
+    } = {
+      name: name.trim(),
+      goal: goal.trim(),
+    };
+
+    if (canCustomizePublisherBrand) {
+      requestBody.publisherImprint = publisherImprint.trim();
+      requestBody.publisherLogoUrl = publisherLogoUrl.trim();
+    }
+
     const response = await fetch("/api/account/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        goal: goal.trim(),
-      }),
+      body: JSON.stringify(requestBody),
     }).catch(() => null);
 
     const payload = response
@@ -172,6 +205,24 @@ export function AccountScreen() {
     setDraft(null);
     setSaveMessage("Profil ayarları kaydedildi.");
     setSaving(false);
+  }
+
+  async function handlePublisherLogoUpload(file: File) {
+    if (!file.type.startsWith("image/")) {
+      setSaveError("Yalnızca görsel dosyası yükleyebilirsin.");
+      return;
+    }
+    if (file.size > 750 * 1024) {
+      setSaveError("Logo dosyası 750 KB'den küçük olmalı.");
+      return;
+    }
+    try {
+      const dataUrl = await readImageAsDataUrl(file);
+      updateDraft({ publisherLogoUrl: dataUrl });
+      setSaveError("");
+    } catch (cause) {
+      setSaveError(cause instanceof Error ? cause.message : "Logo yüklenemedi.");
+    }
   }
 
   async function handleResendVerification() {
@@ -369,6 +420,95 @@ export function AccountScreen() {
                   Bu alan hero mesajlarını ve ilk wizard varsayımlarını netleştirir.
                 </p>
               </div>
+
+              {canCustomizePublisherBrand ? (
+                <div className="mt-6 rounded-[26px] border border-border/70 bg-background/65 p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">Yayınevi markası</div>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                        Pro planında profil logonu bir kez tanımla; `/app/new/style` içinde varsayılan gelsin.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        className="hidden"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) {
+                            void handlePublisherLogoUpload(file);
+                          }
+                          event.currentTarget.value = "";
+                        }}
+                      />
+                      <Button size="sm" variant="outline" onClick={() => logoInputRef.current?.click()}>
+                        <ImagePlus className="mr-1.5 size-3.5" />
+                        Logo yükle
+                      </Button>
+                      {publisherLogoUrl ? (
+                        <Button size="sm" variant="ghost" onClick={() => updateDraft({ publisherLogoUrl: "" })}>
+                          <Trash2 className="mr-1.5 size-3.5" />
+                          Kaldır
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                    <div>
+                      <Label htmlFor="profile-imprint">İmprint / yayınevi adı</Label>
+                      <Input
+                        id="profile-imprint"
+                        value={publisherImprint}
+                        onChange={(event) => updateDraft({ publisherImprint: event.target.value })}
+                        placeholder="örnek: North Peak Press"
+                      />
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Hazır logolardan farklı olarak kendi markanı wizard ve kapak önizlemesine otomatik taşır.
+                      </p>
+                    </div>
+
+                    <div className="rounded-[22px] border border-border/70 bg-card/85 p-4">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                        Önizleme
+                      </div>
+                      <div className="mt-3 flex min-h-[88px] items-center rounded-[18px] border border-border/60 bg-background/90 px-4 py-4">
+                        {publisherLogoUrl ? (
+                          <img
+                            src={publisherLogoUrl}
+                            alt={publisherImprint || "Yayınevi logosu"}
+                            className="h-14 w-auto max-w-full object-contain"
+                          />
+                        ) : (
+                          <div>
+                            <div className="text-sm font-semibold text-foreground">
+                              {publisherImprint || "Henüz logo yüklenmedi"}
+                            </div>
+                            <div className="mt-1 text-xs leading-5 text-muted-foreground">
+                              PNG, JPG, WEBP veya SVG kabul edilir.
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-6 rounded-[26px] border border-primary/15 bg-primary/5 p-5">
+                  <div className="text-sm font-semibold text-foreground">Özel yayınevi logosu</div>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Kendi yayınevi wordmark’ını profil bazlı kaydetmek ve wizard’da otomatik kullanmak için Pro plan gerekir.
+                  </p>
+                  <div className="mt-4">
+                    <Button variant="outline" onClick={() => router.push("/app/settings/billing")}>
+                      Pro plana geç
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {saveError ? <p className="mt-4 text-sm text-destructive">{saveError}</p> : null}
               {saveMessage ? <p className="mt-4 text-sm text-primary">{saveMessage}</p> : null}

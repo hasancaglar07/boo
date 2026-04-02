@@ -2048,9 +2048,12 @@ def validate_outputs(entries: list[BookEntry]) -> None:
         ensure(bool(meta.get("cover_template")), f"Cover template missing for {entry.slug}")
         if meta.get("cover_art_image"):
             ensure(int(meta.get("cover_variant_count") or 0) == 3, f"Variant count mismatch for {entry.slug}")
+            ensure(len(meta.get("cover_variants") or []) == 3, f"Cover variants missing for {entry.slug}")
+            ensure(bool(meta.get("selected_cover_variant")), f"Selected cover variant missing for {entry.slug}")
+            ensure(bool(meta.get("recommended_cover_variant")), f"Recommended cover variant missing for {entry.slug}")
         ensure((book_dir / "assets" / "front_cover_final.png").exists(), f"Missing raster front cover for {entry.slug}")
         ensure((book_dir / "assets" / "front_cover_final.svg").exists(), f"Missing front cover SVG for {entry.slug}")
-        ensure((book_dir / "assets" / "back_cover_final.svg").exists(), f"Missing back cover for {entry.slug}")
+        ensure((book_dir / "assets" / "back_cover_final.png").exists() or (book_dir / "assets" / "back_cover_final.svg").exists(), f"Missing back cover for {entry.slug}")
         ensure((book_dir / "assets" / "publisher_logo.svg").exists(), f"Missing logo for {entry.slug}")
         export_dir = book_dir / "exports_showcase"
         ensure((export_dir / "index.html").exists(), f"Missing HTML export for {entry.slug}")

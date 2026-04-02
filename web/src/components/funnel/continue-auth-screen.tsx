@@ -76,6 +76,8 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
       name: normalizedName,
       email: normalizedEmail,
       goal: existingAccount.goal || DEFAULT_GOAL,
+      publisherImprint: existingAccount.publisherImprint || "",
+      publisherLogoUrl: existingAccount.publisherLogoUrl || "",
     });
 
     const draft = loadFunnelDraft();

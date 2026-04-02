@@ -364,6 +364,20 @@ def build_book_preview(book: dict[str, Any], ratio: float = 0.2) -> dict[str, An
         "updated_at": "",
         "completed_at": "",
     }
+    cover_variants = normalize_cover_variants(book.get("cover_variants"))
+    recommended_variant_id = str(book.get("recommended_cover_variant") or "").strip()
+    if recommended_variant_id not in {variant["id"] for variant in cover_variants} and cover_variants:
+        recommended_variant_id = cover_variants[0]["id"]
+    selected_variant_id = str(book.get("selected_cover_variant") or "").strip() or recommended_variant_id
+    if selected_variant_id not in {variant["id"] for variant in cover_variants} and cover_variants:
+        selected_variant_id = recommended_variant_id or cover_variants[0]["id"]
+
+    cover_lab_state = "idle"
+    if cover_variants:
+        cover_lab_state = "ready"
+    elif generation.get("cover_state") in {"queued", "running"} or generation.get("cover_ready"):
+        cover_lab_state = "running"
+
     total_words = sum(max(1, count_words(chapter.get("content", ""))) for chapter in chapters) if chapters else 0
     target_words = max(220, int(total_words * ratio)) if total_words else 0
     max_visible_sections = max(1, min(3, round(max(1, len(chapters)) * ratio))) if chapters else 0
@@ -455,6 +469,15 @@ def build_book_preview(book: dict[str, Any], ratio: float = 0.2) -> dict[str, An
             "can_view_full_book": False,
         },
         "generation": generation,
+        "coverLab": {
+            "variants": cover_variants,
+            "selectedVariantId": selected_variant_id,
+            "recommendedVariantId": recommended_variant_id,
+            "generationState": cover_lab_state,
+            "slots": 3,
+            "readyCount": len(cover_variants),
+            "queuedSlots": max(0, 3 - len(cover_variants)),
+        },
     }
 
 
@@ -525,6 +548,7 @@ def read_metadata(book_dir: Path) -> dict[str, Any]:
         "branding_mark": "",
         "branding_logo_url": "",
         "cover_brief": "",
+        "book_type": "",
         "language": "",
         "generate_cover": True,
         "cover_art_image": "",
@@ -534,9 +558,25 @@ def read_metadata(book_dir: Path) -> dict[str, Any]:
         "cover_variant_count": 0,
         "cover_generation_provider": "",
         "cover_composed": False,
+        "cover_variants": [],
+        "selected_cover_variant": "",
+        "recommended_cover_variant": "",
+        "back_cover_variant_family": "",
+        "cover_family": "",
+        "cover_branch": "",
+        "cover_genre": "",
+        "cover_subtopic": "",
+        "cover_palette_key": "",
+        "cover_layout_key": "",
+        "cover_motif": "",
+        "cover_lab_version": "",
         "isbn": "",
         "year": "",
         "fast": False,
+        "book_length_tier": "standard",
+        "target_word_count_min": 0,
+        "target_word_count_max": 0,
+        "chapter_plan": [],
         "preview_stage": "idle",
         "preview_message": "",
         "preview_error": "",
@@ -572,6 +612,107 @@ def resolve_book_asset_path(book_dir: Path, relative_path: str) -> Path | None:
     if not asset_path.exists() or (book_dir not in asset_path.parents and asset_path != book_dir):
         return None
     return asset_path
+
+
+def normalize_cover_variants(raw: Any) -> list[dict[str, Any]]:
+    if not isinstance(raw, list):
+        return []
+
+    variants: list[dict[str, Any]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        variant_id = str(item.get("id") or item.get("family") or "").strip()
+        front_image = str(item.get("front_image") or "").strip()
+        back_image = str(item.get("back_image") or "").strip()
+        art_image = str(item.get("art_image") or "").strip()
+        if not variant_id or not front_image or not back_image:
+            continue
+        variants.append(
+            {
+                "id": variant_id,
+                "family": str(item.get("family") or variant_id).strip() or variant_id,
+                "label": str(item.get("label") or variant_id.title()).strip() or variant_id.title(),
+                "genre": str(item.get("genre") or "").strip(),
+                "subtopic": str(item.get("subtopic") or "").strip(),
+                "layout": str(item.get("layout") or "").strip(),
+                "motif": str(item.get("motif") or "").strip(),
+                "paletteKey": str(item.get("paletteKey") or "").strip(),
+                "front_image": front_image,
+                "front_svg": str(item.get("front_svg") or "").strip(),
+                "back_image": back_image,
+                "back_svg": str(item.get("back_svg") or "").strip(),
+                "art_image": art_image,
+                "score": float(item.get("score") or 0),
+                "recommended": bool(item.get("recommended", False)),
+                "provider": str(item.get("provider") or "").strip(),
+                "template": str(item.get("template") or "").strip(),
+                "preferred_zone": str(item.get("preferred_zone") or "").strip(),
+            }
+        )
+    return variants
+
+
+def sync_selected_cover_assets(book_dir: Path, metadata: dict[str, Any]) -> dict[str, Any]:
+    variants = normalize_cover_variants(metadata.get("cover_variants"))
+    if not variants:
+        return metadata
+
+    recommended_id = str(metadata.get("recommended_cover_variant") or "").strip()
+    if recommended_id not in {variant["id"] for variant in variants}:
+        recommended = next((variant for variant in variants if variant.get("recommended")), variants[0])
+        recommended_id = recommended["id"]
+
+    selected_id = str(metadata.get("selected_cover_variant") or "").strip() or recommended_id
+    selected = next((variant for variant in variants if variant["id"] == selected_id), None)
+    if not selected:
+        selected = next((variant for variant in variants if variant["id"] == recommended_id), variants[0])
+        selected_id = selected["id"]
+
+    assets_dir = book_dir / "assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    source_front = resolve_book_asset_path(book_dir, selected["front_image"])
+    source_back = resolve_book_asset_path(book_dir, selected["back_image"])
+    source_front_svg = resolve_book_asset_path(book_dir, selected.get("front_svg", ""))
+    source_back_svg = resolve_book_asset_path(book_dir, selected.get("back_svg", ""))
+    source_art = resolve_book_asset_path(book_dir, selected.get("art_image", ""))
+
+    if source_front and source_front != assets_dir / "front_cover_final.png":
+        shutil.copyfile(source_front, assets_dir / "front_cover_final.png")
+        shutil.copyfile(source_front, assets_dir / "showcase_front_cover.png")
+    if source_back and source_back != assets_dir / "back_cover_final.png":
+        shutil.copyfile(source_back, assets_dir / "back_cover_final.png")
+        shutil.copyfile(source_back, assets_dir / "showcase_back_cover.png")
+    if source_front_svg:
+        shutil.copyfile(source_front_svg, assets_dir / "front_cover_final.svg")
+        shutil.copyfile(source_front_svg, assets_dir / "showcase_front_cover.svg")
+    if source_back_svg:
+        shutil.copyfile(source_back_svg, assets_dir / "back_cover_final.svg")
+        shutil.copyfile(source_back_svg, assets_dir / "showcase_back_cover.svg")
+    if source_art:
+        shutil.copyfile(source_art, assets_dir / "ai_front_cover.png")
+
+    return save_metadata(
+        book_dir,
+        {
+            "cover_variants": variants,
+            "cover_variant_count": len(variants),
+            "recommended_cover_variant": recommended_id,
+            "selected_cover_variant": selected_id,
+            "cover_family": selected.get("family", ""),
+            "back_cover_variant_family": selected.get("family", ""),
+            "cover_genre": selected.get("genre") or str(metadata.get("cover_genre") or ""),
+            "cover_subtopic": selected.get("subtopic") or str(metadata.get("cover_subtopic") or ""),
+            "cover_palette_key": selected.get("paletteKey") or str(metadata.get("cover_palette_key") or ""),
+            "cover_layout_key": selected.get("layout") or str(metadata.get("cover_layout_key") or ""),
+            "cover_motif": selected.get("motif") or str(metadata.get("cover_motif") or ""),
+            "cover_art_image": selected.get("art_image", ""),
+            "cover_image": "assets/front_cover_final.png" if source_front else str(metadata.get("cover_image") or ""),
+            "back_cover_image": "assets/back_cover_final.png" if source_back else str(metadata.get("back_cover_image") or ""),
+            "cover_template": selected.get("template") or str(metadata.get("cover_template") or ""),
+            "cover_composed": bool(source_front) or bool(metadata.get("cover_composed")),
+        },
+    )
 
 
 def chapter_body_word_count(book_dir: Path, chapter_number_value: int) -> int:
@@ -691,20 +832,73 @@ def summarize_workflow_problem(result: dict[str, Any] | None, fallback: str) -> 
 
 
 def infer_cover_genre(book: dict[str, Any]) -> str:
+    explicit = str(book.get("cover_genre") or "").strip().lower()
+    if explicit:
+        return explicit
+    book_type = str(book.get("book_type") or book.get("bookType") or "").strip().lower()
+    if book_type == "cocuk":
+        return "children-illustrated"
     topic = " ".join(
         [
             str(book.get("title") or ""),
             str(book.get("subtitle") or ""),
             str(book.get("description") or ""),
+            str(book.get("cover_brief") or ""),
         ]
     ).lower()
-    if any(keyword in topic for keyword in ("minecraft", "oyun", "game", "gaming", "grok", "ai", "yapay zeka", "teknoloji", "coding", "kod")):
-        return "technology"
-    if any(keyword in topic for keyword in ("çocuk", "cocuk", "kids", "children")):
-        return "children"
-    if any(keyword in topic for keyword in ("iş", "business", "startup", "kariyer", "career", "marketing")):
-        return "business"
-    return "non-fiction"
+    if any(keyword in topic for keyword in ("çocuk", "cocuk", "kids", "children", "storybook", "bedtime", "picture book")):
+        return "children-illustrated"
+    if any(keyword in topic for keyword in ("ai", "yapay zeka", "prompt", "workflow", "automation", "system", "teknoloji", "coding", "kod")):
+        return "ai-systems"
+    if any(keyword in topic for keyword in ("education", "lesson", "teach", "teacher", "stem", "course", "öğret", "eğitim", "trainer", "workshop")):
+        return "education"
+    if any(keyword in topic for keyword in ("focus", "calm", "discipline", "habit", "kişisel", "personal", "clarte", "ritim", "ritme")):
+        return "personal-development"
+    if any(keyword in topic for keyword in ("expert", "expertise", "authority", "method", "uzman", "consultant", "mentor")):
+        return "expertise-authority"
+    return "business-marketing"
+
+
+def normalize_chapter_plan(raw: Any) -> list[dict[str, Any]]:
+    if not isinstance(raw, list):
+        return []
+
+    normalized: list[dict[str, Any]] = []
+    for index, item in enumerate(raw, start=1):
+        if not isinstance(item, dict):
+            continue
+        try:
+            number = int(item.get("number") or index)
+        except (TypeError, ValueError):
+            number = index
+        try:
+            target_min_words = int(item.get("target_min_words") or 0)
+        except (TypeError, ValueError):
+            target_min_words = 0
+        try:
+            target_max_words = int(item.get("target_max_words") or 0)
+        except (TypeError, ValueError):
+            target_max_words = 0
+
+        normalized.append(
+            {
+                "number": number,
+                "title": str(item.get("title") or "").strip(),
+                "summary": str(item.get("summary") or "").strip(),
+                "role": str(item.get("role") or "").strip(),
+                "length": str(item.get("length") or "").strip(),
+                "target_min_words": target_min_words,
+                "target_max_words": target_max_words,
+            }
+        )
+    return normalized
+
+
+def chapter_plan_for_number(metadata: dict[str, Any], chapter_number: int) -> dict[str, Any] | None:
+    for item in normalize_chapter_plan(metadata.get("chapter_plan")):
+        if int(item.get("number") or 0) == chapter_number:
+            return item
+    return None
 
 
 def run_preview_pipeline(slug: str) -> None:
@@ -715,6 +909,7 @@ def run_preview_pipeline(slug: str) -> None:
         return
 
     try:
+        metadata = read_metadata(book_dir)
         save_metadata(
             book_dir,
             {
@@ -730,9 +925,14 @@ def run_preview_pipeline(slug: str) -> None:
 
         if not first_preview_chapter_ready(book_dir):
             first_title = chapter_heading_prefix(infer_book_language(book_dir, read_metadata(book_dir)), 1)
+            first_plan = chapter_plan_for_number(metadata, 1)
+            min_words = int(first_plan.get("target_min_words") or 1800) if first_plan else 1800
+            max_words = int(first_plan.get("target_max_words") or 2400) if first_plan else 2400
             chapters = read_book(book_dir).get("chapters") or []
             if chapters:
                 first_title = str(chapters[0].get("title") or first_title).strip() or first_title
+            if first_plan and str(first_plan.get("title") or "").strip():
+                first_title = str(first_plan.get("title") or "").strip() or first_title
             save_metadata(
                 book_dir,
                 {
@@ -749,8 +949,8 @@ def run_preview_pipeline(slug: str) -> None:
                     "slug": slug,
                     "chapter_number": 1,
                     "chapter_title": first_title,
-                    "min_words": 1800,
-                    "max_words": 2400,
+                    "min_words": min_words,
+                    "max_words": max_words,
                     "style": "clear",
                     "tone": "professional",
                 }
@@ -1182,6 +1382,7 @@ def read_book(book_dir: Path) -> dict[str, Any]:
         "branding_mark": metadata.get("branding_mark", ""),
         "branding_logo_url": metadata.get("branding_logo_url", ""),
         "cover_brief": metadata.get("cover_brief", ""),
+        "book_type": metadata.get("book_type", ""),
         "generate_cover": bool(metadata.get("generate_cover", True)),
         "cover_art_image": metadata.get("cover_art_image", ""),
         "cover_image": metadata.get("cover_image", ""),
@@ -1190,9 +1391,25 @@ def read_book(book_dir: Path) -> dict[str, Any]:
         "cover_variant_count": metadata.get("cover_variant_count", 0),
         "cover_generation_provider": metadata.get("cover_generation_provider", ""),
         "cover_composed": bool(metadata.get("cover_composed", False)),
+        "cover_variants": normalize_cover_variants(metadata.get("cover_variants")),
+        "selected_cover_variant": metadata.get("selected_cover_variant", ""),
+        "recommended_cover_variant": metadata.get("recommended_cover_variant", ""),
+        "back_cover_variant_family": metadata.get("back_cover_variant_family", ""),
+        "cover_family": metadata.get("cover_family", ""),
+        "cover_branch": metadata.get("cover_branch", ""),
+        "cover_genre": metadata.get("cover_genre", ""),
+        "cover_subtopic": metadata.get("cover_subtopic", ""),
+        "cover_palette_key": metadata.get("cover_palette_key", ""),
+        "cover_layout_key": metadata.get("cover_layout_key", ""),
+        "cover_motif": metadata.get("cover_motif", ""),
+        "cover_lab_version": metadata.get("cover_lab_version", ""),
         "isbn": metadata.get("isbn", ""),
         "year": metadata.get("year", ""),
         "fast": bool(metadata.get("fast", False)),
+        "book_length_tier": metadata.get("book_length_tier", "standard"),
+        "target_word_count_min": metadata.get("target_word_count_min", 0),
+        "target_word_count_max": metadata.get("target_word_count_max", 0),
+        "chapter_plan": normalize_chapter_plan(metadata.get("chapter_plan")),
         "outline_file": outline_path.name if outline_path else "",
         "book_dir": relative_to_root(book_dir),
         "latest_export_dir": relative_to_root(latest_export) if latest_export else "",
@@ -1219,6 +1436,51 @@ def read_book(book_dir: Path) -> dict[str, Any]:
     }
 
 
+def read_book_summary(book_dir: Path) -> dict[str, Any]:
+    ensure_book_layout(book_dir)
+    outline_path = find_outline_file(book_dir)
+    title, subtitle = read_outline_title_subtitle(outline_path)
+    metadata = read_metadata(book_dir)
+    exports = collect_exports(book_dir)
+    latest_export = latest_export_dir(book_dir)
+    assets = collect_assets(book_dir, metadata)
+    extras = collect_extra_files(book_dir)
+    research = collect_research_files(book_dir)
+
+    return {
+        "slug": book_dir.name,
+        "title": title or book_dir.name,
+        "subtitle": subtitle,
+        "author": metadata["author"],
+        "publisher": metadata["publisher"],
+        "branding_mark": metadata.get("branding_mark", ""),
+        "branding_logo_url": metadata.get("branding_logo_url", ""),
+        "cover_brief": metadata.get("cover_brief", ""),
+        "cover_art_image": metadata.get("cover_art_image", ""),
+        "cover_image": metadata.get("cover_image", ""),
+        "back_cover_image": metadata.get("back_cover_image", ""),
+        "cover_template": metadata.get("cover_template", ""),
+        "cover_variant_count": metadata.get("cover_variant_count", 0),
+        "cover_generation_provider": metadata.get("cover_generation_provider", ""),
+        "cover_composed": bool(metadata.get("cover_composed", False)),
+        "selected_cover_variant": metadata.get("selected_cover_variant", ""),
+        "recommended_cover_variant": metadata.get("recommended_cover_variant", ""),
+        "cover_family": metadata.get("cover_family", ""),
+        "cover_branch": metadata.get("cover_branch", ""),
+        "cover_genre": metadata.get("cover_genre", ""),
+        "chapter_count": len(list(book_dir.glob("chapter_*_final.md"))),
+        "artifacts": list_files([path for path in exports if latest_export and latest_export in path.parents]),
+        "status": {
+            "chapter_count": len(list(book_dir.glob("chapter_*_final.md"))),
+            "asset_count": len(assets),
+            "extra_count": len(extras),
+            "research_count": len(research),
+            "export_count": len(exports),
+            **build_generation_status(book_dir, metadata),
+        },
+    }
+
+
 def list_books() -> list[dict[str, Any]]:
     BOOK_OUTPUTS_DIR.mkdir(exist_ok=True)
     books = []
@@ -1226,29 +1488,7 @@ def list_books() -> list[dict[str, Any]]:
         outline = find_outline_file(book_dir)
         if not outline and not list(book_dir.glob("chapter_*_final.md")):
             continue
-        book = read_book(book_dir)
-        books.append(
-            {
-                "slug": book["slug"],
-                "title": book["title"],
-                "subtitle": book["subtitle"],
-                "author": book["author"],
-                "publisher": book["publisher"],
-                "branding_mark": book.get("branding_mark", ""),
-                "branding_logo_url": book.get("branding_logo_url", ""),
-                "cover_brief": book.get("cover_brief", ""),
-                "cover_art_image": book.get("cover_art_image", ""),
-                "cover_image": book.get("cover_image", ""),
-                "back_cover_image": book.get("back_cover_image", ""),
-                "cover_template": book.get("cover_template", ""),
-                "cover_variant_count": book.get("cover_variant_count", 0),
-                "cover_generation_provider": book.get("cover_generation_provider", ""),
-                "cover_composed": bool(book.get("cover_composed", False)),
-                "chapter_count": len(book["chapters"]),
-                "artifacts": book["artifacts"],
-                "status": book["status"],
-            }
-        )
+        books.append(read_book_summary(book_dir))
     return books
 
 
@@ -1264,11 +1504,22 @@ def write_outline(
     for old_outline in book_dir.glob("book_outline_final_*.md"):
         old_outline.unlink()
     outline_path = book_dir / f"book_outline_final_{slug}.md"
-    chapter_lines = [
-        f"### {chapter_heading_prefix(language, index)}: {normalize_structural_heading(str(chapter.get('title') or ''), language, index)}"
-        for index, chapter in enumerate(chapters, start=1)
-    ]
-    outline_content = "\n".join([f"# {title}", f"## {subtitle}" if subtitle else "##", "", *chapter_lines, ""])
+    summary_label = "Özet" if language == "Turkish" else "Summary"
+    target_label = "Hedef uzunluk" if language == "Turkish" else "Target length"
+    chapter_blocks: list[str] = []
+    for index, chapter in enumerate(chapters, start=1):
+        chapter_title = normalize_structural_heading(str(chapter.get("title") or ""), language, index)
+        chapter_summary = str(chapter.get("summary") or chapter.get("content") or "").strip()
+        target_min = int(chapter.get("target_min_words") or 0)
+        target_max = int(chapter.get("target_max_words") or 0)
+        lines = [f"### {chapter_heading_prefix(language, index)}: {chapter_title}"]
+        if chapter_summary:
+          lines.append(f"- {summary_label}: {chapter_summary}")
+        if target_min > 0 and target_max > 0:
+          word_unit = "kelime" if language == "Turkish" else "words"
+          lines.append(f"- {target_label}: {target_min}-{target_max} {word_unit}")
+        chapter_blocks.append("\n".join(lines))
+    outline_content = "\n".join([f"# {title}", f"## {subtitle}" if subtitle else "##", "", *chapter_blocks, ""])
     outline_path.write_text(outline_content, encoding="utf-8")
     return outline_path
 
@@ -1288,6 +1539,7 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
     branding_mark = str(payload.get("branding_mark", "")).strip()
     branding_logo_url = str(payload.get("branding_logo_url", "")).strip()
     cover_brief = str(payload.get("cover_brief", "")).strip()
+    book_type = str(payload.get("book_type") or payload.get("bookType") or "").strip()
     language = normalize_book_language(payload.get("language")) or detect_book_language(title, subtitle, description) or "English"
     default_title = "Başlangıç" if language == "Turkish" else "Getting Started"
     chapters = payload.get("chapters") or [{"title": default_title, "content": ""}]
@@ -1299,9 +1551,25 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
     cover_variant_count = int(payload.get("cover_variant_count", 0) or 0)
     cover_generation_provider = str(payload.get("cover_generation_provider", "")).strip()
     cover_composed = bool(payload.get("cover_composed", False))
+    cover_variants = normalize_cover_variants(payload.get("cover_variants"))
+    selected_cover_variant = str(payload.get("selected_cover_variant", "")).strip()
+    recommended_cover_variant = str(payload.get("recommended_cover_variant", "")).strip()
+    back_cover_variant_family = str(payload.get("back_cover_variant_family", "")).strip()
+    cover_family = str(payload.get("cover_family", "")).strip()
+    cover_branch = str(payload.get("cover_branch", "")).strip()
+    cover_genre = str(payload.get("cover_genre", "")).strip()
+    cover_subtopic = str(payload.get("cover_subtopic", "")).strip()
+    cover_palette_key = str(payload.get("cover_palette_key", "")).strip()
+    cover_layout_key = str(payload.get("cover_layout_key", "")).strip()
+    cover_motif = str(payload.get("cover_motif", "")).strip()
+    cover_lab_version = str(payload.get("cover_lab_version", "")).strip()
     isbn = str(payload.get("isbn", "")).strip()
     year = str(payload.get("year", "")).strip()
     fast = bool(payload.get("fast", False))
+    book_length_tier = str(payload.get("book_length_tier") or "standard").strip() or "standard"
+    target_word_count_min = int(payload.get("target_word_count_min") or 0)
+    target_word_count_max = int(payload.get("target_word_count_max") or 0)
+    chapter_plan = normalize_chapter_plan(payload.get("chapter_plan"))
 
     book_dir = BOOK_OUTPUTS_DIR / slug
     ensure_book_layout(book_dir)
@@ -1322,7 +1590,7 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
         if old_chapter.name not in kept:
             old_chapter.unlink()
 
-    save_metadata(
+    saved_meta = save_metadata(
         book_dir,
         {
             "author": author,
@@ -1332,6 +1600,7 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
             "branding_mark": branding_mark,
             "branding_logo_url": branding_logo_url,
             "cover_brief": cover_brief,
+            "book_type": book_type,
             "language": language,
             "generate_cover": generate_cover,
             "cover_art_image": cover_art_image,
@@ -1341,11 +1610,28 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
             "cover_variant_count": cover_variant_count,
             "cover_generation_provider": cover_generation_provider,
             "cover_composed": cover_composed,
+            "cover_variants": cover_variants,
+            "selected_cover_variant": selected_cover_variant,
+            "recommended_cover_variant": recommended_cover_variant,
+            "back_cover_variant_family": back_cover_variant_family,
+            "cover_family": cover_family,
+            "cover_branch": cover_branch,
+            "cover_genre": cover_genre,
+            "cover_subtopic": cover_subtopic,
+            "cover_palette_key": cover_palette_key,
+            "cover_layout_key": cover_layout_key,
+            "cover_motif": cover_motif,
+            "cover_lab_version": cover_lab_version,
             "isbn": isbn,
             "year": year,
             "fast": fast,
+            "book_length_tier": book_length_tier,
+            "target_word_count_min": target_word_count_min,
+            "target_word_count_max": target_word_count_max,
+            "chapter_plan": chapter_plan,
         },
     )
+    saved_meta = sync_selected_cover_assets(book_dir, saved_meta)
     append_log(f"Saved book '{slug}'.")
     return read_book(book_dir)
 
@@ -1464,6 +1750,7 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     branding_mark = str(payload.get("branding_mark") or metadata.get("branding_mark") or "").strip()
     branding_logo_url = str(payload.get("branding_logo_url") or metadata.get("branding_logo_url") or "").strip()
     cover_brief = str(payload.get("cover_brief") or metadata.get("cover_brief") or "").strip()
+    book_type = str(payload.get("book_type") or payload.get("bookType") or metadata.get("book_type") or "").strip()
     generate_cover = bool(payload.get("generate_cover", metadata.get("generate_cover", True)))
     cover_art_image = str(payload.get("cover_art_image") or metadata.get("cover_art_image") or "").strip()
     cover_image = str(payload.get("cover_image") or metadata.get("cover_image") or "").strip()
@@ -1472,11 +1759,27 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     cover_variant_count = int(payload.get("cover_variant_count") or metadata.get("cover_variant_count") or 0)
     cover_generation_provider = str(payload.get("cover_generation_provider") or metadata.get("cover_generation_provider") or "").strip()
     cover_composed = bool(payload.get("cover_composed", metadata.get("cover_composed", False)))
+    cover_variants = normalize_cover_variants(payload.get("cover_variants") or metadata.get("cover_variants"))
+    selected_cover_variant = str(payload.get("selected_cover_variant") or metadata.get("selected_cover_variant") or "").strip()
+    recommended_cover_variant = str(payload.get("recommended_cover_variant") or metadata.get("recommended_cover_variant") or "").strip()
+    back_cover_variant_family = str(payload.get("back_cover_variant_family") or metadata.get("back_cover_variant_family") or "").strip()
+    cover_family = str(payload.get("cover_family") or metadata.get("cover_family") or "").strip()
+    cover_branch = str(payload.get("cover_branch") or metadata.get("cover_branch") or "").strip()
+    cover_genre = str(payload.get("cover_genre") or metadata.get("cover_genre") or "").strip()
+    cover_subtopic = str(payload.get("cover_subtopic") or metadata.get("cover_subtopic") or "").strip()
+    cover_palette_key = str(payload.get("cover_palette_key") or metadata.get("cover_palette_key") or "").strip()
+    cover_layout_key = str(payload.get("cover_layout_key") or metadata.get("cover_layout_key") or "").strip()
+    cover_motif = str(payload.get("cover_motif") or metadata.get("cover_motif") or "").strip()
+    cover_lab_version = str(payload.get("cover_lab_version") or metadata.get("cover_lab_version") or "").strip()
     isbn = str(payload.get("isbn") or metadata.get("isbn") or "").strip()
     year = str(payload.get("year") or metadata.get("year") or "").strip()
     fast = bool(payload.get("fast", metadata.get("fast", False)))
+    book_length_tier = str(payload.get("book_length_tier") or metadata.get("book_length_tier") or "standard").strip() or "standard"
+    target_word_count_min = int(payload.get("target_word_count_min") or metadata.get("target_word_count_min") or 0)
+    target_word_count_max = int(payload.get("target_word_count_max") or metadata.get("target_word_count_max") or 0)
+    chapter_plan = normalize_chapter_plan(payload.get("chapter_plan") or metadata.get("chapter_plan"))
 
-    save_metadata(
+    saved_meta = save_metadata(
         book_dir,
         {
             "author": author,
@@ -1485,6 +1788,7 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             "branding_mark": branding_mark,
             "branding_logo_url": branding_logo_url,
             "cover_brief": cover_brief,
+            "book_type": book_type,
             "generate_cover": generate_cover,
             "cover_art_image": cover_art_image,
             "cover_image": cover_image,
@@ -1493,11 +1797,28 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             "cover_variant_count": cover_variant_count,
             "cover_generation_provider": cover_generation_provider,
             "cover_composed": cover_composed,
+            "cover_variants": cover_variants,
+            "selected_cover_variant": selected_cover_variant,
+            "recommended_cover_variant": recommended_cover_variant,
+            "back_cover_variant_family": back_cover_variant_family,
+            "cover_family": cover_family,
+            "cover_branch": cover_branch,
+            "cover_genre": cover_genre,
+            "cover_subtopic": cover_subtopic,
+            "cover_palette_key": cover_palette_key,
+            "cover_layout_key": cover_layout_key,
+            "cover_motif": cover_motif,
+            "cover_lab_version": cover_lab_version,
             "isbn": isbn,
             "year": year,
             "fast": fast,
+            "book_length_tier": book_length_tier,
+            "target_word_count_min": target_word_count_min,
+            "target_word_count_max": target_word_count_max,
+            "chapter_plan": chapter_plan,
         },
     )
+    saved_meta = sync_selected_cover_assets(book_dir, saved_meta)
 
     command = [
         "bash",
@@ -1668,6 +1989,14 @@ def preflight_for_workflow(action: str, slug: str | None = None) -> dict[str, An
             missing.append("python3 is missing.")
         if not shutil.which("playwright"):
             warnings.append("playwright command not found. The script may install it on first run.")
+
+    if action == "cover_variants_generate":
+        if not shutil.which("python3"):
+            ok = False
+            missing.append("python3 is missing.")
+        if not shutil.which("node"):
+            ok = False
+            missing.append("node is missing.")
 
     if action == "topic_finder" and not shutil.which("xmllint"):
         ok = False
@@ -1866,14 +2195,24 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
     before = file_snapshot(book_dir)
 
     if action == "chapter_generate":
-        book_language = infer_book_language(book_dir, read_metadata(book_dir))
+        metadata = read_metadata(book_dir)
+        book_language = infer_book_language(book_dir, metadata)
+        chapter_number = int(payload.get("chapter_number") or 1)
+        chapter_plan = chapter_plan_for_number(metadata, chapter_number)
+        min_words = str(payload.get("min_words") or (chapter_plan.get("target_min_words") if chapter_plan else 0) or 1800)
+        max_words = str(payload.get("max_words") or (chapter_plan.get("target_max_words") if chapter_plan else 0) or 2400)
+        chapter_title = str(
+            payload.get("chapter_title")
+            or (chapter_plan.get("title") if chapter_plan else "")
+            or normalize_structural_heading("", book_language, chapter_number)
+        )
         result = run_dashboard_action(
             "chapter-generate",
             str(book_dir),
-            str(payload.get("chapter_number") or 1),
-            str(payload.get("chapter_title") or normalize_structural_heading("", book_language, int(payload.get("chapter_number") or 1))),
-            str(payload.get("min_words") or 1800),
-            str(payload.get("max_words") or 2400),
+            str(chapter_number),
+            chapter_title,
+            min_words,
+            max_words,
             str(payload.get("style") or "clear"),
             str(payload.get("tone") or "professional"),
             book_language,
@@ -1921,6 +2260,21 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
             str(payload.get("author") or metadata["author"]),
             str(payload.get("genre") or "non-fiction"),
         )
+    elif action == "cover_variants_generate":
+        settings = read_settings()
+        command = [
+            "python3",
+            str(ROOT_DIR / "scripts" / "generate_book_cover_variants.py"),
+            str(book_dir),
+            "--service",
+            str(payload.get("service") or settings["cover_service"] or "auto"),
+        ]
+        if bool(payload.get("force", False)):
+            command.append("--force")
+        selected_override = str(payload.get("selected_cover_variant") or "").strip()
+        if selected_override:
+            command.extend(["--selected", selected_override])
+        result = run_process(command, cwd=ROOT_DIR, env=command_env())
     elif action == "market_init":
         result = run_dashboard_action("market-init", str(book_dir))
     elif action == "market_search":
@@ -2011,6 +2365,17 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
             response["book"] = read_book(book_dir)
         elif not response["warnings"]:
             response["warnings"] = ["Browser automation started, but no downloaded cover file was detected yet."]
+    if action == "cover_variants_generate" and result.returncode == 0:
+        metadata = sync_selected_cover_assets(book_dir, read_metadata(book_dir))
+        response["book"] = read_book(book_dir)
+        try:
+            response["generated"] = json.loads((result.stdout or "{}").strip())
+        except json.JSONDecodeError:
+            response["generated"] = {
+                "selected_cover_variant": metadata.get("selected_cover_variant", ""),
+                "recommended_cover_variant": metadata.get("recommended_cover_variant", ""),
+                "cover_variant_count": metadata.get("cover_variant_count", 0),
+            }
     return response
 
 

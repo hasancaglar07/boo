@@ -28,6 +28,7 @@ export function FunnelShell({
   description,
   summary,
   children,
+  mode = "funnel",
 }: {
   step?: FunnelStep;
   eyebrow?: string;
@@ -35,49 +36,53 @@ export function FunnelShell({
   description: string;
   summary?: Array<{ label: string; value: string }>;
   children: React.ReactNode;
+  mode?: "funnel" | "embedded";
 }) {
   const activeIndex = step ? FUNNEL_STEPS.indexOf(step) : -1;
+  const embedded = mode === "embedded";
+  const containerClass = embedded ? "mx-auto w-full max-w-[1240px]" : "shell";
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
-      {/* Nav */}
-      <header className="border-b border-border/60 bg-background/95 backdrop-blur-sm sticky top-0 z-40">
-        <div className="shell flex items-center justify-between py-3.5">
-          <Link href="/" className="group flex items-center transition-opacity hover:opacity-90">
-            <span className="relative block h-12 w-[220px] overflow-hidden sm:h-14 sm:w-[280px]">
-              <Image
-                src="/logo.png"
-                alt="Book Generator"
-                className="h-full w-full object-contain object-left dark:hidden"
-                fill
-                priority
-                sizes="(min-width: 640px) 280px, 220px"
-              />
-              <Image
-                src="/dark-logo.png"
-                alt="Book Generator"
-                className="hidden h-full w-full object-contain object-left dark:block"
-                fill
-                priority
-                sizes="(min-width: 640px) 280px, 220px"
-              />
-            </span>
-          </Link>
-          <div className="flex items-center gap-2">
-            {step && (
-              <span className="text-xs text-muted-foreground sm:hidden" aria-hidden="true">
-                {activeIndex + 1}/{FUNNEL_STEPS.length}
+    <div className={cn("text-foreground", embedded ? "w-full" : "min-h-dvh bg-background")}>
+      {!embedded ? (
+        <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur-sm">
+          <div className="shell flex items-center justify-between py-3.5">
+            <Link href="/" className="group flex items-center transition-opacity hover:opacity-90">
+              <span className="relative block h-12 w-[220px] overflow-hidden sm:h-14 sm:w-[280px]">
+                <Image
+                  src="/logo.png"
+                  alt="Book Generator"
+                  className="h-full w-full object-contain object-left dark:hidden"
+                  fill
+                  priority
+                  sizes="(min-width: 640px) 280px, 220px"
+                />
+                <Image
+                  src="/dark-logo.png"
+                  alt="Book Generator"
+                  className="hidden h-full w-full object-contain object-left dark:block"
+                  fill
+                  priority
+                  sizes="(min-width: 640px) 280px, 220px"
+                />
               </span>
-            )}
-            <ThemeToggle />
+            </Link>
+            <div className="flex items-center gap-2">
+              {step ? (
+                <span className="text-xs text-muted-foreground sm:hidden" aria-hidden="true">
+                  {activeIndex + 1}/{FUNNEL_STEPS.length}
+                </span>
+              ) : null}
+              <ThemeToggle />
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      ) : null}
 
       {/* Railway progress */}
       {step ? (
         <div className="border-b border-border/40 bg-card/30">
-          <div className="shell py-4">
+          <div className={cn(containerClass, "py-4")}>
             <ol className="flex items-center">
               {FUNNEL_STEPS.map((item, index) => {
                 const done = index < activeIndex;
@@ -138,7 +143,7 @@ export function FunnelShell({
       ) : null}
 
       {/* Main layout */}
-      <div className="shell py-10 md:py-14">
+      <div className={cn(containerClass, embedded ? "py-0 md:py-0" : "py-10 md:py-14")}>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_280px]">
           {/* Content */}
           <div>

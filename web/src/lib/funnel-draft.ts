@@ -5,6 +5,9 @@ export type FunnelBookType = "rehber" | "is" | "egitim" | "cocuk" | "diger";
 export type FunnelDepth = "hizli" | "dengeli" | "detayli";
 export type FunnelTone = "clear" | "professional" | "warm" | "inspiring";
 export type FunnelCoverDirection = "editorial" | "tech" | "minimal" | "energetic";
+export type FunnelBookLength = "compact" | "standard" | "extended";
+export type FunnelChapterRole = "opening" | "foundation" | "core" | "case" | "advanced" | "closing";
+export type FunnelChapterLength = "short" | "medium" | "long";
 export const SUPPORTED_LANGUAGES = [
   { value: "Turkish", label: "Türkçe", description: "Yerel okur tonu, Türkçe bölüm akışı ve doğal başlık yapısı." },
   { value: "English", label: "English", description: "International reader framing with clean English structure." },
@@ -37,6 +40,8 @@ export type FunnelLanguage = (typeof SUPPORTED_LANGUAGES)[number]["value"];
 export type FunnelOutlineItem = {
   title: string;
   summary: string;
+  role: FunnelChapterRole;
+  length: FunnelChapterLength;
 };
 
 export type FunnelDraft = {
@@ -59,6 +64,7 @@ export type FunnelDraft = {
   title: string;
   subtitle: string;
   outline: FunnelOutlineItem[];
+  bookLength: FunnelBookLength;
   tone: FunnelTone;
   depth: FunnelDepth;
   coverDirection: FunnelCoverDirection;
@@ -66,6 +72,9 @@ export type FunnelDraft = {
 
 const STORAGE_KEY = "book-product-funnel-draft:v1";
 export const FUNNEL_STEPS: FunnelStep[] = ["topic", "title", "outline", "style", "generate"];
+export const BOOK_LENGTHS: FunnelBookLength[] = ["compact", "standard", "extended"];
+export const CHAPTER_ROLES: FunnelChapterRole[] = ["opening", "foundation", "core", "case", "advanced", "closing"];
+export const CHAPTER_LENGTHS: FunnelChapterLength[] = ["short", "medium", "long"];
 
 const LANGUAGE_SET = new Set<string>(SUPPORTED_LANGUAGES.map((item) => item.value));
 
@@ -135,23 +144,80 @@ export function createDefaultFunnelDraft(): FunnelDraft {
     title: "",
     subtitle: "",
     outline: [],
+    bookLength: "standard",
     tone: "professional",
     depth: "dengeli",
     coverDirection: "editorial",
   };
 }
 
+function normalizeBookLength(bookLength?: string): FunnelBookLength {
+  return BOOK_LENGTHS.includes(bookLength as FunnelBookLength) ? (bookLength as FunnelBookLength) : "standard";
+}
+
+function normalizeChapterRole(role?: string): FunnelChapterRole | null {
+  return CHAPTER_ROLES.includes(role as FunnelChapterRole) ? (role as FunnelChapterRole) : null;
+}
+
+function normalizeChapterLength(length?: string): FunnelChapterLength | null {
+  return CHAPTER_LENGTHS.includes(length as FunnelChapterLength) ? (length as FunnelChapterLength) : null;
+}
+
+function suggestedChapterRole(index: number, total: number, bookType: FunnelBookType): FunnelChapterRole {
+  if (index === 0) return "opening";
+  if (index === total - 1) return "closing";
+  if (index === 1) return "foundation";
+  if (total >= 6 && index === total - 2) return "advanced";
+  if (bookType === "egitim" && index === Math.floor(total / 2)) return "case";
+  if (bookType === "is" && index % 3 === 0) return "case";
+  return "core";
+}
+
+function suggestedChapterLength(role: FunnelChapterRole, bookLength: FunnelBookLength): FunnelChapterLength {
+  if (bookLength === "compact") {
+    if (role === "opening" || role === "closing") return "short";
+    if (role === "core" || role === "advanced") return "medium";
+    return "medium";
+  }
+  if (bookLength === "extended") {
+    if (role === "opening" || role === "closing") return "medium";
+    if (role === "advanced") return "medium";
+    return "long";
+  }
+  if (role === "opening" || role === "closing") return "short";
+  if (role === "core") return "long";
+  return "medium";
+}
+
+export function enrichOutlineItems(
+  items: Array<Partial<FunnelOutlineItem>>,
+  input: Pick<FunnelDraft, "bookLength" | "bookType">,
+): FunnelOutlineItem[] {
+  const filtered = items.filter((item) => String(item?.title || "").trim());
+  return filtered.map((item, index) => {
+    const role = normalizeChapterRole(item.role) || suggestedChapterRole(index, filtered.length, input.bookType);
+    return {
+      title: String(item.title || "").trim(),
+      summary: String(item.summary || "").trim(),
+      role,
+      length: normalizeChapterLength(item.length) || suggestedChapterLength(role, input.bookLength),
+    };
+  });
+}
+
 export function normalizeFunnelDraft(payload?: Partial<FunnelDraft> | null): FunnelDraft {
   const base = createDefaultFunnelDraft();
+  const bookLength = normalizeBookLength(payload?.bookLength);
   return {
     ...base,
     ...payload,
     language: normalizeFunnelLanguage(payload?.language),
+    bookLength,
     outline: Array.isArray(payload?.outline)
-      ? payload?.outline.map((item) => ({
-          title: String(item?.title || "").trim(),
-          summary: String(item?.summary || "").trim(),
-        }))
+      ? enrichOutlineItems(payload.outline, {
+          bookLength,
+          bookType: (payload?.bookType as FunnelBookType) || base.bookType,
+        })
       : base.outline,
     updatedAt: new Date().toISOString(),
   };
@@ -251,7 +317,7 @@ export function localOutlineSuggestions(draft: FunnelDraft) {
   const subject = titleCase(draft.topic || "Konu");
   const language = draft.language;
   if (isTurkishLanguage(language)) {
-    return [
+    return enrichOutlineItems([
       { title: `${subject} Dünyasına Giriş`, summary: `${subject} için temel kavramlar, beklentiler ve başlangıç çerçevesi.` },
       { title: "İlk Adımlar ve Temel Kurulum", summary: "Başlamak için gereken hazırlıklar, ayarlar ve ilk uygulamalar." },
       { title: "Ana Mekanikler ve Kritik Mantık", summary: "Konuya dair en önemli sistemleri sade örneklerle açıklayan bölüm." },
@@ -259,10 +325,10 @@ export function localOutlineSuggestions(draft: FunnelDraft) {
       { title: "Strateji ve İlerlemenin Temeli", summary: "Daha iyi sonuç almak için izlenecek düzenli ilerleme planı." },
       { title: "İleri Seviye Taktikler", summary: "Temeller oturduktan sonra fark yaratan yöntemler ve ince ayarlar." },
       { title: "Uzun Vadeli Gelişim Planı", summary: "Kazanımı kalıcı hale getirecek çalışma, tekrar ve geliştirme önerileri." },
-    ];
+    ], draft);
   }
 
-  return [
+  return enrichOutlineItems([
     { title: `Understanding ${subject}`, summary: `A clean introduction to the fundamentals and the mental model behind ${subject}.` },
     { title: "Getting Set Up", summary: "The tools, choices, and first actions needed for a confident start." },
     { title: "Core Mechanics", summary: "The most important systems and workflows explained in a practical order." },
@@ -270,7 +336,44 @@ export function localOutlineSuggestions(draft: FunnelDraft) {
     { title: "Building Consistency", summary: "How to make progress predictable with routines and better decisions." },
     { title: "Advanced Tactics", summary: "The higher-leverage moves that separate casual use from confident execution." },
     { title: "Next-Level Progress", summary: "A long-term roadmap for improving results beyond the basics." },
-  ];
+  ], draft);
+}
+
+type WordRange = { min: number; max: number };
+
+const BOOK_LENGTH_WORD_RANGES: Record<FunnelBookLength, Record<FunnelChapterLength, WordRange>> = {
+  compact: {
+    short: { min: 900, max: 1200 },
+    medium: { min: 1300, max: 1800 },
+    long: { min: 1900, max: 2400 },
+  },
+  standard: {
+    short: { min: 1200, max: 1600 },
+    medium: { min: 1800, max: 2400 },
+    long: { min: 2500, max: 3400 },
+  },
+  extended: {
+    short: { min: 1600, max: 2100 },
+    medium: { min: 2400, max: 3200 },
+    long: { min: 3400, max: 4300 },
+  },
+};
+
+export function chapterWordRange(length: FunnelChapterLength, bookLength: FunnelBookLength): WordRange {
+  return BOOK_LENGTH_WORD_RANGES[bookLength][length];
+}
+
+export function outlineWordRange(outline: FunnelOutlineItem[], bookLength: FunnelBookLength) {
+  return outline.reduce(
+    (total, item) => {
+      const range = chapterWordRange(item.length, bookLength);
+      return {
+        min: total.min + range.min,
+        max: total.max + range.max,
+      };
+    },
+    { min: 0, max: 0 },
+  );
 }
 
 export function suggestedStyleProfile(draft: FunnelDraft) {
@@ -292,11 +395,130 @@ export function buildDraftDescription(draft: FunnelDraft) {
   return `A ${bookTypeLabel(draft.bookType).toLowerCase()} about ${draft.topic} for ${draft.audience || "the target reader"}.`;
 }
 
+export function chapterRoleLabel(role: FunnelChapterRole, language: FunnelLanguage) {
+  if (!isTurkishLanguage(language)) {
+    switch (role) {
+      case "opening":
+        return "Opening";
+      case "foundation":
+        return "Foundation";
+      case "core":
+        return "Core";
+      case "case":
+        return "Application";
+      case "advanced":
+        return "Advanced";
+      case "closing":
+        return "Closing";
+    }
+  }
+  switch (role) {
+    case "opening":
+      return "Açılış";
+    case "foundation":
+      return "Temel";
+    case "core":
+      return "Ana bölüm";
+    case "case":
+      return "Uygulama";
+    case "advanced":
+      return "İleri seviye";
+    case "closing":
+      return "Kapanış";
+  }
+}
+
+export function chapterRoleDescription(role: FunnelChapterRole, language: FunnelLanguage) {
+  if (!isTurkishLanguage(language)) {
+    switch (role) {
+      case "opening":
+        return "Sets the promise, context, and why this book matters.";
+      case "foundation":
+        return "Builds the reader's basics before the heavier sections.";
+      case "core":
+        return "Carries the main framework, method, or transformation.";
+      case "case":
+        return "Shows application, examples, and real-world translation.";
+      case "advanced":
+        return "Adds nuance, edge cases, and leverage for stronger readers.";
+      case "closing":
+        return "Wraps the book with synthesis, next steps, and momentum.";
+    }
+  }
+  switch (role) {
+    case "opening":
+      return "Kitabın vaadini, bağlamını ve neden önemli olduğunu kurar.";
+    case "foundation":
+      return "Daha ağır bölümlerden önce okurun temelini oturtur.";
+    case "core":
+      return "Ana yöntemi, sistemi veya dönüşümü taşır.";
+    case "case":
+      return "Uygulama, örnek ve gerçek dünya karşılığını gösterir.";
+    case "advanced":
+      return "Nüans, istisna ve daha yüksek kaldıraçlı içgörü ekler.";
+    case "closing":
+      return "Kitabı toparlar, sonraki adımları ve kapanış ritmini verir.";
+  }
+}
+
+export function chapterLengthLabel(length: FunnelChapterLength, language: FunnelLanguage) {
+  if (!isTurkishLanguage(language)) {
+    return length === "short" ? "Short" : length === "medium" ? "Medium" : "Long";
+  }
+  return length === "short" ? "Kısa" : length === "medium" ? "Orta" : "Uzun";
+}
+
+export function bookLengthLabel(bookLength: FunnelBookLength, language: FunnelLanguage) {
+  if (!isTurkishLanguage(language)) {
+    return bookLength === "compact" ? "Compact book" : bookLength === "extended" ? "Extended book" : "Standard book";
+  }
+  return bookLength === "compact" ? "Kompakt kitap" : bookLength === "extended" ? "Detaylı kitap" : "Standart kitap";
+}
+
+export function bookLengthDescription(bookLength: FunnelBookLength, language: FunnelLanguage) {
+  const range = {
+    compact: "10k-16k",
+    standard: "16k-24k",
+    extended: "24k-34k",
+  }[bookLength];
+  if (!isTurkishLanguage(language)) {
+    return bookLength === "compact"
+      ? `Fast to read and more focused. Usually around ${range} words.`
+      : bookLength === "extended"
+      ? `More shelf presence, more examples, more breathing room. Usually around ${range} words.`
+      : `The safest nonfiction balance for paid books. Usually around ${range} words.`;
+  }
+  return bookLength === "compact"
+    ? `Daha hızlı okunan ve odaklı yapı. Genelde ${range} kelime civarı.`
+    : bookLength === "extended"
+    ? `Daha raf hissi veren, daha örnekli ve daha nefesli yapı. Genelde ${range} kelime civarı.`
+    : `Ücretli non-fiction için en güvenli denge. Genelde ${range} kelime civarı.`;
+}
+
+function buildChapterGenerationBrief(item: FunnelOutlineItem, bookLength: FunnelBookLength, language: FunnelLanguage) {
+  const words = chapterWordRange(item.length, bookLength);
+  if (!isTurkishLanguage(language)) {
+    return `${item.summary.trim()} Chapter role: ${chapterRoleLabel(item.role, language)}. Suggested depth: ${chapterLengthLabel(item.length, language)}. Target length: ${words.min}-${words.max} words.`;
+  }
+  return `${item.summary.trim()} Bölüm rolü: ${chapterRoleLabel(item.role, language)}. Önerilen derinlik: ${chapterLengthLabel(item.length, language)}. Hedef uzunluk: ${words.min}-${words.max} kelime.`;
+}
+
 export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
-  const chapters = (draft.outline.length ? draft.outline : localOutlineSuggestions(draft)).map((item) => ({
-    title: item.title.trim(),
-    content: item.summary.trim(),
-  }));
+  const plannedOutline = draft.outline.length ? draft.outline : localOutlineSuggestions(draft);
+  const totalWords = outlineWordRange(plannedOutline, draft.bookLength);
+  const chapters = plannedOutline.map((item, index) => {
+    const words = chapterWordRange(item.length, draft.bookLength);
+    return {
+      title: item.title.trim(),
+      summary: item.summary.trim(),
+      role: item.role,
+      length: item.length,
+      target_min_words: words.min,
+      target_max_words: words.max,
+      content: buildChapterGenerationBrief(item, draft.bookLength, draft.language),
+      number: index + 1,
+    };
+  });
 
   return {
     slug: slugify(draft.generatedSlug || draft.title || draft.topic),
@@ -313,6 +535,18 @@ export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
     cover_brief: draft.coverBrief.trim(),
     generate_cover: true,
     fast: draft.depth === "hizli",
+    book_length_tier: draft.bookLength,
+    target_word_count_min: totalWords.min,
+    target_word_count_max: totalWords.max,
+    chapter_plan: chapters.map(({ title, summary, role, length, target_min_words, target_max_words, number }) => ({
+      number,
+      title,
+      summary,
+      role,
+      length,
+      target_min_words,
+      target_max_words,
+    })),
     chapters,
   };
 }

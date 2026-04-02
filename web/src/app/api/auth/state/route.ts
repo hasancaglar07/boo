@@ -11,13 +11,19 @@ export async function GET() {
   const viewer =
     state.authenticated && session?.user?.id
       ? {
-          id: session.user.id,
-          name: state.account.name,
-          email: state.account.email,
-          goal: state.account.goal,
-          planId: state.planId,
-          emailVerified: state.emailVerified,
-          role: state.role,
+        id: session.user.id,
+        name: state.account.name,
+        email: state.account.email,
+        goal: state.account.goal,
+        publisherImprint: state.account.publisherImprint,
+        publisherLogoUrl: state.account.publisherLogoUrl,
+        planId: state.planId,
+        emailVerified: state.emailVerified,
+        role: state.role,
+        usage: {
+          ...state.usage,
+          resetAt: state.usage.resetAt?.toISOString() || null,
+        },
         }
       : null;
 
@@ -39,6 +45,10 @@ export async function GET() {
       authenticated: state.authenticated,
       emailVerified: state.emailVerified,
     }),
+    usage: {
+      ...state.usage,
+      resetAt: state.usage.resetAt?.toISOString() || null,
+    },
     providers: getAuthProviderAvailability(),
     viewer,
   });

@@ -1,0 +1,38 @@
+{
+  "slug": "prompt-systems-for-small-teams",
+  "round": 2,
+  "outputs": [
+    {
+      "name": "operator-brass",
+      "family": "operator",
+      "art_path": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/prompt-systems-for-small-teams/assets/cover_art_v1.png",
+      "front_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/prompt-systems-for-small-teams/round-02/operator-brass.png",
+      "back_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/prompt-systems-for-small-teams/round-02/operator-brass-back.png",
+      "template": "business-playbook"
+    },
+    {
+      "name": "operator-inset",
+      "family": "operator",
+      "art_path": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/prompt-systems-for-small-teams/assets/cover_art_v1.png",
+      "front_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/prompt-systems-for-small-teams/round-02/operator-inset.png",
+      "back_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/prompt-systems-for-small-teams/round-02/operator-inset-back.png",
+      "template": "business-playbook"
+    },
+    {
+      "name": "authority-classic",
+      "family": "authority",
+      "art_path": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/prompt-systems-for-small-teams/assets/cover_art_v2.png",
+      "front_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/prompt-systems-for-small-teams/round-02/authority-classic.png",
+      "back_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/prompt-systems-for-small-teams/round-02/authority-classic-back.png",
+      "template": "business-playbook"
+    },
+    {
+      "name": "authority-sharp",
+      "family": "authority",
+      "art_path": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/prompt-systems-for-small-teams/assets/cover_art_v2.png",
+      "front_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/prompt-systems-for-small-teams/round-02/authority-sharp.png",
+      "back_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/prompt-systems-for-small-teams/round-02/authority-sharp-back.png",
+      "template": "business-playbook"
+    }
+  ]
+}

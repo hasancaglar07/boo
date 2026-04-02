@@ -22,9 +22,15 @@ export type ShowcasePortfolioEntry = {
   coverPrompt: string;
   openingNote: string;
   readerHook: string;
+  coverBranch?: "nonfiction" | "children";
+  coverGenre?: string;
+  coverSubtopic?: string;
   coverTemplateHint?: string;
   titleTone?: string;
   coverHierarchy?: string;
+  coverPaletteKey?: string;
+  coverLayoutKey?: string;
+  coverMotif?: string;
   chapterCount: number;
   heroRank: number;
   exportTarget: "hero" | "preview";

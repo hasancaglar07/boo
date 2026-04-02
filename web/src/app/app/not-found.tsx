@@ -18,7 +18,7 @@ export default function AppNotFound() {
             <Link href="/app/library">Uygulama anasayfasina don</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/start/topic">Ilk kitabi baslat</Link>
+            <Link href="/app/new/topic">Ilk kitabi baslat</Link>
           </Button>
         </div>
       </div>

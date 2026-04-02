@@ -51,7 +51,9 @@ export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoad
   const [completedStages, setCompletedStages] = useState<FastStageId[]>([]);
   const [tipIndex, setTipIndex] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [animationDone, setAnimationDone] = useState(false);
   const [done, setDone] = useState(false);
+  const canNavigate = Boolean(onComplete || redirectPath);
 
   useEffect(() => {
     setIsLoggedIn(getSession() !== null);
@@ -66,16 +68,8 @@ export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoad
     // Stage 2: first chapter — 3 more seconds
     const chapterTimer = window.setTimeout(() => {
       setCompletedStages(["cover", "chapter"]);
-      setDone(true);
+      setAnimationDone(true);
       trackEvent("fast_preview_loading_completed");
-
-      window.setTimeout(() => {
-        if (onComplete) {
-          onComplete();
-        } else if (redirectPath) {
-          router.push(redirectPath);
-        }
-      }, 600);
     }, FAST_STAGES[0].durationMs + FAST_STAGES[1].durationMs);
 
     // Rotate tips every 3 seconds
@@ -88,7 +82,24 @@ export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoad
       window.clearTimeout(chapterTimer);
       window.clearInterval(tipTimer);
     };
-  }, [onComplete, redirectPath, router]);
+  }, []);
+
+  useEffect(() => {
+    if (!animationDone || !canNavigate) return;
+
+    setDone(true);
+    const navigationTimer = window.setTimeout(() => {
+      if (onComplete) {
+        onComplete();
+      } else if (redirectPath) {
+        router.push(redirectPath);
+      }
+    }, 600);
+
+    return () => {
+      window.clearTimeout(navigationTimer);
+    };
+  }, [animationDone, canNavigate, onComplete, redirectPath, router]);
 
   function handleSignup() {
     trackEvent("signup_prompt_clicked", { location: "generate_loading" });
@@ -100,10 +111,12 @@ export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoad
     const stage = FAST_STAGES.find((s) => s.id === id);
     return sum + (stage?.durationMs ?? 0);
   }, 0);
-  const progressPercent = done ? 100 : Math.round((elapsedMs / totalMs) * 100);
+  const progressPercent = done ? 100 : animationDone ? 92 : Math.round((elapsedMs / totalMs) * 100);
   const mainLabel = done
     ? "Önizleme hazır! Açılıyor..."
-    : FAST_STAGES[activeStageIndex]?.description ?? "Hazırlanıyor...";
+    : !canNavigate
+      ? "Kitap kaydediliyor ve preview erişimi hazırlanıyor..."
+      : FAST_STAGES[activeStageIndex]?.description ?? "Hazırlanıyor...";
 
   return (
     <div className="mx-auto max-w-3xl space-y-5" aria-busy={!done} aria-label="Kitap hazırlanıyor">
@@ -124,7 +137,7 @@ export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoad
         )}
         <div className="flex-1">
           <div className="text-[15px] font-semibold text-foreground">
-            {done ? "Önizleme hazır!" : "Kitabının önizlemesi hazırlanıyor…"}
+            {done ? "Önizleme hazır!" : !canNavigate ? "Kitabın kaydediliyor…" : "Kitabının önizlemesi hazırlanıyor…"}
           </div>
           <div className="mt-0.5 text-sm text-muted-foreground">{mainLabel}</div>
         </div>

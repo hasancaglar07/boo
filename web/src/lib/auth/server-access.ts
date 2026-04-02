@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import {
   canAccessBookPreview,
   canAccessFullBook,
+  getBookStartAllowance,
   getGuestIdentityFromCookies,
   viewerFromIds,
 } from "@/lib/auth/data";
@@ -61,5 +62,15 @@ export async function requireBookWorkspaceAccess(slug: string, nextPath: string)
     redirect(`/app/book/${encodeURIComponent(slug)}/upgrade`);
   }
 
+  return session;
+}
+
+export async function requireBookStartAccess(nextPath: string) {
+  const session = await requireAuthenticatedUser(nextPath);
+  const allowance = await getBookStartAllowance(session.user?.id || null);
+  if (!allowance.canStartBook) {
+    const reason = allowance.reason ? `&reason=${encodeURIComponent(allowance.reason)}` : "";
+    redirect(`/app/settings/billing?intent=start-book${reason}`);
+  }
   return session;
 }

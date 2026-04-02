@@ -1,0 +1,38 @@
+{
+  "slug": "parent-friendly-stem-at-home",
+  "round": 1,
+  "outputs": [
+    {
+      "name": "operator-left",
+      "family": "operator",
+      "art_path": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/parent-friendly-stem-at-home/assets/cover_art_v1.png",
+      "front_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/parent-friendly-stem-at-home/round-01/operator-left.png",
+      "back_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/parent-friendly-stem-at-home/round-01/operator-left-back.png",
+      "template": "education-workbook"
+    },
+    {
+      "name": "operator-right",
+      "family": "operator",
+      "art_path": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/parent-friendly-stem-at-home/assets/cover_art_v1.png",
+      "front_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/parent-friendly-stem-at-home/round-01/operator-right.png",
+      "back_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/parent-friendly-stem-at-home/round-01/operator-right-back.png",
+      "template": "education-workbook"
+    },
+    {
+      "name": "authority-left",
+      "family": "authority",
+      "art_path": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/parent-friendly-stem-at-home/assets/cover_art_v2.png",
+      "front_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/parent-friendly-stem-at-home/round-01/authority-left.png",
+      "back_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/parent-friendly-stem-at-home/round-01/authority-left-back.png",
+      "template": "education-workbook"
+    },
+    {
+      "name": "authority-right",
+      "family": "authority",
+      "art_path": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/parent-friendly-stem-at-home/assets/cover_art_v2.png",
+      "front_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/parent-friendly-stem-at-home/round-01/authority-right.png",
+      "back_png": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/cover-lab/parent-friendly-stem-at-home/round-01/authority-right-back.png",
+      "template": "education-workbook"
+    }
+  ]
+}

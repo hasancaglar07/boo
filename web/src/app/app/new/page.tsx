@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { requireAuthenticatedUser } from "@/lib/auth/server-access";
+import { requireBookStartAccess } from "@/lib/auth/server-access";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -12,6 +12,6 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default async function NewBookPage() {
-  await requireAuthenticatedUser("/app/new");
-  redirect("/start/topic");
+  await requireBookStartAccess("/app/new");
+  redirect("/app/new/topic");
 }

@@ -30,6 +30,7 @@ import {
   saveSettings,
   uploadBookAsset,
   type Book,
+  type CoverVariant,
   type Settings,
 } from "@/lib/dashboard-api";
 import { useSessionGuard } from "@/lib/use-session-guard";
@@ -49,6 +50,34 @@ const TAB_LABELS: Record<WorkspaceTab, string> = {
 
 function normalizeTab(tab?: string): WorkspaceTab {
   return tab && tabOptions.includes(tab as WorkspaceTab) ? (tab as WorkspaceTab) : "home";
+}
+
+function coverGenreLabel(genre?: string) {
+  switch (genre) {
+    case "business-marketing":
+      return "Business & Marketing";
+    case "expertise-authority":
+      return "Expertise & Authority";
+    case "ai-systems":
+      return "AI & Systems";
+    case "education":
+      return "Education";
+    case "personal-development":
+      return "Personal Development";
+    case "children-illustrated":
+      return "Children & Illustrated";
+    default:
+      return "Adaptive";
+  }
+}
+
+function coverPickerSummary(book: Book | null) {
+  const branch = book?.cover_branch || "nonfiction";
+  const genre = coverGenreLabel(book?.cover_genre);
+  if (branch === "children") {
+    return `Bu kitap ${genre.toLowerCase()} hattında çalışır. Sistem daha neşeli Storyworld, daha öğretici Learning Adventure ve daha yumuşak Bedtime Calm önerileri üretir; seçtiğin varyant export ve satış yüzeyine aynen yansır.`;
+  }
+  return `Bu kitap ${genre.toLowerCase()} hattında çalışır. Sistem türe göre 3 kapak önerir; biri daha direkt ticari, biri daha premium/editorial, biri de alt konuya göre daha sıcak veya daha modern okunur. Seçtiğin varyant export ve satış yüzeyine aynen yansır.`;
 }
 
 // ─── Toast ───────────────────────────────────────────────────────────────────
@@ -94,6 +123,82 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
         <ToastItem key={t.id} toast={t} onDismiss={() => onDismiss(t.id)} />
       ))}
     </div>
+  );
+}
+
+function CoverVariantCard({
+  slug,
+  variant,
+  selected,
+  onSelect,
+}: {
+  slug: string;
+  variant: CoverVariant;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const frontUrl = buildBookAssetUrl(slug, variant.front_image);
+  const backUrl = variant.back_image ? buildBookAssetUrl(slug, variant.back_image) : undefined;
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "group rounded-[28px] border p-4 text-left transition",
+        selected
+          ? "border-primary/50 bg-primary/5 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.35)]"
+          : "border-border/80 bg-background hover:border-primary/25 hover:bg-accent/30",
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-foreground">{variant.label}</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {variant.genre ? coverGenreLabel(variant.genre) : variant.family}
+            {typeof variant.score === "number" ? ` · ${variant.score.toFixed(1)}` : ""}
+          </div>
+          {variant.genre || variant.motif ? (
+            <div className="mt-1 text-[11px] text-muted-foreground">
+              {[coverGenreLabel(variant.genre), variant.motif].filter(Boolean).join(" · ")}
+            </div>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {variant.recommended ? (
+            <Badge className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+              Recommended
+            </Badge>
+          ) : null}
+          {selected ? <Badge>Seçili</Badge> : null}
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_88px]">
+        <div className="overflow-hidden rounded-[22px] border border-border/70 bg-muted/20">
+          <img
+            src={frontUrl}
+            alt={`${variant.label} kapak varyantı`}
+            className="aspect-[2/3] h-full w-full object-cover transition duration-300 group-hover:scale-[1.015]"
+          />
+        </div>
+        <div className="space-y-3">
+          {backUrl ? (
+            <div className="overflow-hidden rounded-[20px] border border-border/70 bg-muted/20">
+              <img src={backUrl} alt={`${variant.label} arka kapak`} className="aspect-[2/3] h-full w-full object-cover" />
+            </div>
+          ) : (
+            <div className="flex aspect-[2/3] items-center justify-center rounded-[20px] border border-dashed border-border/70 bg-muted/20 px-3 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Back
+            </div>
+          )}
+          <div className="rounded-2xl border border-border/70 bg-background/70 px-3 py-2">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Template</div>
+            <div className="mt-1 text-xs font-medium text-foreground">{variant.template || "Adaptive"}</div>
+          </div>
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -285,6 +390,12 @@ export function WorkspaceScreen({
 
   if (!draft || !book || !settings) return null;
   const currentDraft = draft;
+  const coverVariants = currentDraft.cover_variants || [];
+  const selectedCoverVariantId =
+    currentDraft.selected_cover_variant ||
+    currentDraft.recommended_cover_variant ||
+    coverVariants[0]?.id ||
+    "";
 
   const actions = [
     { label: "Genel", description: "Ana ilerleme özeti", run: () => setActiveTab("home") },
@@ -327,8 +438,19 @@ export function WorkspaceScreen({
         branding_logo_url: currentDraft.branding_logo_url,
         cover_brief: currentDraft.cover_brief,
         generate_cover: currentDraft.generate_cover,
+        cover_art_image: currentDraft.cover_art_image,
         cover_image: currentDraft.cover_image,
         back_cover_image: currentDraft.back_cover_image,
+        cover_template: currentDraft.cover_template,
+        cover_variant_count: currentDraft.cover_variant_count,
+        cover_generation_provider: currentDraft.cover_generation_provider,
+        cover_composed: currentDraft.cover_composed,
+        cover_variants: currentDraft.cover_variants,
+        selected_cover_variant: currentDraft.selected_cover_variant,
+        recommended_cover_variant: currentDraft.recommended_cover_variant,
+        back_cover_variant_family: currentDraft.back_cover_variant_family,
+        cover_family: currentDraft.cover_family,
+        cover_lab_version: currentDraft.cover_lab_version,
         isbn: currentDraft.isbn,
         year: currentDraft.year,
         fast: currentDraft.fast,
@@ -509,15 +631,13 @@ export function WorkspaceScreen({
                         type="button"
                         onClick={() =>
                           triggerWorkflow({
-                            action: "cover_script",
-                            title: draft.title,
-                            author: draft.author,
-                            genre: "non-fiction",
+                            action: "cover_variants_generate",
+                            force: true,
                           }).catch((error) => addToast(error instanceof Error ? error.message : "Kapak üretimi başarısız.", "error"))
                         }
                       >
                         <Sparkles className="mr-2 size-4" />
-                        Kapağı Yeniden Üret
+                        3 Kapak Varyantı Üret
                       </Button>
                     </div>
                   </div>
@@ -740,6 +860,88 @@ export function WorkspaceScreen({
 
         {/* ── PUBLISH ── */}
         <TabsContent value="publish" className="mt-6 space-y-6">
+          <Card>
+            <CardContent className="space-y-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="max-w-2xl">
+                  <div className="text-sm font-medium text-foreground">Kapak varyantları</div>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                    {coverPickerSummary(currentDraft)}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      triggerWorkflow({ action: "cover_variants_generate" }).catch((error) =>
+                        addToast(error instanceof Error ? error.message : "Kapak varyantları üretilemedi.", "error"),
+                      )
+                    }
+                  >
+                    <Layers className="mr-2 size-4" />
+                    Varyantları Yenile
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      triggerWorkflow({ action: "cover_variants_generate", force: true }).catch((error) =>
+                        addToast(error instanceof Error ? error.message : "Kapak varyantları yeniden üretilemedi.", "error"),
+                      )
+                    }
+                  >
+                    <Sparkles className="mr-2 size-4" />
+                    AI ile Baştan Üret
+                  </Button>
+                </div>
+              </div>
+
+              {coverVariants.length ? (
+                <div className="grid gap-4 xl:grid-cols-3">
+                  {coverVariants.map((variant) => (
+                    <CoverVariantCard
+                      key={variant.id}
+                      slug={slug}
+                      variant={variant}
+                      selected={variant.id === selectedCoverVariantId}
+                      onSelect={() =>
+                        updateDraft({
+                          cover_variants: coverVariants,
+                          selected_cover_variant: variant.id,
+                          recommended_cover_variant:
+                            currentDraft.recommended_cover_variant ||
+                            coverVariants.find((item) => item.recommended)?.id ||
+                            variant.id,
+                          back_cover_variant_family: variant.family,
+                          cover_family: variant.family,
+                          cover_branch: currentDraft.cover_branch,
+                          cover_genre: variant.genre || currentDraft.cover_genre,
+                          cover_subtopic: variant.subtopic || currentDraft.cover_subtopic,
+                          cover_palette_key: variant.paletteKey || currentDraft.cover_palette_key,
+                          cover_layout_key: variant.layout || currentDraft.cover_layout_key,
+                          cover_motif: variant.motif || currentDraft.cover_motif,
+                          cover_art_image: variant.art_image || currentDraft.cover_art_image,
+                          cover_image: variant.front_image,
+                          back_cover_image: variant.back_image,
+                          cover_template: variant.template || currentDraft.cover_template,
+                          cover_variant_count: coverVariants.length,
+                          cover_composed: true,
+                          cover_lab_version: currentDraft.cover_lab_version || "adaptive-cover-lab-v1",
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-[28px] border border-dashed border-border/70 bg-muted/20 p-6">
+                  <div className="text-sm font-semibold text-foreground">Henüz cover picker hazır değil.</div>
+                  <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
+                    Önce varyantları üret. Sistem her aile için ön kapak, arka kapak ve önerilen seçimi metadata
+                    içine yazacak.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="flex flex-wrap gap-3">
             <Button
               variant="outline"

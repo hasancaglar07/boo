@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -21,6 +21,7 @@ import { BackendUnavailableState } from "@/components/app/backend-unavailable-st
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { trackEvent } from "@/lib/analytics";
 import { isBackendUnavailableError, loadBooks, type Book } from "@/lib/dashboard-api";
 import { compactNumber, formatDate } from "@/lib/utils";
 import { useSessionGuard as useGuard } from "@/lib/use-session-guard";
@@ -59,6 +60,7 @@ export function HomeScreen() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loadingBooks, setLoadingBooks] = useState(true);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
+  const gateTrackedRef = useRef(false);
 
   async function refreshBooks() {
     setLoadingBooks(true);
@@ -109,6 +111,16 @@ export function HomeScreen() {
     };
   }, [ready]);
 
+  useEffect(() => {
+    if (viewer?.usage?.canStartBook === false && !gateTrackedRef.current) {
+      gateTrackedRef.current = true;
+      trackEvent("second_book_gate_viewed", {
+        reason: viewer.usage.reason || "limit",
+        planId: viewer.planId,
+      });
+    }
+  }, [viewer]);
+
   if (!ready) return null;
 
   const latestBook = books[0];
@@ -119,6 +131,10 @@ export function HomeScreen() {
   const hasNamedProfile = Boolean(viewer?.name && viewer.name !== "Book Creator");
   const hasGoal = Boolean(viewer?.goal?.trim());
   const latestActivity = latestBook?.status?.updated_at || latestBook?.status?.started_at || "";
+  const newBookHref =
+    viewer && viewer.usage?.canStartBook === false
+      ? `/app/settings/billing?intent=start-book${viewer.usage.reason ? `&reason=${encodeURIComponent(viewer.usage.reason)}` : ""}`
+      : "/app/new/topic";
 
   const onboardingActions: OnboardingAction[] = [];
   if (viewer && !hasNamedProfile) {
@@ -142,7 +158,7 @@ export function HomeScreen() {
       icon: BookOpen,
       label: "İlk kitabı başlat",
       description: "Beş kısa adım ile ilk preview'ı üret ve kütüphaneni aç.",
-      run: () => router.push("/start/topic"),
+      run: () => router.push(newBookHref),
     });
   }
   if (viewer && !viewer.emailVerified) {
@@ -198,7 +214,7 @@ export function HomeScreen() {
       books={books}
       viewer={viewer}
       actions={[
-        { label: "Yeni kitap oluştur", description: "Kayıtsız wizard'ı aç", run: () => router.push("/start/topic") },
+        { label: "Yeni kitap oluştur", description: "Uygulama içi yazım akışını aç", run: () => router.push(newBookHref) },
         {
           label: "Son preview'ı aç",
           description: "En son kitabının önizlemesine dön",
@@ -228,6 +244,33 @@ export function HomeScreen() {
                 : "İlk kitabını başlat, preview'ı aynı oturumda yönet ve kütüphaneni bu alandan büyüt."}
             </p>
 
+            {viewer?.usage?.canStartBook === false ? (
+              <div className="mt-5 max-w-2xl rounded-[20px] border border-primary/20 bg-primary/6 px-4 py-4">
+                <div className="text-sm font-semibold text-foreground">
+                  Yeni kitap slotun şu an kapalı
+                </div>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  {viewer.usage.reason === "monthly_quota_reached"
+                    ? "Aylık kitap kotana ulaştın. Yeni üretim için planını yükselt ya da yeni dönemi bekle."
+                    : "Mevcut planın ilk kitap preview’ını kullandı. Yeni kitap için planlardan birini seç."}
+                </p>
+                <div className="mt-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      trackEvent("second_book_gate_converted", {
+                        source: "home_banner",
+                        reason: viewer.usage.reason || "limit",
+                      });
+                      router.push("/app/settings/billing?intent=start-book");
+                    }}
+                  >
+                    Planları gör
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-6 flex flex-wrap gap-2">
               <div className="rounded-full border border-border/70 bg-card/70 px-3 py-1.5 text-xs font-medium text-foreground">
                 Plan: {currentPlanLabel}
@@ -250,7 +293,7 @@ export function HomeScreen() {
                   router.push(
                     latestBook
                       ? `/app/book/${encodeURIComponent(latestBook.slug)}/preview`
-                      : "/start/topic",
+                      : newBookHref,
                   )
                 }
               >
@@ -317,7 +360,7 @@ export function HomeScreen() {
                   icon: BookOpen,
                   label: "Yeni kitap başlat",
                   description: "Kısa wizard ile yeni üretim akışını başlat.",
-                  run: () => router.push("/start/topic"),
+                  run: () => router.push(newBookHref),
                 },
                 {
                   icon: FileText,
@@ -327,7 +370,7 @@ export function HomeScreen() {
                     router.push(
                       latestBook
                         ? `/app/book/${encodeURIComponent(latestBook.slug)}/workspace?tab=writing`
-                        : "/start/topic",
+                        : newBookHref,
                     ),
                 },
                 {
@@ -364,7 +407,7 @@ export function HomeScreen() {
       <section className="mt-10">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-foreground">Kitapların</h2>
-          <Link href="/start/topic">
+          <Link href={newBookHref}>
             <Button variant="outline" size="sm">
               <Sparkles className="mr-1.5 size-3.5" aria-hidden="true" />
               Yeni kitap
@@ -438,7 +481,7 @@ export function HomeScreen() {
                   Hesabın açık. Şimdi ilk üretim akışını başlat, preview üret ve bu ekranı gerçek kütüphanene dönüştür.
                 </p>
                 <div className="mt-8 flex justify-center">
-                  <Button size="lg" onClick={() => router.push("/start/topic")}>
+                  <Button size="lg" onClick={() => router.push(newBookHref)}>
                     Hemen başla
                     <ArrowRight className="ml-2 size-4" aria-hidden="true" />
                   </Button>

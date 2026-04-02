@@ -402,7 +402,7 @@ html.theme-transitioning *::after {
 
 /* ── App layout: fixed sidebar + offset content ────────────── */
 :root {
-  --sidebar-width: 256px;
+  --sidebar-width: 288px;
 }
 
 .admin-root {

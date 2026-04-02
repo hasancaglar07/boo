@@ -45,11 +45,13 @@ Not:
 
 - `start-web.bat` varsayilan olarak `serve` modunda calisir.
 - Yani pencere acik kaldigi surece sunucu calisir, pencereyi kapatinca sunucu durur.
+- `book-generator.bat web` artik eski web ve dashboard sureclerini kapatip temiz yeniden baslatma yapar.
+- Gerekirse `start-web.bat reset` komutunu kullan.
 
 Adres:
 
 ```text
-http://127.0.0.1:3000
+http://localhost:3000
 ```
 
 Durdurmak icin:
@@ -57,6 +59,13 @@ Durdurmak icin:
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 start-web.bat stop
+```
+
+Temiz yeniden baslatmak icin:
+
+```bat
+cd C:\Users\ihsan\Desktop\BOOK
+start-web.bat reset
 ```
 
 Next.js bagimliliklarini onarip tekrar acmak icin:

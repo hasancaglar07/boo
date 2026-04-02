@@ -10,6 +10,27 @@ export type Artifact = {
   is_text?: boolean;
 };
 
+export type CoverVariant = {
+  id: string;
+  family: string;
+  label: string;
+  genre?: string;
+  subtopic?: string;
+  layout?: string;
+  motif?: string;
+  paletteKey?: string;
+  front_image: string;
+  front_svg?: string;
+  back_image: string;
+  back_svg?: string;
+  art_image?: string;
+  score?: number;
+  recommended?: boolean;
+  provider?: string;
+  template?: string;
+  preferred_zone?: string;
+};
+
 export type Chapter = {
   number?: number;
   title: string;
@@ -17,6 +38,16 @@ export type Chapter = {
   filename?: string;
   relative_path?: string;
   url?: string;
+};
+
+export type BookChapterPlan = {
+  number?: number;
+  title: string;
+  summary?: string;
+  role?: string;
+  length?: string;
+  target_min_words?: number;
+  target_max_words?: number;
 };
 
 export type BookStatus = {
@@ -53,6 +84,7 @@ export type Book = {
   branding_mark?: string;
   branding_logo_url?: string;
   cover_brief?: string;
+  book_type?: string;
   generate_cover?: boolean;
   cover_art_image?: string;
   cover_image?: string;
@@ -61,9 +93,25 @@ export type Book = {
   cover_variant_count?: number;
   cover_generation_provider?: string;
   cover_composed?: boolean;
+  cover_variants?: CoverVariant[];
+  selected_cover_variant?: string;
+  recommended_cover_variant?: string;
+  back_cover_variant_family?: string;
+  cover_family?: string;
+  cover_branch?: string;
+  cover_genre?: string;
+  cover_subtopic?: string;
+  cover_palette_key?: string;
+  cover_layout_key?: string;
+  cover_motif?: string;
+  cover_lab_version?: string;
   isbn?: string;
   year?: string;
   fast?: boolean;
+  book_length_tier?: string;
+  target_word_count_min?: number;
+  target_word_count_max?: number;
+  chapter_plan?: BookChapterPlan[];
   outline_file?: string;
   book_dir?: string;
   latest_export_dir?: string;
@@ -89,6 +137,40 @@ export type BookPreviewSection = {
   teaser?: string;
   partial?: boolean;
   word_count?: number;
+};
+
+export type BookPreviewCoverLab = {
+  variants: CoverVariant[];
+  selectedVariantId: string;
+  recommendedVariantId: string;
+  generationState: "idle" | "queued" | "running" | "ready";
+  slots: number;
+  readyCount: number;
+  queuedSlots: number;
+};
+
+export type BookPreviewCommerce = {
+  primaryOffer: {
+    planId: "premium";
+    label: string;
+    priceCents: number;
+    originalPriceCents: number;
+    badge: string;
+    description: string;
+  };
+  secondaryOffer: {
+    planId: "starter";
+    label: string;
+    priceCents: number;
+    interval: string;
+    quotaLabel: string;
+    description: string;
+  };
+  bonusDeadlineAt: string | null;
+  paywallState: "locked" | "unlocked";
+  launchBonus: string[];
+  trustPoints: string[];
+  recoveryEmailEnabled: boolean;
 };
 
 export type BookPreview = {
@@ -121,6 +203,8 @@ export type BookPreview = {
     can_view_full_book: boolean;
   };
   generation: BookStatus;
+  coverLab?: BookPreviewCoverLab;
+  commerce?: BookPreviewCommerce;
 };
 
 export type Settings = {
@@ -238,6 +322,26 @@ export async function startBookPreviewPipeline(slug: string) {
       json: {},
     },
   );
+}
+
+export async function selectBookCoverVariant(slug: string, variantId: string) {
+  const response = await fetch(`/api/books/${encodeURIComponent(slug)}/cover-variant/select`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ variantId }),
+    credentials: "include",
+  });
+  const payload = (await response.json().catch(() => null)) as
+    | { ok?: boolean; error?: string; book?: Book; selectedVariantId?: string }
+    | null;
+  if (!response.ok || !payload?.book) {
+    throw new Error(payload?.error || "Kapak seçimi kaydedilemedi.");
+  }
+  return {
+    ok: true,
+    book: payload.book,
+    selectedVariantId: payload.selectedVariantId || variantId,
+  };
 }
 
 export async function loadSettings() {
@@ -512,6 +616,7 @@ export function createFallbackBookPayload(input: {
     title,
     subtitle: subtitleSet[input.type] || subtitleSet.diger,
     language,
+    book_type: input.type,
     author: input.author,
     publisher: "Book Generator",
     year: String(new Date().getFullYear()),

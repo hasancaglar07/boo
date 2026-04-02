@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { ArrowRight, BookOpen, FileOutput, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,9 @@ type PremiumBookCover = {
   title: string;
   author: string;
   category: string;
+  language?: string;
+  imageUrl?: string;
+  fallbackImageUrl?: string;
   palette: [string, string, string];
   rotation: number;
   position: { x: string; y: string };
@@ -21,13 +25,20 @@ type PremiumBookCover = {
   zIndex: number;
 };
 
+function exampleCoverUrl(slug: string, assetName = "front_cover_final.png") {
+  return `/api/examples/assets/${encodeURIComponent(slug)}/assets/${encodeURIComponent(assetName)}`;
+}
+
 const premiumBooks: PremiumBookCover[] = [
   // Sol taraf - üst
   {
     id: 1,
-    title: "Email to Income",
-    author: "Selin A.",
-    category: "Danışmanlık",
+    title: "Authority in 100 Pages",
+    author: "Mina Hart",
+    category: "Business",
+    language: "English",
+    imageUrl: exampleCoverUrl("authority-in-100-pages", "homepage_hero_cover.png"),
+    fallbackImageUrl: exampleCoverUrl("authority-in-100-pages"),
     palette: ["#c96442", "#a0522d", "#7c3a1e"],
     rotation: -15,
     position: { x: "5%", y: "10%" },
@@ -37,9 +48,12 @@ const premiumBooks: PremiumBookCover[] = [
   // Sağ taraf - üst
   {
     id: 2,
-    title: "Coaching Playbook",
-    author: "Merve D.",
-    category: "Eğitim",
+    title: "Prompt Systems for Small Teams",
+    author: "Owen Vale",
+    category: "AI & Systems",
+    language: "English",
+    imageUrl: exampleCoverUrl("prompt-systems-for-small-teams", "homepage_hero_cover.png"),
+    fallbackImageUrl: exampleCoverUrl("prompt-systems-for-small-teams"),
     palette: ["#1f2937", "#374151", "#111827"],
     rotation: 12,
     position: { x: "80%", y: "8%" },
@@ -49,9 +63,12 @@ const premiumBooks: PremiumBookCover[] = [
   // Sol taraf - orta
   {
     id: 3,
-    title: "Solo Founder OS",
-    author: "Kerem S.",
-    category: "Business",
+    title: "Uzmanlığını Kitaba Dönüştür",
+    author: "Derya Tan",
+    category: "Expertise",
+    language: "Türkçe",
+    imageUrl: exampleCoverUrl("uzmanligini-kitaba-donustur", "homepage_hero_cover.png"),
+    fallbackImageUrl: exampleCoverUrl("uzmanligini-kitaba-donustur"),
     palette: ["#7c2d12", "#c2410c", "#ea580c"],
     rotation: -8,
     position: { x: "3%", y: "45%" },
@@ -61,9 +78,12 @@ const premiumBooks: PremiumBookCover[] = [
   // Sağ taraf - orta
   {
     id: 4,
-    title: "Niche Authority",
-    author: "Onur B.",
-    category: "Uzmanlık",
+    title: "Focus by Design",
+    author: "Noah Sel",
+    category: "Personal Growth",
+    language: "English",
+    imageUrl: exampleCoverUrl("focus-by-design", "homepage_hero_cover.png"),
+    fallbackImageUrl: exampleCoverUrl("focus-by-design"),
     palette: ["#292524", "#57534e", "#78716c"],
     rotation: 10,
     position: { x: "82%", y: "42%" },
@@ -73,9 +93,12 @@ const premiumBooks: PremiumBookCover[] = [
   // Sol taraf - alt
   {
     id: 5,
-    title: "Digital Products",
-    author: "Derya E.",
-    category: "Creator",
+    title: "Tu Método Hecho Libro",
+    author: "Lucía Ferrer",
+    category: "Authority",
+    language: "Español",
+    imageUrl: exampleCoverUrl("tu-metodo-hecho-libro", "homepage_hero_cover.png"),
+    fallbackImageUrl: exampleCoverUrl("tu-metodo-hecho-libro"),
     palette: ["#431407", "#9a3412", "#c2410c"],
     rotation: -10,
     position: { x: "8%", y: "72%" },
@@ -85,9 +108,12 @@ const premiumBooks: PremiumBookCover[] = [
   // Sağ taraf - alt
   {
     id: 6,
-    title: "Freelance Pricing",
-    author: "Baran K.",
-    category: "Freelance",
+    title: "IA Prática para Negócios Pequenos",
+    author: "Lia Monteiro",
+    category: "AI",
+    language: "Português",
+    imageUrl: exampleCoverUrl("ia-pratica-para-negocios-pequenos", "homepage_hero_cover.png"),
+    fallbackImageUrl: exampleCoverUrl("ia-pratica-para-negocios-pequenos"),
     palette: ["#1c1917", "#3d3929", "#57534e"],
     rotation: 8,
     position: { x: "78%", y: "75%" },
@@ -97,9 +123,12 @@ const premiumBooks: PremiumBookCover[] = [
   // Ekstra kitaplar - sol orta-üst
   {
     id: 7,
-    title: "Brand Strategy",
-    author: "Elif K.",
-    category: "Pazarlama",
+    title: "Parent-Friendly STEM at Home",
+    author: "Amelia Stone",
+    category: "Education",
+    language: "English",
+    imageUrl: exampleCoverUrl("parent-friendly-stem-at-home", "homepage_hero_cover.png"),
+    fallbackImageUrl: exampleCoverUrl("parent-friendly-stem-at-home"),
     palette: ["#7c3a1e", "#a0522d", "#c96442"],
     rotation: -18,
     position: { x: "15%", y: "25%" },
@@ -109,9 +138,12 @@ const premiumBooks: PremiumBookCover[] = [
   // Ekstra kitaplar - sağ orta-alt
   {
     id: 8,
-    title: "Content System",
-    author: "Can Y.",
-    category: "İçerik",
+    title: "Clarté, Calme, Exécution",
+    author: "Claire Dumas",
+    category: "Mindset",
+    language: "Français",
+    imageUrl: exampleCoverUrl("clarte-calme-execution", "homepage_hero_cover.png"),
+    fallbackImageUrl: exampleCoverUrl("clarte-calme-execution"),
     palette: ["#111827", "#1f2937", "#374151"],
     rotation: 14,
     position: { x: "70%", y: "65%" },
@@ -132,6 +164,7 @@ const PremiumBookCard = ({
   index: number;
 }) => {
   const ref = React.useRef<HTMLDivElement>(null);
+  const [imageSrc, setImageSrc] = React.useState(book.imageUrl);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateX = useMotionValue(0);
@@ -141,6 +174,10 @@ const PremiumBookCard = ({
   const springY = useSpring(y, { stiffness: 300, damping: 25, mass: 0.8 });
   const springRotateX = useSpring(rotateX, { stiffness: 300, damping: 25, mass: 0.8 });
   const springRotateY = useSpring(rotateY, { stiffness: 300, damping: 25, mass: 0.8 });
+
+  React.useEffect(() => {
+    setImageSrc(book.imageUrl);
+  }, [book.imageUrl]);
 
   React.useEffect(() => {
     let frame = 0;
@@ -211,35 +248,63 @@ const PremiumBookCard = ({
           style={{
             height: book.scale > 1 ? "180px" : "150px",
             width: book.scale > 1 ? "126px" : "105px",
-            background: `linear-gradient(145deg, ${book.palette[0]} 0%, ${book.palette[1]} 50%, ${book.palette[2]} 100%)`,
+            background: imageSrc
+              ? undefined
+              : `linear-gradient(145deg, ${book.palette[0]} 0%, ${book.palette[1]} 50%, ${book.palette[2]} 100%)`,
             transform: "perspective(1200px) rotateY(-8deg) rotateX(2deg)",
             transformStyle: "preserve-3d",
           }}
         >
+          {imageSrc ? (
+            <>
+              <Image
+                src={imageSrc}
+                alt={`${book.title} cover`}
+                fill
+                sizes="(min-width: 768px) 126px, 105px"
+                className="absolute inset-0 h-full w-full object-cover"
+                priority={index < 4}
+                onError={() => {
+                  if (imageSrc !== book.fallbackImageUrl && book.fallbackImageUrl) {
+                    setImageSrc(book.fallbackImageUrl);
+                    return;
+                  }
+                  setImageSrc(undefined);
+                }}
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/18 via-transparent to-black/8" />
+              <div className="pointer-events-none absolute inset-0 ring-1 ring-white/10" />
+              <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-black/40 px-2 py-1 text-[7px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-sm">
+                {book.language || book.category}
+              </div>
+            </>
+          ) : null}
           {/* Premium overlay effects */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/35 via-transparent to-white/5" />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          
+
           {/* Book spine */}
           <div className="absolute left-0 top-0 h-full w-3 bg-black/30 shadow-inner" />
           <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-r from-black/50 to-transparent" />
-          
+
           {/* Content */}
-          <div className="relative flex h-full w-full flex-col justify-between p-3">
-            <div className="inline-block rounded-full bg-white/20 px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider text-white backdrop-blur-md shadow-sm">
-              {book.category}
+          {!imageSrc ? (
+            <div className="relative flex h-full w-full flex-col justify-between p-3">
+              <div className="inline-block rounded-full bg-white/20 px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider text-white backdrop-blur-md shadow-sm">
+                {book.category}
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-[11px] font-bold leading-tight text-white drop-shadow-md md:text-[13px]">
+                  {book.title}
+                </h3>
+                <p className="text-[9px] font-semibold text-white/90 md:text-[10px]">{book.author}</p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-[11px] font-bold leading-tight text-white drop-shadow-md md:text-[13px]">
-                {book.title}
-              </h3>
-              <p className="text-[9px] font-semibold text-white/90 md:text-[10px]">{book.author}</p>
-            </div>
-          </div>
-          
+          ) : null}
+
           {/* Bottom gradient */}
           <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black/40 to-transparent" />
-          
+
           {/* Shine effect */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-60" />
         </div>

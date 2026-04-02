@@ -13,7 +13,7 @@ if not defined WSL_REPO (
 )
 
 set "MODE=%~1"
-if not defined MODE set "MODE=serve"
+if not defined MODE set "MODE=reset"
 
 if /I "%MODE%"=="help" goto :help
 if /I "%MODE%"=="-h" goto :help
@@ -21,6 +21,7 @@ if /I "%MODE%"=="--help" goto :help
 if /I "%MODE%"=="serve" goto :serve
 if /I "%MODE%"=="foreground" goto :foreground
 if /I "%MODE%"=="start" goto :start_bg
+if /I "%MODE%"=="reset" goto :reset
 if /I "%MODE%"=="repair" goto :repair
 if /I "%MODE%"=="restart" goto :restart
 if /I "%MODE%"=="logs" goto :logs
@@ -33,16 +34,23 @@ echo Bilinmeyen komut: %MODE%
 goto :help
 
 :serve
-if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://127.0.0.1:3000
+if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://localhost:3000
 echo Web arayuz foreground modda baslatiliyor. Pencereyi kapatinca sunucu durur.
 wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh serve"
 set "EC=%ERRORLEVEL%"
 goto :finish
 
 :foreground
-if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://127.0.0.1:3000
+if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://localhost:3000
 echo Web arayuz foreground modda baslatiliyor. Pencereyi kapatinca sunucu durur.
 wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh foreground"
+set "EC=%ERRORLEVEL%"
+goto :finish
+
+:reset
+echo Eski web ve dashboard surecleri kapatiliyor...
+ if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://localhost:3000
+wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh reset"
 set "EC=%ERRORLEVEL%"
 goto :finish
 
@@ -50,7 +58,7 @@ goto :finish
 wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh start"
 set "EC=%ERRORLEVEL%"
 if not "%EC%"=="0" goto :finish
-if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://127.0.0.1:3000
+if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://localhost:3000
 goto :finish
 
 :repair
@@ -99,9 +107,10 @@ goto :finish
 
 :help
 echo Kullanim:
-echo   start-web.bat            ^(varsayilan: foreground serve^)
+echo   start-web.bat            ^(varsayilan: temiz baslatma^)
 echo   start-web.bat serve      ^(pencere acik kaldigi surece calisir^)
 echo   start-web.bat start      ^(arkaplanda calisir^)
+echo   start-web.bat reset      ^(eski surecleri kapatip temiz acar^)
 echo   start-web.bat stop
 echo   start-web.bat restart
 echo   start-web.bat repair     ^(bagimlilik onar + serve^)

@@ -59,6 +59,20 @@ finally:
 PY
 }
 
+recover_stale_server() {
+  if [ -f "$PID_FILE" ] && port_in_use; then
+    echo "Eski web sureci tespit edildi, kapatiliyor..."
+    stop_server_core >/dev/null 2>&1 || true
+    sleep 1
+  fi
+}
+
+reset_foreground() {
+  stop_server_core >/dev/null 2>&1 || true
+  "$ROOT_DIR/start-dashboard.sh" stop >/dev/null 2>&1 || true
+  serve_foreground
+}
+
 ensure_runtime() {
   if [ ! -x "$NODE_BIN" ]; then
     echo "Yerel Node runtime bulunamadi: $NODE_BIN"
@@ -184,6 +198,13 @@ start_server() {
     exit 0
   fi
 
+  recover_stale_server
+
+  if is_healthy; then
+    echo "Web arayuz zaten calisiyor: $HEALTH_URL"
+    exit 0
+  fi
+
   if port_in_use; then
     echo "Port $PORT kullanimda fakat web arayuz saglik kontrolu cevap vermedi."
     echo "BOOK_WEB_PORT ile farkli port ver ya da portu bosalt."
@@ -229,6 +250,24 @@ cleanup_serve() {
 }
 
 serve_foreground() {
+  if is_healthy; then
+    echo "Web arayuz zaten calisiyor: $HEALTH_URL"
+    exit 0
+  fi
+
+  recover_stale_server
+
+  if is_healthy; then
+    echo "Web arayuz zaten calisiyor: $HEALTH_URL"
+    exit 0
+  fi
+
+  if port_in_use; then
+    echo "Port $PORT kullanimda fakat web arayuz saglik kontrolu cevap vermedi."
+    echo "Calisan eski web surecini durdur ya da BOOK_WEB_PORT ile farkli bir port kullan."
+    exit 1
+  fi
+
   ensure_runtime
   ensure_dependencies
   ensure_build
@@ -284,6 +323,9 @@ case "${1:-start}" in
   serve|foreground)
     serve_foreground
     ;;
+  reset)
+    reset_foreground
+    ;;
   build)
     build_only
     ;;
@@ -307,7 +349,7 @@ case "${1:-start}" in
     start_server
     ;;
   *)
-    echo "Usage: $0 [start|ensure|serve|foreground|build|repair|logs|logs-live|logs-clear|stop|restart]"
+    echo "Usage: $0 [start|ensure|serve|foreground|reset|build|repair|logs|logs-live|logs-clear|stop|restart]"
     exit 1
     ;;
 esac

@@ -39,6 +39,7 @@ type AppFrameProps = {
   layout?: "default" | "book";
   currentBookSlug?: string;
   books?: Book[];
+  showBookShelf?: boolean;
   actions?: PaletteAction[];
   primaryAction?: {
     label: string;
@@ -50,7 +51,7 @@ type AppFrameProps = {
 
 const NAV_ITEMS = [
   { key: "home", href: "/app/library", label: "Kitaplarım", icon: Library },
-  { key: "new", href: "/start/topic", label: "Kitap Başlat", icon: Plus },
+  { key: "new", href: "/app/new/topic", label: "Kitap Başlat", icon: Plus },
   { key: "account", href: "/app/settings/profile", label: "Ayarlar", icon: User2 },
   { key: "billing", href: "/app/settings/billing", label: "Planlar", icon: CreditCard },
 ] as const;
@@ -90,10 +91,43 @@ function viewerPlanLabel(viewer?: PreviewViewer | null) {
   return PLAN_LABELS[viewer.planId] || viewer.planId;
 }
 
+function AppBrandLogo({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        "relative block overflow-hidden",
+        compact ? "h-8 w-[132px]" : "h-12 w-[220px] max-w-full",
+      )}
+    >
+      <Image
+        src="/logo.png"
+        alt="Book Generator"
+        className="h-full w-full object-contain object-left dark:hidden"
+        fill
+        priority
+        sizes={compact ? "132px" : "210px"}
+      />
+      <Image
+        src="/dark-logo.png"
+        alt="Book Generator"
+        className="hidden h-full w-full object-contain object-left dark:block"
+        fill
+        priority
+        sizes={compact ? "132px" : "210px"}
+      />
+    </span>
+  );
+}
+
 function SidebarContent({
   current,
   currentBookSlug,
   books,
+  showBookShelf = true,
   actions,
   viewer,
   showFooter = false,
@@ -106,6 +140,7 @@ function SidebarContent({
   current: AppFrameProps["current"];
   currentBookSlug?: string;
   books: Book[];
+  showBookShelf?: boolean;
   actions: PaletteAction[];
   viewer?: PreviewViewer | null;
   showFooter?: boolean;
@@ -123,99 +158,115 @@ function SidebarContent({
   }
 
   const displayName = displayNameForViewer(viewer);
+  const newBookHref =
+    viewer && viewer.usage?.canStartBook === false
+      ? `/app/settings/billing?intent=start-book${viewer.usage.reason ? `&reason=${encodeURIComponent(viewer.usage.reason)}` : ""}`
+      : "/app/new/topic";
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <Link
         href="/app/library"
-        className="flex shrink-0 items-center px-2 pb-2 pt-3 transition-opacity hover:opacity-80"
+        className="group flex shrink-0 items-center rounded-[24px] border border-sidebar-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0.04))] px-4 py-4 transition-colors hover:bg-sidebar-accent/65"
         onClick={onNavigate}
       >
-        <span className="relative block h-9 w-[160px] overflow-hidden">
-          <Image
-            src="/logo.png"
-            alt="Book Generator"
-            className="h-full w-full object-contain object-left dark:hidden"
-            fill
-            priority
-            sizes="160px"
-          />
-          <Image
-            src="/dark-logo.png"
-            alt="Book Generator"
-            className="hidden h-full w-full object-contain object-left dark:block"
-            fill
-            priority
-            sizes="160px"
-          />
-        </span>
+        <AppBrandLogo />
       </Link>
 
-      <nav className="mt-4 shrink-0 space-y-0.5" aria-label="Ana menü">
+      <nav className="mt-5 shrink-0 space-y-1" aria-label="Ana menü">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = current === item.key;
+          const href = item.key === "new" ? newBookHref : item.href;
           return (
             <Link
               key={item.key}
-              href={item.href}
+              href={href}
               onClick={onNavigate}
               className={cn(
-                "flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors",
+                "group flex min-h-11 items-center gap-3 rounded-[18px] px-3.5 text-[15px] font-medium transition-colors",
                 active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                  ? "bg-primary text-primary-foreground shadow-[0_12px_24px_rgba(188,104,67,0.16)]"
+                  : "text-sidebar-foreground/74 hover:bg-sidebar-accent hover:text-sidebar-foreground",
               )}
             >
-              <Icon className="size-4 shrink-0" aria-hidden="true" />
-              <span>{item.label}</span>
+              <span
+                className={cn(
+                  "flex size-8 shrink-0 items-center justify-center rounded-xl border transition-colors",
+                  active
+                    ? "border-primary-foreground/10 bg-primary-foreground/14 text-primary-foreground"
+                    : "border-sidebar-border/65 bg-sidebar px-0 text-sidebar-foreground/72 group-hover:border-sidebar-border group-hover:bg-sidebar-accent/85",
+                )}
+              >
+                <Icon className="size-4 shrink-0" aria-hidden="true" />
+              </span>
+              <span className="truncate">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="my-4 shrink-0 h-px bg-sidebar-border/50" />
+      {showBookShelf ? (
+        <>
+          <div className="my-5 shrink-0 h-px bg-sidebar-border/55" />
 
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="mb-2 shrink-0 flex items-center justify-between px-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/40">
-            Kitaplar
-          </span>
-          <span className="rounded-full bg-sidebar-accent px-1.5 py-0.5 text-[10px] font-semibold text-sidebar-foreground/50">
-            {books.length}
-          </span>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="mb-2 shrink-0 flex items-center justify-between px-1">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/42">
+                Kitaplar
+              </span>
+              <span className="rounded-full border border-sidebar-border/60 bg-sidebar-accent/70 px-2 py-0.5 text-[10px] font-semibold text-sidebar-foreground/56">
+                {books.length}
+              </span>
+            </div>
+            <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
+              {books.slice(0, 30).map((book) => {
+                const active = currentBookSlug === book.slug;
+                return (
+                  <button
+                    key={book.slug}
+                    type="button"
+                    className={cn(
+                      "group flex min-h-10 w-full cursor-pointer items-center gap-2 rounded-[16px] px-3 text-left transition-colors",
+                      active
+                        ? "bg-primary/10 text-primary"
+                        : "text-sidebar-foreground/62 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                    )}
+                    onClick={() => go(`/app/book/${encodeURIComponent(book.slug)}/preview`)}
+                  >
+                    <span
+                      className={cn(
+                        "flex size-7 shrink-0 items-center justify-center rounded-lg border transition-colors",
+                        active
+                          ? "border-primary/15 bg-primary/10 text-primary"
+                          : "border-sidebar-border/60 bg-sidebar text-sidebar-foreground/52 group-hover:border-sidebar-border group-hover:bg-sidebar-accent/85",
+                      )}
+                    >
+                      <BookOpen className="size-3.5 shrink-0" aria-hidden="true" />
+                    </span>
+                    <span className="truncate text-xs font-medium leading-5">{book.title}</span>
+                  </button>
+                );
+              })}
+              {!books.length && (
+                <p className="px-3 py-3 text-xs text-sidebar-foreground/40">
+                  Henüz kitap yok.
+                </p>
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="flex min-h-0 flex-1 items-start">
+          <div className="mt-5 rounded-[20px] border border-sidebar-border/55 bg-sidebar-accent/35 px-3 py-3 text-xs leading-6 text-sidebar-foreground/54">
+            Yeni kitap akışındasın. Adımlar bittiğinde preview ve çalışma alanı burada görünecek.
+          </div>
         </div>
-        <div className="min-h-0 flex-1 space-y-px overflow-y-auto">
-          {books.slice(0, 30).map((book) => {
-            const active = currentBookSlug === book.slug;
-            return (
-              <button
-                key={book.slug}
-                type="button"
-                className={cn(
-                  "flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg px-3 text-left transition-colors",
-                  active
-                    ? "bg-primary/10 text-primary"
-                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                )}
-                onClick={() => go(`/app/book/${encodeURIComponent(book.slug)}/preview`)}
-              >
-                <BookOpen className="size-3 shrink-0 opacity-50" aria-hidden="true" />
-                <span className="truncate text-xs font-medium">{book.title}</span>
-              </button>
-            );
-          })}
-          {!books.length && (
-            <p className="px-3 py-3 text-xs text-sidebar-foreground/40">
-              Henüz kitap yok.
-            </p>
-          )}
-        </div>
-      </div>
+      )}
 
       {actions.length > 0 && (
         <div className="mt-3 shrink-0">
-          <div className="flex w-full items-center justify-between rounded-xl border border-sidebar-border/40 bg-sidebar-accent/50 px-3 py-2 text-[11px] text-sidebar-foreground/50">
+          <div className="flex w-full items-center justify-between rounded-[18px] border border-sidebar-border/55 bg-sidebar-accent/55 px-3 py-2.5 text-[11px] text-sidebar-foreground/54">
             <span>Komut paleti</span>
             <kbd className="flex items-center gap-0.5 rounded border border-sidebar-border bg-sidebar px-1.5 py-0.5 font-mono text-[10px]">
               <Command className="size-2.5" />K
@@ -324,6 +375,7 @@ export function AppFrame({
   layout = "default",
   currentBookSlug,
   books = [],
+  showBookShelf = true,
   actions = [],
   primaryAction,
   viewer,
@@ -400,12 +452,14 @@ export function AppFrame({
   return (
     <>
       <aside className="app-sidebar hidden lg:flex">
-        <div className="flex h-full flex-col px-3 py-3">
+        <div className="flex h-full flex-col px-3.5 py-4">
           <SidebarContent
             current={current}
             currentBookSlug={currentBookSlug}
             books={books}
+            showBookShelf={showBookShelf}
             actions={actions}
+            viewer={currentViewer}
           />
         </div>
       </aside>
@@ -425,7 +479,7 @@ export function AppFrame({
         )}
         aria-label="Mobil menü"
       >
-        <div className="flex h-full flex-col px-3 py-3">
+        <div className="flex h-full flex-col px-3.5 py-4">
           <div className="mb-3 flex shrink-0 items-center justify-between">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
               Menü
@@ -443,6 +497,7 @@ export function AppFrame({
             current={current}
             currentBookSlug={currentBookSlug}
             books={books}
+            showBookShelf={showBookShelf}
             actions={actions}
             viewer={currentViewer}
             showFooter
@@ -456,19 +511,30 @@ export function AppFrame({
       </aside>
 
       <div className="app-content min-h-dvh bg-background text-foreground">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/50 bg-background/95 px-6 backdrop-blur-md">
-          <button
-            type="button"
-            className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card transition hover:bg-accent lg:hidden"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Menüyü aç"
-          >
-            <Menu className="size-4" />
-          </button>
+        <header className="sticky top-0 z-30 flex min-h-16 items-center gap-3 border-b border-border/50 bg-background/95 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+          <div className="min-w-0 flex flex-1 items-center gap-3">
+            <button
+              type="button"
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card transition hover:bg-accent lg:hidden"
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Menüyü aç"
+            >
+              <Menu className="size-4" />
+            </button>
 
-          <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">
-            {title}
-          </h1>
+            <Link
+              href="/app/library"
+              className="hidden shrink-0 rounded-full border border-border/70 bg-card px-3 py-2 transition-colors hover:bg-accent sm:flex lg:hidden"
+            >
+              <AppBrandLogo compact />
+            </Link>
+
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-[15px] font-semibold text-foreground sm:text-lg">
+                {title}
+              </h1>
+            </div>
+          </div>
 
           <div className="flex shrink-0 items-center gap-2">
             <ThemeToggle />
@@ -483,7 +549,7 @@ export function AppFrame({
               <div className="relative" ref={accountMenuRef}>
                 <button
                   type="button"
-                  className="flex h-10 cursor-pointer items-center gap-2 rounded-full border border-border/80 bg-card px-2.5 text-left shadow-sm transition-colors hover:bg-accent"
+                  className="flex h-11 cursor-pointer items-center gap-2 rounded-[18px] border border-border/80 bg-card px-2.5 text-left shadow-sm transition-colors hover:bg-accent sm:px-3"
                   onClick={() => setAccountMenuOpen((open) => !open)}
                   aria-expanded={accountMenuOpen}
                   aria-haspopup="menu"
@@ -492,11 +558,13 @@ export function AppFrame({
                     {initialsForViewer(currentViewer)}
                   </div>
                   <div className="hidden min-w-0 sm:block">
-                    <div className="max-w-[10rem] truncate text-sm font-medium text-foreground">
+                    <div className="max-w-[10rem] truncate text-sm font-semibold text-foreground">
                       {displayName}
                     </div>
+                    <div className="truncate text-[11px] font-medium text-muted-foreground">
+                      {planLabel}
+                    </div>
                   </div>
-                  <Badge className="hidden md:inline-flex">{planLabel}</Badge>
                   <ChevronDown className="size-4 text-muted-foreground" />
                 </button>
 

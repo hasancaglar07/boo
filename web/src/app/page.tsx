@@ -14,6 +14,7 @@ import { MarketingPage } from "@/components/site/marketing-page";
 import { PricingCreativeSection } from "@/components/site/pricing-creative-section";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Card, CardContent } from "@/components/ui/card";
+import { loadExamplesShowcaseData } from "@/lib/examples-data";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -30,7 +31,20 @@ export const metadata: Metadata = buildPageMetadata({
   ],
 });
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { items: exampleItems } = await loadExamplesShowcaseData();
+  const homeShowcaseBooks = exampleItems
+    .filter(
+      (item) =>
+        (item.languageCode === "en" || item.language === "English") &&
+        Boolean(item.coverImages.primaryUrl || item.coverImages.fallbackUrl),
+    )
+    .slice(0, 6);
+  const fallbackShowcaseBooks =
+    homeShowcaseBooks.length >= 4
+      ? homeShowcaseBooks
+      : exampleItems.filter((item) => Boolean(item.coverImages.primaryUrl || item.coverImages.fallbackUrl)).slice(0, 6);
+
   const starterFaq: Array<[string, string]> = [
     [
       "AI ile yazılan içerik gerçekten kaliteli oluyor mu?",
@@ -106,7 +120,7 @@ export default function HomePage() {
       </section>
 
       <HomeHowItWorksSection />
-      <InteractiveBookShowcase />
+      <InteractiveBookShowcase books={fallbackShowcaseBooks} />
 
       {/* Pricing: "pahalı mı?" sorusunu testimonials’tan önce cevapla */}
       <section className="border-b border-border/80 py-18">

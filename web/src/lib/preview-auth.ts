@@ -4,6 +4,8 @@ export type PreviewAccount = {
   name: string;
   email: string;
   goal: string;
+  publisherImprint: string;
+  publisherLogoUrl: string;
 };
 
 export type PreviewPlan = "free" | "starter" | "creator" | "pro" | "premium";
@@ -21,14 +23,26 @@ export type PreviewAuthProviders = {
   credentials: boolean;
 };
 
+export type PreviewUsage = {
+  canStartBook: boolean;
+  reason: "free_preview_used" | "premium_single_book_used" | "monthly_quota_reached" | null;
+  remainingBooks: number;
+  resetAt: string | null;
+  limit: number | null;
+  usedBooks: number;
+};
+
 export type PreviewViewer = {
   id: string;
   name: string;
   email: string;
   goal: string;
+  publisherImprint: string;
+  publisherLogoUrl: string;
   planId: PreviewPlan;
   emailVerified: boolean;
   role: UserRole;
+  usage: PreviewUsage;
 };
 
 export type PreviewAuthStatePayload = {
@@ -40,13 +54,24 @@ export type PreviewAuthStatePayload = {
   providers?: PreviewAuthProviders;
   anonymousId?: string | null;
   viewer: PreviewViewer | null;
+  usage: PreviewUsage;
 };
 
 export const DEFAULT_PREVIEW_GOAL = "İlk kitabımı hızlıca üretmek istiyorum.";
+export const DEFAULT_PREVIEW_USAGE: PreviewUsage = {
+  canStartBook: true,
+  reason: null,
+  remainingBooks: 1,
+  resetAt: null,
+  limit: 1,
+  usedBooks: 0,
+};
 export const DEFAULT_PREVIEW_ACCOUNT = {
   name: "Book Creator",
   email: "demo@example.com",
   goal: DEFAULT_PREVIEW_GOAL,
+  publisherImprint: "",
+  publisherLogoUrl: "",
 } satisfies PreviewAccount;
 
 const SESSION_KEY = "book-product-session";
@@ -73,7 +98,9 @@ function hasCustomPreviewAccount(account: PreviewAccount | null | undefined) {
   return (
     account.name !== DEFAULT_PREVIEW_ACCOUNT.name ||
     account.email !== DEFAULT_PREVIEW_ACCOUNT.email ||
-    account.goal !== DEFAULT_PREVIEW_ACCOUNT.goal
+    account.goal !== DEFAULT_PREVIEW_ACCOUNT.goal ||
+    account.publisherImprint !== DEFAULT_PREVIEW_ACCOUNT.publisherImprint ||
+    account.publisherLogoUrl !== DEFAULT_PREVIEW_ACCOUNT.publisherLogoUrl
   );
 }
 
@@ -124,7 +151,12 @@ export function setPlan(planId: PreviewPlan) {
 
 export function getViewer() {
   if (!canUseStorage()) return null;
-  return safeParse<PreviewViewer | null>(localStorage.getItem(VIEWER_KEY), null);
+  const parsed = safeParse<PreviewViewer | null>(localStorage.getItem(VIEWER_KEY), null);
+  if (!parsed) return null;
+  return {
+    ...parsed,
+    usage: parsed.usage || DEFAULT_PREVIEW_USAGE,
+  };
 }
 
 export function setViewer(payload: PreviewViewer) {
@@ -143,6 +175,8 @@ export function persistViewer(payload: PreviewViewer) {
     name: payload.name,
     email: payload.email,
     goal: payload.goal,
+    publisherImprint: payload.publisherImprint,
+    publisherLogoUrl: payload.publisherLogoUrl,
   });
   setPlan(payload.planId);
 

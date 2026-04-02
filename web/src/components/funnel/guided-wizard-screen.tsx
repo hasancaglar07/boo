@@ -4,6 +4,7 @@ import { Check, ImagePlus, Sparkles, Wand2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { AppFrame } from "@/components/app/app-frame";
 import { FunnelShell } from "@/components/funnel/funnel-shell";
 import { GenerateLoadingScreen } from "@/components/funnel/generate-loading-screen";
 import { Button } from "@/components/ui/button";
@@ -21,12 +22,22 @@ import {
   bookTypeLabel,
   buildGuidedBookPayload,
   canOpenStep,
+  CHAPTER_LENGTHS,
+  CHAPTER_ROLES,
   clearFunnelDraft,
+  chapterLengthLabel,
+  chapterRoleDescription,
+  chapterRoleLabel,
+  chapterWordRange,
   coverDirectionLabel,
   createDefaultFunnelDraft,
+  enrichOutlineItems,
   depthLabel,
   FUNNEL_STEPS,
   isTurkishLanguage,
+  BOOK_LENGTHS,
+  bookLengthDescription,
+  bookLengthLabel,
   languageDescription,
   languageLabel,
   loadFunnelDraft,
@@ -40,11 +51,15 @@ import {
   suggestedStyleProfile,
   SUPPORTED_LANGUAGES,
   toneLabel,
+  outlineWordRange,
   workflowStyleLabel,
   workflowGenreLabel,
   workflowToneLabel,
   type FunnelBookType,
   type FunnelCoverDirection,
+  type FunnelBookLength,
+  type FunnelChapterLength,
+  type FunnelChapterRole,
   type FunnelDepth,
   type FunnelDraft,
   type FunnelLanguage,
@@ -54,7 +69,7 @@ import {
 } from "@/lib/funnel-draft";
 import { formatChapterReference } from "@/lib/book-language";
 import { PUBLISHER_LOGO_PRESETS, pickRandomPublisherLogo } from "@/lib/publisher-logo-library";
-import { getAccount, getSession, syncPreviewAuthState } from "@/lib/preview-auth";
+import { getAccount, getPlan, getSession, syncPreviewAuthState } from "@/lib/preview-auth";
 import { cn } from "@/lib/utils";
 
 const BOOK_TYPES: FunnelBookType[] = ["rehber", "is", "egitim", "cocuk", "diger"];
@@ -106,6 +121,277 @@ const RANDOM_COVER_BRIEFS = [
   "Blueprint for growth",
 ] as const;
 
+const STYLE_COPY_BY_LANGUAGE: Partial<
+  Record<
+    FunnelLanguage,
+    {
+      authors: string[];
+      briefs: string[];
+      bios: string[];
+    }
+  >
+> = {
+  Turkish: {
+    authors: ["Deniz Aksoy", "Cemre Yalçın", "Mert Aydın"],
+    briefs: [
+      "Net strateji • Güçlü anlatım • Uygulanabilir rehber",
+      "Açık sistemler • Profesyonel ton • Raf kalitesi",
+      "Pratik akış • Güçlü yapı • Editoryal denge",
+    ],
+    bios: [
+      "{topic} alanında çalışan bağımsız yazar ve yayın üreticisi. Karmaşık bilgiyi okunabilir ve uygulanabilir kitaplara dönüştürür.",
+      "{topic} odaklı rehberler üreten editoryal yazar. Net sistemler, güçlü akış ve güven veren anlatım üzerine çalışır.",
+    ],
+  },
+  English: {
+    authors: ["Clara Bennett", "Noah Carter", "Elena Brooks"],
+    briefs: [
+      "Clear strategy • Practical systems • Editorial finish",
+      "Structured guidance • Strong voice • Professional flow",
+      "Readable framework • Premium tone • Practical depth",
+    ],
+    bios: [
+      "Independent author and publishing maker working on {topic}. Turns complex ideas into clear, practical books with an editorial finish.",
+      "Writer and editorial builder focused on {topic}. Creates readable systems, strong positioning, and shelf-ready non-fiction.",
+    ],
+  },
+  German: {
+    authors: ["Leonie Hartmann", "Jonas Keller", "Mila Becker"],
+    briefs: [
+      "Klare Struktur • Praxistiefe • Editorialer Ton",
+      "Deutliche Führung • Starke Ordnung • Professioneller Stil",
+    ],
+    bios: [
+      "Unabhängige:r Autor:in und Publishing-Maker im Bereich {topic}. Verdichtet komplexes Wissen zu klaren, anwendbaren Büchern.",
+    ],
+  },
+  French: {
+    authors: ["Camille Laurent", "Élodie Martin", "Lucas Fournier"],
+    briefs: [
+      "Clarté éditoriale • Système net • Guide pratique",
+      "Structure lisible • Ton fort • Finition éditoriale",
+    ],
+    bios: [
+      "Auteur indépendant et artisan éditorial autour de {topic}. Transforme des idées complexes en livres clairs et utiles.",
+    ],
+  },
+  Spanish: {
+    authors: ["Lucía Navarro", "Daniel Ortega", "Sofía Romero"],
+    briefs: [
+      "Estrategia clara • Sistema práctico • Acabado editorial",
+      "Guía sólida • Voz profesional • Flujo legible",
+    ],
+    bios: [
+      "Autor independiente y creador editorial en {topic}. Convierte conocimiento complejo en libros claros y aplicables.",
+    ],
+  },
+  Italian: {
+    authors: ["Giulia Moretti", "Luca Rinaldi", "Elisa Conti"],
+    briefs: [
+      "Struttura chiara • Taglio pratico • Finitura editoriale",
+      "Guida leggibile • Voce forte • Qualità editoriale",
+    ],
+    bios: [
+      "Autore indipendente e progettista editoriale su {topic}. Trasforma contenuti complessi in libri chiari e utili.",
+    ],
+  },
+  Portuguese: {
+    authors: ["Beatriz Silva", "Miguel Duarte", "Inês Rocha"],
+    briefs: [
+      "Estratégia clara • Sistema prático • Acabamento editorial",
+      "Leitura fluida • Estrutura forte • Tom profissional",
+    ],
+    bios: [
+      "Autor independente e criador editorial em {topic}. Transforma conhecimento complexo em livros claros e aplicáveis.",
+    ],
+  },
+  Dutch: {
+    authors: ["Sanne de Vries", "Milan Jansen", "Lotte Visser"],
+    briefs: [
+      "Duidelijke structuur • Praktische aanpak • Redactionele afwerking",
+      "Heldere flow • Sterke toon • Professionele gids",
+    ],
+    bios: [
+      "Onafhankelijke auteur en editorial maker rond {topic}. Zet complexe kennis om in heldere, bruikbare boeken.",
+    ],
+  },
+  Polish: {
+    authors: ["Zofia Kowalska", "Jan Nowak", "Maja Zielinska"],
+    briefs: [
+      "Jasna struktura • Praktyczne wskazówki • Editorialny styl",
+      "Mocny układ • Czytelny ton • Profesjonalne wykończenie",
+    ],
+    bios: [
+      "Niezależny autor i twórca redakcyjny w obszarze {topic}. Przekłada złożoną wiedzę na czytelne i praktyczne książki.",
+    ],
+  },
+  Romanian: {
+    authors: ["Ana Ionescu", "Matei Popescu", "Ilinca Radu"],
+    briefs: [
+      "Structură clară • Sistem practic • Finisaj editorial",
+      "Ghid lizibil • Ton profesionist • Flux puternic",
+    ],
+    bios: [
+      "Autor independent și creator editorial în zona {topic}. Transformă idei complexe în cărți clare și aplicabile.",
+    ],
+  },
+  Swedish: {
+    authors: ["Elsa Lindberg", "Noah Berg", "Maja Nystrom"],
+    briefs: [
+      "Tydlig struktur • Praktisk vagledning • Redaktionell ton",
+      "Klar rytm • Stark guide • Professionell finish",
+    ],
+    bios: [
+      "Oberoende forfattare och editorial maker inom {topic}. Gor komplex kunskap tydlig, anvandbar och bokmogen.",
+    ],
+  },
+  Danish: {
+    authors: ["Freja Madsen", "Emil Nielsen", "Clara Holm"],
+    briefs: [
+      "Klar struktur • Praktisk guide • Redaktionel finish",
+      "Stark opbygning • Rolig tone • Professionelt udtryk",
+    ],
+    bios: [
+      "Uafhaengig forfatter og editorial maker inden for {topic}. Gorer kompleks viden klar og anvendelig i bogform.",
+    ],
+  },
+  Norwegian: {
+    authors: ["Ingrid Solberg", "Magnus Dahl", "Emma Lunde"],
+    briefs: [
+      "Tydelig struktur • Praktisk veiledning • Redaksjonell finish",
+      "Lesbar flyt • Profesjonell tone • Sterk guide",
+    ],
+    bios: [
+      "Uavhengig forfatter og editorial maker innen {topic}. Gjør kompleks kunnskap tydelig og anvendelig i bokform.",
+    ],
+  },
+  Finnish: {
+    authors: ["Aino Virtanen", "Elias Korhonen", "Ella Laine"],
+    briefs: [
+      "Selkea rakenne • Kaytannon opas • Editorial viimeistely",
+      "Vahva rytmi • Luettava virta • Ammattimainen saavy",
+    ],
+    bios: [
+      "Itsenainen kirjoittaja ja editorial maker aiheessa {topic}. Muuttaa monimutkaisen tiedon selkeiksi ja kaytannollisiksi kirjoiksi.",
+    ],
+  },
+  Czech: {
+    authors: ["Ema Novakova", "Jakub Svoboda", "Tereza Dvorakova"],
+    briefs: [
+      "Jasna struktura • Prakticky pristup • Redakcni styl",
+      "Silny rytmus • Citelny ton • Profesionalni finish",
+    ],
+    bios: [
+      "Nezavisly autor a editorial maker v oblasti {topic}. Pretvari slozite znalosti do jasnych a pouzitelnych knih.",
+    ],
+  },
+  Slovak: {
+    authors: ["Nina Kovacova", "Tomas Urban", "Ela Hruskova"],
+    briefs: [
+      "Jasna struktura • Prakticke vedenie • Redakcny styl",
+      "Silny tok • Profesionálny ton • Citatelny sprievodca",
+    ],
+    bios: [
+      "Nezavisly autor a editorial maker v oblasti {topic}. Premiena komplexne poznatky na jasne a pouzitelne knihy.",
+    ],
+  },
+  Hungarian: {
+    authors: ["Lili Horvath", "Mate Szabo", "Anna Varga"],
+    briefs: [
+      "Tiszta szerkezet • Gyakorlati utmutato • Szerkesztoi hang",
+      "Eros ritmus • Olvashato vezetes • Professzionalis finish",
+    ],
+    bios: [
+      "{topic} teruleten dolgozo fuggetlen szerzo es editorial maker. Az osszetett tudast tiszta, hasznalhato konyvekké alakitja.",
+    ],
+  },
+  Greek: {
+    authors: ["Ελένη Παππά", "Νίκος Ανδρέου", "Μαρία Θεοδώρου"],
+    briefs: [
+      "Καθαρή δομή • Πρακτικός οδηγός • Εκδοτική αισθητική",
+      "Ισχυρή ροή • Επαγγελματικός τόνος • Καθαρή καθοδήγηση",
+    ],
+    bios: [
+      "Ανεξάρτητος συγγραφέας και editorial maker στο {topic}. Μετατρέπει σύνθετη γνώση σε καθαρά και χρήσιμα βιβλία.",
+    ],
+  },
+  Russian: {
+    authors: ["Анна Волкова", "Илья Смирнов", "Мария Орлова"],
+    briefs: [
+      "Четкая структура • Практичный подход • Редакционный стиль",
+      "Сильный ритм • Понятный тон • Профессиональная подача",
+    ],
+    bios: [
+      "Независимый автор и editorial maker в сфере {topic}. Превращает сложные знания в ясные и полезные книги.",
+    ],
+  },
+  Ukrainian: {
+    authors: ["Олена Мельник", "Артем Шевченко", "Марія Коваль"],
+    briefs: [
+      "Чітка структура • Практичний підхід • Редакційний стиль",
+      "Сильний ритм • Зрозумілий тон • Професійна подача",
+    ],
+    bios: [
+      "Незалежний автор та editorial maker у сфері {topic}. Перетворює складні знання на зрозумілі й корисні книги.",
+    ],
+  },
+  Arabic: {
+    authors: ["ليلى خوري", "عمر ناصر", "سارة حداد"],
+    briefs: [
+      "هيكل واضح • دليل عملي • لمسة تحريرية",
+      "تدفق قوي • نبرة مهنية • بناء مقروء",
+    ],
+    bios: [
+      "كاتب مستقل وصانع نشر يعمل في مجال {topic}. يحول المعرفة المعقدة إلى كتب واضحة وعملية.",
+    ],
+  },
+  Japanese: {
+    authors: ["佐藤 美月", "高橋 蓮", "中村 葵"],
+    briefs: [
+      "明快な構成 • 実践的ガイド • エディトリアル品質",
+      "読みやすい流れ • 強い整理 • プロ品質",
+    ],
+    bios: [
+      "{topic} 分野で活動する独立系ライター兼エディトリアルメーカー。複雑な知識を読みやすく実用的な本に整えます。",
+    ],
+  },
+  Hindi: {
+    authors: ["आन्या शर्मा", "आरव मेहता", "सिया वर्मा"],
+    briefs: [
+      "स्पष्ट संरचना • व्यावहारिक मार्गदर्शन • संपादकीय गुणवत्ता",
+      "मजबूत प्रवाह • पेशेवर स्वर • साफ दिशा",
+    ],
+    bios: [
+      "{topic} पर काम करने वाले स्वतंत्र लेखक और एडिटोरियल मेकर। जटिल ज्ञान को स्पष्ट और उपयोगी पुस्तकों में बदलते हैं।",
+    ],
+  },
+  Indonesian: {
+    authors: ["Alya Pratama", "Raka Putra", "Nadia Lestari"],
+    briefs: [
+      "Struktur jelas • Panduan praktis • Sentuhan editorial",
+      "Alur kuat • Nada profesional • Hasil rapi",
+    ],
+    bios: [
+      "Penulis independen dan editorial maker di bidang {topic}. Mengubah pengetahuan kompleks menjadi buku yang jelas dan berguna.",
+    ],
+  },
+  Malay: {
+    authors: ["Aisyah Rahman", "Adam Hakim", "Sofia Zulkifli"],
+    briefs: [
+      "Struktur jelas • Panduan praktikal • Sentuhan editorial",
+      "Aliran kuat • Nada profesional • Kemasan kemas",
+    ],
+    bios: [
+      "Penulis bebas dan editorial maker dalam bidang {topic}. Menjadikan pengetahuan kompleks sebagai buku yang jelas dan berguna.",
+    ],
+  },
+};
+
+function normalizeRouteBase(routeBase: string) {
+  const normalized = routeBase.trim().replace(/\/+$/, "");
+  return normalized || "/start";
+}
+
 function readImageAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -132,6 +418,64 @@ function defaultChapterReference(language: FunnelLanguage, number: number) {
 
 function randomCoverBrief() {
   return RANDOM_COVER_BRIEFS[Math.floor(Math.random() * RANDOM_COVER_BRIEFS.length)];
+}
+
+function getProfilePublisherBrand() {
+  const account = getAccount();
+  const planId = getPlan();
+  if (planId !== "pro") return null;
+
+  const imprint = String(account.publisherImprint || "").trim();
+  const logoUrl = String(account.publisherLogoUrl || "").trim();
+  if (!imprint && !logoUrl) return null;
+
+  return {
+    imprint: imprint || "Studio Press",
+    logoText: imprint || "Studio Press",
+    logoUrl,
+  };
+}
+
+function randomFrom<T>(items: readonly T[]) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function styleCopyForLanguage(language: FunnelLanguage) {
+  return STYLE_COPY_BY_LANGUAGE[language] || STYLE_COPY_BY_LANGUAGE.English!;
+}
+
+function fallbackTopicLabel(language: FunnelLanguage) {
+  if (isTurkishLanguage(language)) {
+    return "uzmanlık alanı";
+  }
+  return languageLabel(language);
+}
+
+function publisherFamilyLabel(family: "heritage" | "masthead" | "studio" | "letterpress") {
+  switch (family) {
+    case "heritage":
+      return "Heritage";
+    case "masthead":
+      return "Masthead";
+    case "studio":
+      return "Studio";
+    case "letterpress":
+      return "Letterpress";
+  }
+}
+
+function formatWordCount(value: number) {
+  return new Intl.NumberFormat("en-US").format(Math.max(0, Math.round(value)));
+}
+
+function buildRandomStyleCopy(draft: FunnelDraft) {
+  const copy = styleCopyForLanguage(draft.language);
+  const topic = draft.topic.trim() || fallbackTopicLabel(draft.language);
+  return {
+    authorName: randomFrom(copy.authors),
+    coverBrief: randomFrom(copy.briefs),
+    authorBio: randomFrom(copy.bios).replace("{topic}", topic),
+  };
 }
 
 function firstAllowedStep(draft: FunnelDraft, desired: FunnelStep) {
@@ -178,16 +522,17 @@ function LiveBookCard({ draft }: { draft: FunnelDraft }) {
   return (
     <div className="overflow-hidden rounded-[28px] border border-border/80 bg-[radial-gradient(circle_at_top,_rgba(188,104,67,0.18),_transparent_34%),linear-gradient(180deg,_#261c16_0%,_#523629_52%,_#b96a42_100%)] p-6 text-white shadow-[0_24px_48px_rgba(37,27,20,0.18)]">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-white/72">
-          {displayBrand}
-        </div>
         {draft.logoUrl ? (
           <img
             src={draft.logoUrl}
             alt={`${displayBrand} logosu`}
-            className="h-10 w-auto max-w-[92px] rounded-md bg-white/8 object-contain p-1"
+            className="h-12 w-auto max-w-[190px] object-contain"
           />
-        ) : null}
+        ) : (
+          <div className="text-xs font-semibold uppercase tracking-[0.24em] text-white/72">
+            {displayBrand}
+          </div>
+        )}
       </div>
       <div className="mt-12">
         <div className="max-w-[12ch] text-3xl font-semibold leading-[1.02] md:text-4xl">{displayTitle}</div>
@@ -275,7 +620,15 @@ function ChoiceGrid<T extends string>({
   );
 }
 
-export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
+export function GuidedWizardScreen({
+  step,
+  routeBase = "/start",
+  shellMode = "funnel",
+}: {
+  step: FunnelStep;
+  routeBase?: string;
+  shellMode?: "funnel" | "app";
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [draft, setDraft] = useState<FunnelDraft>(() => createDefaultFunnelDraft());
@@ -288,12 +641,19 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
   const autoFillRef = useRef({ title: false, outline: false, style: false });
   const topicPrefillRef = useRef(false);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const normalizedRouteBase = normalizeRouteBase(routeBase);
+  const appShellEnabled = shellMode === "app";
+  const profileBrand = getProfilePublisherBrand();
+
+  function stepHref(target: FunnelStep) {
+    return `${normalizedRouteBase}/${target}`;
+  }
 
   useEffect(() => {
     const stored = normalizeFunnelDraft(loadFunnelDraft());
     const allowedStep = firstAllowedStep(stored, step);
     if (allowedStep !== step) {
-      router.replace(`/start/${allowedStep}`);
+      router.replace(stepHref(allowedStep));
       return;
     }
     const account = getAccount();
@@ -306,7 +666,7 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
     setDraft(nextDraft);
     saveFunnelDraft(nextDraft);
     setReady(true);
-  }, [router, step]);
+  }, [router, step, normalizedRouteBase]);
 
   useEffect(() => {
     if (!ready) return;
@@ -331,9 +691,9 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
 
   useEffect(() => {
     if (step === "topic") {
-      trackEvent("wizard_started", { source: "start_topic" });
+      trackEvent("wizard_started", { source: appShellEnabled ? "app_new_topic" : "start_topic" });
     }
-  }, [step]);
+  }, [appShellEnabled, step]);
 
   useEffect(() => {
     if (aiLoading !== "generate") {
@@ -354,8 +714,14 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
       { label: "Başlık", value: draft.title || "Henüz seçilmedi" },
       { label: "Yazar", value: draft.authorName || "Henüz girilmedi" },
       { label: "Dil", value: languageLabel(draft.language) },
+      { label: "Uzunluk", value: bookLengthLabel(draft.bookLength, draft.language) },
       { label: "Bölümler", value: draft.outline.length ? `${draft.outline.length} bölüm` : "Henüz oluşturulmadı" },
     ],
+    [draft],
+  );
+
+  const outlineWordEstimate = useMemo(
+    () => outlineWordRange(draft.outline.length ? draft.outline : localOutlineSuggestions(draft), draft.bookLength),
     [draft],
   );
 
@@ -377,7 +743,7 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
 
   function goBack() {
     const prev = previousStep(step);
-    if (prev) router.push(`/start/${prev}`);
+    if (prev) router.push(stepHref(prev));
   }
 
   function goNext() {
@@ -400,13 +766,13 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
     }
 
     const next = nextStep(step);
-    if (next) router.push(`/start/${next}`);
+    if (next) router.push(stepHref(next));
   }
 
   async function handleTitleAi(forceReplace = false) {
     if (!draft.topic.trim()) {
       setError("Önce konuyu netleştir.");
-      router.push("/start/topic");
+      router.push(stepHref("topic"));
       return;
     }
 
@@ -462,7 +828,7 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
   async function handleOutlineAi() {
     if (!draft.topic.trim()) {
       setError("Önce konuyu belirle.");
-      router.push("/start/topic");
+      router.push(stepHref("topic"));
       return;
     }
 
@@ -493,10 +859,13 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
             }
           | undefined;
         if (generated?.chapters?.length) {
-          chapters = generated.chapters.map((item, index) => ({
-            title: String(item.title || defaultChapterReference(draft.language, index + 1)).trim(),
-            summary: String(item.summary || "").trim(),
-          }));
+          chapters = enrichOutlineItems(
+            generated.chapters.map((item, index) => ({
+              title: String(item.title || defaultChapterReference(draft.language, index + 1)).trim(),
+              summary: String(item.summary || "").trim(),
+            })),
+            draft,
+          );
           maybeTitle = String(generated.title || maybeTitle || "").trim();
           maybeSubtitle = String(generated.subtitle || maybeSubtitle || "").trim();
         }
@@ -524,22 +893,15 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
   function applyRandomStyleProfile(forceReplace = false) {
     const style = suggestedStyleProfile(draft);
     const preset = pickRandomPublisherLogo();
+    const localized = buildRandomStyleCopy(draft);
     updateDraft({
       ...style,
-      authorName: forceReplace ? draft.authorName || getAccount().name || "İhsan Yılmaz" : draft.authorName || getAccount().name || "İhsan Yılmaz",
+      authorName: forceReplace ? localized.authorName : draft.authorName || getAccount().name || localized.authorName,
       imprint: forceReplace ? preset.imprint : draft.imprint && draft.imprint !== "Book Generator" ? draft.imprint : preset.imprint,
       logoText: forceReplace ? preset.mark : draft.logoText || preset.mark,
       logoUrl: forceReplace ? preset.url : draft.logoUrl || preset.url,
-      coverBrief: forceReplace ? randomCoverBrief() : draft.coverBrief || randomCoverBrief(),
-      authorBio: forceReplace
-        ? draft.authorBio ||
-          (isTurkishLanguage(draft.language)
-            ? "Uzmanlığını kitaplaştıran bağımsız yazar ve yayın üreticisi."
-            : "Independent author building polished books from expert knowledge.")
-        : draft.authorBio ||
-        (isTurkishLanguage(draft.language)
-          ? "Uzmanlığını kitaplaştıran bağımsız yazar ve yayın üreticisi."
-          : "Independent author building polished books from expert knowledge."),
+      coverBrief: forceReplace ? localized.coverBrief : draft.coverBrief || localized.coverBrief || randomCoverBrief(),
+      authorBio: forceReplace ? localized.authorBio : draft.authorBio || localized.authorBio,
     });
     return style;
   }
@@ -654,15 +1016,40 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
 
   if (!ready) return null;
 
-  // ── TOPIC ──────────────────────────────────────────────────────────────────
-  if (step === "topic") {
-    return (
+  function wrapInShell(input: {
+    title: string;
+    description: string;
+    children: React.ReactNode;
+  }) {
+    const shell = (
       <FunnelShell
         step={step}
-        title="Kitabın konusu ne?"
-        description="Konuyu yaz, hedef okurunu belirt, kitap tipini seç — hepsi bu."
+        title={input.title}
+        description={input.description}
         summary={summary}
+        mode={appShellEnabled ? "embedded" : "funnel"}
       >
+        {input.children}
+      </FunnelShell>
+    );
+
+    if (!appShellEnabled) {
+      return shell;
+    }
+
+    return (
+      <AppFrame current="new" title="Yeni Kitap" books={[]} showBookShelf={false}>
+        {shell}
+      </AppFrame>
+    );
+  }
+
+  // ── TOPIC ──────────────────────────────────────────────────────────────────
+  if (step === "topic") {
+    return wrapInShell({
+      title: "Kitabın konusu ne?",
+      description: "Konuyu yaz, hedef okurunu belirt, kitap tipini seç — hepsi bu.",
+      children: (
         <div className="space-y-8">
           <div className="space-y-2">
             <label htmlFor="topic" className="text-sm font-semibold text-foreground">
@@ -731,21 +1118,18 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
             </Button>
           </div>
         </div>
-      </FunnelShell>
-    );
+      ),
+    });
   }
 
   // ── TITLE ──────────────────────────────────────────────────────────────────
   if (step === "title") {
-    return (
-      <FunnelShell
-        step={step}
-        title="Başlık ve alt başlık"
-        description="Kendin yaz ya da AI’dan öneri al."
-        summary={summary}
-      >
+    return wrapInShell({
+      title: "Başlık ve alt başlık",
+      description: "Kendin yaz ya da AI’dan öneri al.",
+      children: (
         <div className="space-y-8">
-          <LiveBookCard draft={draft} />
+          {!appShellEnabled ? <LiveBookCard draft={draft} /> : null}
 
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => void handleTitleAi()} isLoading={aiLoading === "title"}>
@@ -822,20 +1206,53 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
             </Button>
           </div>
         </div>
-      </FunnelShell>
-    );
+      ),
+    });
   }
 
   // ── OUTLINE ────────────────────────────────────────────────────────────────
   if (step === "outline") {
-    return (
-      <FunnelShell
-        step={step}
-        title="Bölüm planı"
-        description="AI ile otomatik oluştur ya da kendin düzenle. En az 3 bölüm gerekli."
-        summary={summary}
-      >
+    return wrapInShell({
+      title: "Bölüm planı",
+      description: "AI ile otomatik oluştur ya da kendin düzenle. En az 3 bölüm gerekli, ama hepsi aynı ritimde olmak zorunda değil.",
+      children: (
         <div className="space-y-6">
+          <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+            <div className="rounded-[24px] border border-border/80 bg-background/72 p-5">
+              <div className="text-sm font-semibold text-foreground">Kitap uzunluğu hedefi</div>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                Gerçek kitaplarda açılış ve kapanış daha kısa, taşıyıcı bölümler daha güçlü olur. Burada toplam omurgayı belirle.
+              </p>
+              <div className="mt-4">
+                <ChoiceGrid
+                  values={BOOK_LENGTHS}
+                  selected={draft.bookLength}
+                  labelFor={(value) => bookLengthLabel(value, draft.language)}
+                  descriptionFor={(value) => bookLengthDescription(value, draft.language)}
+                  onSelect={(value) => updateDraft({ bookLength: value })}
+                  columns="sm:grid-cols-3"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-[24px] border border-primary/12 bg-primary/5 p-5">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Tahmini toplam hacim
+              </div>
+              <div className="mt-3 text-3xl font-semibold text-foreground">
+                {formatWordCount(outlineWordEstimate.min)}-{formatWordCount(outlineWordEstimate.max)}
+              </div>
+              <div className="mt-2 text-sm leading-6 text-muted-foreground">
+                {isTurkishLanguage(draft.language) ? "kelime" : "words"}
+              </div>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                {isTurkishLanguage(draft.language)
+                  ? "Bu sayı bölüm rollerine göre esnek dağılır; tüm bölümlerin aynı kelime bandında gitmesi hedeflenmez."
+                  : "This estimate flexes by chapter role; the plan avoids forcing every chapter into the same band."}
+              </p>
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => void handleOutlineAi()} isLoading={aiLoading === "outline"}>
               <Sparkles className="mr-1.5 size-3.5" />
@@ -851,6 +1268,8 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
                     {
                       title: defaultChapterReference(draft.language, draft.outline.length + 1),
                       summary: isTurkishLanguage(draft.language) ? "Bu bölümün kısa amacı." : "Short purpose of this section.",
+                      role: "core",
+                      length: draft.bookLength === "extended" ? "long" : "medium",
                     },
                   ],
                 });
@@ -888,6 +1307,52 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
                       rows={2}
                       className="resize-none text-sm"
                     />
+                    <div className="grid gap-3 pt-1 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <label htmlFor={`outline-role-${index}`} className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                          Bölüm rolü
+                        </label>
+                        <select
+                          id={`outline-role-${index}`}
+                          value={item.role}
+                          onChange={(event) => updateOutline(index, { role: event.target.value as FunnelChapterRole })}
+                          className="flex h-10 w-full rounded-[16px] border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-ring/50 focus:ring-2 focus:ring-ring/20"
+                        >
+                          {CHAPTER_ROLES.map((role) => (
+                            <option key={role} value={role}>
+                              {chapterRoleLabel(role, draft.language)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label htmlFor={`outline-length-${index}`} className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                          Bölüm derinliği
+                        </label>
+                        <select
+                          id={`outline-length-${index}`}
+                          value={item.length}
+                          onChange={(event) => updateOutline(index, { length: event.target.value as FunnelChapterLength })}
+                          className="flex h-10 w-full rounded-[16px] border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-ring/50 focus:ring-2 focus:ring-ring/20"
+                        >
+                          {CHAPTER_LENGTHS.map((length) => (
+                            <option key={length} value={length}>
+                              {chapterLengthLabel(length, draft.language)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="rounded-[16px] border border-border/60 bg-background/70 px-3 py-2">
+                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                        {formatWordCount(chapterWordRange(item.length, draft.bookLength).min)}-{formatWordCount(chapterWordRange(item.length, draft.bookLength).max)}{" "}
+                        {isTurkishLanguage(draft.language) ? "kelime" : "words"}
+                      </div>
+                      <div className="mt-1 text-xs leading-5 text-muted-foreground">
+                        {chapterRoleDescription(item.role, draft.language)}
+                      </div>
+                    </div>
                   </div>
                   <Button
                     variant="ghost"
@@ -924,26 +1389,31 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
             </Button>
           </div>
         </div>
-      </FunnelShell>
-    );
+      ),
+    });
   }
 
   // ── STYLE ──────────────────────────────────────────────────────────────────
   if (step === "style") {
-    return (
-      <FunnelShell
-        step={step}
-        title="Dil ve stil"
-        description="Bu ekran otomatik doldu. İstersen dili, markayı ve kapağın genel hissini burada değiştir."
-        summary={summary}
-      >
+    return wrapInShell({
+      title: "Dil ve stil",
+      description: "Bu ekran otomatik doldu. İstersen dili, markayı ve kapağın genel hissini burada değiştir.",
+      children: (
         <div className="space-y-8">
-          <LiveBookCard draft={draft} />
+          {!appShellEnabled ? <LiveBookCard draft={draft} /> : null}
 
           <div className="rounded-[22px] border border-border/80 bg-background/72 px-6 py-6">
-            <div className="text-[15px] font-semibold text-foreground">AI ilk stil paketini hazırladı</div>
-            <div className="mt-1.5 text-sm leading-6 text-muted-foreground">
-              Dil, ton, kapak yönü ve yayın evi markası otomatik yerleştirildi. Beğenmezsen değiştir, beğenirsen devam et.
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="text-[15px] font-semibold text-foreground">AI stil paketi</div>
+                <div className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                  Seçtiğin dile göre yazar adı, imprint, wordmark, kapak vurgu metni ve kısa biyografiyi otomatik üret.
+                </div>
+              </div>
+              <Button size="sm" variant="outline" onClick={handleStyleAi} isLoading={aiLoading === "style"}>
+                <Sparkles className="mr-1.5 size-3.5" />
+                AI ile oluştur
+              </Button>
             </div>
           </div>
 
@@ -1037,7 +1507,7 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
               <div>
                 <div className="text-[15px] font-semibold text-foreground">Yayın evi logosu</div>
                 <div className="mt-1 text-sm leading-6 text-muted-foreground">
-                  30 hazır yayın evi logosundan birini seçebilir ya da kendi logonu yükleyebilirsin.
+                  Hazır yayın evi wordmark’larından birini seçebilir ya da kendi logonu yükleyebilirsin.
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -1054,10 +1524,6 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
                     event.currentTarget.value = "";
                   }}
                 />
-                <Button size="sm" variant="outline" onClick={handleStyleAi} isLoading={aiLoading === "style"}>
-                  <Sparkles className="mr-1.5 size-3.5" />
-                  AI ile yenile
-                </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -1077,10 +1543,25 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
                   <ImagePlus className="mr-1.5 size-3.5" />
                   Logo yükle
                 </Button>
+                {profileBrand ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      updateDraft({
+                        imprint: profileBrand.imprint,
+                        logoText: profileBrand.logoText,
+                        logoUrl: profileBrand.logoUrl || draft.logoUrl,
+                      })
+                    }
+                  >
+                    Profil logosu
+                  </Button>
+                ) : null}
               </div>
             </div>
 
-            <div className="grid max-h-[280px] gap-3 overflow-y-auto pr-1 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="grid max-h-[320px] gap-3 overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
               {PUBLISHER_LOGO_PRESETS.map((preset) => {
                 const selected = draft.logoUrl === preset.url;
                 return (
@@ -1088,7 +1569,7 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
                     key={preset.id}
                     type="button"
                     className={cn(
-                      "rounded-[18px] border p-3 text-left transition",
+                      "rounded-[20px] border p-4 text-left transition",
                       selected ? "border-primary/40 bg-primary/8 ring-1 ring-primary/20" : "border-border/80 bg-card hover:border-primary/20 hover:bg-accent",
                     )}
                     onClick={() =>
@@ -1099,8 +1580,12 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
                       })
                     }
                   >
-                    <img src={preset.url} alt={preset.imprint} className="h-14 w-14 rounded-[14px] object-contain" />
-                    <div className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{preset.mark}</div>
+                    <div className="flex min-h-[88px] items-center rounded-[18px] border border-border/60 bg-background/85 px-4 py-4">
+                      <img src={preset.url} alt={preset.imprint} className="h-14 w-auto max-w-full object-contain" />
+                    </div>
+                    <div className="mt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      {publisherFamilyLabel(preset.family)}
+                    </div>
                     <div className="mt-1 text-sm font-medium leading-6 text-foreground">{preset.imprint}</div>
                   </button>
                 );
@@ -1161,19 +1646,16 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
             </Button>
           </div>
         </div>
-      </FunnelShell>
-    );
+      ),
+    });
   }
 
   // ── GENERATE ───────────────────────────────────────────────────────────────
-  return (
-    <FunnelShell
-      step={step}
-      title="Önizlemeyi başlat"
-      description="Tek tıkla kitap vitrini oluşur. Kapak ve ilk okunabilir bölüm arka planda hazırlanır."
-      summary={summary}
-    >
-      {aiLoading === "generate" ? (
+  return wrapInShell({
+    title: "Önizlemeyi başlat",
+    description: "Tek tıkla kitap vitrini oluşur. Kapak ve ilk okunabilir bölüm arka planda hazırlanır.",
+    children: (
+      aiLoading === "generate" ? (
         <GenerateLoadingScreen redirectPath={pendingRedirect || undefined} />
       ) : (
         <div className="mx-auto max-w-3xl space-y-5">
@@ -1219,17 +1701,19 @@ export function GuidedWizardScreen({ step }: { step: FunnelStep }) {
               size="lg"
               onClick={() => {
                 clearFunnelDraft();
-                router.push("/start/topic");
+                router.push(stepHref("topic"));
               }}
             >
               Baştan Kur
             </Button>
           </div>
           <p className="text-xs text-muted-foreground/70">
-            Kayıt gerekmez · Ücretsiz önizleme · Kapak + ilk bölüm canlı hazırlanır
+            {appShellEnabled
+              ? "Aynı hesapta devam et · Önizleme hemen hazırlanır · Kapak + ilk bölüm canlı üretilir"
+              : "Kayıt gerekmez · Ücretsiz önizleme · Kapak + ilk bölüm canlı hazırlanır"}
           </p>
         </div>
-      )}
-    </FunnelShell>
-  );
+      )
+    ),
+  });
 }

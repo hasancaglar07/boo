@@ -124,7 +124,7 @@ if "%~1"=="" goto MENU
 exit /b 0
 
 :WEB
-call "%REPO_DIR%\start-web.bat"
+call "%REPO_DIR%\start-web.bat" reset
 if "%~1"=="" goto MENU
 exit /b 0
 

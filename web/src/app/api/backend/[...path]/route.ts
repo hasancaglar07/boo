@@ -10,10 +10,13 @@ import {
   canAccessFullBook,
   enrichPreviewEntitlements,
   extractSlugFromWorkspacePath,
+  getBookStartAllowance,
   getGuestIdentityFromCookies,
   getOrCreateGuestIdentity,
   getOwnedBookSlugs,
+  recordBookUsage,
   requestMeta,
+  usageReasonLabel,
   viewerFromIds,
 } from "@/lib/auth/data";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
@@ -219,6 +222,17 @@ async function handleBookCreateOrUpdate(
     return NextResponse.json(upstreamPayload, { status: response.status });
   }
 
+  if (userId) {
+    const allowance = await getBookStartAllowance(userId);
+    if (!allowance.canStartBook) {
+      return jsonError(
+        403,
+        usageReasonLabel(allowance.reason) || "Yeni kitap oluşturmak için planını yükseltmen gerekiyor.",
+        "BOOK_CREATION_LIMIT_REACHED",
+      );
+    }
+  }
+
   let guestIdentityId: string | null = null;
   let guestToken: string | null = null;
 
@@ -259,6 +273,12 @@ async function handleBookCreateOrUpdate(
       origin: "api.books.create",
       statusSnapshot: upstreamPayload.status,
     });
+    if (userId) {
+      await recordBookUsage({
+        userId,
+        bookSlug: createdSlug,
+      });
+    }
   }
 
   return withGuestCookie(NextResponse.json(upstreamPayload, { status: response.status }), guestToken);
@@ -322,9 +342,11 @@ async function handleWorkflowRoute(
   request: NextRequest,
   body: ArrayBuffer | null,
   userId: string | null,
+  guestIdentityId: string | null,
 ) {
   const payload = await readJsonBody(body);
   const slug = typeof payload?.slug === "string" ? payload.slug.trim() : "";
+  const action = typeof payload?.action === "string" ? payload.action.trim() : "";
 
   if (slug) {
     const record = await prisma.bookRecord.findUnique({
@@ -333,12 +355,24 @@ async function handleWorkflowRoute(
     });
 
     if (record) {
-      const denied = await requireFullAccess({
-        slug: record.slug,
-        userId,
-      });
-      if (denied) {
-        return denied;
+      if (action === "cover_variants_generate") {
+        const previewDenied = await requirePreviewAccess({
+          request,
+          slug: record.slug,
+          userId,
+          guestIdentityId,
+        });
+        if (previewDenied) {
+          return previewDenied;
+        }
+      } else {
+        const denied = await requireFullAccess({
+          slug: record.slug,
+          userId,
+        });
+        if (denied) {
+          return denied;
+        }
       }
     }
   }
@@ -434,7 +468,7 @@ async function handleProxyRequest(
   }
 
   if (upstreamPath === "/api/workflows" && request.method === "POST") {
-    return handleWorkflowRoute(request, body, userId);
+    return handleWorkflowRoute(request, body, userId, guestIdentityId);
   }
 
   if (upstreamPath === "/api/settings") {

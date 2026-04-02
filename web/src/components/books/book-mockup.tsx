@@ -38,13 +38,14 @@ function CoverFace({
         <div className="absolute inset-y-0 left-0 w-[24%] bg-[linear-gradient(90deg,rgba(0,0,0,0.18),transparent_70%)]" />
         <div className="absolute left-3 top-3 flex items-center gap-2">
           {logoUrl ? (
-            <div className="relative h-8 w-8 overflow-hidden rounded-md border border-white/18 bg-white/10 p-1 backdrop-blur-sm">
-              <Image src={logoUrl} alt={`${brand || "Brand"} logosu`} fill className="object-contain p-1" unoptimized />
+            <div className="relative h-9 w-[132px] overflow-hidden rounded-xl border border-white/18 bg-white/12 px-2 backdrop-blur-sm">
+              <Image src={logoUrl} alt={`${brand || "Brand"} logosu`} fill className="object-contain p-2" unoptimized />
             </div>
-          ) : null}
-          <div className="rounded-full border border-white/18 bg-black/18 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/88 backdrop-blur-sm">
-            {brand || "Book Generator"}
-          </div>
+          ) : (
+            <div className="rounded-full border border-white/18 bg-black/18 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/88 backdrop-blur-sm">
+              {brand || "Book Generator"}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -53,12 +54,13 @@ function CoverFace({
   return (
     <div className="flex h-full w-full flex-col justify-between rounded-[18px] bg-[radial-gradient(circle_at_top,_rgba(188,104,67,0.18),_transparent_34%),linear-gradient(180deg,_#261c16_0%,_#523629_52%,_#b96a42_100%)] p-5 text-white">
       <div className="flex items-center justify-between gap-2">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/76">{brand || "Book Generator"}</div>
         {logoUrl ? (
-          <div className="relative h-8 w-8 overflow-hidden rounded-md border border-white/16 bg-white/8 p-1">
-            <Image src={logoUrl} alt={`${brand || "Brand"} logosu`} fill className="object-contain p-1" unoptimized />
+          <div className="relative h-9 w-[128px] overflow-hidden rounded-xl border border-white/16 bg-white/8 px-2">
+            <Image src={logoUrl} alt={`${brand || "Brand"} logosu`} fill className="object-contain p-2" unoptimized />
           </div>
-        ) : null}
+        ) : (
+          <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/76">{brand || "Book Generator"}</div>
+        )}
       </div>
       <div>
         <div className="max-w-[9ch] text-2xl font-semibold leading-[1.02]">{title}</div>

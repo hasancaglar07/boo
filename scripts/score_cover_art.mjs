@@ -98,6 +98,119 @@ function zoneScore(stats) {
   return calmScore * 0.52 + contrastScore * 0.28 + saturationScore * 0.2;
 }
 
+function buildLuminanceGrid(png, targetWidth = 220) {
+  const scale = Math.min(1, targetWidth / png.width);
+  const width = Math.max(48, Math.round(png.width * scale));
+  const height = Math.max(64, Math.round(png.height * scale));
+  const data = new Float32Array(width * height);
+  const sampleX = png.width / width;
+  const sampleY = png.height / height;
+
+  for (let y = 0; y < height; y += 1) {
+    const srcY = Math.min(png.height - 1, Math.floor((y + 0.5) * sampleY));
+    for (let x = 0; x < width; x += 1) {
+      const srcX = Math.min(png.width - 1, Math.floor((x + 0.5) * sampleX));
+      const index = (png.width * srcY + srcX) << 2;
+      const red = png.data[index];
+      const green = png.data[index + 1];
+      const blue = png.data[index + 2];
+      data[y * width + x] = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+    }
+  }
+
+  return { width, height, data };
+}
+
+function buildBinaryMask(grid, threshold, mode) {
+  const mask = new Uint8Array(grid.width * grid.height);
+  for (let index = 0; index < grid.data.length; index += 1) {
+    const value = grid.data[index];
+    mask[index] = mode === "dark" ? (value <= threshold ? 1 : 0) : value >= threshold ? 1 : 0;
+  }
+  return mask;
+}
+
+function scoreTextRows(mask, width, height) {
+  const limitY = Math.max(12, Math.floor(height * 0.78));
+  const bandHeight = Math.max(10, Math.round(height * 0.06));
+  const stride = Math.max(4, Math.round(bandHeight * 0.5));
+  const bands = [];
+
+  for (let y0 = 0; y0 + bandHeight <= limitY; y0 += stride) {
+    let active = 0;
+    let transitions = 0;
+    let segments = 0;
+
+    for (let y = y0; y < y0 + bandHeight; y += 1) {
+      let previous = 0;
+      for (let x = 0; x < width; x += 1) {
+        const current = mask[y * width + x];
+        active += current;
+        if (x > 0 && current !== previous) {
+          transitions += 1;
+        }
+        if (current && previous === 0) {
+          segments += 1;
+        }
+        previous = current;
+      }
+    }
+
+    const area = bandHeight * width;
+    const fill = active / Math.max(1, area);
+    const transitionDensity = transitions / Math.max(1, bandHeight * (width - 1));
+    const segmentDensity = segments / Math.max(1, bandHeight);
+    const fillFit = fill < 0.015 || fill > 0.36 ? 0 : clamp(1 - Math.abs(fill - 0.12) / 0.12, 0, 1);
+    const transitionScore = clamp((transitionDensity - 0.045) / 0.16, 0, 1);
+    const segmentScore = clamp((segmentDensity - 1.4) / 4.6, 0, 1);
+    const risk = (fillFit * 0.34 + transitionScore * 0.41 + segmentScore * 0.25) * 100;
+
+    bands.push({
+      y0,
+      y1: y0 + bandHeight,
+      fill,
+      transitionDensity,
+      segmentDensity,
+      risk,
+    });
+  }
+
+  const ranked = [...bands].sort((left, right) => right.risk - left.risk);
+  const top = ranked.slice(0, 3);
+  const meanTopRisk =
+    top.length > 0 ? top.reduce((sum, band) => sum + band.risk, 0) / top.length : 0;
+  const repeatedHighBands = bands.filter((band) => band.risk >= 52).length;
+  const repeatBonus = clamp((repeatedHighBands - 1) * 10, 0, 28);
+  const score = clamp((top[0]?.risk || 0) * 0.62 + meanTopRisk * 0.26 + repeatBonus, 0, 100);
+
+  return {
+    score,
+    bands: top.map((band) => ({
+      y0: band.y0,
+      y1: band.y1,
+      fill: Number(band.fill.toFixed(3)),
+      transitionDensity: Number(band.transitionDensity.toFixed(3)),
+      segmentDensity: Number(band.segmentDensity.toFixed(3)),
+      risk: Number(band.risk.toFixed(2)),
+    })),
+  };
+}
+
+function textArtifactScore(png, overall) {
+  const grid = buildLuminanceGrid(png);
+  const brightThreshold = clamp(overall.mean + Math.max(26, overall.stdDev * 0.32), 154, 236);
+  const darkThreshold = clamp(overall.mean - Math.max(28, overall.stdDev * 0.35), 18, 112);
+  const bright = scoreTextRows(buildBinaryMask(grid, brightThreshold, "bright"), grid.width, grid.height);
+  const dark = scoreTextRows(buildBinaryMask(grid, darkThreshold, "dark"), grid.width, grid.height);
+  const score = clamp(Math.max(bright.score, dark.score), 0, 100);
+  return {
+    score,
+    dominantMode: bright.score >= dark.score ? "bright" : "dark",
+    brightBands: bright.bands,
+    darkBands: dark.bands,
+  };
+}
+
 function main() {
   const args = parseArgs(process.argv);
   const input = args.input ? path.resolve(args.input) : "";
@@ -135,12 +248,17 @@ function main() {
   const calmestZone = [...scoredZones].sort((left, right) => right.score - left.score)[0];
   const center = scoredZones.find((zone) => zone.name === "center");
   const overall = statRegion(png, { x: 0, y: 0, width: 1, height: 1 });
+  const textArtifacts = textArtifactScore(png, overall);
 
   const crowdPenalty = center ? clamp(center.stdDev * 0.55 + center.edge * 0.55 - 18, 0, 38) : 0;
   const globalContrast = clamp(Math.abs(overall.mean - 124) * 0.45 + overall.stdDev * 0.35, 0, 100);
   const saturationBalance = clamp(100 - Math.abs(overall.saturation - 68) * 1.1, 0, 100);
   const finalScore = clamp(
-    calmestZone.score * 0.58 + globalContrast * 0.24 + saturationBalance * 0.18 - crowdPenalty,
+    calmestZone.score * 0.58 +
+      globalContrast * 0.24 +
+      saturationBalance * 0.18 -
+      crowdPenalty -
+      textArtifacts.score * 0.48,
     0,
     100,
   );
@@ -167,6 +285,12 @@ function main() {
           stdDev: Number(overall.stdDev.toFixed(2)),
           edge: Number(overall.edge.toFixed(2)),
           saturation: Number(overall.saturation.toFixed(2)),
+        },
+        textRisk: Number(textArtifacts.score.toFixed(2)),
+        textDominantMode: textArtifacts.dominantMode,
+        textBands: {
+          bright: textArtifacts.brightBands,
+          dark: textArtifacts.darkBands,
         },
       },
       null,
