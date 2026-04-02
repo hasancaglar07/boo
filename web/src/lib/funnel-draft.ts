@@ -70,7 +70,21 @@ export type FunnelDraft = {
   coverDirection: FunnelCoverDirection;
 };
 
+export type PendingGenerateAuthMethod = "google" | "magic" | "credentials";
+
+export type PendingGenerateIntent = {
+  source: "start_generate";
+  draftId: string;
+  step: "generate";
+  resumePath: string;
+  createdAt: string;
+  authMethod?: PendingGenerateAuthMethod | null;
+  authMode?: "login" | "register" | null;
+};
+
 const STORAGE_KEY = "book-product-funnel-draft:v1";
+const PENDING_GENERATE_INTENT_KEY = "book-product-pending-generate:v1";
+const PENDING_GENERATE_INTENT_MAX_AGE_MS = 1000 * 60 * 60 * 24;
 export const FUNNEL_STEPS: FunnelStep[] = ["topic", "title", "outline", "style", "generate"];
 export const BOOK_LENGTHS: FunnelBookLength[] = ["compact", "standard", "extended"];
 export const CHAPTER_ROLES: FunnelChapterRole[] = ["opening", "foundation", "core", "case", "advanced", "closing"];
@@ -236,6 +250,43 @@ export function saveFunnelDraft(payload: FunnelDraft) {
 export function clearFunnelDraft() {
   if (!canUseStorage()) return;
   localStorage.removeItem(STORAGE_KEY);
+}
+
+export function loadPendingGenerateIntent() {
+  if (!canUseStorage()) return null as PendingGenerateIntent | null;
+  const parsed = safeParse<PendingGenerateIntent | null>(
+    localStorage.getItem(PENDING_GENERATE_INTENT_KEY),
+    null,
+  );
+  if (!parsed) return null;
+  if (
+    parsed.source !== "start_generate" ||
+    parsed.step !== "generate" ||
+    !String(parsed.draftId || "").trim() ||
+    !String(parsed.resumePath || "").trim()
+  ) {
+    localStorage.removeItem(PENDING_GENERATE_INTENT_KEY);
+    return null;
+  }
+  const createdAt = new Date(parsed.createdAt || "");
+  if (
+    Number.isNaN(createdAt.getTime()) ||
+    Date.now() - createdAt.getTime() > PENDING_GENERATE_INTENT_MAX_AGE_MS
+  ) {
+    localStorage.removeItem(PENDING_GENERATE_INTENT_KEY);
+    return null;
+  }
+  return parsed;
+}
+
+export function savePendingGenerateIntent(payload: PendingGenerateIntent) {
+  if (!canUseStorage()) return;
+  localStorage.setItem(PENDING_GENERATE_INTENT_KEY, JSON.stringify(payload));
+}
+
+export function clearPendingGenerateIntent() {
+  if (!canUseStorage()) return;
+  localStorage.removeItem(PENDING_GENERATE_INTENT_KEY);
 }
 
 export function stepIndex(step: FunnelStep) {

@@ -3,21 +3,39 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 
+import { cn } from "@/lib/utils";
+
 interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
+  dismissible?: boolean;
+  closeOnOverlay?: boolean;
+  closeOnEscape?: boolean;
+  labelledBy?: string;
+  describedBy?: string;
+  panelClassName?: string;
 }
 
-export function Dialog({ open, onOpenChange, children }: DialogProps) {
+export function Dialog({
+  open,
+  onOpenChange,
+  children,
+  dismissible = true,
+  closeOnOverlay = dismissible,
+  closeOnEscape = dismissible,
+  labelledBy,
+  describedBy,
+  panelClassName,
+}: DialogProps) {
   React.useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOpenChange(false);
+      if (e.key === "Escape" && closeOnEscape) onOpenChange(false);
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onOpenChange]);
+  }, [closeOnEscape, open, onOpenChange]);
 
   if (!open) return null;
   if (typeof document === "undefined") return null;
@@ -27,20 +45,30 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
       className="fixed inset-0 z-50 flex items-center justify-center"
       role="dialog"
       aria-modal="true"
+      aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
     >
       <div
         className="fixed inset-0 bg-black/60"
-        onClick={() => onOpenChange(false)}
+        onClick={() => {
+          if (dismissible && closeOnOverlay) onOpenChange(false);
+        }}
       />
-      <div className="relative z-50 w-full max-w-md">{children}</div>
+      <div className={cn("relative z-50 w-full max-w-md", panelClassName)}>{children}</div>
     </div>,
     document.body,
   );
 }
 
-export function DialogContent({ children }: { children: React.ReactNode }) {
+export function DialogContent({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="rounded-lg border border-border bg-card p-6 shadow-xl">
+    <div className={cn("rounded-lg border border-border bg-card p-6 shadow-xl", className)}>
       {children}
     </div>
   );

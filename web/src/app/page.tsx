@@ -31,15 +31,25 @@ export const metadata: Metadata = buildPageMetadata({
   ],
 });
 
+const HOME_SHOWCASE_SLUGS = [
+  "authority-in-100-pages",
+  "silent-offers",
+  "prompt-systems-for-small-teams",
+  "parent-friendly-stem-at-home",
+  "focus-by-design",
+  "tu-metodo-hecho-libro",
+] as const;
+
 export default async function HomePage() {
   const { items: exampleItems } = await loadExamplesShowcaseData();
-  const homeShowcaseBooks = exampleItems
+  const showcaseMap = new Map(exampleItems.map((item) => [item.slug, item] as const));
+  const curatedHomeShowcaseBooks = HOME_SHOWCASE_SLUGS
+    .map((slug) => showcaseMap.get(slug))
     .filter(
-      (item) =>
-        (item.languageCode === "en" || item.language === "English") &&
-        Boolean(item.coverImages.primaryUrl || item.coverImages.fallbackUrl),
-    )
-    .slice(0, 6);
+      (item): item is (typeof exampleItems)[number] =>
+        Boolean(item && (item.coverImages.primaryUrl || item.coverImages.fallbackUrl)),
+    );
+  const homeShowcaseBooks = curatedHomeShowcaseBooks;
   const fallbackShowcaseBooks =
     homeShowcaseBooks.length >= 4
       ? homeShowcaseBooks
