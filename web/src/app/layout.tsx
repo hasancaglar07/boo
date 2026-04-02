@@ -3,6 +3,7 @@ import { Libre_Bodoni, Public_Sans } from "next/font/google";
 import Script from "next/script";
 
 import { AuthStateHydrator } from "@/components/auth/auth-state-hydrator";
+import { ChunkLoadRecovery } from "@/components/app/chunk-load-recovery";
 import { ThemeProvider } from "@/components/theme-provider";
 import { absoluteUrl, metadataBaseUrl, siteConfig } from "@/lib/seo";
 
@@ -154,6 +155,7 @@ export default function RootLayout(props: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
         />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <ChunkLoadRecovery />
           <AuthStateHydrator />
           <div id="main-content" className="flex min-h-full flex-col">
             {children}
