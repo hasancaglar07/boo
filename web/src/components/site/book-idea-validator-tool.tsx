@@ -12,6 +12,7 @@ import {
   Sparkles,
   Target,
   TrendingUp,
+  FileText,
 } from "lucide-react";
 
 import { Label } from "@/components/ui/label";
@@ -21,7 +22,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { trackEvent } from "@/lib/analytics";
-import { evaluateBookIdea, type BookIdeaIntent, type BookIdeaLanguage, type MaterialStatus } from "@/lib/book-idea-validator";
+import {
+  evaluateBookIdea,
+  mapValidatorIntentToBookType,
+  mapValidatorLanguageToFunnelLanguage,
+  type BookIdeaIntent,
+  type BookIdeaLanguage,
+  type MaterialStatus,
+} from "@/lib/book-idea-validator";
 
 type FormState = {
   topic: string;
@@ -76,6 +84,9 @@ export function BookIdeaValidatorTool() {
   const [showValidation, setShowValidation] = useState(false);
   const [analysisState, setAnalysisState] = useState<"idle" | "analyzing" | "done">("idle");
   const [reportUnlocked, setReportUnlocked] = useState(false);
+  const [reportRequestPending, setReportRequestPending] = useState(false);
+  const [reportRequestError, setReportRequestError] = useState("");
+  const [reportDeliveredTo, setReportDeliveredTo] = useState("");
   const gateViewTrackedRef = useRef(false);
   const startTrackedRef = useRef(false);
 
@@ -90,6 +101,12 @@ export function BookIdeaValidatorTool() {
 
   const isFormValid = form.topic.trim().length > 8 && form.audience.trim().length > 5 && form.goal.trim().length > 8;
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
+
+  const previewHref = `/start/topic?topic=${encodeURIComponent(form.topic.trim())}&audience=${encodeURIComponent(
+    form.audience.trim(),
+  )}&language=${encodeURIComponent(mapValidatorLanguageToFunnelLanguage(form.language))}&bookType=${encodeURIComponent(
+    mapValidatorIntentToBookType(form.intent),
+  )}`;
 
   useEffect(() => {
     trackEvent("tool_page_viewed", { tool: "book_idea_validator" });
@@ -121,6 +138,7 @@ export function BookIdeaValidatorTool() {
 
   function handleAnalyze() {
     setShowValidation(true);
+    setReportRequestError("");
     if (!isFormValid) return;
 
     setAnalysisState("analyzing");
@@ -138,7 +156,7 @@ export function BookIdeaValidatorTool() {
     }, 950);
   }
 
-  function handleUnlockReport() {
+  async function handleUnlockReport() {
     if (!gateViewTrackedRef.current) {
       gateViewTrackedRef.current = true;
       trackEvent("tool_email_capture_viewed", {
@@ -150,12 +168,46 @@ export function BookIdeaValidatorTool() {
     setShowValidation(true);
     if (!emailValid) return;
 
-    setReportUnlocked(true);
-    trackEvent("tool_email_submitted", {
-      tool: "book_idea_validator",
-      score: result.overallScore,
-      intent: form.intent,
-    });
+    setReportRequestPending(true);
+    setReportRequestError("");
+    try {
+      const response = await fetch("/api/tools/book-idea-validator/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email.trim(),
+          topic: form.topic.trim(),
+          audience: form.audience.trim(),
+          goal: form.goal.trim(),
+          intent: form.intent,
+          language: form.language,
+          materials: form.materials,
+          score: result.overallScore,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.error || "Rapor gönderilemedi.");
+      }
+
+      setReportUnlocked(true);
+      setReportDeliveredTo(form.email.trim());
+      trackEvent("tool_email_submitted", {
+        tool: "book_idea_validator",
+        score: result.overallScore,
+        intent: form.intent,
+      });
+      trackEvent("tool_full_report_delivered", {
+        tool: "book_idea_validator",
+        score: result.overallScore,
+        intent: form.intent,
+      });
+    } catch (error) {
+      setReportRequestError(error instanceof Error ? error.message : "Rapor gönderilemedi.");
+    } finally {
+      setReportRequestPending(false);
+    }
   }
 
   return (
@@ -482,19 +534,25 @@ export function BookIdeaValidatorTool() {
                             placeholder="you@example.com"
                             className="bg-background/90"
                           />
-                          <Button onClick={handleUnlockReport} className="gap-2">
-                            Tam Raporu Aç
-                            <ArrowRight className="size-4" />
-                          </Button>
-                        </div>
+                            <Button onClick={handleUnlockReport} className="gap-2" isLoading={reportRequestPending}>
+                              Tam Raporu Aç
+                              <ArrowRight className="size-4" />
+                            </Button>
+                          </div>
                         {showValidation && !emailValid ? (
                           <p className="mt-2 text-sm text-primary">Tam rapor için geçerli bir e-posta gir.</p>
+                        ) : null}
+                        {reportRequestError ? (
+                          <p className="mt-2 text-sm text-primary">{reportRequestError}</p>
                         ) : null}
                       </div>
                     ) : (
                       <div className="grid gap-4 lg:grid-cols-2">
                         <Card className="border border-border/80 bg-background/70">
                           <CardContent className="p-6">
+                            <div className="mb-4 rounded-[18px] border border-primary/20 bg-primary/8 px-4 py-3 text-sm text-foreground">
+                              Tam rapor <span className="font-semibold">{reportDeliveredTo}</span> adresine gönderildi.
+                            </div>
                             <p className="text-sm font-semibold text-foreground">Önerilen başlıklar</p>
                             <ul className="mt-4 space-y-3">
                               {result.titleIdeas.map((title) => (
@@ -533,6 +591,36 @@ export function BookIdeaValidatorTool() {
 
       <section className="py-16">
         <div className="shell">
+          <div className="mb-8 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                href: "/blog/how-to-validate-a-nonfiction-book-idea",
+                title: "How to validate a nonfiction book idea",
+                text: "Zayıf fikirle güçlü fikir arasındaki farkı hangi sinyallerle okuyacağını anlatır.",
+              },
+              {
+                href: "/blog/authority-book-mu-lead-magnet-book-mu",
+                title: "Authority book mu lead magnet book mu?",
+                text: "Aynı konunun hangi formatta daha iyi çalışacağını karar ağacıyla netleştirir.",
+              },
+              {
+                href: "/blog/zayif-bir-kitap-fikri-nasil-guclendirilir",
+                title: "Zayıf bir kitap fikri nasıl güçlendirilir?",
+                text: "Geniş, jenerik veya sonuçsuz görünen fikirleri nasıl daraltacağını gösterir.",
+              },
+            ].map((item) => (
+              <Link key={item.href} href={item.href}>
+                <Card className="h-full border border-border/80 bg-background/70 transition hover:border-primary/30 hover:shadow-sm">
+                  <CardContent className="p-6">
+                    <FileText className="size-5 text-primary" />
+                    <p className="mt-4 text-lg font-semibold tracking-tight text-foreground">{item.title}</p>
+                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.text}</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+
           <div className="rounded-[36px] border border-border/80 bg-[linear-gradient(135deg,#1f1510_0%,#2a1d16_50%,#191512_100%)] px-6 py-10 text-white shadow-[0_32px_80px_-20px_rgba(0,0,0,0.45)] md:px-10 md:py-12">
             <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
@@ -548,7 +636,7 @@ export function BookIdeaValidatorTool() {
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="min-w-[220px] gap-2" onClick={() => trackEvent("tool_cta_clicked", { tool: "book_idea_validator", destination: "start_topic" })}>
-                  <Link href="/start/topic">
+                  <Link href={previewHref}>
                     Ücretsiz Preview Başlat
                     <ArrowRight className="size-4" />
                   </Link>

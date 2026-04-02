@@ -6,6 +6,7 @@ export type AnalyticsEventName =
   | "tool_result_generated"
   | "tool_email_capture_viewed"
   | "tool_email_submitted"
+  | "tool_full_report_delivered"
   | "tool_cta_clicked"
   | "landing_hero_cta_click"
   | "landing_cta_click"

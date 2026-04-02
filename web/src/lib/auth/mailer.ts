@@ -1,6 +1,12 @@
 import { Resend } from "resend";
 
 import { absoluteUrl } from "@/lib/seo";
+import {
+  evaluateBookIdea,
+  mapValidatorIntentToBookType,
+  mapValidatorLanguageToFunnelLanguage,
+  type BookIdeaValidatorInput,
+} from "@/lib/book-idea-validator";
 
 const resendApiKey = process.env.RESEND_API_KEY || "";
 const resendClient = resendApiKey ? new Resend(resendApiKey) : null;
@@ -107,6 +113,43 @@ export async function sendPreviewRecoveryEmail(input: {
       <p>${bonusLine}</p>
       <p><a href="${url}">Preview'a geri dön</a></p>
       <p>Bu e-postalar ayda en fazla bir kez gönderilir. İstersen hesap ayarlarından kapatabilirsin.</p>
+    `,
+  });
+}
+
+export async function sendBookIdeaReportEmail(input: {
+  to: string;
+  payload: BookIdeaValidatorInput;
+}) {
+  const result = evaluateBookIdea(input.payload);
+  const previewUrl = new URL(absoluteUrl("/start/topic"));
+  previewUrl.searchParams.set("topic", input.payload.topic);
+  previewUrl.searchParams.set("audience", input.payload.audience);
+  previewUrl.searchParams.set("language", mapValidatorLanguageToFunnelLanguage(input.payload.language));
+  previewUrl.searchParams.set("bookType", mapValidatorIntentToBookType(input.payload.intent));
+
+  const titleIdeas = result.titleIdeas.map((item) => `<li>${item}</li>`).join("");
+  const outlineItems = result.miniOutline.map((item) => `<li>${item}</li>`).join("");
+  const strongItems = result.strongestPoints.map((item) => `<li>${item}</li>`).join("");
+  const riskItems = result.risks.map((item) => `<li>${item}</li>`).join("");
+
+  await deliverEmail({
+    to: input.to,
+    subject: `Book Idea Validator raporun hazır: ${result.overallScore}/100`,
+    html: `
+      <p>Book Idea Validator raporun hazır.</p>
+      <p><strong>Skor:</strong> ${result.overallScore}/100<br /><strong>Verdict:</strong> ${result.verdict}<br /><strong>Önerilen format:</strong> ${result.recommendedFormat}</p>
+      <p><strong>Önerilen açı:</strong><br />${result.recommendedAngle}</p>
+      <p><strong>Güçlü yönler</strong></p>
+      <ul>${strongItems}</ul>
+      <p><strong>Riskler</strong></p>
+      <ul>${riskItems}</ul>
+      <p><strong>Başlık önerileri</strong></p>
+      <ul>${titleIdeas}</ul>
+      <p><strong>Mini outline</strong></p>
+      <ol>${outlineItems}</ol>
+      <p><strong>Sonraki adım:</strong> ${result.nextStep}</p>
+      <p><a href="${previewUrl.toString()}">Bu fikri şimdi ücretsiz preview akışına taşı</a></p>
     `,
   });
 }

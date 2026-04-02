@@ -270,7 +270,6 @@ export function FunnelShell({
               </div>
             </div>
 
-            {/* Preview badge */}
             <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="size-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
@@ -279,8 +278,17 @@ export function FunnelShell({
                 </div>
               </div>
               <div className="text-xs leading-5 text-muted-foreground">
-                Kapak, outline ve ilk %20 hazır.{" "}
-                <span className="text-foreground/70 font-medium">PDF & tam kitap</span> premium ile açılır.
+                Önce kapağı, outline'ı ve okunabilir preview'ı görürsün.{" "}
+                <span className="text-foreground/70 font-medium">Tam kitap, PDF ve EPUB</span> daha sonra açılır.
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-card p-4">
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                Launch path
+              </div>
+              <div className="mt-2 text-xs leading-5 text-muted-foreground">
+                Bu akış pazarlama vaadini doğrulamak için tasarlandı: konu gir, preview gör, sonra unlock kararı ver.
               </div>
             </div>
           </aside>

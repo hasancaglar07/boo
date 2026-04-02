@@ -243,11 +243,11 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
     router.push(next);
   }
 
-  const title = mode === "signup" ? "Kitabını kaybetme" : "Kaldığın yerden devam et";
+  const title = mode === "signup" ? "Preview'ını kaybetme" : "Kaldığın preview'a dön";
   const description =
     mode === "signup"
-      ? "Kitabını hesabına bağla. Önizleme hazır olduğunda seni burada beklesin ve ödeme/export için aynı hesaptan devam edebilesin."
-      : "Daha önce başladığın kitabı hesabına bağla ve önizlemeye dön.";
+      ? "Preview ve kitap taslağını hesabına bağla. Hazır olduğunda aynı yerden aç, sonra unlock veya export kararını aynı hesapta ver."
+      : "Daha önce başlattığın kitabı hesabına bağla ve preview ekranına geri dön.";
 
   return (
     <FunnelShell
@@ -262,10 +262,37 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
     >
       <div className="space-y-8">
         <div className="rounded-[28px] border border-primary/20 bg-primary/8 p-5 md:p-6">
-          <div className="text-lg font-semibold text-foreground">Kayıt değil, bağlantı</div>
+          <div className="text-lg font-semibold text-foreground">Kayıt değil, kitap bağlantısı</div>
           <p className="mt-2 text-sm leading-7 text-muted-foreground">
-            Bu adım bir engel değil. Hazırladığın kitabı hesabına bağlıyoruz; tekrar geldiğinde preview seni beklesin. Ödeme yok, zorunluluk yok.
+            Bu adım bir engel değil. Hazırladığın preview'ı ve kitap taslağını hesabına bağlıyoruz; tekrar geldiğinde seni aynı yerden karşılasın. Burada ödeme istemiyoruz.
           </p>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-[22px] border border-border/70 bg-card/70 px-4 py-4">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Şimdi açılan
+            </div>
+            <div className="mt-2 text-sm leading-6 text-foreground">
+              Kapak, outline ve ücretsiz preview.
+            </div>
+          </div>
+          <div className="rounded-[22px] border border-border/70 bg-card/70 px-4 py-4">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Sonra karar verirsin
+            </div>
+            <div className="mt-2 text-sm leading-6 text-foreground">
+              Beğenirsen tam kitabı, PDF'i ve EPUB'u unlock edersin.
+            </div>
+          </div>
+          <div className="rounded-[22px] border border-primary/20 bg-primary/5 px-4 py-4">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Neden hesap
+            </div>
+            <div className="mt-2 text-sm leading-6 text-foreground">
+              Kitabın kaybolmaz, başka cihazdan da kaldığın yerden dönersin.
+            </div>
+          </div>
         </div>
 
         {mode === "signup" ? (
@@ -394,7 +421,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
           {mode === "signup" ? (
             <div className="rounded-[20px] border border-dashed border-border/70 bg-background/50 px-4 py-3 text-center">
               <p className="text-xs leading-6 text-muted-foreground">
-                İstersen önce preview&apos;a dönebilirsin. Ama kitabını daha sonra bulmak, ödeme yapmak ve export almak için hesabına bağlaman gerekecek.
+                İstersen önce preview'a dönebilirsin. Ama kitabını daha sonra bulmak, unlock etmek ve export almak için hesabına bağlaman gerekecek.
               </p>
               <button
                 type="button"
@@ -402,7 +429,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
                 disabled={busyMethod !== null}
                 onClick={handleSkip}
               >
-                {busyMethod === "skip" ? "Önizlemeye gidiliyor..." : "Yine de preview&apos;a dön"}
+                {busyMethod === "skip" ? "Önizlemeye gidiliyor..." : "Yine de preview'a dön"}
               </button>
             </div>
           ) : null}

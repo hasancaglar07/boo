@@ -172,14 +172,14 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
         >
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm">
             <BookOpen className="h-3.5 w-3.5 text-primary" />
-            Gerçek Çıktılar
+            Gerçek Kitaplar
           </div>
           <h2 className="mt-8 text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-            Bunlar bu sistemle üretilmiş{" "}
-            <span className="text-primary">gerçek kitap çıktıları.</span>
+            Bunlar gerçek kullanıcıların{" "}
+            <span className="text-primary">bu sistemle çıkardığı kitaplar.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-8 text-muted-foreground">
-            Kapak, metadata, bölüm akışı ve export dosyaları hazır. Aşağıdaki örnekler özellikle English ağırlıklı gerçek kitap setinden geliyor.
+            Her biri brief → outline → EPUB akışından geçti. Sen de aynı akışla bu hafta başlayabilirsin.
           </p>
         </motion.div>
 
@@ -259,7 +259,7 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
                     </span>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <FileText className="h-4 w-4 text-primary/70" />
-                      <span>{exportFormats.join(" + ") || currentBook.type}</span>
+                      <span>{currentBook.type}</span>
                     </div>
                   </div>
 
@@ -357,14 +357,14 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
                     <Button asChild size="lg" className="min-w-[240px] flex-1 shadow-xl">
                       <Link href={`/examples/${encodeURIComponent(currentBook.slug)}`}>
                         <Play className="mr-2 h-4 w-4" />
-                        Kitabı Oku
+                        Gerçek Kitabı İncele
                       </Link>
                     </Button>
                     {exportAsset ? (
                       <Button asChild size="lg" variant="outline" className="min-w-[220px] flex-1">
                         <a href={exportAsset.url} target="_blank" rel="noreferrer">
                           <Download className="mr-2 h-4 w-4" />
-                          {exportAsset.label || "Örnek İndir"}
+                          {exportAsset.label || "Örnek Export'u Aç"}
                         </a>
                       </Button>
                     ) : (
@@ -456,14 +456,14 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
           className="mt-14 text-center"
         >
           <p className="text-base leading-8 text-muted-foreground">
-            Bu bölüm artık mock değil.{" "}
-            <span className="font-semibold text-foreground">Gerçek kapaklı gerçek kitaplar</span>{" "}
-            doğrudan output klasörlerinden geliyor.
+            Gerçek kapakları, gerçek metadata'sı ve gerçek export dosyalarıyla{" "}
+            <span className="font-semibold text-foreground">yayına hazır kitapları</span>{" "}
+            görüyorsun. Aynı akışla kendi kitabını bu hafta çıkarabilirsin.
           </p>
           <Button asChild size="lg" className="mt-6 shadow-xl">
             <a href="/start/topic" className="inline-flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
-              14 Gün Ücretsiz Başla
+              Ücretsiz Önizlemeyi Başlat
             </a>
           </Button>
         </motion.div>

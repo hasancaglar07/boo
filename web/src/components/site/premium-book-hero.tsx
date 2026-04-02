@@ -340,13 +340,13 @@ export const PremiumBookHero = React.forwardRef<
 >((
   {
     className,
-    title = "Kitabını bugün çıkar.",
-    subtitle = "Konunu gir, taslağını gör, beğenirsen $4 ile tam kitabı al.",
-    ctaText = "Taslağımı Ücretsiz Gör",
+    title = "Fikrini yayına hazır kitaba çevir.",
+    subtitle = "Konunu gir, outline ve kapağı gör, ilk okunabilir preview'ı aç. Beğenirsen tam kitabı ve export'u unlock et.",
+    ctaText = "Ücretsiz Preview Oluştur",
     ctaHref = "/start/topic",
-    badge = "✨ Ücretsiz Başla",
-    trustNote = "✓ Kredi kartı gerekmez · ✓ Kayıt zorunlu değil · ✓ 30 saniye",
-    socialProof = { count: "4.291 kitap üretildi", rating: "Amazon'da satışta" },
+    badge = "Ücretsiz Preview",
+    trustNote = "Kredi kartı gerekmez · Kayıtsız başlayabilirsin · İlk değer birkaç adımda görünür",
+    socialProof = { count: "30 showcase kitap hazır", rating: "2 kitap Amazon KDP'de canlı" },
     secondaryCtaText = "Örnekleri Gör",
     secondaryCtaHref = "/examples",
     ...props
@@ -448,7 +448,7 @@ export const PremiumBookHero = React.forwardRef<
           {title}
         </motion.h1>
 
-        {/* Subtitle — Daha kısa ve net */}
+        {/* Subtitle — daha net kategori + outcome */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -494,7 +494,7 @@ export const PremiumBookHero = React.forwardRef<
           )}
         </motion.div>
 
-        {/* Trust Microcopy — Daha belirgin */}
+        {/* Trust Microcopy */}
         {trustNote && (
           <motion.p
             initial={{ opacity: 0 }}

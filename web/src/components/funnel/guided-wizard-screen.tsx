@@ -48,6 +48,7 @@ import {
   localTitleSuggestions,
   nextStep,
   normalizeFunnelDraft,
+  normalizeFunnelLanguage,
   previousStep,
   savePendingGenerateIntent,
   saveFunnelDraft,
@@ -757,16 +758,23 @@ export function GuidedWizardScreen({
     if (!ready || step !== "topic" || topicPrefillRef.current) return;
     topicPrefillRef.current = true;
     const topic = (searchParams.get("topic") || "").trim();
-    if (!topic) return;
-    setDraft((current) =>
-      current.topic.trim()
-        ? current
-        : {
-            ...current,
-            topic,
-            updatedAt: new Date().toISOString(),
-          },
-    );
+    const audience = (searchParams.get("audience") || "").trim();
+    const language = normalizeFunnelLanguage(searchParams.get("language") || undefined);
+    const bookType = searchParams.get("bookType");
+    if (!topic && !audience && !bookType && !searchParams.get("language")) return;
+    setDraft((current) => ({
+      ...current,
+      topic: current.topic.trim() || topic,
+      audience: current.audience.trim() || audience,
+      language: current.topic.trim() || current.audience.trim() ? current.language : language,
+      bookType:
+        current.topic.trim() || current.audience.trim()
+          ? current.bookType
+          : bookType === "rehber" || bookType === "is" || bookType === "egitim" || bookType === "cocuk" || bookType === "diger"
+            ? bookType
+            : current.bookType,
+      updatedAt: new Date().toISOString(),
+    }));
   }, [ready, searchParams, step]);
 
   useEffect(() => {
@@ -1190,9 +1198,36 @@ export function GuidedWizardScreen({
   if (step === "topic") {
     return wrapInShell({
       title: "Kitabın konusu ne?",
-      description: "Konuyu yaz, hedef okurunu belirt, kitap tipini seç — hepsi bu.",
+      description: "Bir fikir yazman yeterli. Bu adımdan sonra başlık, outline ve preview akışı onun etrafında kurulur.",
       children: (
         <div className="space-y-8">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-[20px] border border-border/80 bg-background/72 px-4 py-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Bu adımda senden
+              </div>
+              <div className="mt-2 text-sm leading-6 text-foreground">
+                Sadece konu, okur ve kitap tipi isteriz. Boş sayfayla kalmazsın.
+              </div>
+            </div>
+            <div className="rounded-[20px] border border-border/80 bg-background/72 px-4 py-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Sonraki çıktı
+              </div>
+              <div className="mt-2 text-sm leading-6 text-foreground">
+                Başlık önerileri ve bölüm planı otomatik gelir, istersen elle düzenlersin.
+              </div>
+            </div>
+            <div className="rounded-[20px] border border-primary/20 bg-primary/5 px-4 py-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Hedef
+              </div>
+              <div className="mt-2 text-sm leading-6 text-foreground">
+                Preview'ı hızlı gösterip tam kitabı unlock etmeye değer olup olmadığını netleştirmek.
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label htmlFor="topic" className="text-sm font-semibold text-foreground">
               Konu
@@ -1201,13 +1236,13 @@ export function GuidedWizardScreen({
               id="topic"
               value={draft.topic}
               onChange={(event) => updateDraft({ topic: event.target.value })}
-              placeholder="örnek: Minecraft oyun rehberi — hayatta kalma, inşa ve macera stratejileri"
+              placeholder="örnek: danışmanların uzmanlığını lead magnet ve authority book'a dönüştürme rehberi"
               rows={3}
               autoFocus
               className="resize-none text-base leading-7 placeholder:text-muted-foreground/60"
             />
             <p className="text-xs text-muted-foreground/70">
-              Ne kadar ayrıntılı yazarsan AI o kadar iyi sonuç üretir.
+              Sorun, hedef okur ve vaat ne kadar netse çıkan outline o kadar iyi olur.
             </p>
           </div>
 
@@ -1251,8 +1286,8 @@ export function GuidedWizardScreen({
               size="lg"
               onClick={() =>
                 updateDraft({
-                  topic: draft.topic || "Minecraft oyun rehberi",
-                  audience: draft.audience || "yeni başlayan oyuncular",
+                  topic: draft.topic || "uzmanlığını kitaba dönüştürmek isteyen danışmanlar için authority book rehberi",
+                  audience: draft.audience || "koçlar, danışmanlar ve course creator'lar",
                 })
               }
             >
@@ -1797,7 +1832,7 @@ export function GuidedWizardScreen({
     title: "Önizlemeyi başlat",
     description: appShellEnabled
       ? "Kitap vitrini tek akışta hazırlanır. Kapak ve ilk okunabilir bölüm arka planda canlı üretime girer."
-      : "Önizleme üretimi başlamadan önce hesabını oluşturursun. Kitap doğrudan senin kütüphanene kaydolur.",
+      : "Preview kaybolmasın diye bu aşamada hesabına bağlarız. Kitap doğrudan kütüphanene kaydolur ve üretim arka planda devam eder.",
     children: (
       aiLoading === "generate" ? (
         <GenerateLoadingScreen redirectPath={pendingRedirect || undefined} />
@@ -1812,6 +1847,21 @@ export function GuidedWizardScreen({
           />
 
           <div className="rounded-[24px] border border-border/80 bg-background/72 p-6">
+            <div className="mb-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[18px] border border-border/80 bg-card px-4 py-4">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">1. önce</div>
+                <div className="mt-2 text-sm leading-6 text-foreground">Kapak ve preview hazırlanır.</div>
+              </div>
+              <div className="rounded-[18px] border border-border/80 bg-card px-4 py-4">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">2. sonra</div>
+                <div className="mt-2 text-sm leading-6 text-foreground">Değeri görür, düzenler ve karar verirsin.</div>
+              </div>
+              <div className="rounded-[18px] border border-primary/20 bg-primary/5 px-4 py-4">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">3. unlock</div>
+                <div className="mt-2 text-sm leading-6 text-foreground">Tam kitap, PDF ve EPUB daha sonra açılır.</div>
+              </div>
+            </div>
+
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-[18px] border border-border/80 bg-card px-4 py-4">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Başlık</div>
@@ -1832,8 +1882,8 @@ export function GuidedWizardScreen({
             </div>
             <div className="mt-5 rounded-[18px] border border-border/80 bg-card px-4 py-4 text-sm leading-7 text-muted-foreground">
               {appShellEnabled
-                ? "Generate&apos;a bastığında kitap aynı hesabın altında kaydedilir. İlk okunabilir bölüm gelir gelmez preview açılır, kapak da arka planda görünür hale gelir."
-                : "Önce hesabını oluşturur veya giriş yaparsın. Ardından kitap doğrudan hesabına kaydedilir, preview hazırlanırken kütüphanende seni bekler."}
+                ? "Generate'a bastığında kitap aynı hesabın altında kaydedilir. İlk okunabilir bölüm gelir gelmez preview açılır; tam kitap ve export daha sonra unlock edilir."
+                : "Önce hesabını oluşturur veya giriş yaparsın. Bunun amacı preview'ı ve kitabını kaybetmemen. Sonra üretim başlar ve preview hazır olunca doğrudan kitabına dönersin."}
             </div>
           </div>
 
@@ -1863,8 +1913,8 @@ export function GuidedWizardScreen({
           </div>
           <p className="text-xs text-muted-foreground/70">
             {appShellEnabled
-              ? "Aynı hesapta devam et · Önizleme hemen hazırlanır · Kapak + ilk bölüm canlı üretilir"
-              : "Üyelik zorunlu · Kitap hesabına kaydolur · Hazır olunca kütüphanende görünür"}
+              ? "Aynı hesapta devam et · Önce preview gör · Tam kitabı sonra unlock et"
+              : "Hesabına bağlanır · Preview kaybolmaz · Hazır olunca doğrudan geri dönersin"}
           </p>
         </div>
       )

@@ -11,6 +11,34 @@ export type BookIdeaValidatorInput = {
   materials: MaterialStatus;
 };
 
+export function mapValidatorLanguageToFunnelLanguage(language: BookIdeaLanguage) {
+  switch (language) {
+    case "english":
+      return "English";
+    case "turkish":
+      return "Turkish";
+    case "multilingual":
+      return "English";
+    default:
+      return "Turkish";
+  }
+}
+
+export function mapValidatorIntentToBookType(intent: BookIdeaIntent) {
+  switch (intent) {
+    case "authority_book":
+      return "is";
+    case "lead_magnet":
+      return "rehber";
+    case "paid_guide":
+      return "egitim";
+    case "kdp_publish":
+      return "is";
+    default:
+      return "rehber";
+  }
+}
+
 type DimensionKey =
   | "audienceClarity"
   | "promiseStrength"

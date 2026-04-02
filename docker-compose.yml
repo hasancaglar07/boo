@@ -14,8 +14,8 @@ services:
       BOOK_DASHBOARD_HOST: 0.0.0.0
       BOOK_DASHBOARD_PORT: 8765
       OLLAMA_DISABLED: ${OLLAMA_DISABLED:-1}
-    ports:
-      - "127.0.0.1:${BOOK_DASHBOARD_BIND_PORT:-8765}:8765"
+    expose:
+      - "8765"
     volumes:
       - type: bind
         source: ${BOOK_OUTPUTS_DIR:-./book_outputs}
