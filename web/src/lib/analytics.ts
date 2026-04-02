@@ -98,6 +98,33 @@ type AnalyticsPayload = {
 };
 
 const EVENT_ENDPOINT = "/api/events";
+const EVENT_ONCE_STORAGE_PREFIX = "book-generator:analytics-once:";
+const eventOnceCache = new Map<string, number>();
+
+function shouldTrackEventOnce(key: string, ttlMs: number) {
+  if (typeof window === "undefined") return false;
+
+  const now = Date.now();
+  const storageKey = `${EVENT_ONCE_STORAGE_PREFIX}${key}`;
+  const cachedAt = eventOnceCache.get(storageKey);
+  if (typeof cachedAt === "number" && now - cachedAt < ttlMs) {
+    return false;
+  }
+
+  try {
+    const storedAt = Number(window.sessionStorage.getItem(storageKey));
+    if (Number.isFinite(storedAt) && now - storedAt < ttlMs) {
+      eventOnceCache.set(storageKey, storedAt);
+      return false;
+    }
+    window.sessionStorage.setItem(storageKey, String(now));
+  } catch {
+    // no-op
+  }
+
+  eventOnceCache.set(storageKey, now);
+  return true;
+}
 
 export function trackEvent(
   event: AnalyticsEventName,
@@ -138,4 +165,22 @@ export function trackEvent(
   }).catch(() => {
     // no-op
   });
+}
+
+export function trackEventOnce(
+  event: AnalyticsEventName,
+  properties: AnalyticsPayload["properties"] = {},
+  options: {
+    key?: string;
+    ttlMs?: number;
+  } = {},
+) {
+  const key = options.key || event;
+  const ttlMs = options.ttlMs ?? 15_000;
+
+  if (!shouldTrackEventOnce(key, ttlMs)) {
+    return;
+  }
+
+  trackEvent(event, properties);
 }

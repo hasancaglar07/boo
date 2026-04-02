@@ -11,7 +11,7 @@ import { GenerateLoadingScreen } from "@/components/funnel/generate-loading-scre
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackEventOnce } from "@/lib/analytics";
 import {
   loadSettings,
   providerLooksReady,
@@ -779,7 +779,8 @@ export function GuidedWizardScreen({
 
   useEffect(() => {
     if (step === "topic") {
-      trackEvent("wizard_started", { source: appShellEnabled ? "app_new_topic" : "start_topic" });
+      const source = appShellEnabled ? "app_new_topic" : "start_topic";
+      trackEventOnce("wizard_started", { source }, { key: `wizard_started:${source}`, ttlMs: 15_000 });
     }
   }, [appShellEnabled, step]);
 

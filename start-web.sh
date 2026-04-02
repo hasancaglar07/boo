@@ -31,6 +31,14 @@ run_pnpm() {
   (cd "$WEB_DIR" && env CI=true PATH="$(node_path)" "$COREPACK_BIN" pnpm "$@")
 }
 
+standalone_dir() {
+  echo "$WEB_DIR/.next/standalone"
+}
+
+standalone_entrypoint() {
+  echo "$(standalone_dir)/server.js"
+}
+
 is_healthy() {
   curl -fsS --max-time 2 "$HEALTH_URL" >/dev/null 2>&1
 }
@@ -156,6 +164,39 @@ ensure_build() {
   esac
 }
 
+has_standalone_build() {
+  [ -f "$(standalone_entrypoint)" ]
+}
+
+start_web_process_background() {
+  if has_standalone_build; then
+    if command -v setsid >/dev/null 2>&1; then
+      setsid bash -lc "cd '$(standalone_dir)' && env PATH='$(node_path)' HOSTNAME='$HOST' PORT='$PORT' '$NODE_BIN' server.js" < /dev/null >"$LOG_FILE" 2>&1 &
+    else
+      nohup bash -lc "cd '$(standalone_dir)' && env PATH='$(node_path)' HOSTNAME='$HOST' PORT='$PORT' '$NODE_BIN' server.js" < /dev/null >"$LOG_FILE" 2>&1 &
+      disown || true
+    fi
+    return
+  fi
+
+  if command -v setsid >/dev/null 2>&1; then
+    setsid bash -lc "cd '$WEB_DIR' && env PATH='$(node_path)' '$NODE_BIN' '$NEXT_BIN' start --hostname '$HOST' --port '$PORT'" < /dev/null >"$LOG_FILE" 2>&1 &
+  else
+    nohup bash -lc "cd '$WEB_DIR' && env PATH='$(node_path)' '$NODE_BIN' '$NEXT_BIN' start --hostname '$HOST' --port '$PORT'" < /dev/null >"$LOG_FILE" 2>&1 &
+    disown || true
+  fi
+}
+
+serve_web_process_foreground() {
+  if has_standalone_build; then
+    cd "$(standalone_dir)"
+    exec env PATH="$(node_path)" HOSTNAME="$HOST" PORT="$PORT" "$NODE_BIN" server.js
+  fi
+
+  cd "$WEB_DIR"
+  exec env PATH="$(node_path)" "$NODE_BIN" "$NEXT_BIN" start --hostname "$HOST" --port "$PORT"
+}
+
 stop_server_core() {
   if [ -f "$PID_FILE" ]; then
     local pid
@@ -220,12 +261,7 @@ start_server() {
     exit 1
   fi
 
-  if command -v setsid >/dev/null 2>&1; then
-    setsid bash -lc "cd '$WEB_DIR' && env PATH='$(node_path)' '$NODE_BIN' '$NEXT_BIN' start --hostname '$HOST' --port '$PORT'" < /dev/null >"$LOG_FILE" 2>&1 &
-  else
-    nohup bash -lc "cd '$WEB_DIR' && env PATH='$(node_path)' '$NODE_BIN' '$NEXT_BIN' start --hostname '$HOST' --port '$PORT'" < /dev/null >"$LOG_FILE" 2>&1 &
-    disown || true
-  fi
+  start_web_process_background
   local pid
   pid=$!
   echo "$pid" > "$PID_FILE"
@@ -282,8 +318,7 @@ serve_foreground() {
   echo "Web arayuz foreground modda calisiyor: $HEALTH_URL"
   echo "Pencereyi kapatinca web sureci durur."
 
-  cd "$WEB_DIR"
-  exec env PATH="$(node_path)" "$NODE_BIN" "$NEXT_BIN" start --hostname "$HOST" --port "$PORT"
+  serve_web_process_foreground
 }
 
 logs_tail() {
