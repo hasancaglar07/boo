@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Loader2, Mail, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -30,9 +30,11 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
 
   const [name, setName] = useState(existingAccount.name !== "Book Creator" ? existingAccount.name : "");
   const [email, setEmail] = useState(existingAccount.email !== "demo@example.com" ? existingAccount.email : "");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [busyMethod, setBusyMethod] = useState<"google" | "magic" | "skip" | null>(null);
+  const [busyMethod, setBusyMethod] = useState<"google" | "magic" | "skip" | "password" | null>(null);
   const [providers, setProviders] = useState<PreviewAuthProviders>({
     google: false,
     magicLink: true,
@@ -112,6 +114,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail) {
       setError("Magic link için e-posta adresi gerekli.");
+      trackEvent("auth_form_failed", { mode, method: "magic", reason: "missing_email", source: "continue_auth", slug });
       return;
     }
 
@@ -128,6 +131,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
 
     if (result?.error) {
       setError("Magic link gönderilemedi. Lütfen tekrar dene.");
+      trackEvent("auth_form_failed", { mode, method: "magic", reason: "send_failed", source: "continue_auth", slug });
       setBusyMethod(null);
       return;
     }
@@ -136,8 +140,100 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
       slug,
       source: "continue_auth",
     });
+    trackEvent("magic_link_sent", { mode, source: "continue_auth", slug });
     setMessage("Giriş bağlantısı gönderildi. Gelen kutunu kontrol et.");
     setBusyMethod(null);
+  }
+
+  async function handlePasswordContinue() {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    if (!normalizedEmail) {
+      setError("Şifre ile devam etmek için e-posta gerekli.");
+      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "missing_email", source: "continue_auth", slug });
+      return;
+    }
+
+    if (!normalizedPassword) {
+      setError("Şifre gerekli.");
+      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "missing_password", source: "continue_auth", slug });
+      return;
+    }
+
+    setError("");
+    setMessage("");
+    setBusyMethod("password");
+    rememberDraftIdentity();
+    trackEvent("auth_form_submitted", { mode, method: "credentials", source: "continue_auth", slug });
+    trackEvent("continue_auth_password_clicked", { slug, mode });
+
+    try {
+      if (mode === "signup") {
+        const normalizedName =
+          name.trim() ||
+          existingAccount.name ||
+          normalizedEmail.split("@")[0].replace(/[._-]+/g, " ") ||
+          "Book Creator";
+
+        const registerResponse = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: normalizedName,
+            email: normalizedEmail,
+            password: normalizedPassword,
+            goal: "",
+          }),
+        });
+
+        const registerPayload = (await registerResponse.json().catch(() => null)) as {
+          ok?: boolean;
+          error?: string;
+        } | null;
+
+        if (!registerResponse.ok) {
+          setError(registerPayload?.error || "Kayıt oluşturulamadı.");
+          trackEvent("auth_form_failed", { mode, method: "credentials", reason: "register_failed", source: "continue_auth", slug });
+          setBusyMethod(null);
+          return;
+        }
+
+        trackEvent("signup_completed", {
+          method: "credentials",
+          source: "continue_auth",
+          slug,
+        });
+      }
+
+      const result = await signIn("credentials", {
+        email: normalizedEmail,
+        password: normalizedPassword,
+        redirect: false,
+        callbackUrl: next,
+      });
+
+      if (result?.error) {
+        setError(result.error);
+        trackEvent("auth_form_failed", { mode, method: "credentials", reason: "login_failed", source: "continue_auth", slug });
+        setBusyMethod(null);
+        return;
+      }
+
+      await syncPreviewAuthState();
+      await fetch("/api/auth/claim-guest-books", {
+        method: "POST",
+        credentials: "include",
+      }).catch(() => null);
+
+      router.push(next);
+    } catch {
+      setError("Şifre ile devam edilemedi. Lütfen tekrar dene.");
+      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "unknown", source: "continue_auth", slug });
+      setBusyMethod(null);
+    }
   }
 
   function handleSkip() {
@@ -248,6 +344,45 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
             E-posta ile Link Gönder
           </Button>
 
+          <div className="rounded-[24px] border border-border/70 bg-card/70 p-4">
+            <p className="text-sm font-semibold text-foreground">Şifre ile devam et</p>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              Ayrı bir sayfaya gitmeden burada devam edebilirsin.
+            </p>
+            <div className="mt-4 space-y-3">
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder={mode === "signup" ? "En az 8 karakter" : "Şifren"}
+                  className="h-12 pr-14"
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                />
+                <button
+                  type="button"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              <Button
+                variant="secondary"
+                size="lg"
+                className="w-full"
+                disabled={busyMethod !== null}
+                onClick={() => void handlePasswordContinue()}
+              >
+                {busyMethod === "password" ? (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : null}
+                {mode === "signup" ? "Hesap oluştur ve devam et" : "Şifre ile devam et"}
+              </Button>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3 pt-2 sm:flex-row">
             <Button
               variant="ghost"
@@ -259,9 +394,9 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
               {busyMethod === "skip" ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
               Şimdilik atla
             </Button>
-            <Button variant="secondary" size="lg" className="w-full" asChild>
+            <Button variant="outline" size="lg" className="w-full" asChild>
               <Link href={`/${mode}?next=${encodeURIComponent(next)}`}>
-                Şifre ile devam et
+                Tam sayfa akışını aç
               </Link>
             </Button>
           </div>

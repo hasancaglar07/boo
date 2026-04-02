@@ -91,6 +91,9 @@ export function UpgradeScreen({ slug }: { slug: string }) {
   const [books, setBooks] = useState<Book[]>([]);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [verificationSending, setVerificationSending] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState("");
 
   async function hydrate() {
     try {
@@ -111,6 +114,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
     void hydrate();
     void syncPreviewAuthState().then((payload) => {
       setAuthenticated(Boolean(payload?.authenticated));
+      setEmailVerified(Boolean(payload?.emailVerified));
     });
     trackEvent("paywall_viewed", { slug, trigger: "upgrade_screen" });
   }, [slug]);
@@ -134,6 +138,30 @@ export function UpgradeScreen({ slug }: { slug: string }) {
     currentBook?.branding_mark || currentBook?.publisher || "Book Generator";
   const mockupLabel = currentBook?.cover_brief || "Ödeme sonrası tam ürün açılır";
 
+  async function handleResendVerification() {
+    setVerificationSending(true);
+    setVerificationMessage("");
+    trackEvent("verification_resend_clicked", { source: "upgrade_screen", slug });
+
+    const response = await fetch("/api/auth/verify-email/resend", {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => null);
+
+    const payload = response
+      ? ((await response.json().catch(() => null)) as { error?: string } | null)
+      : null;
+
+    if (!response?.ok) {
+      setVerificationMessage(payload?.error || "Doğrulama maili tekrar gönderilemedi.");
+      setVerificationSending(false);
+      return;
+    }
+
+    setVerificationMessage("Doğrulama maili tekrar gönderildi.");
+    setVerificationSending(false);
+  }
+
   async function handleBuy(planId: string) {
     trackEvent("paywall_full_unlock_clicked", { slug, plan: planId, source: "upgrade_screen" });
     trackEvent("checkout_started", { slug, plan: planId, source: "preview_upgrade" });
@@ -141,6 +169,12 @@ export function UpgradeScreen({ slug }: { slug: string }) {
       router.push(
         `/signup/continue?slug=${encodeURIComponent(slug)}&next=${encodeURIComponent(`/app/book/${slug}/upgrade`)}`,
       );
+      return;
+    }
+
+    if (!emailVerified) {
+      trackEvent("checkout_blocked_unverified", { slug, plan: planId, source: "upgrade_screen" });
+      setVerificationMessage("Satın alma öncesi e-postanı doğrulaman gerekiyor.");
       return;
     }
 
@@ -157,6 +191,12 @@ export function UpgradeScreen({ slug }: { slug: string }) {
     if (payload?.url) {
       window.location.href = payload.url;
     } else {
+      if ((payload as { code?: string } | null)?.code === "EMAIL_NOT_VERIFIED") {
+        trackEvent("checkout_blocked_unverified", { slug, plan: planId, source: "upgrade_screen_api" });
+        setVerificationMessage("Satın alma öncesi e-postanı doğrulaman gerekiyor.");
+        setEmailVerified(false);
+        return;
+      }
       router.push(`/app/settings/billing?book=${encodeURIComponent(slug)}`);
     }
   }
@@ -214,6 +254,29 @@ export function UpgradeScreen({ slug }: { slug: string }) {
 
         {/* Sağ: başlık + feature list + pricing */}
         <div className="space-y-8">
+          {authenticated && !emailVerified ? (
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
+              <p className="text-sm font-semibold text-foreground">
+                Satın alma öncesi e-postanı doğrula
+              </p>
+              <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                Hesabın hazır. Checkout başlamadan önce doğrulama linkine tıklaman gerekiyor. Bu adım yalnızca bir kez istenir.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={verificationSending}
+                  onClick={() => void handleResendVerification()}
+                >
+                  {verificationSending ? "Gönderiliyor..." : "Doğrulama mailini tekrar gönder"}
+                </Button>
+                {verificationMessage ? (
+                  <span className="text-xs text-muted-foreground">{verificationMessage}</span>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           {/* Hero copy */}
           <div>

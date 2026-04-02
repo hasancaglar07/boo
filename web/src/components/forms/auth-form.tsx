@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, Mail, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, Sparkles } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
 
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { trackEvent } from "@/lib/analytics";
 import {
   getAccount,
@@ -76,10 +75,10 @@ export function AuthForm({
     mode === "register" && storedAccount.name !== "Book Creator" ? storedAccount.name : "",
   );
   const [email, setEmail] = useState(storedAccount.email !== "demo@example.com" ? storedAccount.email : "");
-  const [goal, setGoal] = useState(
-    storedAccount.goal && storedAccount.goal !== DEFAULT_GOAL ? storedAccount.goal : "",
-  );
+  const goal =
+    storedAccount.goal && storedAccount.goal !== DEFAULT_GOAL ? storedAccount.goal : "";
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busyMethod, setBusyMethod] = useState<AuthFormMethod | null>(null);
@@ -125,7 +124,7 @@ export function AuthForm({
   const description =
     mode === "login"
       ? "Google, magic link veya şifrenle giriş yap. Preview, kütüphane ve ödeme akışı aynı hesapta kalır."
-      : "Google ile tek tıkta başla, istersen magic link veya şifreli hesap oluştur. Önizleme kaybolmaz.";
+      : "Tek email alanı ile başla. Google, magic link veya şifreli hesap seçeneklerinden birini seç; preview kaybolmaz.";
 
   const emailTrimmed = email.trim().toLowerCase();
   const nameTrimmed = name.trim();
@@ -177,6 +176,7 @@ export function AuthForm({
     if (!emailTrimmed) {
       const nextError = "Magic link için e-posta adresi gerekli.";
       setError(nextError);
+      trackEvent("auth_form_failed", { mode, method: "magic", reason: "missing_email", source });
       emitGenerateGateEvent("generate_auth_gate_failed", { method: "magic", mode, reason: "missing_email" });
       return;
     }
@@ -195,6 +195,7 @@ export function AuthForm({
 
     if (result?.error) {
       setError("Magic link gönderilemedi. Lütfen tekrar dene.");
+      trackEvent("auth_form_failed", { mode, method: "magic", reason: "send_failed", source });
       emitGenerateGateEvent("generate_auth_gate_failed", { method: "magic", mode, reason: "send_failed" });
       setBusyMethod(null);
       return;
@@ -213,6 +214,7 @@ export function AuthForm({
       trackEvent("login_magic_link_clicked", { source });
     }
 
+    trackEvent("magic_link_sent", { mode, source });
     setMessage("Magic link gönderildi. Gelen kutunu kontrol et.");
     setBusyMethod(null);
   }
@@ -224,6 +226,7 @@ export function AuthForm({
 
     if (!emailTrimmed) {
       setError("E-posta adresi gerekli.");
+      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "missing_email", source });
       emitGenerateGateEvent("generate_auth_gate_failed", {
         method: "credentials",
         mode,
@@ -233,6 +236,7 @@ export function AuthForm({
     }
     if (!passwordTrimmed) {
       setError("Şifre gerekli.");
+      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "missing_password", source });
       emitGenerateGateEvent("generate_auth_gate_failed", {
         method: "credentials",
         mode,
@@ -242,6 +246,7 @@ export function AuthForm({
     }
     if (mode === "register" && !nameTrimmed) {
       setError("Ad alanı gerekli.");
+      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "missing_name", source });
       emitGenerateGateEvent("generate_auth_gate_failed", {
         method: "credentials",
         mode,
@@ -251,6 +256,7 @@ export function AuthForm({
     }
 
     setBusyMethod("credentials");
+    trackEvent("auth_form_submitted", { mode, method: "credentials", source });
     onMethodSelected?.({ method: "credentials", mode });
     emitGenerateGateEvent("generate_auth_gate_method_selected", { method: "credentials", mode });
 
@@ -265,7 +271,7 @@ export function AuthForm({
             name: nameTrimmed,
             email: emailTrimmed,
             password: passwordTrimmed,
-            goal: goalTrimmed,
+            goal: "",
           }),
         });
         const registerPayload = (await registerResponse.json().catch(() => null)) as {
@@ -275,6 +281,7 @@ export function AuthForm({
 
         if (!registerResponse.ok) {
           setError(registerPayload?.error || "Kayıt oluşturulamadı.");
+          trackEvent("auth_form_failed", { mode, method: "credentials", reason: "register_failed", source });
           emitGenerateGateEvent("generate_auth_gate_failed", {
             method: "credentials",
             mode,
@@ -285,6 +292,10 @@ export function AuthForm({
 
         trackEvent("register_completion", {
           email_domain: emailTrimmed.split("@")[1] || "unknown",
+          source,
+        });
+        trackEvent("signup_completed", {
+          method: "credentials",
           source,
         });
       }
@@ -298,6 +309,7 @@ export function AuthForm({
 
       if (result?.error) {
         setError(result.error);
+        trackEvent("auth_form_failed", { mode, method: "credentials", reason: "login_failed", source });
         emitGenerateGateEvent("generate_auth_gate_failed", {
           method: "credentials",
           mode,
@@ -328,6 +340,7 @@ export function AuthForm({
       window.location.assign(next);
     } catch {
       setError("Kimlik doğrulama tamamlanamadı. Lütfen tekrar dene.");
+      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "unknown", source });
       emitGenerateGateEvent("generate_auth_gate_failed", {
         method: "credentials",
         mode,
@@ -352,48 +365,59 @@ export function AuthForm({
         </div>
       ) : null}
 
-      <div className="space-y-3">
-        {providers.google ? (
+      <div className="space-y-5">
+        <div>
+          <Label htmlFor="auth-email-primary">
+            E-posta <span aria-hidden="true" className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="auth-email-primary"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="ornek@mail.com"
+            required
+            autoComplete="email"
+          />
+        </div>
+
+        <div className="space-y-3">
+          {providers.google ? (
+            <Button
+              type="button"
+              size="lg"
+              className="w-full"
+              disabled={busyMethod !== null}
+              onClick={() => void handleGoogle()}
+            >
+              {busyMethod === "google" ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <Sparkles className="mr-2 size-4" />
+              )}
+              Google ile devam et
+            </Button>
+          ) : null}
+
           <Button
             type="button"
+            variant="outline"
             size="lg"
             className="w-full"
             disabled={busyMethod !== null}
-            onClick={() => void handleGoogle()}
+            onClick={() => void handleMagicLink()}
           >
-            {busyMethod === "google" ? (
+            {busyMethod === "magic" ? (
               <Loader2 className="mr-2 size-4 animate-spin" />
             ) : (
-              <Sparkles className="mr-2 size-4" />
+              <Mail className="mr-2 size-4" />
             )}
-            Google ile devam et
+            Magic link gönder
           </Button>
-        ) : null}
 
-        <div className="space-y-2">
-          <Label htmlFor={`${mode}-magic-email`}>Magic link e-postası</Label>
-          <div className="flex gap-2">
-            <Input
-              id={`${mode}-magic-email`}
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="ornek@mail.com"
-              autoComplete="email"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busyMethod !== null}
-              onClick={() => void handleMagicLink()}
-            >
-              {busyMethod === "magic" ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Mail className="size-4" />
-              )}
-            </Button>
-          </div>
+          <p className="text-xs leading-6 text-muted-foreground">
+            Şifre istemeden girmek istersen emailine tek kullanımlık bağlantı göndeririz.
+          </p>
         </div>
       </div>
 
@@ -421,53 +445,43 @@ export function AuthForm({
         ) : null}
 
         <div>
-          <Label htmlFor="email">
-            E-posta <span aria-hidden="true" className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="ornek@mail.com"
-            required
-            autoComplete="email"
-          />
-        </div>
-
-        <div>
           <Label htmlFor="password">
             Şifre <span aria-hidden="true" className="text-destructive">*</span>
           </Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder={mode === "register" ? "En az 8 karakter" : "Şifren"}
-            required
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder={mode === "register" ? "En az 8 karakter" : "Şifren"}
+              required
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              className="pr-14"
+            />
+            <button
+              type="button"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
+          {mode === "register" ? (
+            <p className="mt-2 text-xs leading-6 text-muted-foreground">
+              En az 8 karakter kullan. İstersen şifre yerine üstteki magic link seçeneğini de kullanabilirsin.
+            </p>
+          ) : null}
         </div>
 
-        {mode === "register" ? (
-          <div>
-            <Label htmlFor="goal">Hedefin</Label>
-            <Textarea
-              id="goal"
-              value={goal}
-              onChange={(event) => setGoal(event.target.value)}
-              placeholder="örnek: uzmanlığımı İngilizce bir rehbere dönüştürmek istiyorum"
-              autoComplete="off"
-            />
-          </div>
-        ) : (
+        {mode === "login" ? (
           <div className="text-right">
             <Link href="/reset-password" className="text-sm text-primary hover:underline">
               Şifremi unuttum
             </Link>
           </div>
-        )}
+        ) : null}
 
         {message ? (
           <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">
