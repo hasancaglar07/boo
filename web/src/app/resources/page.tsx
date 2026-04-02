@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Download, BookOpen, FileText, Search, Lightbulb, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Download, BookOpen, FileText, Search, Lightbulb, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { MarketingCtaSection } from "@/components/site/marketing-cta-section";
@@ -33,6 +33,22 @@ const resources = [
     cta: "Ücretsiz İndir",
     href: "/start/topic",
     featured: true,
+  },
+  {
+    icon: Sparkles,
+    badge: "Interactive Tool",
+    title: "Book Idea Validator",
+    description:
+      "Kitap fikrini puanla, doğru formatı gör ve mini outline önerisi al. Özellikle authority book, lead magnet ve KDP odaklı fikirleri netleştirmek için tasarlandı.",
+    highlights: [
+      "Audience clarity score",
+      "Title idea önerileri",
+      "Mini outline başlangıcı",
+      "Format ve angle tavsiyesi",
+    ],
+    cta: "Aracı Aç",
+    href: "/tools/book-idea-validator",
+    featured: false,
   },
   {
     icon: CheckCircle2,

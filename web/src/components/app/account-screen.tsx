@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { trackEvent } from "@/lib/analytics";
 import {
   clearClientAuthState,
   persistViewer,
@@ -228,6 +229,7 @@ export function AccountScreen() {
   async function handleResendVerification() {
     setVerificationSending(true);
     setVerificationMessage("");
+    trackEvent("verification_resend_clicked", { source: "account_screen" });
 
     const response = await fetch("/api/auth/verify-email/resend", {
       method: "POST",
@@ -334,7 +336,7 @@ export function AccountScreen() {
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-foreground">E-posta doğrulaması gerekli</div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Ödeme, tam erişim ve export akışı için hesabını doğrula.
+                      Ödeme, PDF/EPUB export ve tam erişim akışları için hesabını doğrula. Bu adım yalnızca bir kez gerekir.
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button
@@ -343,7 +345,7 @@ export function AccountScreen() {
                         onClick={() => void handleResendVerification()}
                         disabled={verificationSending}
                       >
-                        {verificationSending ? "Gönderiliyor..." : "Doğrulama Mailini Gönder"}
+                        {verificationSending ? "Gönderiliyor..." : "Doğrulama mailini tekrar gönder"}
                       </Button>
                     </div>
                     {verificationMessage ? (

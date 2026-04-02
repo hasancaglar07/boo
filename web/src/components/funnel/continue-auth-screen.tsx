@@ -246,7 +246,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   const title = mode === "signup" ? "Kitabını kaybetme" : "Kaldığın yerden devam et";
   const description =
     mode === "signup"
-      ? "Kitabını hesabına bağla. Önizleme hazır olduğunda seni burada beklesin. İstersen şimdilik atlayıp preview'a geç."
+      ? "Kitabını hesabına bağla. Önizleme hazır olduğunda seni burada beklesin ve ödeme/export için aynı hesaptan devam edebilesin."
       : "Daha önce başladığın kitabı hesabına bağla ve önizlemeye dön.";
 
   return (
@@ -384,22 +384,28 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
           </div>
 
           <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-            <Button
-              variant="ghost"
-              size="lg"
-              className="w-full"
-              disabled={busyMethod !== null}
-              onClick={handleSkip}
-            >
-              {busyMethod === "skip" ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-              Şimdilik atla
-            </Button>
             <Button variant="outline" size="lg" className="w-full" asChild>
               <Link href={`/${mode}?next=${encodeURIComponent(next)}`}>
                 Tam sayfa akışını aç
               </Link>
             </Button>
           </div>
+
+          {mode === "signup" ? (
+            <div className="rounded-[20px] border border-dashed border-border/70 bg-background/50 px-4 py-3 text-center">
+              <p className="text-xs leading-6 text-muted-foreground">
+                İstersen önce preview&apos;a dönebilirsin. Ama kitabını daha sonra bulmak, ödeme yapmak ve export almak için hesabına bağlaman gerekecek.
+              </p>
+              <button
+                type="button"
+                className="mt-2 text-sm font-medium text-muted-foreground underline-offset-4 transition hover:text-foreground hover:underline"
+                disabled={busyMethod !== null}
+                onClick={handleSkip}
+              >
+                {busyMethod === "skip" ? "Önizlemeye gidiliyor..." : "Yine de preview&apos;a dön"}
+              </button>
+            </div>
+          ) : null}
 
           <p className="text-center text-xs text-muted-foreground/70">
             Kredi kartı gerekmez · Ücretsiz önizleme · İstediğin zaman çık

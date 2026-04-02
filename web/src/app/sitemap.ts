@@ -13,6 +13,7 @@ const staticRoutes = [
   "/pricing",
   "/faq",
   "/blog",
+  "/tools/book-idea-validator",
   "/resources",
   "/contact",
   "/privacy",
@@ -31,6 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/compare": 0.88,
     "/faq": 0.85,
     "/blog": 0.82,
+    "/tools/book-idea-validator": 0.84,
     "/about": 0.75,
   };
 

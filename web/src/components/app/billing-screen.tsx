@@ -101,6 +101,11 @@ export function BillingScreen() {
       setCheckoutError(payload?.error || "Ödeme başlatılamadı. Lütfen tekrar dene.");
       if (payload?.code === "EMAIL_NOT_VERIFIED") {
         setVerificationRequired(true);
+        trackEvent("checkout_blocked_unverified", {
+          source: "billing_screen",
+          plan: pendingPlanId,
+          book_slug: returnBook || null,
+        });
       }
       setSubmitting(false);
       return;
@@ -113,6 +118,7 @@ export function BillingScreen() {
   async function handleResendVerification() {
     setVerificationSending(true);
     setVerificationMessage("");
+    trackEvent("verification_resend_clicked", { source: "billing_screen", book_slug: returnBook || null });
 
     const response = await fetch("/api/auth/verify-email/resend", {
       method: "POST",
@@ -242,14 +248,23 @@ export function BillingScreen() {
             <div className="space-y-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
               <p className="text-sm text-destructive">{checkoutError}</p>
               {verificationRequired ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void handleResendVerification()}
-                  disabled={verificationSending}
-                >
-                  {verificationSending ? "Gönderiliyor..." : "Doğrulama Mailini Tekrar Gönder"}
-                </Button>
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    Satın alma öncesi e-postanı doğrula
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    Hesabın hazır. Checkout başlamadan önce doğrulama linkine tıklaman gerekiyor.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-3"
+                    onClick={() => void handleResendVerification()}
+                    disabled={verificationSending}
+                  >
+                    {verificationSending ? "Gönderiliyor..." : "Doğrulama mailini tekrar gönder"}
+                  </Button>
+                </div>
               ) : null}
               {verificationMessage ? (
                 <p className="text-sm text-muted-foreground">{verificationMessage}</p>

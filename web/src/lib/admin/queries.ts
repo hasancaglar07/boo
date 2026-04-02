@@ -476,6 +476,108 @@ export async function getFunnelAnalytics(range: DateRangeInput) {
   return { stages };
 }
 
+export async function getAuthAnalytics(range: DateRangeInput) {
+  const events = await prisma.analyticsEvent.findMany({
+    where: {
+      eventName: {
+        in: [
+          "signup_google_clicked",
+          "login_google_clicked",
+          "signup_magic_link_clicked",
+          "login_magic_link_clicked",
+          "continue_auth_password_clicked",
+          "auth_bridge_skipped",
+          "auth_form_submitted",
+          "auth_form_failed",
+          "magic_link_sent",
+          "verification_resend_clicked",
+          "checkout_blocked_unverified",
+          "signup_completed",
+        ],
+      },
+      createdAt: {
+        ...(range.from ? { gte: new Date(range.from) } : {}),
+        ...(range.to ? { lte: new Date(new Date(range.to).getTime() + DAY_MS) } : {}),
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 1000,
+  });
+
+  const countByEvent = new Map<string, number>();
+  const methodMap = new Map<string, number>();
+  const reasonMap = new Map<string, number>();
+  const sourceMap = new Map<string, number>();
+
+  for (const event of events) {
+    countByEvent.set(event.eventName, (countByEvent.get(event.eventName) || 0) + 1);
+
+    const properties = (event.properties || {}) as Record<string, unknown>;
+    const method = String(properties.method || "").trim();
+    const reason = String(properties.reason || "").trim();
+    const source = String(properties.source || "").trim();
+
+    if (method) {
+      methodMap.set(method, (methodMap.get(method) || 0) + 1);
+    }
+    if (reason) {
+      reasonMap.set(reason, (reasonMap.get(reason) || 0) + 1);
+    }
+    if (source) {
+      sourceMap.set(source, (sourceMap.get(source) || 0) + 1);
+    }
+  }
+
+  return {
+    summary: {
+      signupsCompleted: countByEvent.get("signup_completed") || 0,
+      magicLinksSent: countByEvent.get("magic_link_sent") || 0,
+      verificationResends: countByEvent.get("verification_resend_clicked") || 0,
+      checkoutBlockedUnverified: countByEvent.get("checkout_blocked_unverified") || 0,
+      authBridgeSkipped: countByEvent.get("auth_bridge_skipped") || 0,
+    },
+    miniFunnel: [
+      {
+        name: "Credentials submit",
+        count: countByEvent.get("auth_form_submitted") || 0,
+      },
+      {
+        name: "Magic link sent",
+        count: countByEvent.get("magic_link_sent") || 0,
+      },
+      {
+        name: "Signup completed",
+        count: countByEvent.get("signup_completed") || 0,
+      },
+      {
+        name: "Bridge skipped",
+        count: countByEvent.get("auth_bridge_skipped") || 0,
+      },
+    ].map((stage, index, list) => {
+      const previous = index === 0 ? stage.count : list[index - 1]?.count || 0;
+      return {
+        ...stage,
+        conversionRate: previous > 0 ? Number(((stage.count / previous) * 100).toFixed(1)) : 0,
+      };
+    }),
+    methods: Array.from(methodMap.entries())
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value),
+    failureReasons: Array.from(reasonMap.entries())
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value),
+    sources: Array.from(sourceMap.entries())
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value),
+    recentEvents: events.slice(0, 12).map((event) => ({
+      id: event.id,
+      eventName: event.eventName,
+      createdAt: event.createdAt.toISOString(),
+      properties: (event.properties || {}) as Record<string, unknown>,
+    })),
+  };
+}
+
 export async function getCohortAnalysis(months = 6) {
   const start = new Date();
   start.setUTCMonth(start.getUTCMonth() - months + 1, 1);

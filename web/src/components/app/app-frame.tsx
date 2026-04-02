@@ -24,6 +24,7 @@ import { CommandPalette, type PaletteAction } from "@/components/app/command-pal
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics";
 import {
   clearClientAuthState,
   type PreviewViewer,
@@ -428,6 +429,7 @@ export function AppFrame({
   async function handleResendVerification() {
     setVerificationSending(true);
     setVerificationMessage("");
+    trackEvent("verification_resend_clicked", { source: "app_frame_banner" });
 
     const response = await fetch("/api/auth/verify-email/resend", {
       method: "POST",
@@ -647,7 +649,7 @@ export function AppFrame({
                     E-posta adresini doğrula
                   </div>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    Ödeme, PDF/EPUB export ve tam erişim akışları için hesabını doğrulaman gerekiyor.
+                    Ödeme, PDF/EPUB export ve tam erişim akışları için hesabını doğrulaman gerekiyor. Bu adım yalnızca bir kez gerekir.
                   </p>
                   {verificationMessage ? (
                     <p className="mt-2 text-xs font-medium text-primary">{verificationMessage}</p>
@@ -655,14 +657,14 @@ export function AppFrame({
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => void handleResendVerification()}
-                    disabled={verificationSending}
-                  >
-                    {verificationSending ? "Gönderiliyor..." : "Doğrulama Mailini Gönder"}
-                  </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void handleResendVerification()}
+                      disabled={verificationSending}
+                    >
+                    {verificationSending ? "Gönderiliyor..." : "Doğrulama mailini tekrar gönder"}
+                    </Button>
                   <Button
                     size="sm"
                     variant="ghost"

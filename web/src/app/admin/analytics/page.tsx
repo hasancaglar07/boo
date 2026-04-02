@@ -45,6 +45,30 @@ type RevenuePayload = {
   revenueTrend: Array<{ label: string; amount: number }>;
 };
 
+type AuthPayload = {
+  summary: {
+    signupsCompleted: number;
+    magicLinksSent: number;
+    verificationResends: number;
+    checkoutBlockedUnverified: number;
+    authBridgeSkipped: number;
+  };
+  miniFunnel: Array<{
+    name: string;
+    count: number;
+    conversionRate: number;
+  }>;
+  methods: Array<{ label: string; value: number }>;
+  failureReasons: Array<{ label: string; value: number }>;
+  sources: Array<{ label: string; value: number }>;
+  recentEvents: Array<{
+    id: string;
+    eventName: string;
+    createdAt: string;
+    properties: Record<string, unknown>;
+  }>;
+};
+
 const funnelConfig = {
   count: {
     label: "Count",
@@ -71,6 +95,7 @@ export default function AdminAnalyticsPage() {
   const cohort = useAdminResource<CohortPayload>("/api/admin/analytics/cohort");
   const churn = useAdminResource<ChurnPayload>("/api/admin/analytics/churn");
   const revenue = useAdminResource<RevenuePayload>("/api/admin/analytics/revenue");
+  const auth = useAdminResource<AuthPayload>("/api/admin/analytics/auth");
   const performance = useAdminResource<{ code?: string; feature?: string }>("/api/admin/analytics/performance", {
     allowErrorPayload: true,
   });
@@ -86,6 +111,14 @@ export default function AdminAnalyticsPage() {
         <MetricCard title="Total revenue" value={revenue.data ? formatAdminCurrency(revenue.data.totalRevenue) : "—"} />
         <MetricCard title="MRR" value={revenue.data ? formatAdminCurrency(revenue.data.mrr) : "—"} color="success" />
         <MetricCard title="Cohorts" value={cohort.data ? formatAdminNumber(cohort.data.length) : "—"} color="warning" />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-5">
+        <MetricCard title="Signups" value={auth.data ? formatAdminNumber(auth.data.summary.signupsCompleted) : "—"} />
+        <MetricCard title="Magic Links" value={auth.data ? formatAdminNumber(auth.data.summary.magicLinksSent) : "—"} color="success" />
+        <MetricCard title="Verification Resends" value={auth.data ? formatAdminNumber(auth.data.summary.verificationResends) : "—"} color="warning" />
+        <MetricCard title="Blocked Checkout" value={auth.data ? formatAdminNumber(auth.data.summary.checkoutBlockedUnverified) : "—"} color="danger" />
+        <MetricCard title="Bridge Skips" value={auth.data ? formatAdminNumber(auth.data.summary.authBridgeSkipped) : "—"} color="warning" />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
@@ -112,6 +145,76 @@ export default function AdminAnalyticsPage() {
               <Area type="monotone" dataKey="amount" stroke="var(--color-amount)" fill="var(--color-amount)" fillOpacity={0.18} />
             </AreaChart>
           </ChartContainer>
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-4">
+        <div className="admin-panel rounded-[28px] p-5">
+          <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Auth mini funnel</div>
+          <div className="space-y-3">
+            {(auth.data?.miniFunnel || []).map((item) => (
+              <div key={item.name} className="rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm font-medium text-[color:var(--admin-text)]">{item.name}</div>
+                  <div className="text-sm admin-muted">{formatAdminNumber(item.count)}</div>
+                </div>
+                <div className="mt-2 text-xs admin-muted">Step conversion: %{item.conversionRate}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="admin-panel rounded-[28px] p-5">
+          <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Auth methods</div>
+          <div className="space-y-3">
+            {(auth.data?.methods || []).map((item) => (
+              <div key={item.label} className="flex items-center justify-between rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
+                <div className="text-sm font-medium text-[color:var(--admin-text)]">{item.label}</div>
+                <div className="text-sm admin-muted">{formatAdminNumber(item.value)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="admin-panel rounded-[28px] p-5">
+          <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Auth failure reasons</div>
+          <div className="space-y-3">
+            {(auth.data?.failureReasons || []).map((item) => (
+              <div key={item.label} className="flex items-center justify-between rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
+                <div className="text-sm font-medium text-[color:var(--admin-text)]">{item.label}</div>
+                <div className="text-sm admin-muted">{formatAdminNumber(item.value)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="admin-panel rounded-[28px] p-5">
+          <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Auth sources</div>
+          <div className="space-y-3">
+            {(auth.data?.sources || []).map((item) => (
+              <div key={item.label} className="flex items-center justify-between rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
+                <div className="text-sm font-medium text-[color:var(--admin-text)]">{item.label}</div>
+                <div className="text-sm admin-muted">{formatAdminNumber(item.value)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="admin-panel rounded-[28px] p-5">
+        <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Recent auth events</div>
+        <div className="space-y-3">
+          {(auth.data?.recentEvents || []).map((item) => (
+            <div key={item.id} className="rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-sm font-medium text-[color:var(--admin-text)]">{item.eventName}</div>
+                <div className="text-xs admin-muted">{new Date(item.createdAt).toLocaleString("tr-TR")}</div>
+              </div>
+              <div className="mt-2 text-xs admin-muted">
+                {Object.entries(item.properties || {}).map(([key, value]) => `${key}: ${String(value)}`).join(" · ") || "No properties"}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
