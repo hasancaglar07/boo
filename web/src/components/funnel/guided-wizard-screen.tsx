@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AppFrame } from "@/components/app/app-frame";
+import { GenerateAuthGateDialog } from "@/components/funnel/generate-auth-gate-dialog";
 import { FunnelShell } from "@/components/funnel/funnel-shell";
 import { GenerateLoadingScreen } from "@/components/funnel/generate-loading-screen";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import {
   canOpenStep,
   CHAPTER_LENGTHS,
   CHAPTER_ROLES,
+  clearPendingGenerateIntent,
   clearFunnelDraft,
   chapterLengthLabel,
   chapterRoleDescription,
@@ -40,12 +42,14 @@ import {
   bookLengthLabel,
   languageDescription,
   languageLabel,
+  loadPendingGenerateIntent,
   loadFunnelDraft,
   localOutlineSuggestions,
   localTitleSuggestions,
   nextStep,
   normalizeFunnelDraft,
   previousStep,
+  savePendingGenerateIntent,
   saveFunnelDraft,
   stepIndex,
   suggestedStyleProfile,
@@ -69,7 +73,7 @@ import {
 } from "@/lib/funnel-draft";
 import { formatChapterReference } from "@/lib/book-language";
 import { PUBLISHER_LOGO_PRESETS, pickRandomPublisherLogo } from "@/lib/publisher-logo-library";
-import { getAccount, getPlan, getSession, syncPreviewAuthState } from "@/lib/preview-auth";
+import { getAccount, getPlan, getSession, getViewer, syncPreviewAuthState } from "@/lib/preview-auth";
 import { cn } from "@/lib/utils";
 
 const BOOK_TYPES: FunnelBookType[] = ["rehber", "is", "egitim", "cocuk", "diger"];
@@ -638,15 +642,91 @@ export function GuidedWizardScreen({
   const [aiLoading, setAiLoading] = useState<"" | "title" | "outline" | "style" | "generate">("");
   const [generationStageIndex, setGenerationStageIndex] = useState(0);
   const [pendingRedirect, setPendingRedirect] = useState("");
+  const [authGateOpen, setAuthGateOpen] = useState(false);
   const autoFillRef = useRef({ title: false, outline: false, style: false });
   const topicPrefillRef = useRef(false);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const resumeAttemptRef = useRef(false);
   const normalizedRouteBase = normalizeRouteBase(routeBase);
   const appShellEnabled = shellMode === "app";
   const profileBrand = getProfilePublisherBrand();
+  const shouldResumeGenerate = searchParams.get("resume") === "1";
 
   function stepHref(target: FunnelStep) {
     return `${normalizedRouteBase}/${target}`;
+  }
+
+  function generateResumePath() {
+    return `${stepHref("generate")}?resume=1`;
+  }
+
+  function makePendingGenerateIntent(
+    authMethod?: "google" | "magic" | "credentials" | null,
+    authMode?: "login" | "register" | null,
+  ) {
+    return {
+      source: "start_generate" as const,
+      draftId: draft.id,
+      step: "generate" as const,
+      resumePath: generateResumePath(),
+      createdAt: new Date().toISOString(),
+      authMethod: authMethod || null,
+      authMode: authMode || null,
+    };
+  }
+
+  function usageBillingHref(reason?: string | null) {
+    return `/app/settings/billing?intent=start-book${reason ? `&reason=${encodeURIComponent(reason)}` : ""}`;
+  }
+
+  function maybeRouteToUsageGate(
+    usage = getViewer()?.usage,
+  ) {
+    if (!usage || usage.canStartBook) {
+      return false;
+    }
+    clearPendingGenerateIntent();
+    setAuthGateOpen(false);
+    trackEvent("second_book_gate_viewed", {
+      source: appShellEnabled ? "app_new_generate" : "start_generate",
+      reason: usage.reason || "unknown",
+    });
+    router.push(usageBillingHref(usage.reason));
+    return true;
+  }
+
+  function openGenerateAuthGate() {
+    savePendingGenerateIntent(makePendingGenerateIntent());
+    setAuthGateOpen(true);
+    trackEvent("generate_auth_gate_viewed", {
+      source: appShellEnabled ? "app_new_generate" : "start_generate",
+      language: draft.language,
+    });
+  }
+
+  function handleAuthGateOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setAuthGateOpen(true);
+      return;
+    }
+
+    const intent = loadPendingGenerateIntent();
+    if (!intent?.authMethod) {
+      clearPendingGenerateIntent();
+    }
+
+    setAuthGateOpen(false);
+    trackEvent("generate_auth_gate_closed", {
+      source: appShellEnabled ? "app_new_generate" : "start_generate",
+      method: intent?.authMethod || "none",
+    });
+  }
+
+  function handleAuthGateMethodSelected(input: {
+    method: "google" | "magic" | "credentials";
+    mode: "login" | "register";
+  }) {
+    savePendingGenerateIntent(makePendingGenerateIntent(input.method, input.mode));
   }
 
   useEffect(() => {
@@ -707,6 +787,48 @@ export function GuidedWizardScreen({
     }, 1400);
     return () => window.clearInterval(timer);
   }, [aiLoading]);
+
+  useEffect(() => {
+    if (step !== "generate") {
+      setAuthGateOpen(false);
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (!ready || step !== "generate" || !shouldResumeGenerate || resumeAttemptRef.current) {
+      return;
+    }
+
+    const intent = loadPendingGenerateIntent();
+    if (!intent || intent.draftId !== draft.id || intent.resumePath !== generateResumePath()) {
+      return;
+    }
+
+    resumeAttemptRef.current = true;
+
+    void (async () => {
+      const authState = await syncPreviewAuthState().catch(() => null);
+      const hasSession = Boolean(authState?.authenticated || getSession());
+      if (!hasSession) {
+        resumeAttemptRef.current = false;
+        return;
+      }
+
+      if (maybeRouteToUsageGate(authState?.usage || getViewer()?.usage)) {
+        return;
+      }
+
+      trackEvent("generate_auth_gate_completed", {
+        method: intent.authMethod || "resume",
+        mode: intent.authMode || "register",
+      });
+      trackEvent("generate_auth_gate_resumed", {
+        method: intent.authMethod || "resume",
+      });
+
+      await runGenerateAfterAuth();
+    })();
+  }, [draft.id, ready, searchParams, shouldResumeGenerate, step]);
 
   const summary = useMemo(
     () => [
@@ -968,14 +1090,16 @@ export function GuidedWizardScreen({
     applyRandomStyleProfile(false);
   }, [ready, step]);
 
-  async function handleGenerate() {
+  async function runGenerateAfterAuth() {
+    if (aiLoading === "generate") {
+      return;
+    }
+
     setAiLoading("generate");
     setError("");
     setPendingRedirect("");
-    trackEvent("wizard_generate_clicked", {
-      language: draft.language,
-      chapter_count: draft.outline.length,
-    });
+    setAuthGateOpen(false);
+    clearPendingGenerateIntent();
 
     try {
       const account = getAccount();
@@ -983,13 +1107,10 @@ export function GuidedWizardScreen({
       const book = await saveBook(payload);
       if (!book) throw new Error("Kitap kaydedilemedi: sunucu geçersiz yanıt döndürdü.");
 
-      const authState = await syncPreviewAuthState().catch(() => null);
-      const hasSession = Boolean(authState?.authenticated || getSession());
-
       const nextDraft = {
         ...draft,
         currentStep: "generate" as const,
-        status: hasSession ? ("generating" as const) : ("awaiting_signup" as const),
+        status: "generating" as const,
         generatedSlug: book.slug,
         updatedAt: new Date().toISOString(),
       };
@@ -997,21 +1118,42 @@ export function GuidedWizardScreen({
       trackEvent("generate_started", { slug: book.slug });
       void startBookPreviewPipeline(book.slug).catch(() => undefined);
 
-      const destination = hasSession
-        ? `/app/book/${encodeURIComponent(book.slug)}/preview`
-        : `/signup/continue?slug=${encodeURIComponent(book.slug)}&next=${encodeURIComponent(`/app/book/${book.slug}/preview`)}`;
-
-      if (!hasSession) {
-        trackEvent("signup_prompt_shown", { slug: book.slug });
-      }
-
       // Store destination — GenerateLoadingScreen will navigate after its 5-second animation
-      setPendingRedirect(destination);
+      setPendingRedirect(`/app/book/${encodeURIComponent(book.slug)}/preview`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Kitap oluşturulamadı. Lütfen tekrar dene.");
       setAiLoading("");
     }
     // Note: aiLoading stays "generate" until GenerateLoadingScreen completes
+  }
+
+  async function requestGenerate(trigger: "manual" | "inline_auth" = "manual") {
+    if (aiLoading === "generate") {
+      return;
+    }
+
+    setError("");
+
+    if (trigger === "manual") {
+      trackEvent("wizard_generate_clicked", {
+        language: draft.language,
+        chapter_count: draft.outline.length,
+      });
+    }
+
+    const authState = await syncPreviewAuthState().catch(() => null);
+    const hasSession = Boolean(authState?.authenticated || getSession());
+
+    if (!hasSession) {
+      openGenerateAuthGate();
+      return;
+    }
+
+    if (maybeRouteToUsageGate(authState?.usage || getViewer()?.usage)) {
+      return;
+    }
+
+    await runGenerateAfterAuth();
   }
 
   if (!ready) return null;
@@ -1653,12 +1795,22 @@ export function GuidedWizardScreen({
   // ── GENERATE ───────────────────────────────────────────────────────────────
   return wrapInShell({
     title: "Önizlemeyi başlat",
-    description: "Tek tıkla kitap vitrini oluşur. Kapak ve ilk okunabilir bölüm arka planda hazırlanır.",
+    description: appShellEnabled
+      ? "Kitap vitrini tek akışta hazırlanır. Kapak ve ilk okunabilir bölüm arka planda canlı üretime girer."
+      : "Önizleme üretimi başlamadan önce hesabını oluşturursun. Kitap doğrudan senin kütüphanene kaydolur.",
     children: (
       aiLoading === "generate" ? (
         <GenerateLoadingScreen redirectPath={pendingRedirect || undefined} />
       ) : (
         <div className="mx-auto max-w-3xl space-y-5">
+          <GenerateAuthGateDialog
+            open={authGateOpen}
+            onOpenChange={handleAuthGateOpenChange}
+            resumePath={generateResumePath()}
+            onMethodSelected={handleAuthGateMethodSelected}
+            onAuthenticated={() => requestGenerate("inline_auth")}
+          />
+
           <div className="rounded-[24px] border border-border/80 bg-background/72 p-6">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-[18px] border border-border/80 bg-card px-4 py-4">
@@ -1679,7 +1831,9 @@ export function GuidedWizardScreen({
               </div>
             </div>
             <div className="mt-5 rounded-[18px] border border-border/80 bg-card px-4 py-4 text-sm leading-7 text-muted-foreground">
-              Generate&apos;a bastığında kullanıcıyı doğrudan preview ekranına taşıyacağız. İlk bölüm gelir gelmez sayfa açılır, kapak da arka planda görünür hale gelir.
+              {appShellEnabled
+                ? "Generate&apos;a bastığında kitap aynı hesabın altında kaydedilir. İlk okunabilir bölüm gelir gelmez preview açılır, kapak da arka planda görünür hale gelir."
+                : "Önce hesabını oluşturur veya giriş yaparsın. Ardından kitap doğrudan hesabına kaydedilir, preview hazırlanırken kütüphanende seni bekler."}
             </div>
           </div>
 
@@ -1693,8 +1847,8 @@ export function GuidedWizardScreen({
             <Button variant="ghost" size="lg" onClick={goBack}>
               Geri
             </Button>
-            <Button size="lg" onClick={() => void handleGenerate()}>
-              Önizlemeyi Oluştur
+            <Button size="lg" onClick={() => void requestGenerate()}>
+              {appShellEnabled ? "Önizlemeyi Oluştur" : "Hesabını Oluştur ve Önizlemeyi Başlat"}
             </Button>
             <Button
               variant="outline"
@@ -1710,7 +1864,7 @@ export function GuidedWizardScreen({
           <p className="text-xs text-muted-foreground/70">
             {appShellEnabled
               ? "Aynı hesapta devam et · Önizleme hemen hazırlanır · Kapak + ilk bölüm canlı üretilir"
-              : "Kayıt gerekmez · Ücretsiz önizleme · Kapak + ilk bölüm canlı hazırlanır"}
+              : "Üyelik zorunlu · Kitap hesabına kaydolur · Hazır olunca kütüphanende görünür"}
           </p>
         </div>
       )

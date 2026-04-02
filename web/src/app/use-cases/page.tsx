@@ -12,9 +12,9 @@ import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 export const metadata: Metadata = buildPageMetadata({
   title: "Kimler İçin? | Book Generator",
   description:
-    "Book Generator'ı kimin kullandığını ve neden tercih ettiğini öğren. Yazarlar, danışmanlar, eğitimciler ve içerik üreticileri için AI destekli kitap üretimi.",
+    "Book Generator'ı kimin kullandığını ve neden tercih ettiğini öğren. Yazarlar, danışmanlar, eğitmenler, course creator'lar ve içerik üreticileri için AI publishing studio.",
   path: "/use-cases",
-  keywords: ["ai kitap üretimi", "danışman kitap yazma", "eğitimci kitap", "içerik üretici", "indiebook"],
+  keywords: ["ai kitap üretimi", "danışman kitap yazma", "eğitmen kitap", "course creator kitap", "içerik üretici"],
 });
 
 const segments = [
@@ -60,19 +60,19 @@ const segments = [
   },
   {
     icon: GraduationCap,
-    badge: "Eğitimciler & Akademisyenler",
-    title: "Ders materyallerini kitaba dönüştüren eğitimciler",
+    badge: "Eğitmenler & Course Creator'lar",
+    title: "Eğitim içeriğini rehber kitaba dönüştüren eğitmenler",
     description:
-      "Hazırladığın ders içerikleri, notlar ve slaytlar zaten var. Book Generator bunları tutarlı bir kitap yapısına kavuşturur. Akademik dil, kaynak notları ve bölüm bütünlüğü korunur.",
+      "Hazırladığın ders içerikleri, workshop notları ve kurs modülleri zaten var. Book Generator bunları tutarlı bir rehber kitap yapısına kavuşturur. Amaç akademik format değil; öğrencinin veya müşterinin okuyup uygulayacağı net, yayınlanabilir bir içerik çıkarmaktır.",
     benefits: [
-      "Ders notlarından kitap taslağı",
-      "Akademik ton ve yapı desteği",
-      "Bölüm sonu özet ve sorular",
-      "Kaynakça uyumlu format",
+      "Kurs modüllerinden kitap taslağı",
+      "Öğretici ton ve bölüm yapısı",
+      "Bölüm sonu özet ve aksiyon maddeleri",
+      "Lead magnet veya ücretli rehber olarak kullanma",
     ],
-    quote: "Öğrencilerime dağıttığım ders kitabını Book Generator ile hazırladım. Profesyonel görünüyor.",
-    quoteName: "Dr. Ayşe K.",
-    quoteRole: "Üniversite öğretim görevlisi",
+    quote: "Workshop içeriğimi bir rehber kitaba dönüştürdüm. Kurs satış sayfam için de güçlü bir authority asset oldu.",
+    quoteName: "Derya S.",
+    quoteRole: "Eğitmen ve course creator",
     cta: "Eğitimciler için başla",
     ctaHref: "/start/topic",
     color: "bg-green-50 border-green-100",
@@ -170,6 +170,12 @@ export default function UseCasesPage() {
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
               Bireysel yazardan kurumsal ekibe, danışmandan KDP yayıncısına. Book Generator farklı amaçlar için farklı şekillerde çalışır.
             </p>
+            <div className="mx-auto mt-8 max-w-3xl rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 text-left shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
+              <p className="mt-2 text-sm leading-7 text-foreground">
+                Book Generator; uzmanlar, koçlar, eğitmenler, course creator'lar ve KDP yayıncıları için tasarlanmış çok dilli bir AI publishing studio'dur. Teknik dokümantasyon veya akademik tez üretiminden çok, authority book, rehber kitap, lead magnet ve publish-ready non-fiction üretiminde güçlüdür.
+              </p>
+            </div>
           </div>
         </div>
       </section>

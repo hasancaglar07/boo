@@ -30,7 +30,7 @@ const OPTIONS = [
     href: "/pricing",
     icon: CreditCard,
     label: "Fiyatları gör",
-    description: "$29 tek seferlik tam erişim veya aylık planlar. Önce ücretsiz preview, sonra karar ver.",
+    description: "$4 tek seferlik tam erişim veya aylık planlar. Önce ücretsiz preview, sonra karar ver.",
     cta: "Fiyatları İncele",
     highlight: false,
   },

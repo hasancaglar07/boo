@@ -84,6 +84,12 @@ function formatDate(dateStr: string) {
   });
 }
 
+function firstSentence(text: string) {
+  const sentence = text.split(". ")[0]?.trim();
+  if (!sentence) return text;
+  return sentence.endsWith(".") ? sentence : `${sentence}.`;
+}
+
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const post = blogPosts.find((item) => item.slug === slug);
@@ -95,6 +101,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     id: toSectionId(title),
     title,
   }));
+  const quickAnswer = firstSentence(post.intro);
+  const takeawayItems = post.sections.slice(0, 3).map(([title]) => title);
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -183,10 +191,31 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   <time dateTime={post.datePublished}>{formatDate(post.datePublished)}</time>
                 </span>
                 <span className="size-1 rounded-full bg-border" />
+                <span>Son güncelleme: {formatDate(post.dateModified)}</span>
+                <span className="size-1 rounded-full bg-border" />
                 <span className="flex items-center gap-1.5">
                   <Clock className="size-3.5 shrink-0" />
                   {post.readTime} okuma
                 </span>
+              </div>
+              <div className="mt-6 rounded-[20px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-5 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
+                <p className="mt-2 text-sm leading-7 text-foreground">{quickAnswer}</p>
+              </div>
+              <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+                <div className="rounded-[20px] border border-border/70 bg-card/80 px-5 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Öne çıkanlar</p>
+                  <ul className="mt-3 space-y-2 text-sm leading-7 text-foreground">
+                    {takeawayItems.map((item) => (
+                      <li key={item}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="rounded-[20px] border border-border/70 bg-card/80 px-5 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Yayın notu</p>
+                  <p className="mt-2 text-sm leading-7 text-foreground">Book Generator editör ekibi tarafından hazırlanıp gözden geçirildi.</p>
+                  <p className="mt-2 text-xs leading-6 text-muted-foreground">Amaç hukuki veya profesyonel tavsiye vermek değil; publishing kararlarını daha net almanı sağlamaktır.</p>
+                </div>
               </div>
             </header>
 

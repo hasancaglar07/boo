@@ -12,7 +12,7 @@ import { buildPageMetadata, absoluteUrl, siteConfig } from "@/lib/seo";
 export const metadata: Metadata = buildPageMetadata({
   title: "Book Generator Fiyatlar | AI Kitap Yazma Planları",
   description:
-    "Book Generator fiyat planlarını karşılaştırın. $4 tek seferlik ile dene, aylık planlarla büyü. İlk kitabından stüdyo üretimine kadar her seviyede plan.",
+    "Book Generator fiyat planlarını karşılaştırın. $4 tek seferlik ile dene, aylık planlarla büyü. İlk kitabından publishing studio akışına kadar her seviyede plan.",
   path: "/pricing",
   keywords: ["book generator fiyat", "ai kitap yazma planları", "kitap üretim aboneliği", "kdp kitap fiyat"],
 });
@@ -150,6 +150,15 @@ export default function PricingPage() {
   return (
     <MarketingPage>
       <PricingPageHero />
+
+      <section className="shell pt-10 pb-0">
+        <div className="rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
+          <p className="mt-2 max-w-4xl text-sm leading-7 text-foreground">
+            Book Generator fiyatlandırması iki ihtiyaca göre ayrılır: tek kitap için $4 tek seferlik Premium erişim veya düzenli üretim için aylık planlar. Tek Kitap planı, ilk kitap denemesi için en düşük giriş noktasıdır; Starter, Yazar ve Stüdyo ise yayın hacmi arttığında kitap başına maliyeti düşürür.
+          </p>
+        </div>
+      </section>
 
       {/* Güven şeridi */}
       <section className="border-b border-border/80 bg-accent/30 py-5">

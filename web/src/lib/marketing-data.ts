@@ -284,8 +284,8 @@ export const faqSections = [
         "Değişiklik veya iade talebini destek üzerinden ilet; en kısa sürede değerlendirip dönüş yapıyoruz.",
       ],
       [
-        "$29 tek seferlik ödeme ne kapsıyor?",
-        "$4 Tek Kitap, aylık abonelik olmadan tek bir kitap için tam erişim: tüm bölümler, kapak, EPUB ve PDF çıktısı. Süre sınırı yok. Birden fazla kitap üretmek isteyenler aylık planları tercih edebilir, ama ilk kitabı denemek için en düşük giriş noktası bu.",
+        "$4 tek seferlik ödeme ne kapsıyor?",
+        "$4 Tek Kitap, aylık abonelik olmadan tek bir kitap için tam erişim sunar: tüm bölümler, kapak, EPUB ve PDF çıktısı. Süre sınırı yok. Birden fazla kitap üretmek isteyenler aylık planları tercih edebilir, ama ilk kitabı denemek için en düşük giriş noktası budur.",
       ],
     ],
   },

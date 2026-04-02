@@ -98,7 +98,7 @@ export default async function HomePage() {
             Book Generator ne yapar? Bir cümlede.
           </h2>
           <p className="mt-4 max-w-3xl text-base leading-8 text-muted-foreground">
-            Konu fikrinden yayına hazır EPUB/PDF dosyasına kadar tüm süreci tek akışta yönetirsin — taslak, bölüm yazımı, kapak ve çıktı ayrı araçlara dağılmaz.
+            Book Generator, tek bir fikirden çok dilli, branded ve yayına hazır non-fiction kitap üretmeni sağlayan AI publishing studio'dur. Outline, bölüm yazımı, kapak ve EPUB/PDF export aynı yönlendirmeli akışta birleşir; süreç ChatGPT, Canva ve export araçları arasında dağılmaz.
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-[24px] border border-border/80 bg-card/80 px-5 py-5 shadow-sm">
@@ -136,8 +136,8 @@ export default async function HomePage() {
       <section className="border-b border-border/80 py-18">
         <PricingCreativeSection
           tag="Planlar"
-          title="İlk kitabın için $29. Ghostwriter için $5.000."
-          description="Tek kitap için $29 Premium — tam içerik, EPUB+PDF export, sınırsız düzenleme. Ajans tutmak yerine bu hafta yayında ol."
+          title="İlk kitabın için $4. Ghostwriter için $5.000."
+          description="Tek kitap için $4 Premium: tam içerik, EPUB+PDF export ve tam düzenleme erişimi. Ajans tutmak yerine bu hafta yayında ol."
         />
       </section>
 

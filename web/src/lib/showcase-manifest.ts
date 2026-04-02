@@ -56,18 +56,32 @@ async function exists(targetPath: string) {
 }
 
 export async function resolveRepoRoot() {
-  const candidates = [path.resolve(process.cwd(), ".."), process.cwd()];
+  const candidates = [process.cwd(), path.resolve(process.cwd(), "..")];
   for (const candidate of candidates) {
-    if (await exists(path.join(candidate, "book_outputs"))) {
+    if (
+      (await exists(path.join(candidate, "book_outputs"))) ||
+      (await exists(path.join(candidate, "data", "showcase-portfolio.json")))
+    ) {
       return candidate;
     }
   }
-  return candidates[0];
+  return process.cwd();
 }
 
 export async function loadShowcasePortfolioManifest(repoRoot?: string) {
   const root = repoRoot || (await resolveRepoRoot());
   const manifestPath = path.join(root, "data", "showcase-portfolio.json");
-  const raw = await fs.readFile(manifestPath, "utf8");
-  return JSON.parse(raw) as ShowcasePortfolioEntry[];
+  const raw = await fs.readFile(manifestPath, "utf8").catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") {
+      return "";
+    }
+    throw error;
+  });
+  if (!raw) return [];
+
+  try {
+    return JSON.parse(raw) as ShowcasePortfolioEntry[];
+  } catch {
+    return [];
+  }
 }

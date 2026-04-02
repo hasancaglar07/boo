@@ -106,6 +106,12 @@ export default function ComparePage() {
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
               Genel AI araçları veya manuel yazımla neden aynı sonucu alamazsın? İşte dürüst bir karşılaştırma.
             </p>
+            <div className="mx-auto mt-8 max-w-3xl rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 text-left shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
+              <p className="mt-2 text-sm leading-7 text-foreground">
+                Book Generator, ChatGPT veya genel AI araçlarının yerine geçen genel bir chatbot değil; tek bir fikirden outline, chapter, cover ve export üreten özel bir AI publishing studio'dur. Farkı model kalitesinden çok, kitap üretimine özel workflow, editör ve publish-ready çıktı sunmasıdır.
+              </p>
+            </div>
           </div>
         </div>
       </section>
