@@ -76,8 +76,8 @@ services:
       DATABASE_URL: file:/data/prod.db
       DASHBOARD_ORIGIN: http://dashboard:8765
       NEXT_PUBLIC_DASHBOARD_ORIGIN: http://dashboard:8765
-    ports:
-      - "127.0.0.1:${BOOK_WEB_BIND_PORT:-3000}:3000"
+    expose:
+      - "3000"
     volumes:
       - type: bind
         source: ${BOOK_SQLITE_DIR:-./runtime/sqlite}
