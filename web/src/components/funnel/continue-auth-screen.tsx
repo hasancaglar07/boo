@@ -44,6 +44,10 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   useEffect(() => {
     let active = true;
 
+    if (mode === "signup") {
+      trackEvent("signup_prompt_shown", { source: "continue_auth", slug });
+    }
+
     void syncPreviewAuthState().then((payload) => {
       if (!active) return;
       if (payload?.providers) {
@@ -64,7 +68,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
     return () => {
       active = false;
     };
-  }, [next, router]);
+  }, [mode, next, router, slug]);
 
   function rememberDraftIdentity() {
     const normalizedEmail = email.trim().toLowerCase() || existingAccount.email || "demo@example.com";

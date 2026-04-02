@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { audit } from "@/lib/auth/audit";
 import { getGuestIdentityFromCookies, claimGuestBooksForUser } from "@/lib/auth/data";
+import { prisma } from "@/lib/prisma";
 
 export async function POST() {
   const session = await auth();
@@ -29,6 +30,19 @@ export async function POST() {
       guestIdentityId: guest.id,
       metadata: {
         claimedCount,
+      },
+    });
+
+    await prisma.analyticsEvent.create({
+      data: {
+        eventName: "draft_merged_to_user",
+        pathname: "/api/auth/claim-guest-books",
+        properties: {
+          claimed_count: claimedCount,
+          flow_id: guest.id,
+        } as never,
+        userId: session.user.id,
+        guestIdentityId: guest.id,
       },
     });
   }

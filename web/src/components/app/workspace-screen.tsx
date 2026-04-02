@@ -428,6 +428,8 @@ export function WorkspaceScreen({
   async function triggerBuild(format: "epub" | "pdf") {
     const hadExportBefore = Number(currentDraft.status?.export_count || 0) > 0;
     const toastId = addToast("Çıktı hazırlanıyor...", "loading");
+    if (format === "pdf") trackEvent("pdf_export_started", { slug });
+    if (format === "epub") trackEvent("epub_export_started", { slug });
     try {
       const response = await buildBook(slug, {
         format,
@@ -457,6 +459,8 @@ export function WorkspaceScreen({
       });
       await refresh();
       updateToast(toastId, responseSummary(response).short, "success");
+      if (format === "pdf") trackEvent("pdf_export_completed", { slug });
+      if (format === "epub") trackEvent("epub_export_completed", { slug });
       if (!hadExportBefore) trackEvent("first_export_success", { slug, format });
       if (currentDraft.generate_cover) trackEvent("cover_generated", { slug, format });
     } catch (error) {

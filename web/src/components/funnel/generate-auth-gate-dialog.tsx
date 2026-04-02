@@ -6,6 +6,7 @@ import { useEffect, useId, useState } from "react";
 import { AuthForm } from "@/components/forms/auth-form";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 type GateMode = "login" | "register";
@@ -33,6 +34,7 @@ export function GenerateAuthGateDialog({
     if (open) {
       setMode("register");
       setBusy(false);
+      trackEvent("signup_prompt_shown", { source: "generate_gate" });
     }
   }, [open]);
 

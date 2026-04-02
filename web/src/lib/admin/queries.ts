@@ -17,11 +17,9 @@ import { prisma } from "@/lib/prisma";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const FUNNEL_STAGES = [
-  "landing_page_viewed",
   "start_page_viewed",
   "wizard_started",
-  "wizard_completed",
-  "book_generated",
+  "generate_started",
   "signup_completed",
   "preview_viewed",
   "checkout_started",
@@ -203,7 +201,7 @@ export async function getAdminOverviewData() {
     prisma.analyticsEvent.findMany({
       where: {
         eventName: {
-          in: [...FUNNEL_STAGES, "landing_page_viewed", "signup_completed", "checkout_completed"],
+          in: [...FUNNEL_STAGES],
         },
         createdAt: {
           gte: new Date(Date.now() - 90 * DAY_MS),
@@ -257,7 +255,7 @@ export async function getAdminOverviewData() {
     .slice(-8);
 
   const funnels = await getFunnelAnalytics({ from: "", to: "" });
-  const landingStage = funnels.stages.find((stage) => stage.name === "landing_page_viewed");
+  const landingStage = funnels.stages.find((stage) => stage.name === "start_page_viewed");
   const paidStage = funnels.stages.find((stage) => stage.name === "checkout_completed");
 
   const planDistributionMap = new Map<string, number>();
