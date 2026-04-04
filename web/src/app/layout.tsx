@@ -8,6 +8,7 @@ import { ChunkLoadRecovery } from "@/components/app/chunk-load-recovery";
 import { CookieConsent } from "@/components/app/cookie-consent";
 import { RefCodeDetector } from "@/components/app/ref-code-detector";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { PUBLIC_BILLING_EMAIL, PUBLIC_SUPPORT_EMAIL } from "@/lib/contact-shared";
 import { absoluteUrl, metadataBaseUrl, siteConfig } from "@/lib/seo";
 

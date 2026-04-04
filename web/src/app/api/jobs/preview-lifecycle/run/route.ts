@@ -13,6 +13,7 @@ import {
   sendPreviewReadyEmail,
   sendPreviewRecoveryEmail,
 } from "@/lib/auth/mailer";
+import { resolveAuthSecret } from "@/lib/auth/env";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -28,7 +29,7 @@ function unauthorized() {
 
 function isAuthorized(request: NextRequest) {
   if (process.env.NODE_ENV !== "production") return true;
-  const expected = process.env.CRON_SECRET || process.env.AUTH_SECRET || "";
+  const expected = process.env.CRON_SECRET || resolveAuthSecret() || "";
   if (!expected) return false;
   const header = request.headers.get("authorization") || "";
   return header === `Bearer ${expected}`;

@@ -3,11 +3,10 @@ import { encode } from "next-auth/jwt";
 
 import { audit } from "@/lib/auth/audit";
 import { resolvePreviewCampaignToken } from "@/lib/auth/data";
+import { resolveAuthSecret } from "@/lib/auth/env";
 import { prisma } from "@/lib/prisma";
 
-const authSecret =
-  process.env.AUTH_SECRET ||
-  (process.env.NODE_ENV !== "production" ? "book-generator-dev-secret" : undefined);
+const authSecret = resolveAuthSecret();
 
 function sessionCookieName(request: NextRequest) {
   const secure = request.nextUrl.protocol === "https:" || process.env.NODE_ENV === "production";

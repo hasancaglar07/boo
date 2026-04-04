@@ -14,6 +14,7 @@ import { findUserByEmail } from "@/lib/auth/data";
 import { normalizeEmail, verifyPasswordHash } from "@/lib/auth/crypto";
 import { sendMagicLinkEmail } from "@/lib/auth/mailer";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import { resolveAuthSecret } from "@/lib/auth/env";
 import { prisma } from "@/lib/prisma";
 
 const credentialsSchema = z.object({
@@ -21,9 +22,7 @@ const credentialsSchema = z.object({
   password: z.string().min(8),
 });
 
-const authSecret =
-  process.env.AUTH_SECRET ||
-  (process.env.NODE_ENV !== "production" ? "book-generator-dev-secret" : undefined);
+const authSecret = resolveAuthSecret();
 const authEmailServer = process.env.AUTH_EMAIL_SERVER || "smtp://127.0.0.1:2525";
 
 const providers: any[] = [

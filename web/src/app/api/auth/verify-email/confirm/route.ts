@@ -3,12 +3,11 @@ import { encode } from "next-auth/jwt";
 
 import { audit } from "@/lib/auth/audit";
 import { hashToken } from "@/lib/auth/crypto";
+import { resolveAuthSecret } from "@/lib/auth/env";
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/seo";
 
-const authSecret =
-  process.env.AUTH_SECRET ||
-  (process.env.NODE_ENV !== "production" ? "book-generator-dev-secret" : undefined);
+const authSecret = resolveAuthSecret();
 
 function isLocalOrPrivateHostname(hostname: string) {
   const normalized = hostname.toLowerCase();
