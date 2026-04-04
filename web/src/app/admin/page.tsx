@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, CreditCard, TrendingUp, Users } from "lucide-react";
+import { BarChart2, BookOpen, CreditCard, TrendingUp, Users } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, Cell, Line, LineChart, Pie, PieChart, XAxis, YAxis } from "recharts";
 
 import { ActivityFeed } from "@/components/admin/activity-feed";
@@ -13,6 +13,18 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+
+function computeTrend(
+  series: Array<Record<string, number | string | null | undefined>> | undefined,
+  key: string
+): { value: number; direction: "up" | "down"; label: string } | undefined {
+  if (!series || series.length < 2) return undefined;
+  const prev = Number(series[series.length - 2]?.[key] ?? 0);
+  const curr = Number(series[series.length - 1]?.[key] ?? 0);
+  if (prev === 0) return undefined;
+  const delta = Math.round(((curr - prev) / prev) * 100);
+  return { value: Math.abs(delta), direction: delta >= 0 ? "up" : "down", label: "önceki döneme göre" };
+}
 
 const revenueChartConfig = {
   value: {
@@ -52,12 +64,13 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-3">
         <MetricCard
           title="Toplam kullanıcı"
           value={loading || !data ? "—" : formatAdminNumber(data.cards.totalUsers)}
           icon={<Users className="size-5" />}
           sparkline={data?.userGrowth.map((item) => item.users)}
+          trend={computeTrend(data?.userGrowth, "users")}
         />
         <MetricCard
           title="Aktif abonelik"
@@ -65,6 +78,7 @@ export default function AdminDashboardPage() {
           icon={<CreditCard className="size-5" />}
           color="success"
           sparkline={data?.conversionSeries.map((item) => item.paid)}
+          trend={computeTrend(data?.conversionSeries, "paid")}
         />
         <MetricCard
           title="MRR"
@@ -72,6 +86,19 @@ export default function AdminDashboardPage() {
           icon={<TrendingUp className="size-5" />}
           color="primary"
           sparkline={data?.revenueTrend.map((item) => item.value)}
+          trend={computeTrend(data?.revenueTrend, "value")}
+        />
+        <MetricCard
+          title="ARR"
+          value={loading || !data ? "—" : formatAdminCurrency(data.cards.arr)}
+          icon={<TrendingUp className="size-5" />}
+          color="success"
+        />
+        <MetricCard
+          title="Funnel CR"
+          value={loading || !data ? "—" : `%${data.cards.funnelConversionRate.toFixed(1)}`}
+          icon={<BarChart2 className="size-5" />}
+          color="warning"
         />
         <MetricCard
           title="Toplam kitap"

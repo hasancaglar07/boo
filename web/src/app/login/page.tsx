@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthForm } from "@/components/forms/auth-form";
 import { LoginLogo } from "@/components/forms/login-logo";
+import { isBillingAutostartNextPath } from "@/lib/auth/checkout-intent";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -21,6 +22,7 @@ export default async function LoginPage({
   const params = await searchParams;
   const verified = params.verified === "1";
   const nextPath = typeof params.next === "string" ? params.next : "";
+  const checkoutIntent = isBillingAutostartNextPath(nextPath);
   const signupHref = nextPath ? `/signup?next=${encodeURIComponent(nextPath)}` : "/signup";
 
   return (
@@ -37,8 +39,15 @@ export default async function LoginPage({
           </div>
         )}
         <div className="text-center text-sm leading-7 text-muted-foreground">
-          Önizleme, kütüphane ve ödeme akışı aynı hesapta kalır. Giriş yap, kitabın kaldığı yerden devam etsin.
+          {checkoutIntent
+            ? "Giriş yaptıktan sonra ödeme penceresi otomatik açılır. Akış kesilmeden satın almaya geçersin."
+            : "Bu ekran ödeme duvarı değildir. Preview, kütüphane ve ödeme akışı aynı hesapta kalır; giriş yapınca kitabın kaldığı yerden devam eder."}
         </div>
+        {!checkoutIntent ? (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-center text-sm text-muted-foreground">
+            Preview hazır olduğunda aynı hesapta saklanır.
+          </div>
+        ) : null}
         <div className="rounded-2xl border border-border/70 bg-card/60 px-4 py-3 text-center text-sm text-muted-foreground">
           Hesabın yok mu?{" "}
           <Link href={signupHref} className="font-semibold text-foreground hover:underline">

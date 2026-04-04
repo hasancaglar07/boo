@@ -7,6 +7,7 @@ import { FilterBar } from "@/components/admin/filter-bar";
 import { Pagination } from "@/components/admin/pagination";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { adminFetch, useAdminResource } from "@/lib/admin/client";
+import { formatAdminDate } from "@/lib/admin/format";
 import type { AdminListResponse } from "@/lib/admin/types";
 
 type ModerationRow = {
@@ -17,6 +18,7 @@ type ModerationRow = {
   qualityScore: number | null;
   plagiarismScore: number | null;
   createdAt: string;
+  notes?: string | null;
 };
 
 export default function AdminModerationPage() {
@@ -38,7 +40,12 @@ export default function AdminModerationPage() {
       header: "Book",
       cell: (row) => (
         <div>
-          <div className="font-semibold text-[color:var(--admin-text)]">{row.bookTitle}</div>
+          <a
+            href={`/admin/books/${encodeURIComponent(row.bookSlug)}`}
+            className="font-semibold text-[color:var(--admin-text)] hover:text-[color:var(--admin-primary)] hover:underline"
+          >
+            {row.bookTitle}
+          </a>
           <div className="text-xs admin-muted">{row.bookSlug}</div>
         </div>
       ),
@@ -50,32 +57,52 @@ export default function AdminModerationPage() {
     },
     {
       key: "scores",
-      header: "Scores",
+      header: "Scores & Notes",
       cell: (row) => (
-        <div className="text-sm">
-          <div>Quality: {row.qualityScore ?? "—"}</div>
-          <div className="text-xs admin-muted">Plagiarism: {row.plagiarismScore ?? "—"}</div>
+        <div className="text-sm max-w-[200px]">
+          <div className="flex gap-3">
+            <span>Kalite: <strong>{row.qualityScore ?? "—"}</strong></span>
+            <span>İntihal: <strong>{row.plagiarismScore ?? "—"}</strong></span>
+          </div>
+          {row.notes && (
+            <div className="mt-1 text-xs admin-muted line-clamp-2">{row.notes}</div>
+          )}
         </div>
       ),
+    },
+    {
+      key: "createdAt",
+      header: "Tarih",
+      cell: (row) => formatAdminDate(row.createdAt),
     },
     {
       key: "actions",
       header: "",
       cell: (row) => (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            className="rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+            className="rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300 disabled:opacity-50"
             onClick={() => void moderate(row.id, "approve")}
+            disabled={row.status === "approved"}
           >
-            Approve
+            Onayla
           </button>
           <button
             type="button"
-            className="rounded-xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300"
-            onClick={() => void moderate(row.id, "reject")}
+            className="rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300 disabled:opacity-50"
+            onClick={() => void moderate(row.id, "request_revision")}
+            disabled={row.status === "revision_requested"}
           >
-            Reject
+            Revizyon
+          </button>
+          <button
+            type="button"
+            className="rounded-xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300 disabled:opacity-50"
+            onClick={() => void moderate(row.id, "reject")}
+            disabled={row.status === "rejected"}
+          >
+            Reddet
           </button>
         </div>
       ),

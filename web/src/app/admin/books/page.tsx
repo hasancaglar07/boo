@@ -1,5 +1,6 @@
 "use client";
 
+import { Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { ActionMenu } from "@/components/admin/action-menu";
@@ -55,7 +56,13 @@ export default function AdminBooksPage() {
             <div className="h-14 w-10 rounded-lg bg-black/5 dark:bg-white/8" />
           )}
           <div>
-            <div className="font-semibold text-[color:var(--admin-text)]">{row.title}</div>
+            <button
+              type="button"
+              className="text-left font-semibold text-[color:var(--admin-text)] hover:text-[color:var(--admin-primary)] hover:underline"
+              onClick={() => router.push(`/admin/books/${encodeURIComponent(row.slug)}`)}
+            >
+              {row.title}
+            </button>
             <div className="mt-1 text-xs admin-muted">{row.slug}</div>
           </div>
         </div>
@@ -65,7 +72,16 @@ export default function AdminBooksPage() {
       key: "status",
       header: "Status",
       sortable: true,
-      cell: (row) => <StatusBadge status={row.status} />,
+      cell: (row) => (
+        <div className="flex flex-col gap-1.5">
+          <StatusBadge status={row.status} />
+          {row.premiumUnlocked && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:text-indigo-300">
+              <Sparkles className="size-3" /> Premium Açık
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       key: "author",
@@ -75,6 +91,15 @@ export default function AdminBooksPage() {
         <div>
           <div>{row.author}</div>
           <div className="text-xs admin-muted">{row.language}</div>
+          {row.ownerEmail && (
+            <button
+              type="button"
+              className="mt-1 text-xs text-[color:var(--admin-primary)] hover:underline"
+              onClick={(e) => { e.stopPropagation(); router.push(`/admin/users?q=${encodeURIComponent(row.ownerEmail)}`); }}
+            >
+              {row.ownerEmail}
+            </button>
+          )}
         </div>
       ),
     },

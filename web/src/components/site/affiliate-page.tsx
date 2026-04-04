@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronUp, ArrowRight, Users, LinkIcon, BadgeDollarSign } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -81,7 +80,7 @@ export function AffiliatePage() {
             Her Abonelikten<br />%30 Komisyon Kazan
           </h1>
           <p className="mt-5 text-base text-muted-foreground leading-relaxed">
-            Kitap Oluşturucu'yu tanıtıyorsun, biz ödüyoruz. İlk 3 ay boyunca her aktif abonelikten komisyon kazan.
+            Kitap Oluşturucu&apos;yu tanıtıyorsun, biz ödüyoruz. İlk 3 ay boyunca her aktif abonelikten komisyon kazan.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a

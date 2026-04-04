@@ -9,7 +9,7 @@ import { SectionHeading } from "@/components/site/section-heading";
 import { Features11 } from "@/components/ui/features-11";
 import { Card, CardContent } from "@/components/ui/card";
 import { deliverables, howItWorksPageSteps } from "@/lib/marketing-data";
-import { buildPageMetadata, absoluteUrl, siteConfig } from "@/lib/seo";
+import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Kitap Oluşturucu Nasıl Çalışır? 3 Adımda Kitap Üretimi",

@@ -11,7 +11,8 @@
     "build": "next build",
     "postbuild": "node ./scripts/prepare-standalone.mjs",
     "start": "node .next/standalone/server.js",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:assets": "node ./scripts/check-asset-consistency.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { Download } from "lucide-react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { DataTable, type Column } from "@/components/admin/data-table";
@@ -21,11 +22,20 @@ type AuditRow = {
   entityId: string | null;
 };
 
+const entityTypeColors: Record<string, string> = {
+  user: "text-blue-600 dark:text-blue-400",
+  book: "text-violet-600 dark:text-violet-400",
+  billing: "text-emerald-600 dark:text-emerald-400",
+  subscription: "text-amber-600 dark:text-amber-400",
+  feature_flag: "text-rose-600 dark:text-rose-400",
+};
+
 export default function AdminAuditPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const { data, loading, error } = useAdminResource<AdminListResponse<AuditRow>>(`/api/admin/audit?${query}`);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   function handleSort(key: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -54,7 +64,34 @@ export default function AdminAuditPage() {
       cell: (row) => (
         <div>
           <div className="font-semibold text-[color:var(--admin-text)]">{row.action}</div>
-          <div className="text-xs admin-muted">{row.entityType}{row.entityId ? ` · ${row.entityId}` : ""}</div>
+          <div className="text-xs admin-muted">
+            <span className={entityTypeColors[row.entityType] || "admin-muted"}>{row.entityType}</span>
+            {row.entityId ? ` · ${row.entityId.slice(0, 12)}` : ""}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "details",
+      header: "Details",
+      cell: (row) => (
+        <div>
+          {row.details ? (
+            <button
+              type="button"
+              className="text-xs text-[color:var(--admin-primary)] hover:underline"
+              onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
+            >
+              {expandedId === row.id ? "Gizle" : "Göster"}
+            </button>
+          ) : (
+            <span className="text-xs admin-muted">—</span>
+          )}
+          {expandedId === row.id && row.details && (
+            <pre className="mt-2 max-w-[300px] overflow-x-auto rounded-xl bg-black/5 p-3 text-[10px] dark:bg-white/5">
+              {JSON.stringify(row.details, null, 2)}
+            </pre>
+          )}
         </div>
       ),
     },
@@ -72,12 +109,25 @@ export default function AdminAuditPage() {
           <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Audit log</h1>
           <p className="mt-1 text-sm admin-muted">Admin, auth ve billing aksiyonlarının tamamı.</p>
         </div>
-        <Link
-          href="/admin/reports"
-          className="inline-flex h-11 items-center justify-center rounded-2xl border border-[color:var(--admin-border)] px-4 text-sm font-semibold text-[color:var(--admin-text)]"
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              const res = await fetch(`/api/admin/reports/audit?${query}`, { credentials: "include" });
+              if (!res.ok) return;
+              const blob = await res.blob();
+              const a = document.createElement("a");
+              a.href = URL.createObjectURL(blob);
+              a.download = "audit-log.csv";
+              a.click();
+              URL.revokeObjectURL(a.href);
+            } catch { /* silent */ }
+          }}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[color:var(--admin-border)] px-4 text-sm font-semibold text-[color:var(--admin-text)] transition hover:border-[color:var(--admin-primary)]"
         >
-          Export tools
-        </Link>
+          <Download className="size-4" />
+          CSV export
+        </button>
       </div>
 
       <FilterBar

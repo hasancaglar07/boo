@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -38,10 +39,21 @@ export default function AdminUsersPage() {
       header: "User",
       sortable: true,
       cell: (row) => (
-        <div>
+        <Link href={`/admin/users/${row.id}`} className="block hover:underline">
           <div className="font-semibold text-[color:var(--admin-text)]">{row.name}</div>
-          <div className="mt-1 text-xs admin-muted">{row.email}</div>
-        </div>
+          <div className="mt-0.5 text-xs admin-muted">{row.email}</div>
+          <div className="mt-1 flex items-center gap-1.5">
+            {row.emailVerified ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                <CheckCircle2 className="size-3" /> Doğrulandı
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+                <AlertCircle className="size-3" /> Doğrulanmadı
+              </span>
+            )}
+          </div>
+        </Link>
       ),
     },
     {

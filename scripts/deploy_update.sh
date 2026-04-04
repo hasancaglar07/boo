@@ -102,6 +102,18 @@ health_check() {
   return 1
 }
 
+asset_check_in_container() {
+  local base_url="$1"
+  local iterations="$2"
+  local mode_label="$3"
+
+  echo "[asset-check:$mode_label] base=$base_url iterations=$iterations"
+  compose exec -T web env \
+    CHECK_BASE_URL="$base_url" \
+    CHECK_ITERATIONS="$iterations" \
+    node ./scripts/check-asset-consistency.mjs
+}
+
 ensure_clean_git_tree() {
   if ! git -C "$ROOT_DIR" diff --quiet || ! git -C "$ROOT_DIR" diff --cached --quiet; then
     echo "working tree has tracked changes; commit/stash them or rerun with --skip-pull" >&2
@@ -142,6 +154,10 @@ set +a
 
 BOOK_WEB_BIND_PORT="${BOOK_WEB_BIND_PORT:-3000}"
 BOOK_DASHBOARD_BIND_PORT="${BOOK_DASHBOARD_BIND_PORT:-8765}"
+DEPLOY_LOCAL_ASSET_CHECK_ITERATIONS="${DEPLOY_LOCAL_ASSET_CHECK_ITERATIONS:-3}"
+DEPLOY_PUBLIC_ASSET_CHECK_ITERATIONS="${DEPLOY_PUBLIC_ASSET_CHECK_ITERATIONS:-6}"
+DEPLOY_PUBLIC_BASE_URL="${DEPLOY_PUBLIC_BASE_URL:-https://bookgenerator.net}"
+DEPLOY_SKIP_PUBLIC_ASSET_CHECK="${DEPLOY_SKIP_PUBLIC_ASSET_CHECK:-0}"
 
 if [ "$SKIP_PULL" -eq 0 ]; then
   ensure_clean_git_tree
@@ -172,6 +188,19 @@ fi
 if ! health_check "web" "http://127.0.0.1:${BOOK_WEB_BIND_PORT}/api/auth/state" 60 1; then
   rollback
   exit 1
+fi
+
+if ! asset_check_in_container "http://127.0.0.1:${BOOK_WEB_BIND_PORT}" "$DEPLOY_LOCAL_ASSET_CHECK_ITERATIONS" "local"; then
+  rollback
+  exit 1
+fi
+
+if [ "$DEPLOY_SKIP_PUBLIC_ASSET_CHECK" != "1" ] && [ -n "$DEPLOY_PUBLIC_BASE_URL" ]; then
+  if ! asset_check_in_container "$DEPLOY_PUBLIC_BASE_URL" "$DEPLOY_PUBLIC_ASSET_CHECK_ITERATIONS" "public"; then
+    echo "[asset-check:public] failed. Mixed releases/origins may be active behind CDN or DNS." >&2
+    echo "[asset-check:public] check Cloudflare DNS (single active origin), old containers, and CDN cache purge." >&2
+    exit 1
+  fi
 fi
 
 compose ps

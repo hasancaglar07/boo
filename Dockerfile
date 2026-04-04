@@ -36,6 +36,7 @@ WORKDIR /app
 COPY --from=web-builder /app/.next/standalone ./
 COPY --from=web-builder /app/.next/static ./.next/static
 COPY --from=web-builder /app/public ./public
+COPY --from=web-builder /app/scripts ./scripts
 COPY --from=web-builder /app/data ./data
 
 RUN mkdir -p /app/.next/cache /app/book_outputs \

@@ -10,7 +10,6 @@ import { plans, premiumPlan } from "@/lib/marketing-data";
 import { buildPageMetadata, buildOgImageUrl, absoluteUrl, siteConfig } from "@/lib/seo";
 import {
   KDP_GUARANTEE_CLAIM,
-  KDP_LIVE_BOOK_COUNT,
   KDP_LIVE_BOOKS_CLAIM,
   NO_API_COST_CLAIM,
   REFUND_GUARANTEE_CLAIM,
@@ -39,7 +38,7 @@ const pricingFaq = [
   ],
   [
     "KDP'ye direkt yükleyebilir miyim?",
-    `Evet. EPUB ve PDF çıktıları Amazon KDP yükleme gereksinimlerini karşılayacak şekilde üretiliyor. ${KDP_LIVE_BOOKS_CLAIM} ve kitaplarımız ${KDP_GUARANTEE_CLAIM} ile hazırlanır.`,
+    `Evet. EPUB ve PDF çıktıları Amazon KDP yükleme gereksinimlerini karşılayacak şekilde üretiliyor. Üretim akışı ${KDP_LIVE_BOOKS_CLAIM} mantığıyla tasarlanır ve teslim paketi ${KDP_GUARANTEE_CLAIM} odağında hazırlanır.`,
   ],
   [
     "Türkçe yazıp İngilizce kitap üretebilir miyim?",
@@ -47,7 +46,7 @@ const pricingFaq = [
   ],
   [
     "AI içeriği kaliteli çıkar mı?",
-    `Sistem taslak üretir, kaliteyi sen belirlersin. Bölüm editörüyle her bölümü düzenleyebilir veya yeniden üretebilirsin. Üstelik ${KDP_LIVE_BOOKS_CLAIM} ve yayın hedefi KDP ise kitaplar ${KDP_GUARANTEE_CLAIM} ile ilerler.`,
+    `Sistem taslak üretir, kaliteyi sen belirlersin. Bölüm editörüyle her bölümü düzenleyebilir veya yeniden üretebilirsin. Üstelik akış ${KDP_LIVE_BOOKS_CLAIM} yaklaşımıyla kurulur ve yayın hedefi KDP ise teslim paketi ${KDP_GUARANTEE_CLAIM} odağında ilerler.`,
   ],
   [
     "Planımı değiştirebilir miyim?",
@@ -55,7 +54,7 @@ const pricingFaq = [
   ],
   [
     "30 gün garantisi nasıl işliyor?",
-    `Kitaplar ${KDP_GUARANTEE_CLAIM} ile hazırlanır. Ayrıca ilk 30 gün içinde memnun kalmazsan soru sormadan tam iade yapıyoruz. $4 Tek Kitap dahil tüm planlar kapsanıyor.`,
+    `Teslim paketi ${KDP_GUARANTEE_CLAIM} odağında hazırlanır. Ayrıca ilk 30 gün içinde memnun kalmazsan iade talebi açabilirsin. $4 Tek Kitap dahil kapsam detayları refund policy sayfasında yer alır.`,
   ],
   [
     "Kullanılmayan kitap hakları devredyor mu?",
@@ -86,7 +85,7 @@ const whoForItems = [
     title: "KDP'de büyümek isteyen",
     description:
       "Hangi konu satar? Hangi anahtar kelime boş? Araştırma merkezi ve pazar analizi ile karar ver, 30 kitapla hızlı üret.",
-    bullets: ["KDP anahtar kelime + pazar analizi", "30 kitap/ay, 60 kapak", "HTML çıktısı dahil"],
+    bullets: ["KDP anahtar kelime + pazar analizi", "30 kitap/ay, 60 kapak", "Ek export seçenekleri"],
   },
   {
     icon: Layers,
@@ -190,7 +189,7 @@ export default function PricingPage() {
           <div>
             <p className="font-semibold text-foreground">{KDP_GUARANTEE_CLAIM} + {REFUND_GUARANTEE_CLAIM}</p>
             <p className="mt-1 text-sm leading-7 text-muted-foreground">
-              Önce önizlemeyi gör, sonra bu kitabı aç. KDP hedefliyorsan kitaplar {KDP_GUARANTEE_CLAIM} ile hazırlanır. Ayrıca {NO_API_COST_CLAIM.toLowerCase()} ve beğenmezsen ilk 30 gün içinde soru sormadan tam iade alırsın. $4 Tek Kitap dahil tüm planlar kapsanıyor.{" "}
+              Önce önizlemeyi gör, sonra bu kitabı aç. KDP hedefliyorsan teslim paketi {KDP_GUARANTEE_CLAIM} odağında hazırlanır. Ayrıca {NO_API_COST_CLAIM.toLowerCase()} ve memnun kalmazsan ilk 30 gün içinde iade talebi açabilirsin. Kapsam detayları {" "}
               <Link href="/refund-policy" className="text-primary/80 underline-offset-4 hover:underline">
                 İade koşullarını oku →
               </Link>
@@ -292,27 +291,27 @@ export default function PricingPage() {
       <section className="border-b border-border/80 bg-[linear-gradient(180deg,rgba(233,230,220,0.3),transparent)] py-14">
         <div className="shell">
           <h2 className="mb-8 text-center text-base font-medium text-muted-foreground">
-            Kanıtlanmış süreç — {KDP_LIVE_BOOKS_CLAIM}
+            Süreç netliği — {KDP_LIVE_BOOKS_CLAIM}
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
             {[
               {
                 icon: BookOpen,
-                stat: `${KDP_LIVE_BOOK_COUNT} kitap`,
-                label: "KDP onaylı kitap canlıda",
-                sub: "Gerçek yayın proof'u ve satışta olan kitap akışı",
+                stat: "Preview → kitap",
+                label: "Aynı akışta üretim",
+                sub: "Konu özeti, bölüm planı, kapak ve export aynı üretim omurgasında ilerler.",
               },
               {
                 icon: Check,
-                stat: "%100",
-                label: "KDP onay garantisi",
-                sub: "Platformdan çıkan kitaplar yayın hedefinde onay garantisiyle hazırlanır",
+                stat: "EPUB + PDF",
+                label: "Teslim paketi net",
+                sub: "Yayın hedefi KDP ise teslim paketi kontrol edilmesi kolay bir format setiyle hazırlanır.",
               },
               {
                 icon: Zap,
-                stat: "Ek API cost yok",
-                label: "Kullanıcı ayrıca API ödemez",
-                sub: "Model ve altyapı maliyeti planın içinde kalır",
+                stat: "Plan içine dahil",
+                label: "Model maliyeti görünür",
+                sub: "Ek model faturası çıkmaz; kullanılan altyapı plan fiyatına dahildir.",
               },
             ].map((item) => (
               <div key={item.stat} className="rounded-[24px] border border-border/80 bg-card/80 p-5 shadow-sm">
@@ -342,7 +341,7 @@ export default function PricingPage() {
             },
             {
               title: "Çıktı formatları",
-              text: "EPUB ve PDF her planda dahil. HTML ve Markdown Yazar planından itibaren. Tüm formatlar KDP ve e-kitap platformlarına uyumlu.",
+              text: "EPUB ve PDF her planda dahil. Ek export seçenekleri üst planlarda açılır. Teslim dosyaları yayın öncesi kontrol etmeyi kolaylaştıracak şekilde hazırlanır.",
             },
           ].map(({ title, text }) => (
             <div key={title} className="rounded-[24px] border border-border/80 bg-card/80 px-5 py-5 shadow-sm">
@@ -411,14 +410,14 @@ export default function PricingPage() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-muted-foreground">
             Outline ve kapak önizlemesi ücretsiz. Tam kitap + EPUB/PDF için $4 — bir kez öde, senindir.
-            Aylık planlarda ayda 10 kitaba kadar $19.
+            Aylık planlarda uygun paketi seçip ödemeyi doğrudan başlatabilirsin.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/start/topic"
+              href="/billing?plan=creator&autostart=1"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90"
             >
-              Ücretsiz Önizlemeyi Başlat
+              Hızlı Kayıt + Ödemeyi Aç
               <ArrowRight className="size-4" />
             </Link>
             <Link
@@ -445,9 +444,13 @@ export default function PricingPage() {
             ))}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            Ya da doğrudan{" "}
+            Aylık plana hızlı geçiş için{" "}
+            <Link href="/billing?plan=starter&autostart=1" className="font-semibold text-foreground underline-offset-4 hover:underline">
+              ödemeyi direkt başlat →
+            </Link>
+            {" "}· Tek kitap için önce{" "}
             <Link href="/start/topic?plan=tek-kitap" className="font-semibold text-foreground underline-offset-4 hover:underline">
-              $4 Tek Kitap ile başla →
+              önizleme oluştur
             </Link>
           </p>
         </div>

@@ -284,11 +284,11 @@ export const PremiumBookHero = React.forwardRef<
   {
     className,
     title = "Uzmanlığını kısa sürede görülebilir bir kitaba çevir.",
-    subtitle = "Konunu yaz, wizard seni yönlendirsin. Outline, kapak ve ilk preview aynı akışta oluşsun. ChatGPT, Canva ve export araçları arasında dağılma.",
-    ctaText = "Ücretsiz Preview Başlat",
+    subtitle = "Konunu yaz, wizard seni yönlendirsin. 5 kısa soruda outline, kapak yönü ve ilk preview aynı akışta oluşsun; farklı araçlar arasında dağılma.",
+    ctaText = "5 Soruda Ücretsiz Preview",
     ctaHref = "/start/topic",
     badge = "Ücretsiz Preview",
-    trustNote = `Önce ücretsiz preview gör. Beğenirsen tam kitabı aç. · ${FULL_TRUST_CLAIM}`,
+    trustNote = `Önce ücretsiz preview gör. Kredi kartı gerekmez; beğenirsen tam kitabı aç. · ${FULL_TRUST_CLAIM}`,
     socialProof = { count: KDP_LIVE_BOOKS_CLAIM, rating: KDP_GUARANTEE_CLAIM },
     secondaryCtaText = "Örnekleri Gör",
     secondaryCtaHref = "/examples",
@@ -435,6 +435,19 @@ export const PremiumBookHero = React.forwardRef<
               </a>
             </Button>
           )}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.72, duration: 0.5 }}
+          className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs font-medium text-muted-foreground"
+        >
+          {["5 kısa soru", "Önce preview", "Kredi kartı gerekmez"].map((item) => (
+            <span key={item} className="rounded-full border border-border/80 bg-card/70 px-3 py-1 backdrop-blur-sm">
+              {item}
+            </span>
+          ))}
         </motion.div>
 
         {/* Trust Microcopy */}

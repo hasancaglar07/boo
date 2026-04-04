@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { DateRangePicker } from "@/components/admin/date-range-picker";
@@ -82,16 +83,32 @@ export function FilterBar({
       {(activeFilters.length > 0 || searchParams.get("q") || searchParams.get("from") || searchParams.get("to")) && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {searchParams.get("q") ? (
-            <span className="rounded-full bg-[color:var(--admin-primary-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--admin-primary)]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--admin-primary-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--admin-primary)]">
               Arama: {searchParams.get("q")}
+              <button
+                type="button"
+                onClick={() => update("q", "")}
+                className="ml-0.5 inline-flex size-4 items-center justify-center rounded-full hover:bg-[color:var(--admin-primary-soft)]"
+                aria-label="Aramayı temizle"
+              >
+                <X className="size-3" />
+              </button>
             </span>
           ) : null}
           {activeFilters.map((item) => (
             <span
               key={item.key}
-              className="rounded-full bg-black/5 px-3 py-1 text-xs font-semibold text-[color:var(--admin-text)] dark:bg-white/8"
+              className="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-xs font-semibold text-[color:var(--admin-text)] dark:bg-white/8"
             >
               {item.label}: {item.value}
+              <button
+                type="button"
+                onClick={() => update(item.key, "")}
+                className="ml-0.5 inline-flex size-4 items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10"
+                aria-label={`${item.label} filtresini kaldır`}
+              >
+                <X className="size-3" />
+              </button>
             </span>
           ))}
           <button

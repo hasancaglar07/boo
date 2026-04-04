@@ -83,6 +83,14 @@ export default function AdminBillingPage() {
         <div>
           <div className="font-semibold text-[color:var(--admin-text)]">{row.invoiceId.slice(0, 8)}</div>
           <div className="text-xs admin-muted">{row.userEmail}</div>
+          {row.bookSlug && (
+            <a
+              href={`/admin/books/${encodeURIComponent(row.bookSlug)}`}
+              className="mt-1 block text-xs text-[color:var(--admin-primary)] hover:underline"
+            >
+              📖 {row.bookSlug}
+            </a>
+          )}
         </div>
       ),
     },
@@ -91,6 +99,29 @@ export default function AdminBillingPage() {
       header: "Amount",
       sortable: true,
       cell: (row) => formatAdminCurrency(row.amount, row.currency),
+    },
+    {
+      key: "kind",
+      header: "Kind",
+      cell: (row) => {
+        const kindColors: Record<string, string> = {
+          subscription: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
+          one_time_book_unlock: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
+          manual_adjustment: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
+          refund: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+        };
+        const kindLabels: Record<string, string> = {
+          subscription: "Abonelik",
+          one_time_book_unlock: "Kitap Kilidi",
+          manual_adjustment: "Manuel",
+          refund: "İade",
+        };
+        return (
+          <span className={`rounded-full px-2 py-1 text-xs font-semibold ${kindColors[row.kind] || "bg-slate-500/10 text-slate-700"}`}>
+            {kindLabels[row.kind] || row.kind}
+          </span>
+        );
+      },
     },
     {
       key: "status",

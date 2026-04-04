@@ -3,6 +3,8 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+const PAGE_SIZES = [10, 25, 50, 100];
+
 export function Pagination({
   page,
   totalPages,
@@ -26,8 +28,23 @@ export function Pagination({
 
   return (
     <div className="mt-4 flex flex-col gap-3 rounded-[20px] border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 text-sm dark:bg-white/5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="admin-muted">
-        {Math.min((page - 1) * pageSize + 1, totalItems)}-{Math.min(page * pageSize, totalItems)} / {totalItems}
+      <div className="flex items-center gap-2 text-sm admin-muted">
+        <span>Sayfa başına:</span>
+        <select
+          value={pageSize}
+          onChange={(e) => {
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("pageSize", e.target.value);
+            params.set("page", "1");
+            router.replace(`${pathname}?${params.toString()}`);
+          }}
+          className="h-8 rounded-xl border border-[color:var(--admin-border)] bg-white/60 px-2 text-sm outline-none dark:bg-white/5"
+        >
+          {PAGE_SIZES.map((size) => (
+            <option key={size} value={size}>{size}</option>
+          ))}
+        </select>
+        <span>{totalItems} kayıt</span>
       </div>
       <div className="flex items-center gap-2">
         <button

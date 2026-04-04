@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, Sparkles, CreditCard, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 import { buildPageMetadata } from "@/lib/seo";
 import { StartOptionCards } from "@/components/site/start-option-cards";
@@ -24,10 +24,16 @@ export default function StartPage() {
           Konunu yaz. Kitabını başlat.
         </h1>
         <p className="text-lg text-muted-foreground">
-          En doğru ilk adım sihirbaz. Konunu gir, sistem seni yönlendirsin; kısa sürede bölüm planın, kapak yönün ve ilk önizlemen hazır olsun.
+          En doğru ilk adım sihirbaz. 5 kısa soruyla başlarsın; sistem seni yönlendirir, bölüm planın ve ilk preview hızlıca görünür olur.
         </p>
       </div>
 
+
+      <div className="mb-8 flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-muted-foreground">
+        <span className="rounded-full border border-border/80 bg-card px-3 py-1">Önerilen yol: sihirbaz</span>
+        <span className="rounded-full border border-border/80 bg-card px-3 py-1">Yaklaşık 2 dakika</span>
+        <span className="rounded-full border border-border/80 bg-card px-3 py-1">Önce preview, sonra karar</span>
+      </div>
       {/* 3-Option Cards */}
       <StartOptionCards />
 
@@ -45,7 +51,7 @@ export default function StartPage() {
         <span className="hidden sm:inline text-border">•</span>
         <span className="flex items-center gap-1.5">
           <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-          Kayıt şartsız başla
+          5 soruda başla
         </span>
       </div>
 

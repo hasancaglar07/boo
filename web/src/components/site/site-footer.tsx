@@ -4,8 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { useTheme } from "@/components/theme-provider";
-import { marketingToolCatalog } from "@/lib/marketing-tools";
-import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
+import { KDP_GUARANTEE_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export function SiteFooter() {
   const { resolvedTheme } = useTheme();
@@ -14,7 +13,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-border/80 py-12">
       <div className="shell">
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-[1.1fr_auto_auto_auto_auto_auto]">
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-[1.2fr_auto_auto_auto]">
           {/* Logo + Açıklama */}
           <div>
             <Link href="/" aria-label="Ana sayfaya git" className="inline-block transition-opacity duration-150 hover:opacity-80">
@@ -40,7 +39,11 @@ export function SiteFooter() {
               </Link>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              {[KDP_LIVE_BOOKS_CLAIM, KDP_GUARANTEE_CLAIM, NO_API_COST_CLAIM].map((item) => (
+              {[
+                "Ücretsiz preview ile başlarsın",
+                KDP_GUARANTEE_CLAIM,
+                NO_API_COST_CLAIM,
+              ].map((item) => (
                 <span key={item} className="rounded-full border border-border/80 bg-card px-3 py-1">
                   {item}
                 </span>
@@ -68,27 +71,13 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Araçlar</p>
-            <ul className="space-y-2 text-sm">
-              {[{ path: "/tools", shortLabel: "Tüm Araçlar" }, ...marketingToolCatalog].map((item) => (
-                <li key={item.path}>
-                  <Link href={item.path} className="text-muted-foreground transition hover:text-foreground">
-                    {item.shortLabel}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Öğren</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Kaynaklar</p>
             <ul className="space-y-2 text-sm">
               {[
+                { href: "/tools", label: "Ücretsiz Araçlar" },
                 { href: "/blog", label: "Blog" },
                 { href: "/faq", label: "SSS" },
                 { href: "/resources", label: "Kaynaklar" },
-                { href: "/compare", label: "Karşılaştır" },
-                { href: "/use-cases", label: "Kullanım Alanları" },
               ].map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} className="text-muted-foreground transition hover:text-foreground">

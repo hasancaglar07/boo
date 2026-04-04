@@ -104,7 +104,7 @@ export function ContactForm() {
             </div>
             <div>
               <h4 className="font-semibold text-foreground">Yanıt süresi</h4>
-              <p className="mt-1 text-sm text-muted-foreground">Genelde 2 saat içinde yanıt</p>
+              <p className="mt-1 text-sm text-muted-foreground">Çoğu mesaj aynı iş günü içinde yanıtlanır</p>
             </div>
           </div>
         </div>
@@ -114,7 +114,8 @@ export function ContactForm() {
             <h4 className="mb-2 font-semibold text-foreground">Hızlı notlar</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>• Konu başlığı net olsun</li>
-              <li>• Kitap slug'ını veya preview linkini ekleyin</li>
+              <li>• Faturalama / erişim / teknik desteği doğru seçin</li>
+              <li>• Kitap slug’ını veya preview linkini ekleyin</li>
               <li>• Gerekirse ekran görüntüsü paylaşın</li>
             </ul>
           </CardContent>

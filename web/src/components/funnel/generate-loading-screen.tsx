@@ -50,13 +50,11 @@ export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoad
   const [activeStageIndex, setActiveStageIndex] = useState(0);
   const [completedStages, setCompletedStages] = useState<FastStageId[]>([]);
   const [tipIndex, setTipIndex] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn] = useState(() => getSession() !== null);
   const [animationDone, setAnimationDone] = useState(false);
-  const [done, setDone] = useState(false);
   const canNavigate = Boolean(onComplete || redirectPath);
 
   useEffect(() => {
-    setIsLoggedIn(getSession() !== null);
     trackEvent("fast_preview_loading_started");
 
     // Stage 1: cover draft — 2 seconds
@@ -87,7 +85,6 @@ export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoad
   useEffect(() => {
     if (!animationDone || !canNavigate) return;
 
-    setDone(true);
     const navigationTimer = window.setTimeout(() => {
       if (onComplete) {
         onComplete();
@@ -111,6 +108,7 @@ export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoad
     const stage = FAST_STAGES.find((s) => s.id === id);
     return sum + (stage?.durationMs ?? 0);
   }, 0);
+  const done = animationDone && canNavigate;
   const progressPercent = done ? 100 : animationDone ? 92 : Math.round((elapsedMs / totalMs) * 100);
   const mainLabel = done
     ? "Önizleme hazır! Açılıyor..."

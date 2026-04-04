@@ -11,9 +11,9 @@ const OPTIONS = [
     key: "start_wizard",
     href: "/start/topic",
     icon: Sparkles,
-    label: "Önerilen başlangıç: sihirbaz",
-    description: "Konunu gir, sistem seni adım adım yönlendirsin. Önce bölüm planını ve önizlemeyi gör, sonra tam kitabı açmaya karar ver.",
-    cta: "Sihirbazı Başlat",
+    label: "Önerilen başlangıç: 5 soruluk sihirbaz",
+    description: "Konunu gir, sistem seni adım adım yönlendirsin. Yaklaşık 5 kısa soruda bölüm planını ve preview’yi gör; tam kitabı açma kararını sonra ver.",
+    cta: "Şimdi Sihirbazı Başlat",
     highlight: true,
   },
   {

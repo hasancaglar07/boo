@@ -90,6 +90,14 @@ const revenueConfig = {
   },
 };
 
+function retentionColor(value: number): string {
+  if (value >= 80) return "bg-emerald-500/90 text-white";
+  if (value >= 60) return "bg-emerald-400/70 text-emerald-900 dark:text-white";
+  if (value >= 40) return "bg-amber-400/70 text-amber-900 dark:text-amber-100";
+  if (value >= 20) return "bg-orange-400/70 text-orange-900 dark:text-orange-100";
+  return "bg-rose-400/70 text-rose-900 dark:text-rose-100";
+}
+
 export default function AdminAnalyticsPage() {
   const funnel = useAdminResource<FunnelPayload>("/api/admin/analytics/funnel");
   const cohort = useAdminResource<CohortPayload>("/api/admin/analytics/cohort");
@@ -210,8 +218,15 @@ export default function AdminAnalyticsPage() {
                 <div className="text-sm font-medium text-[color:var(--admin-text)]">{item.eventName}</div>
                 <div className="text-xs admin-muted">{new Date(item.createdAt).toLocaleString("tr-TR")}</div>
               </div>
-              <div className="mt-2 text-xs admin-muted">
-                {Object.entries(item.properties || {}).map(([key, value]) => `${key}: ${String(value)}`).join(" · ") || "No properties"}
+              <div className="mt-2 flex flex-wrap gap-1">
+                {Object.entries(item.properties || {}).map(([key, value]) => (
+                  <span key={key} className="rounded-md bg-black/5 px-2 py-0.5 text-[10px] font-mono dark:bg-white/8">
+                    {key}: {String(value)}
+                  </span>
+                ))}
+                {Object.keys(item.properties || {}).length === 0 && (
+                  <span className="text-xs admin-muted">properties yok</span>
+                )}
               </div>
             </div>
           ))}
@@ -230,9 +245,9 @@ export default function AdminAnalyticsPage() {
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   {item.retention.map((value, index) => (
-                    <div key={index} className="rounded-xl bg-black/5 px-3 py-2 text-center dark:bg-white/8">
-                      <div className="text-[10px] uppercase tracking-[0.14em] admin-muted">M{index + 1}</div>
-                      <div className="mt-1 text-sm font-semibold text-[color:var(--admin-text)]">%{value}</div>
+                    <div key={index} className={`rounded-xl px-3 py-2 text-center ${retentionColor(value)}`}>
+                      <div className="text-[10px] uppercase tracking-[0.14em] opacity-70">M{index + 1}</div>
+                      <div className="mt-1 text-sm font-bold">%{value}</div>
                     </div>
                   ))}
                 </div>
@@ -246,8 +261,15 @@ export default function AdminAnalyticsPage() {
           <ChartContainer className="h-[280px] w-full" config={churnConfig}>
             <BarChart data={churn.data?.byMonth || []}>
               <XAxis dataKey="month" tickLine={false} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} />
-              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v: number) => `%${v}`}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent formatter={(value) => [`%${value}`, "Churn"]} />}
+              />
               <Bar dataKey="churnRate" fill="var(--color-churnRate)" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ChartContainer>

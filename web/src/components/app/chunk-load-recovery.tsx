@@ -24,12 +24,14 @@ function shouldRecoverFromChunkError(input: unknown) {
   if (
     message.includes("ChunkLoadError") ||
     message.includes("Failed to load chunk") ||
-    message.includes("Failed to fetch dynamically imported module")
+    message.includes("Failed to fetch dynamically imported module") ||
+    message.includes("Refused to apply style") ||
+    message.includes("MIME type")
   ) {
     return true;
   }
 
-  return message.includes("/_next/static/chunks/");
+  return message.includes("/_next/static/");
 }
 
 function canReloadNow() {
@@ -64,7 +66,17 @@ export function ChunkLoadRecovery() {
   useEffect(() => {
     function onError(event: Event) {
       const scriptTarget = event.target as HTMLScriptElement | null;
-      if (scriptTarget?.tagName === "SCRIPT" && scriptTarget.src.includes("/_next/static/chunks/")) {
+      if (scriptTarget?.tagName === "SCRIPT" && scriptTarget.src.includes("/_next/static/")) {
+        reloadForFreshChunks();
+        return;
+      }
+
+      const linkTarget = event.target as HTMLLinkElement | null;
+      if (
+        linkTarget?.tagName === "LINK" &&
+        linkTarget.rel === "stylesheet" &&
+        linkTarget.href.includes("/_next/static/")
+      ) {
         reloadForFreshChunks();
         return;
       }

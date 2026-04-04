@@ -287,7 +287,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
               Sonra karar verirsin
             </div>
             <div className="mt-2 text-sm leading-6 text-foreground">
-              Beğenirsen tam kitabı, PDF'i ve EPUB'u açarsın.
+              Beğenirsen tam kitabı, PDF&apos;i ve EPUB&apos;u açarsın.
             </div>
           </div>
           <div className="rounded-[22px] border border-primary/20 bg-primary/5 px-4 py-4">

@@ -137,6 +137,42 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="border-b border-border/80 py-18">
+        <div className="shell">
+          <SectionHeading
+            badge="Preview nasıl çalışır?"
+            title="Önce preview görürsün, tam kitaba sonra geçersin."
+            description="Ücretsiz kısım karar vermek içindir; tam erişim ise düzenleme ve teslim dosyalarını açar. Kullanıcı neyi ücretsiz gördüğünü, neyi ödeme sonrası açtığını ilk bakışta anlar."
+          />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="rounded-[28px] border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))]">
+              <CardContent className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary/80">Ücretsiz preview</p>
+                <h3 className="text-xl font-semibold tracking-tight text-foreground">Karar vermek için yeterli görünürlük</h3>
+                <ul className="space-y-2 text-sm leading-7 text-muted-foreground">
+                  <li>• Konu özeti ve kitap yönü</li>
+                  <li>• Bölüm planı ve ilk yapı</li>
+                  <li>• Kapak yönü / önizleme</li>
+                  <li>• İlk içerik örneğini görme</li>
+                </ul>
+              </CardContent>
+            </Card>
+            <Card className="rounded-[28px]">
+              <CardContent className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary/80">Tam erişim</p>
+                <h3 className="text-xl font-semibold tracking-tight text-foreground">Kitabı tamamlama ve dışa aktarma</h3>
+                <ul className="space-y-2 text-sm leading-7 text-muted-foreground">
+                  <li>• Tüm bölümleri açma ve düzenleme</li>
+                  <li>• Kapak ve kitap bilgilerini netleştirme</li>
+                  <li>• EPUB + PDF teslim dosyaları</li>
+                  <li>• Aynı kitap üzerinde çalışmaya devam etme</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       <HomeHowItWorksSection />
       <InteractiveBookShowcase books={fallbackShowcaseBooks} />
 
@@ -182,7 +218,7 @@ export default async function HomePage() {
 
       <MarketingCtaSection
         title="Aklındaki kitabı bir yıl daha beklettirme."
-        description={`Konunu gir, bölüm planını gör, önizlemeyi aç — aynı akışta kapağın ve yayın dosyan hazır olur. ${NO_API_COST_CLAIM}, kredi kartı gerekmez ve kitaplar ${KDP_GUARANTEE_CLAIM} ile hazırlanır.`}
+        description={`Konunu gir, bölüm planını gör, önizlemeyi aç — aynı akışta kapağın ve yayın dosyan hazır olur. ${NO_API_COST_CLAIM}, kredi kartı gerekmez ve teslim paketi ${KDP_GUARANTEE_CLAIM} odağında hazırlanır.`}
         items={[
           "5 soruluk hızlı sihirbaz",
           "Otomatik bölüm planı + bölüm akışı",

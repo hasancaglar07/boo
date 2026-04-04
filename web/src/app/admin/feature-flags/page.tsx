@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Flag, Plus, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
+import { Flag, Pencil, Plus, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
 
 import { useAdminResource } from "@/lib/admin/client";
 import { adminFetch } from "@/lib/admin/client";
@@ -30,6 +30,11 @@ export default function AdminFeatureFlagsPage() {
   const [newDesc, setNewDesc] = useState("");
   const [createError, setCreateError] = useState("");
 
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+
   async function handleToggle(flag: FeatureFlag) {
     setToggling(flag.key);
     try {
@@ -52,6 +57,24 @@ export default function AdminFeatureFlagsPage() {
       await reload();
     } catch {
       // silently ignore
+    }
+  }
+
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingKey) return;
+    setEditSaving(true);
+    try {
+      await adminFetch(`/api/admin/feature-flags/${encodeURIComponent(editingKey)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ label: editLabel, description: editDesc }),
+      });
+      setEditingKey(null);
+      await reload();
+    } catch {
+      // silently ignore
+    } finally {
+      setEditSaving(false);
     }
   }
 
@@ -172,45 +195,96 @@ export default function AdminFeatureFlagsPage() {
         {!loading && (data?.flags || []).length > 0 && (
           <div className="space-y-3">
             {(data?.flags || []).map((flag) => (
-              <div
-                key={flag.key}
-                className="flex items-center justify-between gap-4 rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-semibold text-[color:var(--admin-primary)]">{flag.key}</span>
-                    <StatusBadge status={flag.enabled ? "success" : "default"} label={flag.enabled ? "Aktif" : "Pasif"} />
-                  </div>
-                  <div className="mt-0.5 text-sm font-medium text-[color:var(--admin-text)]">{flag.label}</div>
-                  {flag.description && (
-                    <div className="mt-0.5 text-xs admin-muted">{flag.description}</div>
-                  )}
-                  <div className="mt-1 text-xs admin-muted">Güncellendi: {formatAdminDateTime(flag.updatedAt)}</div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    disabled={toggling === flag.key}
-                    onClick={() => handleToggle(flag)}
-                    className="inline-flex items-center gap-2 rounded-xl border border-[color:var(--admin-border)] px-3 py-2 text-sm transition hover:border-[color:var(--admin-primary)] disabled:opacity-50"
-                    title={flag.enabled ? "Kapat" : "Aç"}
-                  >
-                    {flag.enabled ? (
-                      <ToggleRight className="size-5 text-emerald-500" />
-                    ) : (
-                      <ToggleLeft className="size-5 admin-muted" />
+              <div key={flag.key}>
+                <div className="flex items-center justify-between gap-4 rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs font-semibold text-[color:var(--admin-primary)]">{flag.key}</span>
+                      <StatusBadge status={flag.enabled ? "success" : "default"} label={flag.enabled ? "Aktif" : "Pasif"} />
+                    </div>
+                    <div className="mt-0.5 text-sm font-medium text-[color:var(--admin-text)]">{flag.label}</div>
+                    {flag.description && (
+                      <div className="mt-0.5 text-xs admin-muted">{flag.description}</div>
                     )}
-                    <span className="text-xs font-medium">{toggling === flag.key ? "..." : flag.enabled ? "Kapat" : "Aç"}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(flag.key)}
-                    className="inline-flex size-9 items-center justify-center rounded-xl border border-[color:var(--admin-border)] text-rose-500 transition hover:bg-rose-50 dark:hover:bg-rose-950/20"
-                    title="Sil"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
+                    <div className="mt-1 text-xs admin-muted">Güncellendi: {formatAdminDateTime(flag.updatedAt)}</div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      disabled={toggling === flag.key}
+                      onClick={() => handleToggle(flag)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-[color:var(--admin-border)] px-3 py-2 text-sm transition hover:border-[color:var(--admin-primary)] disabled:opacity-50"
+                      title={flag.enabled ? "Kapat" : "Aç"}
+                    >
+                      {flag.enabled ? (
+                        <ToggleRight className="size-5 text-emerald-500" />
+                      ) : (
+                        <ToggleLeft className="size-5 admin-muted" />
+                      )}
+                      <span className="text-xs font-medium">{toggling === flag.key ? "..." : flag.enabled ? "Kapat" : "Aç"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingKey(flag.key);
+                        setEditLabel(flag.label);
+                        setEditDesc(flag.description || "");
+                      }}
+                      className="inline-flex size-9 items-center justify-center rounded-xl border border-[color:var(--admin-border)] text-[color:var(--admin-muted)] transition hover:border-[color:var(--admin-primary)] hover:text-[color:var(--admin-primary)]"
+                      title="Düzenle"
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(flag.key)}
+                      className="inline-flex size-9 items-center justify-center rounded-xl border border-[color:var(--admin-border)] text-rose-500 transition hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                      title="Sil"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
                 </div>
+
+                {editingKey === flag.key && (
+                  <form onSubmit={handleEdit} className="mt-3 rounded-2xl border border-[color:var(--admin-primary)]/30 bg-[color:var(--admin-primary-soft)] p-4 space-y-3">
+                    <div className="text-xs font-semibold text-[color:var(--admin-primary)]">Flag düzenle: {flag.key}</div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block text-xs font-medium admin-muted">Label</label>
+                        <input
+                          value={editLabel}
+                          onChange={(e) => setEditLabel(e.target.value)}
+                          className="h-9 w-full rounded-xl border border-[color:var(--admin-border)] bg-white/80 px-3 text-sm outline-none focus:border-[color:var(--admin-primary)] dark:bg-white/10"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium admin-muted">Açıklama</label>
+                        <input
+                          value={editDesc}
+                          onChange={(e) => setEditDesc(e.target.value)}
+                          className="h-9 w-full rounded-xl border border-[color:var(--admin-border)] bg-white/80 px-3 text-sm outline-none focus:border-[color:var(--admin-primary)] dark:bg-white/10"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={editSaving}
+                        className="rounded-xl bg-[color:var(--admin-primary)] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                      >
+                        {editSaving ? "Kaydediliyor..." : "Kaydet"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingKey(null)}
+                        className="rounded-xl border border-[color:var(--admin-border)] px-3 py-1.5 text-xs admin-muted"
+                      >
+                        İptal
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             ))}
           </div>

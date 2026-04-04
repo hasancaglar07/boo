@@ -18,7 +18,7 @@ import { CyberneticBentoGrid } from "@/components/ui/cybernetic-bento-grid";
 import { Features4 } from "@/components/ui/features-4";
 import { Card, CardContent } from "@/components/ui/card";
 import { buildPageMetadata, absoluteUrl, siteConfig } from "@/lib/seo";
-import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOK_COUNT, NO_API_COST_CLAIM } from "@/lib/site-claims";
+import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Kitap Oluşturucu Hakkında | AI Kitap Üretim Yaklaşımımız",
@@ -104,8 +104,8 @@ const aboutBentoItems = [
 const metrics = [
   {
     icon: <BookMarked className="size-5 text-primary" />,
-    value: KDP_LIVE_BOOK_COUNT,
-    label: "KDP onaylı kitap canlıda",
+    value: "KDP odaklı",
+    label: KDP_LIVE_BOOKS_CLAIM,
   },
   {
     icon: <Sparkles className="size-5 text-primary" />,
@@ -119,8 +119,8 @@ const metrics = [
   },
   {
     icon: <ShieldCheck className="size-5 text-primary" />,
-    value: "%100",
-    label: "KDP onay garantisi",
+    value: "Kılavuzlu teslim",
+    label: "yayın sürecini sadeleştiren yaklaşım",
   },
 ];
 
@@ -201,7 +201,7 @@ export default function AboutPage() {
             <CardContent className="space-y-4">
               <h2 className="font-serif text-3xl font-semibold tracking-tight text-foreground">Yaklaşım</h2>
               <p className="text-sm leading-8 text-muted-foreground">
-                Önce güven veren mesaj, sonra anlaşılır onboarding, sonra da gerçekten çalışan bir kitap üretim akışı. {NO_API_COST_CLAIM} ve yayın hedefi KDP ise kitaplar {KDP_GUARANTEE_CLAIM} ile ilerler.
+                Önce güven veren mesaj, sonra anlaşılır onboarding, sonra da gerçekten çalışan bir kitap üretim akışı. {NO_API_COST_CLAIM} ve yayın hedefi KDP ise teslim paketi {KDP_GUARANTEE_CLAIM} odağında hazırlanır.
               </p>
             </CardContent>
           </Card>

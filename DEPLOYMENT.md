@@ -93,6 +93,22 @@ cd /var/www/book
 sudo BOOK_COMPOSE_ENV_FILE=/var/www/book/.env.compose /var/www/book/scripts/deploy_update.sh --skip-pull
 ```
 
+### Asset consistency checks (new)
+`deploy_update.sh` now runs two post-deploy checks:
+- local container asset integrity (`http://127.0.0.1:${BOOK_WEB_BIND_PORT}`)
+- public domain consistency (`https://bookgenerator.net` by default)
+
+When it fails with "Inconsistent HTML asset variants", this means different releases are being served at the same time (commonly multiple active origins behind Cloudflare or an old container still receiving traffic).
+
+Useful toggles:
+```bash
+# Skip public check temporarily
+DEPLOY_SKIP_PUBLIC_ASSET_CHECK=1 sudo BOOK_COMPOSE_ENV_FILE=/var/www/book/.env.compose /var/www/book/scripts/deploy_update.sh
+
+# Override public URL and iterations
+DEPLOY_PUBLIC_BASE_URL=https://bookgenerator.net DEPLOY_PUBLIC_ASSET_CHECK_ITERATIONS=8 sudo BOOK_COMPOSE_ENV_FILE=/var/www/book/.env.compose /var/www/book/scripts/deploy_update.sh
+```
+
 ## GitHub auto deploy
 The production workflow is [.github/workflows/deploy-production.yml](/mnt/c/Users/ihsan/Desktop/BOOK/.github/workflows/deploy-production.yml).
 
@@ -132,4 +148,8 @@ sudo systemctl status book-dashboard book-web
 curl http://127.0.0.1:3000/api/auth/state
 curl http://127.0.0.1:8765/api/health
 curl -I https://bookgenerator.net
+
+# Manual asset consistency check
+cd /var/www/book/web
+CHECK_BASE_URL=https://bookgenerator.net CHECK_ITERATIONS=6 pnpm check:assets
 ```

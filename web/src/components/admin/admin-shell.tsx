@@ -25,6 +25,7 @@ import {
 import { signOut } from "next-auth/react";
 import { useMemo, useState } from "react";
 
+import { useAdminResource } from "@/lib/admin/client";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -96,6 +97,20 @@ export function AdminShell({
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const jobs = useAdminResource<{ summary: { pending: number; failed: number } }>("/api/admin/jobs", { intervalMs: 30000 });
+  const moderation = useAdminResource<{ totalItems: number }>("/api/admin/moderation/queue?status=pending&pageSize=1", { intervalMs: 60000 });
+
+  function getNavBadge(href: string): number | null {
+    if (href === "/admin/jobs") {
+      const pending = (jobs.data?.summary.pending ?? 0) + (jobs.data?.summary.failed ?? 0);
+      return pending > 0 ? pending : null;
+    }
+    if (href === "/admin/moderation") {
+      return moderation.data?.totalItems && moderation.data.totalItems > 0 ? moderation.data.totalItems : null;
+    }
+    return null;
+  }
 
   const title = useMemo(() => {
     const match = [...NAV_ITEMS]
@@ -169,6 +184,14 @@ export function AdminShell({
                 >
                   <Icon className="size-4 shrink-0" />
                   {!collapsed ? <span>{item.label}</span> : null}
+                  {!collapsed && (() => {
+                    const badge = getNavBadge(item.href);
+                    return badge ? (
+                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                        {badge > 99 ? "99+" : badge}
+                      </span>
+                    ) : null;
+                  })()}
                 </Link>
               );
             })}

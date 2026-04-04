@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -124,7 +125,18 @@ export default function AdminUserDetailPage() {
               <h1 className="mt-2 text-3xl font-semibold text-[color:var(--admin-text)]">{data.item.name}</h1>
               <p className="mt-2 text-sm admin-muted">{data.item.email}</p>
             </div>
-            <StatusBadge status={data.item.currentStatus} label={data.item.currentStatus} />
+            <div className="flex flex-col items-end gap-2">
+              <StatusBadge status={data.item.currentStatus} label={data.item.currentStatus} />
+              {data.item.emailVerified ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                  <CheckCircle2 className="size-3.5" /> E-posta doğrulandı
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                  <AlertCircle className="size-3.5" /> E-posta doğrulanmadı
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -143,6 +155,12 @@ export default function AdminUserDetailPage() {
             <div className="rounded-[20px] border border-[color:var(--admin-border)] bg-white/50 p-4 dark:bg-white/5">
               <div className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">Total revenue</div>
               <div className="mt-2 font-semibold text-[color:var(--admin-text)]">{formatAdminCurrency(data.item.totalRevenue)}</div>
+            </div>
+            <div className="rounded-[20px] border border-[color:var(--admin-border)] bg-white/50 p-4 dark:bg-white/5">
+              <div className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">Son Giriş</div>
+              <div className="mt-2 font-semibold text-[color:var(--admin-text)]">
+                {data.item.lastLoginAt ? formatAdminDateTime(data.item.lastLoginAt) : "Hiç giriş yapılmadı"}
+              </div>
             </div>
           </div>
 

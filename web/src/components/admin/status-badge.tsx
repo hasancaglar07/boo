@@ -36,6 +36,11 @@ const STATUS_MAP: Record<
     icon: Minus,
     className: "border-slate-400/20 bg-slate-500/10 text-slate-700 dark:text-slate-300",
   },
+  default: {
+    label: "Default",
+    icon: Minus,
+    className: "border-slate-400/20 bg-slate-500/10 text-slate-700 dark:text-slate-300",
+  },
   warning: {
     label: "Warning",
     icon: AlertTriangle,
@@ -46,8 +51,18 @@ const STATUS_MAP: Record<
     icon: XCircle,
     className: "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-300",
   },
+  failed: {
+    label: "Failed",
+    icon: XCircle,
+    className: "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  },
   processing: {
     label: "Processing",
+    icon: Loader2,
+    className: "border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  },
+  running: {
+    label: "Running",
     icon: Loader2,
     className: "border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300",
   },
@@ -55,6 +70,16 @@ const STATUS_MAP: Record<
     label: "Pending",
     icon: Clock3,
     className: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  },
+  queued: {
+    label: "Queued",
+    icon: Clock3,
+    className: "border-slate-400/20 bg-slate-500/10 text-slate-700 dark:text-slate-300",
+  },
+  completed: {
+    label: "Completed",
+    icon: CheckCircle2,
+    className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   },
   canceled: {
     label: "Canceled",
@@ -143,7 +168,7 @@ export function StatusBadge({
   size?: "sm" | "md" | "lg";
 }) {
   const key = String(status || "").trim().toLowerCase();
-  const meta = STATUS_MAP[key] || STATUS_MAP.inactive;
+  const meta = STATUS_MAP[key] || STATUS_MAP["default"];
   const Icon = meta.icon;
 
   return (
@@ -157,7 +182,7 @@ export function StatusBadge({
       )}
       title={label || meta.label}
     >
-      <Icon className={cn("size-3.5", key === "processing" || key === "generating" ? "animate-spin" : "")} />
+      <Icon className={cn("size-3.5", key === "processing" || key === "generating" || key === "running" ? "animate-spin" : "")} />
       {label || meta.label}
     </span>
   );

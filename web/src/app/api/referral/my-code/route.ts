@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://kitapol.com";
 
 export async function GET(_request: NextRequest) {
+  void _request;
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });

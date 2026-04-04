@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { auth } from "@/auth";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -24,5 +25,12 @@ export default async function BillingPage({
     }
   }
 
-  redirect(`/app/settings/billing${params.size ? `?${params.toString()}` : ""}`);
+  const checkoutPath = `/app/settings/billing${params.size ? `?${params.toString()}` : ""}`;
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect(`/signup?next=${encodeURIComponent(checkoutPath)}`);
+  }
+
+  redirect(checkoutPath);
 }

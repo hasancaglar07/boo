@@ -53,7 +53,13 @@ export default function AdminSubscriptionsPage() {
       header: "User",
       cell: (row) => (
         <div>
-          <div className="font-semibold text-[color:var(--admin-text)]">{row.userName}</div>
+          <button
+            type="button"
+            className="font-semibold text-[color:var(--admin-text)] hover:text-[color:var(--admin-primary)] hover:underline text-left"
+            onClick={() => router.push(`/admin/users/${row.userId}`)}
+          >
+            {row.userName}
+          </button>
           <div className="text-xs admin-muted">{row.userEmail}</div>
         </div>
       ),
@@ -83,7 +89,11 @@ export default function AdminSubscriptionsPage() {
       cell: (row) => (
         <div>
           <div>{formatAdminDate(row.startedAt)}</div>
-          <div className="text-xs admin-muted">{row.nextBilling ? `Next: ${formatAdminDate(row.nextBilling)}` : "Manual"}</div>
+          {row.nextBilling ? (
+            <div className="text-xs admin-muted">Sonraki: {formatAdminDate(row.nextBilling)}</div>
+          ) : (
+            <div className="text-xs text-amber-600 dark:text-amber-400">Manuel ödeme</div>
+          )}
         </div>
       ),
     },
@@ -114,6 +124,23 @@ export default function AdminSubscriptionsPage() {
         <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Subscriptions</h1>
         <p className="mt-1 text-sm admin-muted">Manual entitlement tabanlı aktif abonelik görünümü.</p>
       </div>
+
+      {data && (
+        <section className="grid gap-4 md:grid-cols-3">
+          <div className="admin-panel rounded-[24px] p-5">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] admin-muted">Toplam Abonelik</div>
+            <div className="mt-3 text-3xl font-semibold text-[color:var(--admin-text)]">{data.totalItems}</div>
+          </div>
+          <div className="admin-panel rounded-[24px] p-5">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] admin-muted">Bu Sayfa</div>
+            <div className="mt-3 text-3xl font-semibold text-[color:var(--admin-text)]">{data.items.length}</div>
+          </div>
+          <div className="admin-panel rounded-[24px] p-5">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] admin-muted">Aktif</div>
+            <div className="mt-3 text-3xl font-semibold text-emerald-600">{data.items.filter(i => i.status === "ACTIVE").length}</div>
+          </div>
+        </section>
+      )}
 
       <FilterBar
         searchPlaceholder="Kullanıcı e-postası veya subscription ID ara"

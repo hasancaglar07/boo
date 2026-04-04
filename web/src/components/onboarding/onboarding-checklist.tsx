@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight } from "lucide-react";
 
@@ -40,13 +40,8 @@ function saveChecklistState(items: typeof DEFAULT_CHECKLIST_ITEMS) {
 
 export function OnboardingChecklist() {
   const router = useRouter();
-  const [items, setItems] = useState<typeof DEFAULT_CHECKLIST_ITEMS>(DEFAULT_CHECKLIST_ITEMS);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    setItems(loadChecklistState());
-    setIsLoggedIn(getSession() !== null);
-  }, []);
+  const [items, setItems] = useState<typeof DEFAULT_CHECKLIST_ITEMS>(() => loadChecklistState());
+  const [isLoggedIn] = useState(() => getSession() !== null);
 
   const completedCount = items.filter((i) => i.completed).length;
   const progress = (completedCount / items.length) * 100;
@@ -72,12 +67,13 @@ export function OnboardingChecklist() {
 
   return (
     <div className="checklist-card rounded-[28px] border border-border/80 bg-card/80 p-6">
-      {/* Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-foreground">🎯 İlk Kitabın</h3>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-foreground">{completedCount}/{items.length}</span>
+            <span className="text-sm font-semibold text-foreground">
+              {completedCount}/{items.length}
+            </span>
             <div className="h-2 w-20 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-primary transition-all duration-500"
@@ -87,11 +83,14 @@ export function OnboardingChecklist() {
           </div>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          {isComplete ? "Tebrikler! İlk kitabın hazır!" : "İlerlemeni takip et"}
+          {isComplete
+            ? "Tebrikler! İlk kitabın hazır!"
+            : isLoggedIn
+              ? "İlerlemeni takip et"
+              : "İlerlemeni takip et ve hesabına bağla"}
         </p>
       </div>
 
-      {/* Checklist Items */}
       <div className="space-y-2">
         {items.map((item) => (
           <button
@@ -132,7 +131,6 @@ export function OnboardingChecklist() {
         ))}
       </div>
 
-      {/* Celebration / CTA */}
       {isComplete ? (
         <div className="mt-4 rounded-[20px] border border-primary/30 bg-gradient-to-br from-primary/15 to-primary/5 px-4 py-4">
           <div className="flex items-start gap-3">
@@ -143,7 +141,7 @@ export function OnboardingChecklist() {
                 Şimdi tam kitap ve export özellikleriyle devam et.
               </p>
               <Button size="sm" className="mt-3" onClick={handleGetStarted}>
-                Premium'a Geç
+                Premium&apos;a Geç
               </Button>
             </div>
           </div>
@@ -152,23 +150,20 @@ export function OnboardingChecklist() {
         <div className="mt-4 rounded-[16px] border border-border/60 bg-background/40 px-3 py-2">
           <p className="text-xs text-muted-foreground">
             {completedCount > 0 ? (
-              <>
-                Harika! {completedCount} adım tamamladın. Devam et!
-              </>
+              <>Harika! {completedCount} adım tamamladın. Devam et!</>
             ) : (
-              <>İlk adımını atmak için wizard'ı başlat.</>
+              <>İlk adımını atmak için wizard&apos;ı başlat.</>
             )}
           </p>
         </div>
       )}
 
-      {/* Reset Link */}
       <button
         onClick={() => {
           setItems(DEFAULT_CHECKLIST_ITEMS);
           saveChecklistState(DEFAULT_CHECKLIST_ITEMS);
         }}
-        className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        className="mt-3 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         Sıfırla
       </button>

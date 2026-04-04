@@ -19,7 +19,7 @@ const nav: NavItem[] = [
   { type: "link", href: "/how-it-works", label: "Nasıl Çalışır" },
   { type: "link", href: "/examples", label: "Örnekler" },
   { type: "link", href: "/pricing", label: "Fiyatlar" },
-  { type: "link", href: "/compare", label: "Karşılaştır" },
+  { type: "link", href: "/tools", label: "Araçlar" },
   { type: "link", href: "/faq", label: "SSS" },
 ];
 
@@ -102,7 +102,7 @@ export function SiteHeader() {
               className="header-cta-btn h-9 gap-1.5 px-4 text-[13px] font-semibold tracking-[-0.02em]"
             >
               <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              Ücretsiz Önizleme
+              Ücretsiz Preview
             </Button>
           </Link>
 

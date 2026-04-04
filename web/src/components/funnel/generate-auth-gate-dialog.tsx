@@ -1,7 +1,7 @@
 "use client";
 
 import { LockKeyhole } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
 import { AuthForm } from "@/components/forms/auth-form";
 import { Button } from "@/components/ui/button";
@@ -29,11 +29,10 @@ export function GenerateAuthGateDialog({
   const descriptionId = useId();
   const [mode, setMode] = useState<GateMode>("register");
   const [busy, setBusy] = useState(false);
+  const dialogKey = useMemo(() => (open ? "generate-gate-open" : "generate-gate-closed"), [open]);
 
   useEffect(() => {
     if (open) {
-      setMode("register");
-      setBusy(false);
       trackEvent("signup_prompt_shown", { source: "generate_gate" });
     }
   }, [open]);
@@ -93,6 +92,7 @@ export function GenerateAuthGateDialog({
 
         <div className="mt-4 rounded-[22px] border border-[#e4d1c1] bg-white/92 p-4 shadow-[0_18px_40px_rgba(92,58,40,0.05)] sm:p-5">
           <AuthForm
+            key={dialogKey}
             mode={mode}
             variant="modal"
             showHeader={false}

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 
@@ -117,7 +118,15 @@ export default function AdminBookDetailPage() {
             </div>
             <div className="rounded-[20px] border border-[color:var(--admin-border)] bg-white/50 p-4 dark:bg-white/5">
               <div className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">Owner</div>
-              <div className="mt-2 font-semibold text-[color:var(--admin-text)]">{data.item.ownerEmail || data.item.ownerName || "—"}</div>
+              <div className="mt-2">
+                {data.item.ownerEmail ? (
+                  <Link href={`/admin/users?q=${encodeURIComponent(data.item.ownerEmail)}`} className="font-semibold text-[color:var(--admin-primary)] hover:underline">
+                    {data.item.ownerEmail}
+                  </Link>
+                ) : (
+                  <span className="font-semibold text-[color:var(--admin-text)]">{data.item.ownerName || "—"}</span>
+                )}
+              </div>
             </div>
             <div className="rounded-[20px] border border-[color:var(--admin-border)] bg-white/50 p-4 dark:bg-white/5">
               <div className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">Language</div>
@@ -202,16 +211,25 @@ export default function AdminBookDetailPage() {
         <div className="admin-panel rounded-[28px] p-6 xl:col-span-2">
           <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Outline & chapters</div>
           <div className="space-y-3">
-            {data.related.outline.map((chapter) => (
-              <div key={chapter.id} className="rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="font-semibold text-[color:var(--admin-text)]">
-                    {chapter.number}. {chapter.title}
+            {(() => {
+              const maxWords = Math.max(...data.related.outline.map(c => c.wordCount), 1);
+              return data.related.outline.map((chapter) => (
+                <div key={chapter.id} className="rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="font-semibold text-[color:var(--admin-text)]">
+                      {chapter.number}. {chapter.title}
+                    </div>
+                    <div className="text-xs admin-muted">{chapter.wordCount.toLocaleString("tr-TR")} kelime</div>
                   </div>
-                  <div className="text-xs admin-muted">{chapter.wordCount} kelime</div>
+                  <div className="mt-2 h-1.5 rounded-full bg-black/5 dark:bg-white/10">
+                    <div
+                      className="h-1.5 rounded-full bg-[color:var(--admin-primary)] opacity-70"
+                      style={{ width: `${Math.round((chapter.wordCount / maxWords) * 100)}%` }}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         </div>
 
@@ -235,6 +253,23 @@ export default function AdminBookDetailPage() {
               </div>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* Notes Section */}
+      <section className="admin-panel rounded-[28px] p-6">
+        <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Admin notları</div>
+        <div className="space-y-3">
+          {data.related.notes.length ? data.related.notes.map((note) => (
+            <div key={note.id} className="rounded-2xl border border-[color:var(--admin-border)] bg-white/50 p-4 dark:bg-white/5">
+              <div className="text-sm text-[color:var(--admin-text)]">{note.body}</div>
+              <div className="mt-2 text-xs admin-muted">{note.author} · {formatAdminDateTime(note.createdAt)}</div>
+            </div>
+          )) : (
+            <div className="rounded-2xl border border-dashed border-[color:var(--admin-border)] px-4 py-6 text-sm admin-muted">
+              Bu kitap için admin notu yok.
+            </div>
+          )}
         </div>
       </section>
 

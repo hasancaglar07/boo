@@ -147,7 +147,7 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
                     <div className="flex items-start gap-3">
                       <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
                       <p className="text-sm leading-6 text-muted-foreground">
-                        Email only. Kaynak kopyası inbox'una gider; bu adım seni doğrudan wizard ve tool akışına bağlamak için var.
+                        Email only. Kaynak kopyası inbox&apos;una gider; bu adım seni doğrudan wizard ve tool akışına bağlamak için var.
                       </p>
                     </div>
                   </div>

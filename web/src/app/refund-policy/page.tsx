@@ -21,7 +21,7 @@ export default function RefundPolicyPage() {
         <Badge>İade</Badge>
         <h1 className="mt-4 text-5xl font-semibold tracking-tight text-foreground">İade politikası</h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-          Kitap Oluşturucu'yu risk almadan denemen için iade akışını açık tutuyoruz. Önce önizlemeyi görür, sonra tam kitabı açarsın; memnun kalmazsan ilk 30 gün içinde iade isteyebilirsin.
+          Kitap Oluşturucu&apos;yu risk almadan denemen için iade akışını açık tutuyoruz. Önce önizlemeyi görür, sonra tam kitabı açarsın; memnun kalmazsan ilk 30 gün içinde iade isteyebilirsin.
         </p>
         <div className="mt-8 rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_7%,var(--card)),var(--card))] px-6 py-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>

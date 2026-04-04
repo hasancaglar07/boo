@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trackEvent } from "@/lib/analytics";
+import { isBillingAutostartNextPath } from "@/lib/auth/checkout-intent";
 import {
   getAccount,
   getSession,
@@ -70,6 +71,7 @@ export function AuthForm({
   const storedAccount = useMemo(() => getAccount(), []);
   const fallbackNext = mode === "login" ? "/app/library" : "/start/topic";
   const next = sanitizeNextPath(nextProp || searchParams.get("next"), fallbackNext);
+  const isCheckoutIntent = isBillingAutostartNextPath(next);
   const verified = searchParams.get("verified");
   const checkEmail = searchParams.get("checkEmail");
 
@@ -122,11 +124,21 @@ export function AuthForm({
     };
   }, [next, redirectIfAuthenticated, router]);
 
-  const title = mode === "login" ? "Kitabına kaldığın yerden devam et" : "Ön izlemeyi kaydet ve devam et";
+  const title = mode === "login"
+    ? isCheckoutIntent
+      ? "Giriş Yap ve Ödemeye Geç"
+      : "Kitabına kaldığın yerden devam et"
+    : isCheckoutIntent
+      ? "Hızlı Kayıtla Ödemeye Geç"
+      : "Ön izlemeyi kaydet ve devam et";
   const description =
     mode === "login"
-      ? "Google, e-posta bağlantısı veya şifrenle giriş yap. Ön izleme, kütüphane ve ödeme akışı aynı hesapta kalır."
-      : "Google, e-posta bağlantısı veya şifreli hesap seçeneklerinden biriyle başla. Bu adım ödeme istemez; yalnızca ön izlemenin kaybolmamasını engeller.";
+      ? isCheckoutIntent
+        ? "Hesabına giriş yaptıktan sonra ödeme penceresi otomatik açılır."
+        : "Google, e-posta bağlantısı veya şifrenle giriş yap. Ön izleme, kütüphane ve ödeme akışı aynı hesapta kalır."
+      : isCheckoutIntent
+        ? "Hesabını oluşturduğun anda ödeme penceresi otomatik açılır. Akış kesilmez."
+        : "Google, e-posta bağlantısı veya şifreli hesap seçeneklerinden biriyle başla. Bu adım ödeme istemez; yalnızca ön izlemenin kaybolmamasını engeller.";
 
   const emailTrimmed = email.trim().toLowerCase();
   const nameTrimmed = name.trim();
@@ -141,12 +153,16 @@ export function AuthForm({
     mode === "login" ? "E-posta ve şifre ile giriş yap" : "E-posta ve şifre ile hesap oluştur";
   const submitLabel =
     mode === "login"
-      ? source === "generate_gate"
-        ? "Giriş Yap ve Ön İzlemeye Devam Et"
-        : "Giriş Yap ve Devam Et"
-      : source === "generate_gate"
-        ? "Hesabımı Oluştur ve Ön İzlemeyi Başlat"
-        : "Hesabımı Oluştur ve Ön İzlemeyi Kaydet";
+      ? isCheckoutIntent
+        ? "Giriş Yap ve Ödemeye Geç"
+        : source === "generate_gate"
+          ? "Giriş Yap ve Ön İzlemeye Devam Et"
+          : "Giriş Yap ve Devam Et"
+      : isCheckoutIntent
+        ? "Hesabımı Oluştur ve Ödemeye Geç"
+        : source === "generate_gate"
+          ? "Hesabımı Oluştur ve Ön İzlemeyi Başlat"
+          : "Hesabımı Oluştur ve Ön İzlemeyi Kaydet";
 
   function emitGenerateGateEvent(event: "generate_auth_gate_method_selected" | "generate_auth_gate_failed", properties: Record<string, string>) {
     if (source !== "generate_gate") return;

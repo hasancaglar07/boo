@@ -1,21 +1,26 @@
 "use client";
 
+import { useState } from "react";
+import { RefreshCw } from "lucide-react";
+
 import { DataTable, type Column } from "@/components/admin/data-table";
 import { MetricCard } from "@/components/admin/metric-card";
 import { StatusBadge } from "@/components/admin/status-badge";
-import { useAdminResource } from "@/lib/admin/client";
+import { adminFetch, useAdminResource } from "@/lib/admin/client";
+
+type JobRow = {
+  id: string;
+  type: string;
+  bookSlug: string;
+  title: string;
+  status: string;
+  progress: number;
+  startedAt: string;
+  message: string;
+};
 
 type JobsPayload = {
-  items: Array<{
-    id: string;
-    type: string;
-    bookSlug: string;
-    title: string;
-    status: string;
-    progress: number;
-    startedAt: string;
-    message: string;
-  }>;
+  items: Array<JobRow>;
   summary: {
     active: number;
     pending: number;
@@ -25,11 +30,12 @@ type JobsPayload = {
 };
 
 export default function AdminJobsPage() {
-  const { data, loading, error } = useAdminResource<JobsPayload>("/api/admin/jobs", {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { data, loading, error, reload } = useAdminResource<JobsPayload>("/api/admin/jobs", {
     intervalMs: 10000,
   });
 
-  const columns: Column<JobsPayload["items"][number]>[] = [
+  const columns: Column<JobRow>[] = [
     {
       key: "type",
       header: "Type",
@@ -52,7 +58,6 @@ export default function AdminJobsPage() {
         <div className="min-w-[180px]">
           <div className="flex items-center justify-between gap-3 text-sm">
             <span>{row.progress}%</span>
-            <span className="admin-muted">{row.message}</span>
           </div>
           <div className="mt-2 h-2 rounded-full bg-black/5 dark:bg-white/10">
             <div className="h-2 rounded-full bg-[color:var(--admin-primary)]" style={{ width: `${row.progress}%` }} />
@@ -61,17 +66,65 @@ export default function AdminJobsPage() {
       ),
     },
     {
+      key: "message",
+      header: "Message",
+      cell: (row) => (
+        <div className="max-w-[200px] truncate text-xs admin-muted" title={row.message}>
+          {row.message || "—"}
+        </div>
+      ),
+    },
+    {
       key: "startedAt",
       header: "Started",
       cell: (row) => row.startedAt.replace("T", " ").slice(0, 16),
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (row) => (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="text-xs text-[color:var(--admin-primary)] hover:underline"
+            onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
+          >
+            {expandedId === row.id ? "Gizle" : "Detay"}
+          </button>
+          {row.status === "failed" && (
+            <button
+              type="button"
+              className="rounded-xl bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300"
+              onClick={() => {
+                void adminFetch(`/api/admin/jobs/${row.id}/retry`, { method: "POST", body: "{}" })
+                  .then(() => void reload())
+                  .catch(() => {});
+              }}
+            >
+              Tekrar Dene
+            </button>
+          )}
+        </div>
+      ),
     },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Job queue monitor</h1>
-        <p className="mt-1 text-sm admin-muted">Preview ve generation işlerini 10 saniyede bir yeniler.</p>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Job queue monitor</h1>
+          <p className="mt-1 text-sm admin-muted">Preview ve generation işlerini 10 saniyede bir yeniler.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void reload()}
+          disabled={loading}
+          className="inline-flex items-center gap-2 rounded-2xl border border-[color:var(--admin-border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--admin-text)] disabled:opacity-50 transition hover:border-[color:var(--admin-primary)]"
+        >
+          <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+          {loading ? "Yükleniyor..." : "Yenile"}
+        </button>
       </div>
 
       <section className="grid gap-4 md:grid-cols-4">

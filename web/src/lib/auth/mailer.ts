@@ -57,11 +57,43 @@ async function deliverEmail(input: { to: string; subject: string; html: string }
   });
 }
 
+function extractCheckoutContinuationPath(url: string) {
+  try {
+    const parsed = new URL(url);
+    const callback = parsed.searchParams.get("callbackUrl");
+    if (!callback) return null;
+
+    const target = new URL(callback, parsed.origin);
+    if (target.pathname !== "/app/settings/billing") return null;
+    if (target.searchParams.get("autostart") !== "1") return null;
+
+    return `${target.pathname}${target.search}`;
+  } catch {
+    return null;
+  }
+}
+
 export async function sendMagicLinkEmail(to: string, url: string) {
+  const checkoutPath = extractCheckoutContinuationPath(url);
+  const checkoutUrl = checkoutPath ? absoluteUrl(checkoutPath) : "";
+
   await deliverEmail({
     to,
-    subject: "Book Generator giriş bağlantın",
-    html: `<p>Book Generator'a giriş yapmak için aşağıdaki bağlantıyı kullan.</p><p><a href="${url}">${url}</a></p><p>Bağlantı 15 dakika boyunca geçerlidir.</p>`,
+    subject: checkoutPath ? "Book Generator giriş + ödeme bağlantın" : "Book Generator giriş bağlantın",
+    html: checkoutPath
+      ? `
+      <p>Book Generator'a devam etmek için aşağıdaki giriş bağlantısını kullan.</p>
+      <p>Hesabın yoksa hızlı kayıt, hesabın varsa giriş yapılır ve ödeme penceresi otomatik açılır.</p>
+      <p><a href="${url}">Hızlı kayıt / giriş bağlantısı</a></p>
+      <p><a href="${checkoutUrl}">Doğrudan ödeme ekranı</a></p>
+      <p>Bağlantı 15 dakika boyunca geçerlidir.</p>
+    `
+      : `
+      <p>Book Generator'a giriş yapmak için aşağıdaki bağlantıyı kullan.</p>
+      <p>Hesabın yoksa aynı bağlantı ile hızlı kayıt olur, varsa doğrudan giriş yaparsın.</p>
+      <p><a href="${url}">${url}</a></p>
+      <p>Bağlantı 15 dakika boyunca geçerlidir.</p>
+    `,
   });
 }
 
@@ -70,7 +102,7 @@ export async function sendEmailVerificationEmail(to: string, token: string) {
   await deliverEmail({
     to,
     subject: "E-posta adresini doğrula",
-    html: `<p>Satın alma ve export işlemlerini açmak için e-posta adresini doğrula.</p><p><a href="${url}">${url}</a></p><p>Bağlantı 24 saat boyunca geçerlidir.</p>`,
+    html: `<p>Hesap güvenliği ve fatura bildirimleri için e-posta adresini doğrula.</p><p><a href="${url}">${url}</a></p><p>Bağlantı 24 saat boyunca geçerlidir.</p>`,
   });
 }
 

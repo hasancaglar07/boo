@@ -57,6 +57,30 @@ export default async function ExamplesPage() {
         </div>
       </section>
 
+      <section className="border-b border-border/80 py-12">
+        <div className="shell grid gap-4 md:grid-cols-3">
+          {[
+            {
+              title: "Sadece kapak değil",
+              text: "Her örnekte bölüm planı, ilk bölüm önizlemesi ve export durumu birlikte görünür.",
+            },
+            {
+              title: "Gerçek içerik preview",
+              text: "Hızlı bak modunda içindekiler ve ilk bölüm metni yer alır; kaliteyi sadece görselden değil metinden de değerlendirirsin.",
+            },
+            {
+              title: "Aynı akış sana da açık",
+              text: "Beğendiğin örneğe benzer bir kitabı aynı start akışında kendi konunla başlatabilirsin.",
+            },
+          ].map(({ title, text }) => (
+            <div key={title} className="rounded-[24px] border border-border/80 bg-card/80 px-5 py-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+              <p className="mt-2 text-sm leading-7 text-muted-foreground">{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <ExamplesShowcase items={items} categories={categories} languages={languages} />
 
       <MarketingCtaSection

@@ -38,6 +38,20 @@ export default function ContactPage() {
 
       {/* Form + başlık */}
       <section className="shell py-12">
+        <div className="mb-8 grid gap-4 md:grid-cols-3">
+          {[
+            { title: "Genel yanıt süresi", text: "Çoğu mesajı aynı iş günü içinde yanıtlamayı hedefliyoruz." },
+            { title: "En hızlı çözüm için", text: "Kitap slug’ı, preview linki veya ekran görüntüsü paylaş." },
+            { title: "Konu seçimi önemli", text: "Faturalama, erişim ve teknik destek için doğru konu başlığı seçimi süreci hızlandırır." },
+          ].map(({ title, text }) => (
+            <Card key={title}>
+              <CardContent className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+                <p className="text-xs leading-6 text-muted-foreground">{text}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
         <div className="mb-8">
           <Badge>İletişim</Badge>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">

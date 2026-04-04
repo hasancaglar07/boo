@@ -136,13 +136,6 @@ function buildPublicCoverAssetUrl(slug: string, relativePath: string, version?: 
   return `/showcase-covers/${encodeURIComponent(slug)}/${encodeURIComponent(fileName)}${query}`;
 }
 
-async function buildVersionedExampleAssetUrl(slug: string, bookDir: string, relativePath?: string) {
-  if (!relativePath) return undefined;
-  const fileStat = await safeStat(path.join(bookDir, relativePath));
-  const version = fileStat ? `${fileStat.size}-${Math.round(fileStat.mtimeMs)}` : "current";
-  return buildExampleAssetUrl(slug, relativePath, version);
-}
-
 async function readMaybeText(targetPath: string) {
   try {
     return await fs.readFile(targetPath, "utf8");

@@ -3,6 +3,7 @@ import { Libre_Bodoni, Public_Sans } from "next/font/google";
 import Script from "next/script";
 
 import { AuthStateHydrator } from "@/components/auth/auth-state-hydrator";
+import { AssetLoadRecoveryScript } from "@/components/app/asset-load-recovery-script";
 import { ChunkLoadRecovery } from "@/components/app/chunk-load-recovery";
 import { CookieConsent } from "@/components/app/cookie-consent";
 import { RefCodeDetector } from "@/components/app/ref-code-detector";
@@ -185,6 +186,7 @@ export default function RootLayout(props: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
     >
       <body className="min-h-full bg-background font-sans text-foreground">
+        <AssetLoadRecoveryScript />
         <a
           href="#main-content"
           className="skip-link"

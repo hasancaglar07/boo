@@ -11,7 +11,7 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AppFrame } from "@/components/app/app-frame";
@@ -87,12 +87,15 @@ const PLAN_COMPARE = [
   },
 ];
 
+const AUTOSTART_PLANS = new Set(["premium", "starter"]);
+
 export function UpgradeScreen({ slug }: { slug: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [books, setBooks] = useState<Book[]>([]);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const autoStartHandledRef = useRef(false);
 
   async function hydrate() {
     try {
@@ -120,31 +123,18 @@ export function UpgradeScreen({ slug }: { slug: string }) {
     }
   }, [slug, searchParams]);
 
-  if (backendUnavailable) {
-    return (
-      <AppFrame
-        layout="book"
-        current="billing"
-        currentBookSlug={slug}
-        title="Premium"
-        books={books}
-      >
-        <BackendUnavailableState onRetry={() => void hydrate()} />
-      </AppFrame>
-    );
-  }
-
   const currentBook = books.find((b) => b.slug === slug) ?? null;
   const mockupBrand =
     currentBook?.branding_mark || currentBook?.publisher || "Kitap Oluşturucu";
   const mockupLabel = currentBook?.cover_brief || "Ödeme sonrası tam ürün açılır";
 
-  async function handleBuy(planId: string) {
+  const handleBuy = useCallback(async (planId: string) => {
     trackEvent("paywall_full_unlock_clicked", { slug, plan: planId, source: "upgrade_screen" });
     trackEvent("checkout_started", { slug, plan: planId, source: "preview_upgrade" });
     if (!authenticated) {
+      const resumePath = `/app/book/${slug}/upgrade?plan=${encodeURIComponent(planId)}&autostart=1`;
       router.push(
-        `/signup/continue?slug=${encodeURIComponent(slug)}&next=${encodeURIComponent(`/app/book/${slug}/upgrade`)}`,
+        `/signup/continue?slug=${encodeURIComponent(slug)}&next=${encodeURIComponent(resumePath)}`,
       );
       return;
     }
@@ -164,6 +154,31 @@ export function UpgradeScreen({ slug }: { slug: string }) {
     } else {
       router.push(`/app/settings/billing?book=${encodeURIComponent(slug)}`);
     }
+  }, [authenticated, router, slug]);
+
+  useEffect(() => {
+    const autostart = searchParams.get("autostart") === "1";
+    const plan = searchParams.get("plan") || "premium";
+
+    if (!authenticated || !autostart || autoStartHandledRef.current) return;
+    if (!AUTOSTART_PLANS.has(plan)) return;
+
+    autoStartHandledRef.current = true;
+    void handleBuy(plan);
+  }, [authenticated, handleBuy, searchParams]);
+
+  if (backendUnavailable) {
+    return (
+      <AppFrame
+        layout="book"
+        current="billing"
+        currentBookSlug={slug}
+        title="Premium"
+        books={books}
+      >
+        <BackendUnavailableState onRetry={() => void hydrate()} />
+      </AppFrame>
+    );
   }
 
   return (
@@ -209,7 +224,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3">
                   <p className="text-xs font-semibold text-muted-foreground text-center">
-                    {NO_API_COST_CLAIM}. Kapağı ve preview'i gördükten sonra <strong className="text-foreground">ödeme kararı</strong> verirsin
+                    {NO_API_COST_CLAIM}. Kapağı ve preview&apos;i gördükten sonra <strong className="text-foreground">ödeme kararı</strong> verirsin
                   </p>
                 </div>
               </div>
