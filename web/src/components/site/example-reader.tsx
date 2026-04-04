@@ -39,7 +39,7 @@ function ExportButton({
           <Icon className="size-4" />
           {label}
         </div>
-        <div className="mt-2 text-xs text-muted-foreground">Not available for this book.</div>
+        <div className="mt-2 text-xs text-muted-foreground">Bu kitap için henüz hazır değil.</div>
       </div>
     );
   }
@@ -57,7 +57,7 @@ function ExportButton({
         {label}
       </div>
       <div className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
-        Open export <Download className="size-3.5 transition group-hover:translate-y-0.5" />
+        Çıktıyı aç <Download className="size-3.5 transition group-hover:translate-y-0.5" />
       </div>
     </a>
   );
@@ -85,18 +85,18 @@ function ReaderCta({
         </div>
         <div className="min-w-0">
           <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Write Your Version
+            Kendi Sürümünü Yaz
           </div>
           <p className="mt-2 text-sm leading-7 text-foreground/82">
-            If this structure feels publishable, start from your own topic and generate the same sequence:
-            outline, chapters, cover, and export.
+            Bu yapı sana yayına hazır görünüyorsa kendi konunla başla ve aynı akışı üret:
+            bölüm planı, bölümler, kapak ve çıktılar.
           </p>
           <Link
             href="/start/topic"
             className="mt-4 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition hover:opacity-90"
             onClick={() => trackEvent("examples_sticky_cta_clicked", { slug, location })}
           >
-            Start Your Book <ArrowRight className="size-4" />
+            Kendi Kitabını Yaz <ArrowRight className="size-4" />
           </Link>
         </div>
       </div>
@@ -319,7 +319,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
               <div className="sticky top-24 space-y-5">
                 <div className="rounded-[28px] border border-border/80 bg-background p-5 shadow-sm">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Table of Contents
+                    İçindekiler
                   </div>
                   <div className="mt-4 space-y-2" dir={item.direction}>
                     {item.chaptersContent.map((chapter) => (
@@ -344,12 +344,12 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
 
                 <div className="rounded-[28px] border border-border/80 bg-background p-5 shadow-sm">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Exact Exports
+                    Birebir Çıktılar
                   </div>
                   <div className="mt-4 space-y-3">
-                    <ExportButton asset={item.exports.html} label="Read exact HTML" slug={item.slug} format="html" />
-                    <ExportButton asset={item.exports.pdf} label="View PDF" slug={item.slug} format="pdf" />
-                    <ExportButton asset={item.exports.epub} label="Download EPUB" slug={item.slug} format="epub" />
+                    <ExportButton asset={item.exports.html} label="Birebir HTML'i aç" slug={item.slug} format="html" />
+                    <ExportButton asset={item.exports.pdf} label="PDF'i görüntüle" slug={item.slug} format="pdf" />
+                    <ExportButton asset={item.exports.epub} label="EPUB'u indir" slug={item.slug} format="epub" />
                   </div>
                 </div>
 
@@ -371,7 +371,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
             className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition hover:opacity-90"
             onClick={() => trackEvent("examples_sticky_cta_clicked", { slug: item.slug, location: "reader_mobile_sticky" })}
           >
-            Start Yours <ArrowRight className="size-4" />
+            Kendi Kitabını Başlat <ArrowRight className="size-4" />
           </Link>
         </div>
       </div>

@@ -4,14 +4,17 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getSession, syncPreviewAuthState } from "@/lib/preview-auth";
+import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 const MOTIVATION_FACTS = [
-  "📖 Her ay 50+ kitap Book Generator ile üretiliyor",
-  "⚡ Ortalama 10 dakikada outline hazır",
-  "🌍 15+ dilde kitap üretilebiliyor",
-  "📚 2 kitap Amazon KDP'de canlı",
-  "🎨 AI kapak tasarımı 30 saniyede hazır",
-  "✨ İlk bölüm 60 saniyede önizleme",
+  `📚 ${KDP_LIVE_BOOKS_CLAIM}`,
+  `🛡️ ${KDP_GUARANTEE_CLAIM}`,
+  "🧭 Önce bölüm planını ve kapağı görürsün",
+  "🌍 Türkçe panel, çok dilli kitap çıktısı",
+  "🖼️ Vitrinde 30 gerçek showcase kitap var",
+  "📦 Tam erişimde EPUB ve PDF açılır",
+  `⚙️ ${NO_API_COST_CLAIM}`,
+  "✨ Preview mantığını ödeme öncesi test edersin",
 ];
 
 export default function RootLoading() {

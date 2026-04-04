@@ -17,7 +17,7 @@ export function LoginLogo() {
       <span className="relative block h-10 w-[220px]">
         <Image
           src={logoSrc}
-          alt="Book Generator"
+          alt="Kitap Oluşturucu"
           fill
           priority
           className="object-contain object-center"

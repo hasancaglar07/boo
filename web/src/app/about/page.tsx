@@ -7,8 +7,6 @@ import {
   Layers3,
   ShieldCheck,
   Sparkles,
-  Users,
-  Star,
   BookMarked,
 } from "lucide-react";
 
@@ -20,11 +18,12 @@ import { CyberneticBentoGrid } from "@/components/ui/cybernetic-bento-grid";
 import { Features4 } from "@/components/ui/features-4";
 import { Card, CardContent } from "@/components/ui/card";
 import { buildPageMetadata, absoluteUrl, siteConfig } from "@/lib/seo";
+import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOK_COUNT, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Book Generator Hakkında | AI Kitap Üretim Yaklaşımımız",
+  title: "Kitap Oluşturucu Hakkında | AI Kitap Üretim Yaklaşımımız",
   description:
-    "Book Generator neden sade arayüzle çalışıyor, AI kitap üretiminde hangi ilkelere odaklanıyor ve ilk kez kitap yazanlara nasıl hız kazandırdığını öğrenin.",
+    "Kitap Oluşturucu neden sade arayüzle çalışıyor, AI kitap üretiminde hangi ilkelere odaklanıyor ve ilk kez kitap yazanlara nasıl hız kazandırdığını öğrenin.",
   path: "/about",
   keywords: ["book generator hakkında", "ai kitap üretimi", "kitap yazma platformu"],
 });
@@ -68,7 +67,7 @@ const aboutBentoItems = [
     title: "Görünürde sade çünkü karmaşayı arka tarafta çözer",
     description:
       "İlk kez kitap üreten biri için en büyük sorun seçenek çokluğu. Biz de gelişmiş işleri tek tek bağırtmak yerine akışı yöneten bir omurga kurduk.",
-    metric: "First-time friendly",
+    metric: "İlk kez kullanan dostu",
     className: "md:col-span-2 md:row-span-2",
     bullets: ["Sihirbaz önce", "Panel sonra", "Geliştirilmiş arka plan", "Temiz teslim mantığı"],
   },
@@ -82,7 +81,7 @@ const aboutBentoItems = [
   {
     eyebrow: "Yayın",
     title: "İlk hedef her zaman gerçek çıktı",
-    description: "Bu yüzden export ve metadata akışlarını ürünün merkezine koyduk.",
+    description: "Bu yüzden çıktı ve kitap bilgileri akışlarını ürünün merkezine koyduk.",
     className: "md:col-span-1",
     bullets: ["EPUB", "PDF"],
   },
@@ -91,7 +90,7 @@ const aboutBentoItems = [
     title: "Araştırma ve kontrol araçları gizli kalabilir",
     description: "İhtiyaç olduğunda açılır; ilk ekranda ise kullanıcıyı boğmaz.",
     className: "md:col-span-1",
-    bullets: ["Keyword", "KDP", "Review"],
+    bullets: ["Anahtar kelime", "KDP", "İnceleme"],
   },
   {
     eyebrow: "Sonuç",
@@ -104,24 +103,24 @@ const aboutBentoItems = [
 
 const metrics = [
   {
-    icon: <Users className="size-5 text-primary" />,
-    value: "1,240+",
-    label: "Bu ay kitap çıkaran yazar",
-  },
-  {
     icon: <BookMarked className="size-5 text-primary" />,
-    value: "3,800+",
-    label: "Üretilen kitap",
+    value: KDP_LIVE_BOOK_COUNT,
+    label: "KDP onaylı kitap canlıda",
   },
   {
-    icon: <Star className="size-5 text-primary" />,
-    value: "4.9/5",
-    label: "Ortalama kullanıcı puanı",
+    icon: <Sparkles className="size-5 text-primary" />,
+    value: "30 örnek",
+    label: "çok dilli showcase kitap",
+  },
+  {
+    icon: <Eye className="size-5 text-primary" />,
+    value: "Ücretsiz preview",
+    label: "ödeme öncesi görünür",
   },
   {
     icon: <ShieldCheck className="size-5 text-primary" />,
-    value: "30 gün",
-    label: "Para iade garantisi",
+    value: "%100",
+    label: "KDP onay garantisi",
   },
 ];
 
@@ -133,14 +132,6 @@ export default function AboutPage() {
     url: siteConfig.siteUrl,
     logo: absoluteUrl("/logo.png"),
     description: siteConfig.description,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      bestRating: "5",
-      worstRating: "1",
-      ratingCount: "1240",
-      reviewCount: "1240",
-    },
   };
 
   return (
@@ -165,12 +156,15 @@ export default function AboutPage() {
 
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
-          <h1 className="sr-only">Book Generator hakkında</h1>
+          <h1 className="sr-only">Kitap Oluşturucu hakkında</h1>
           <SectionHeading
             badge="Hakkında"
             title="Bu ürün, kitabını çıkarmak isteyen ama karmaşık araçlarla boğulmak istemeyen insanlar için tasarlandı."
             description="Hedefimiz daha fazla panel göstermek değil, daha fazla insanın gerçekten kitabını bitirmesini sağlamak. Bu yüzden görünür tarafta sade, arka planda ise güçlü bir üretim sistemi kurduk."
           />
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
+            Bizim için asıl rakip başka bir yapay zeka aracı değil; erteleme, boş sayfa korkusu ve dağınık iş akışı. Ürün kararlarını bu psikolojik bariyerleri azaltacak şekilde aldık.
+          </p>
         </div>
       </section>
 
@@ -187,7 +181,7 @@ export default function AboutPage() {
         <CyberneticBentoGrid
           badge="Yaklaşım"
           title="Sade gösteriyor çünkü gücü arka planda topluyor."
-          description="Araştırma, outline, kapak, bölüm üretimi ve export aynı kitap etrafında organize edilir. Bu da hem profesyonel hem anlaşılır bir ürün hissi verir."
+          description="Araştırma, bölüm planı, kapak, bölüm üretimi ve çıktı aynı kitap etrafında organize edilir. Bu da hem profesyonel hem anlaşılır bir ürün hissi verir."
           items={aboutBentoItems}
         />
       </section>
@@ -207,7 +201,7 @@ export default function AboutPage() {
             <CardContent className="space-y-4">
               <h2 className="font-serif text-3xl font-semibold tracking-tight text-foreground">Yaklaşım</h2>
               <p className="text-sm leading-8 text-muted-foreground">
-                Önce güven veren mesaj, sonra anlaşılır onboarding, sonra da gerçekten çalışan bir kitap üretim akışı.
+                Önce güven veren mesaj, sonra anlaşılır onboarding, sonra da gerçekten çalışan bir kitap üretim akışı. {NO_API_COST_CLAIM} ve yayın hedefi KDP ise kitaplar {KDP_GUARANTEE_CLAIM} ile ilerler.
               </p>
             </CardContent>
           </Card>
@@ -221,13 +215,13 @@ export default function AboutPage() {
       </section>
 
       <MarketingCtaSection
-        title="Bu ürünü görmek için değil, kitap çıkarmak için kullansınlar istiyoruz."
-        description="Yani tasarım kararlarının tamamı tek şeye hizmet ediyor: kullanıcı ilk kitabını daha kolay bitirebilsin."
+        title="Bu ürün gösteriş için değil, kitap çıkarmak için var."
+        description="Yani tasarım kararlarının tamamı tek şeye hizmet ediyor: kullanıcı ilk kitabını daha kolay bitirebilsin. Önce önizlemeyi görsün, sonra tam kitaba geçsin."
         items={[
           "Az kelime, net yönlendirme",
           "Görünürde sade panel",
           "Arka planda güçlü üretim sistemi",
-          "Yayın odaklı teslim mantığı",
+          "Önce önizleme, sonra tam kitap",
         ]}
       />
       <script

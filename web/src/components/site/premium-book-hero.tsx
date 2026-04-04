@@ -8,6 +8,12 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
+import { SITE_REAL_BOOK_LOOKUP, siteExamplePublicCoverUrl } from "@/lib/site-real-books";
+import {
+  FULL_TRUST_CLAIM,
+  KDP_GUARANTEE_CLAIM,
+  KDP_LIVE_BOOKS_CLAIM,
+} from "@/lib/site-claims";
 
 // Terracotta marka paletine uyumlu kitap tonları
 type PremiumBookCover = {
@@ -25,131 +31,85 @@ type PremiumBookCover = {
   zIndex: number;
 };
 
-function exampleCoverUrl(slug: string, assetName = "front_cover_final.png") {
-  return `/api/examples/assets/${encodeURIComponent(slug)}/assets/${encodeURIComponent(assetName)}`;
+function premiumBook(slug: string, overrides: Omit<PremiumBookCover, "title" | "author" | "category" | "language" | "imageUrl" | "fallbackImageUrl" | "palette">) {
+  const book = SITE_REAL_BOOK_LOOKUP[slug];
+  return {
+    ...overrides,
+    title: book.title,
+    author: book.author,
+    category: book.category,
+    language: book.language,
+    imageUrl: siteExamplePublicCoverUrl(slug),
+    fallbackImageUrl: undefined,
+    palette: book.palette,
+  } satisfies PremiumBookCover;
 }
 
 const premiumBooks: PremiumBookCover[] = [
   // Sol taraf - üst
-  {
+  premiumBook("authority-in-100-pages", {
     id: 1,
-    title: "Authority in 100 Pages",
-    author: "Mina Hart",
-    category: "Business",
-    language: "English",
-    imageUrl: exampleCoverUrl("authority-in-100-pages", "homepage_hero_cover.png"),
-    fallbackImageUrl: exampleCoverUrl("authority-in-100-pages"),
-    palette: ["#c96442", "#a0522d", "#7c3a1e"],
     rotation: -15,
     position: { x: "5%", y: "10%" },
     scale: 1.2,
     zIndex: 10,
-  },
+  }),
   // Sağ taraf - üst
-  {
+  premiumBook("prompt-systems-for-small-teams", {
     id: 2,
-    title: "Prompt Systems for Small Teams",
-    author: "Owen Vale",
-    category: "AI & Systems",
-    language: "English",
-    imageUrl: exampleCoverUrl("prompt-systems-for-small-teams", "homepage_hero_cover.png"),
-    fallbackImageUrl: exampleCoverUrl("prompt-systems-for-small-teams"),
-    palette: ["#1f2937", "#374151", "#111827"],
     rotation: 12,
     position: { x: "80%", y: "8%" },
     scale: 1.15,
     zIndex: 15,
-  },
+  }),
   // Sol taraf - orta
-  {
+  premiumBook("uzmanligini-kitaba-donustur", {
     id: 3,
-    title: "Uzmanlığını Kitaba Dönüştür",
-    author: "Derya Tan",
-    category: "Expertise",
-    language: "Türkçe",
-    imageUrl: exampleCoverUrl("uzmanligini-kitaba-donustur", "homepage_hero_cover.png"),
-    fallbackImageUrl: exampleCoverUrl("uzmanligini-kitaba-donustur"),
-    palette: ["#7c2d12", "#c2410c", "#ea580c"],
     rotation: -8,
     position: { x: "3%", y: "45%" },
     scale: 1.0,
     zIndex: 12,
-  },
+  }),
   // Sağ taraf - orta
-  {
+  premiumBook("focus-by-design", {
     id: 4,
-    title: "Focus by Design",
-    author: "Noah Sel",
-    category: "Personal Growth",
-    language: "English",
-    imageUrl: exampleCoverUrl("focus-by-design", "homepage_hero_cover.png"),
-    fallbackImageUrl: exampleCoverUrl("focus-by-design"),
-    palette: ["#292524", "#57534e", "#78716c"],
     rotation: 10,
     position: { x: "82%", y: "42%" },
     scale: 1.05,
     zIndex: 18,
-  },
+  }),
   // Sol taraf - alt
-  {
+  premiumBook("tu-metodo-hecho-libro", {
     id: 5,
-    title: "Tu Método Hecho Libro",
-    author: "Lucía Ferrer",
-    category: "Authority",
-    language: "Español",
-    imageUrl: exampleCoverUrl("tu-metodo-hecho-libro", "homepage_hero_cover.png"),
-    fallbackImageUrl: exampleCoverUrl("tu-metodo-hecho-libro"),
-    palette: ["#431407", "#9a3412", "#c2410c"],
     rotation: -10,
     position: { x: "8%", y: "72%" },
     scale: 0.95,
     zIndex: 14,
-  },
+  }),
   // Sağ taraf - alt
-  {
+  premiumBook("ia-pratica-para-negocios-pequenos", {
     id: 6,
-    title: "IA Prática para Negócios Pequenos",
-    author: "Lia Monteiro",
-    category: "AI",
-    language: "Português",
-    imageUrl: exampleCoverUrl("ia-pratica-para-negocios-pequenos", "homepage_hero_cover.png"),
-    fallbackImageUrl: exampleCoverUrl("ia-pratica-para-negocios-pequenos"),
-    palette: ["#1c1917", "#3d3929", "#57534e"],
     rotation: 8,
     position: { x: "78%", y: "75%" },
     scale: 1.0,
     zIndex: 16,
-  },
+  }),
   // Ekstra kitaplar - sol orta-üst
-  {
+  premiumBook("parent-friendly-stem-at-home", {
     id: 7,
-    title: "Parent-Friendly STEM at Home",
-    author: "Amelia Stone",
-    category: "Education",
-    language: "English",
-    imageUrl: exampleCoverUrl("parent-friendly-stem-at-home", "homepage_hero_cover.png"),
-    fallbackImageUrl: exampleCoverUrl("parent-friendly-stem-at-home"),
-    palette: ["#7c3a1e", "#a0522d", "#c96442"],
     rotation: -18,
     position: { x: "15%", y: "25%" },
     scale: 0.85,
     zIndex: 11,
-  },
+  }),
   // Ekstra kitaplar - sağ orta-alt
-  {
+  premiumBook("clarte-calme-execution", {
     id: 8,
-    title: "Clarté, Calme, Exécution",
-    author: "Claire Dumas",
-    category: "Mindset",
-    language: "Français",
-    imageUrl: exampleCoverUrl("clarte-calme-execution", "homepage_hero_cover.png"),
-    fallbackImageUrl: exampleCoverUrl("clarte-calme-execution"),
-    palette: ["#111827", "#1f2937", "#374151"],
     rotation: 14,
     position: { x: "70%", y: "65%" },
     scale: 0.9,
     zIndex: 17,
-  },
+  }),
 ];
 
 const PremiumBookCard = ({
@@ -214,6 +174,10 @@ const PremiumBookCard = ({
     return 1 + Math.min(d / 200, 0.08);
   });
 
+  if (!imageSrc) {
+    return null;
+  }
+
   return (
     <motion.div
       ref={ref}
@@ -248,37 +212,31 @@ const PremiumBookCard = ({
           style={{
             height: book.scale > 1 ? "180px" : "150px",
             width: book.scale > 1 ? "126px" : "105px",
-            background: imageSrc
-              ? undefined
-              : `linear-gradient(145deg, ${book.palette[0]} 0%, ${book.palette[1]} 50%, ${book.palette[2]} 100%)`,
             transform: "perspective(1200px) rotateY(-8deg) rotateX(2deg)",
             transformStyle: "preserve-3d",
           }}
         >
-          {imageSrc ? (
-            <>
-              <Image
-                src={imageSrc}
-                alt={`${book.title} cover`}
-                fill
-                sizes="(min-width: 768px) 126px, 105px"
-                className="absolute inset-0 h-full w-full object-cover"
-                priority={index < 4}
-                onError={() => {
-                  if (imageSrc !== book.fallbackImageUrl && book.fallbackImageUrl) {
-                    setImageSrc(book.fallbackImageUrl);
-                    return;
-                  }
-                  setImageSrc(undefined);
-                }}
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/18 via-transparent to-black/8" />
-              <div className="pointer-events-none absolute inset-0 ring-1 ring-white/10" />
-              <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-black/40 px-2 py-1 text-[7px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-sm">
-                {book.language || book.category}
-              </div>
-            </>
-          ) : null}
+          <Image
+            src={imageSrc}
+            alt={`${book.title} cover`}
+            fill
+            sizes="(min-width: 768px) 126px, 105px"
+            className="absolute inset-0 h-full w-full object-cover"
+            priority={index < 4}
+            unoptimized
+            onError={() => {
+              if (imageSrc !== book.fallbackImageUrl && book.fallbackImageUrl) {
+                setImageSrc(book.fallbackImageUrl);
+                return;
+              }
+              setImageSrc(undefined);
+            }}
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/18 via-transparent to-black/8" />
+          <div className="pointer-events-none absolute inset-0 ring-1 ring-white/10" />
+          <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-black/40 px-2 py-1 text-[7px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-sm">
+            {book.language || book.category}
+          </div>
           {/* Premium overlay effects */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/35 via-transparent to-white/5" />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -286,21 +244,6 @@ const PremiumBookCard = ({
           {/* Book spine */}
           <div className="absolute left-0 top-0 h-full w-3 bg-black/30 shadow-inner" />
           <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-r from-black/50 to-transparent" />
-
-          {/* Content */}
-          {!imageSrc ? (
-            <div className="relative flex h-full w-full flex-col justify-between p-3">
-              <div className="inline-block rounded-full bg-white/20 px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider text-white backdrop-blur-md shadow-sm">
-                {book.category}
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-[11px] font-bold leading-tight text-white drop-shadow-md md:text-[13px]">
-                  {book.title}
-                </h3>
-                <p className="text-[9px] font-semibold text-white/90 md:text-[10px]">{book.author}</p>
-              </div>
-            </div>
-          ) : null}
 
           {/* Bottom gradient */}
           <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black/40 to-transparent" />
@@ -340,13 +283,13 @@ export const PremiumBookHero = React.forwardRef<
 >((
   {
     className,
-    title = "Fikrini yayına hazır kitaba çevir.",
-    subtitle = "Konunu gir, outline ve kapağı gör, ilk okunabilir preview'ı aç. Beğenirsen tam kitabı ve export'u unlock et.",
-    ctaText = "Ücretsiz Preview Oluştur",
+    title = "Uzmanlığını kısa sürede görülebilir bir kitaba çevir.",
+    subtitle = "Konunu yaz, wizard seni yönlendirsin. Outline, kapak ve ilk preview aynı akışta oluşsun. ChatGPT, Canva ve export araçları arasında dağılma.",
+    ctaText = "Ücretsiz Preview Başlat",
     ctaHref = "/start/topic",
     badge = "Ücretsiz Preview",
-    trustNote = "Kredi kartı gerekmez · Kayıtsız başlayabilirsin · İlk değer birkaç adımda görünür",
-    socialProof = { count: "30 showcase kitap hazır", rating: "2 kitap Amazon KDP'de canlı" },
+    trustNote = `Önce ücretsiz preview gör. Beğenirsen tam kitabı aç. · ${FULL_TRUST_CLAIM}`,
+    socialProof = { count: KDP_LIVE_BOOKS_CLAIM, rating: KDP_GUARANTEE_CLAIM },
     secondaryCtaText = "Örnekleri Gör",
     secondaryCtaHref = "/examples",
     ...props

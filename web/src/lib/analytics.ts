@@ -1,6 +1,14 @@
 "use client";
 
 export type AnalyticsEventName =
+  | "contact_form_viewed"
+  | "contact_form_failed"
+  | "contact_form_submitted"
+  | "lead_magnet_viewed"
+  | "lead_magnet_email_capture_viewed"
+  | "lead_magnet_requested"
+  | "lead_magnet_delivered"
+  | "lead_magnet_cta_clicked"
   | "tool_page_viewed"
   | "tool_started"
   | "tool_result_generated"
@@ -15,6 +23,7 @@ export type AnalyticsEventName =
   | "examples_reader_viewed"
   | "examples_export_clicked"
   | "examples_sticky_cta_clicked"
+  | "examples_start_similar_clicked"
   | "examples_cta_click"
   | "faq_cta_click"
   | "quick_start_clicked"
@@ -73,6 +82,11 @@ export type AnalyticsEventName =
   | "full_book_viewed"
   | "recovery_email_sent"
   | "recovery_email_clicked"
+  | "referral_link_copied"
+  | "referral_share_dialog_dismissed"
+  | "referral_share_dialog_shown"
+  | "referral_twitter_clicked"
+  | "referral_whatsapp_clicked"
   | "second_book_gate_viewed"
   | "second_book_gate_converted"
   | "pdf_export_started"
@@ -139,11 +153,15 @@ export function trackEvent(
     timestamp: new Date().toISOString(),
   };
 
-  const win = window as Window & { dataLayer?: Array<Record<string, unknown>> };
+  const win = window as Window & { dataLayer?: Array<Record<string, unknown>>; gtag?: (...args: unknown[]) => void };
   if (Array.isArray(win.dataLayer)) {
     win.dataLayer.push(payload);
   } else {
     win.dataLayer = [payload];
+  }
+
+  if (typeof win.gtag === "function") {
+    win.gtag("event", event, properties ?? {});
   }
 
   const body = JSON.stringify(payload);
@@ -176,7 +194,7 @@ export function trackEventOnce(
   } = {},
 ) {
   const key = options.key || event;
-  const ttlMs = options.ttlMs ?? 15_000;
+  const ttlMs = options.ttlMs ?? 30 * 60 * 1000; // 30 dakika varsayılan
 
   if (!shouldTrackEventOnce(key, ttlMs)) {
     return;

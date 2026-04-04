@@ -73,7 +73,7 @@ export default function AdminAuditPage() {
           <p className="mt-1 text-sm admin-muted">Admin, auth ve billing aksiyonlarının tamamı.</p>
         </div>
         <Link
-          href={`/api/admin/reports/users?${query}`}
+          href="/admin/reports"
           className="inline-flex h-11 items-center justify-center rounded-2xl border border-[color:var(--admin-border)] px-4 text-sm font-semibold text-[color:var(--admin-text)]"
         >
           Export tools

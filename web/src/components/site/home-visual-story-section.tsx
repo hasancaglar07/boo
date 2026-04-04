@@ -19,29 +19,29 @@ import { cn } from "@/lib/utils";
 const storySteps = [
   {
     step: "1",
-    badge: "Brief",
+    badge: "Konu Özeti",
     title: "Fikrini gir. Sistem kitap yönünü kursun.",
     description:
       "Kitap türü, konu, hedef okur ve dil tercihini yaz. Sistem başlık, alt başlık ve ilk omurgayı tek ekranda önerir.",
-    bullets: ["Türkçe arayüz", "English output", "Başlık + açıklama"],
+    bullets: ["Türkçe arayüz", "İngilizce çıktı", "Başlık + açıklama"],
     mock: "brief",
   },
   {
     step: "2",
-    badge: "Outline",
+    badge: "Bölüm Planı",
     title: "Taslağı gör. Bölüm sırasını netleştir.",
     description:
       "Daha yazıya geçmeden önce bölüm akışını, okuyucu vaadini ve araştırma sinyallerini aynı yerde kontrol et.",
-    bullets: ["Bölüm yapısı", "Keyword yönü", "Düzenlenebilir taslak"],
+    bullets: ["Bölüm yapısı", "Anahtar kelime yönü", "Düzenlenebilir taslak"],
     mock: "outline",
   },
   {
     step: "3",
-    badge: "Publish",
+    badge: "Yayın",
     title: "İçeriği üret. Kapağı ekle. EPUB al.",
     description:
       "Bölümler sırayla oluşur, kapak akışı eklenir ve yayın klasörüne ilk teslim dosyaların düşer.",
-    bullets: ["Kapak akışı", "EPUB + PDF", "Export klasörü"],
+    bullets: ["Kapak akışı", "EPUB + PDF", "Çıktı klasörü"],
     mock: "publish",
   },
 ] as const;
@@ -92,7 +92,7 @@ function BriefMock() {
           ))}
 
           <div className="flex flex-wrap gap-2">
-            {["English", "6 bölüm", "Lead magnet değil"].map((chip) => (
+            {["İngilizce", "6 bölüm", "Kısa tanıtım kitabı değil"].map((chip) => (
               <span
                 key={chip}
                 className="rounded-full border border-border bg-accent/60 px-3 py-1 text-xs text-accent-foreground"
@@ -122,7 +122,7 @@ function BriefMock() {
             {[
               "Başlık + alt başlık",
               "Kitap açıklaması",
-              "İlk outline",
+              "İlk bölüm planı",
               "Bölüm sırası",
             ].map((item) => (
               <div
@@ -141,7 +141,7 @@ function BriefMock() {
 
 function OutlineMock() {
   return (
-    <MockFrame title="Outline + research">
+      <MockFrame title="Bölüm planı + araştırma">
       <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="space-y-2">
           {[
@@ -192,7 +192,7 @@ function OutlineMock() {
             <div className="rounded-2xl border border-border/80 bg-card/80 p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <SearchCheck className="size-4 text-primary" />
-                Keyword yönü
+                Anahtar kelime yönü
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {["email sales", "consulting offer", "client system"].map((chip) => (
@@ -211,7 +211,7 @@ function OutlineMock() {
                 Çıktı dili
               </div>
               <div className="mt-3 text-xs leading-6 text-muted-foreground">
-                Panel Türkçe kalır. Kitap içeriği English olarak ilerler.
+                Panel Türkçe kalır. Kitap içeriği İngilizce olarak ilerler.
               </div>
             </div>
           </div>
@@ -223,13 +223,13 @@ function OutlineMock() {
 
 function PublishMock() {
   return (
-    <MockFrame title="Publish">
+    <MockFrame title="Yayına Hazırla">
       <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="flex items-end justify-center gap-3 rounded-[28px] border border-border/80 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_8%,transparent),transparent_80%)] px-4 py-6">
           {[
-            ["Creator Brief", "amber", "KDP"],
-            ["Email Offer Book", "zinc", "EPUB"],
-            ["Launch Notes", "orange", "PDF"],
+            ["Üretim Özeti", "amber", "KDP"],
+            ["E-posta İçin Kitap", "zinc", "EPUB"],
+            ["Yayın Notları", "orange", "PDF"],
           ].map(([title, tone, badge], index) => (
             <motion.div
               key={title}
@@ -252,7 +252,7 @@ function PublishMock() {
           <div className="rounded-2xl border border-border/80 bg-background/95 p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <FileOutput className="size-4 text-primary" />
-              Export durumu
+              Çıktı durumu
             </div>
             <div className="mt-4 space-y-3">
               {[
@@ -278,7 +278,7 @@ function PublishMock() {
                 Kapak akışı
               </div>
               <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                Ön kapak, arka kapak ve export klasörü tek kitap altında toplanır.
+                Ön kapak, arka kapak ve çıktı klasörü tek kitap altında toplanır.
               </p>
             </div>
             <div className="rounded-2xl border border-border/80 bg-card/80 p-4">
@@ -287,7 +287,7 @@ function PublishMock() {
                 Teslim dosyaları
               </div>
               <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                Timestamp’li klasör ile hangi exportun ne zaman alındığı nettir.
+                Zaman damgalı klasör ile hangi çıktının ne zaman alındığı nettir.
               </p>
             </div>
           </div>

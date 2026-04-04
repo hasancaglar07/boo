@@ -10,18 +10,77 @@ type PageMetadataInput = {
   ogImage?: string;
 };
 
-const fallbackSiteUrl = "http://localhost:3000";
+const productionSiteUrl = "https://bookgenerator.net";
+const siteUrlEnvKeys = [
+  "NEXT_PUBLIC_SITE_URL",
+  "SITE_URL",
+  "VERCEL_PROJECT_PRODUCTION_URL",
+  "VERCEL_URL",
+  "URL",
+] as const;
+
+function isLocalOrPrivateHostname(hostname: string) {
+  const normalized = hostname.toLowerCase();
+
+  if (
+    normalized === "localhost" ||
+    normalized === "127.0.0.1" ||
+    normalized === "0.0.0.0" ||
+    normalized === "::1" ||
+    normalized.endsWith(".local")
+  ) {
+    return true;
+  }
+
+  if (/^10\.\d+\.\d+\.\d+$/.test(normalized)) return true;
+  if (/^192\.168\.\d+\.\d+$/.test(normalized)) return true;
+
+  const private172Match = normalized.match(/^172\.(\d{1,2})\.\d+\.\d+$/);
+  if (private172Match) {
+    const octet = Number(private172Match[1]);
+    if (octet >= 16 && octet <= 31) return true;
+  }
+
+  return false;
+}
+
+function resolveRawSiteUrl() {
+  for (const key of siteUrlEnvKeys) {
+    const value = process.env[key];
+    if (value?.trim()) return value.trim();
+  }
+
+  return productionSiteUrl;
+}
 
 function normalizeSiteUrl(raw?: string) {
-  if (!raw) return fallbackSiteUrl;
-  const prefixed = raw.startsWith("http://") || raw.startsWith("https://") ? raw : `https://${raw}`;
-  return prefixed.replace(/\/+$/, "");
+  if (!raw) return productionSiteUrl;
+
+  try {
+    const prefixed = raw.startsWith("http://") || raw.startsWith("https://") ? raw : `https://${raw}`;
+    const parsed = new URL(prefixed);
+    const hostname = parsed.hostname.toLowerCase();
+
+    if (isLocalOrPrivateHostname(hostname)) {
+      return productionSiteUrl;
+    }
+
+    if (hostname === "bookgenerator.net" || hostname === "www.bookgenerator.net") {
+      return productionSiteUrl;
+    }
+
+    return parsed.origin.replace(/\/+$/, "");
+  } catch {
+    return productionSiteUrl;
+  }
 }
 
 export const siteConfig = {
   name: "Book Generator",
-  description: "İlk kitabını daha sade, daha net ve daha hızlı üretmek için kurulan premium yazım arayüzü.",
-  siteUrl: normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
+  alternateName: "Kitap Oluşturucu",
+  description:
+    "Çok dilli AI publishing studio: tek bir fikirden branded, yayına hazır kitap, kapak ve EPUB/PDF çıktısı üretir.",
+  siteUrl: normalizeSiteUrl(resolveRawSiteUrl()),
   locale: "tr_TR",
   defaultTitle: "Book Generator",
   defaultOgImage: "/logo-tight.png",
@@ -60,6 +119,9 @@ export function buildPageMetadata({
       googleBot: {
         index: !noIndex,
         follow: !noIndex,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
       },
     },
     openGraph: {

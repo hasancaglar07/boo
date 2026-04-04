@@ -4,6 +4,7 @@ import { recordCheckoutEntitlement } from "@/lib/auth/data";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { type BookPlanId } from "@/lib/auth/constants";
+import { grantReferrerReward } from "@/lib/referral";
 
 export async function POST(request: NextRequest) {
   let stripe;
@@ -66,6 +67,28 @@ export async function POST(request: NextRequest) {
           },
         },
       });
+
+      // Grant referral reward if this user was referred and reward not yet granted
+      try {
+        const conversion = await prisma.referralConversion.findUnique({
+          where: { newUserId: userId },
+          include: { referralCode: true },
+        });
+        if (conversion && !conversion.rewardGranted) {
+          await grantReferrerReward(prisma, conversion.id, conversion.referralCode.userId);
+          await prisma.auditLog.create({
+            data: {
+              action: "referral_reward_granted",
+              entityType: "user",
+              entityId: conversion.referralCode.userId,
+              actorUserId: userId,
+              metadata: { conversionId: conversion.id },
+            },
+          });
+        }
+      } catch (referralErr) {
+        console.error("Referral reward grant failed (non-critical):", referralErr);
+      }
 
       console.log(`Stripe checkout tamamlandı: userId=${userId} planId=${planId} bookSlug=${bookSlug}`);
     } catch (err) {

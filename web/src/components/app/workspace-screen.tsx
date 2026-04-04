@@ -7,6 +7,8 @@ import { BarChart3, BookOpen, Check, FileText, FlaskConical, ImagePlus, Layers, 
 import { AppFrame } from "@/components/app/app-frame";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
 import { BookMockup } from "@/components/books/book-mockup";
+import { ReferralBanner } from "@/components/app/referral-banner";
+import { ReferralShareDialog, hasReferralDialogBeenShown } from "@/components/app/referral-share-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +30,7 @@ import {
   runWorkflow,
   saveBook,
   saveSettings,
+  selectBookCoverVariant,
   uploadBookAsset,
   type Book,
   type CoverVariant,
@@ -74,10 +77,43 @@ function coverGenreLabel(genre?: string) {
 function coverPickerSummary(book: Book | null) {
   const branch = book?.cover_branch || "nonfiction";
   const genre = coverGenreLabel(book?.cover_genre);
+  if (book?.cover_text_strategy === "hybrid-ai-text") {
+    return `Bu kitap hibrit kapak modunda çalışır. Sistem 2 AI text önerisi üretir: Signature tam başlık düzenini doğrudan modelden dener, Minimal daha sade bir tipografi dener, Exact ise her zaman bizim hatasız studio yerleşimimizdir.`;
+  }
   if (branch === "children") {
     return `Bu kitap ${genre.toLowerCase()} hattında çalışır. Sistem daha neşeli Storyworld, daha öğretici Learning Adventure ve daha yumuşak Bedtime Calm önerileri üretir; seçtiğin varyant export ve satış yüzeyine aynen yansır.`;
   }
   return `Bu kitap ${genre.toLowerCase()} hattında çalışır. Sistem türe göre 3 kapak önerir; biri daha direkt ticari, biri daha premium/editorial, biri de alt konuya göre daha sıcak veya daha modern okunur. Seçtiğin varyant export ve satış yüzeyine aynen yansır.`;
+}
+
+function coverRenderModeLabel(mode?: string) {
+  switch (mode) {
+    case "ai-signature":
+      return "Signature";
+    case "ai-minimal":
+      return "Minimal";
+    case "studio-exact":
+      return "Exact";
+    case "studio-exact-fallback":
+      return "Studio Fallback";
+    default:
+      return "";
+  }
+}
+
+function coverValidationSummary(variant: CoverVariant) {
+  const validation = variant.text_validation;
+  if (!validation) return "";
+  if (variant.render_mode === "studio-exact-fallback") {
+    return "AI text denendi ama doğrulama eşiğini geçmedi; studio exact ile güvenli fallback kullanılıyor.";
+  }
+  if (variant.render_mode === "ai-signature" || variant.render_mode === "ai-minimal") {
+    if (validation.valid) {
+      return "OCR doğrulaması geçti. Bu varyantta kapak yazısı doğrudan model tarafından üretildi.";
+    }
+    return "AI text denemesi yapıldı ama doğrulama tamamlanmadı.";
+  }
+  return "Bu varyantta başlık ve yazar her zaman studio compositor ile tam yerleştirilir.";
 }
 
 // ─── Toast ───────────────────────────────────────────────────────────────────
@@ -130,22 +166,30 @@ function CoverVariantCard({
   slug,
   variant,
   selected,
+  selecting,
   onSelect,
 }: {
   slug: string;
   variant: CoverVariant;
   selected: boolean;
+  selecting?: boolean;
   onSelect: () => void;
 }) {
   const frontUrl = buildBookAssetUrl(slug, variant.front_image);
   const backUrl = variant.back_image ? buildBookAssetUrl(slug, variant.back_image) : undefined;
+  const validation = variant.text_validation;
+  const hasValidationScores =
+    typeof validation?.titleScore === "number" ||
+    typeof validation?.subtitleScore === "number" ||
+    typeof validation?.authorScore === "number";
 
   return (
     <button
       type="button"
       onClick={onSelect}
+      disabled={selecting}
       className={cn(
-        "group rounded-[28px] border p-4 text-left transition",
+        "group rounded-[28px] border p-4 text-left transition disabled:cursor-wait disabled:opacity-80",
         selected
           ? "border-primary/50 bg-primary/5 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.35)]"
           : "border-border/80 bg-background hover:border-primary/25 hover:bg-accent/30",
@@ -165,6 +209,16 @@ function CoverVariantCard({
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {variant.render_mode ? (
+            <Badge className="border-primary/20 bg-primary/5 text-primary">
+              {coverRenderModeLabel(variant.render_mode)}
+            </Badge>
+          ) : null}
+          {validation?.valid ? (
+            <Badge className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+              Text Verified
+            </Badge>
+          ) : null}
           {variant.recommended ? (
             <Badge className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
               Recommended
@@ -198,6 +252,20 @@ function CoverVariantCard({
           </div>
         </div>
       </div>
+
+      <div className="mt-4 rounded-2xl border border-border/70 bg-background/60 px-3 py-3">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Render</div>
+        <div className="mt-2 text-xs leading-6 text-muted-foreground">{coverValidationSummary(variant)}</div>
+        {hasValidationScores ? (
+          <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-foreground/80">
+            {typeof validation?.titleScore === "number" ? <span className="rounded-full border border-border/70 px-2 py-1">Title {validation.titleScore.toFixed(2)}</span> : null}
+            {typeof validation?.subtitleScore === "number" && variant.render_mode === "ai-signature" ? (
+              <span className="rounded-full border border-border/70 px-2 py-1">Subtitle {validation.subtitleScore.toFixed(2)}</span>
+            ) : null}
+            {typeof validation?.authorScore === "number" ? <span className="rounded-full border border-border/70 px-2 py-1">Author {validation.authorScore.toFixed(2)}</span> : null}
+          </div>
+        ) : null}
+      </div>
     </button>
   );
 }
@@ -221,8 +289,10 @@ export function WorkspaceScreen({
   const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectingCoverVariantId, setSelectingCoverVariantId] = useState("");
   const [activeChapter, setActiveChapter] = useState(0);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [showReferralDialog, setShowReferralDialog] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -345,6 +415,24 @@ export function WorkspaceScreen({
     }
   }
 
+  async function handleSelectCoverVariant(variant: CoverVariant) {
+    if (selectingCoverVariantId || !slug) return;
+    setSelectingCoverVariantId(variant.id);
+    const toastId = addToast("Kapak seçimi kaydediliyor...", "loading");
+    try {
+      const response = await selectBookCoverVariant(slug, variant.id);
+      setBook(response.book);
+      setDraft(response.book);
+      setIsDirty(false);
+      trackEvent("cover_variant_selected", { slug, variantId: variant.id, renderMode: variant.render_mode || "" });
+      updateToast(toastId, "Kapak seçimi kaydedildi.", "success");
+    } catch (error) {
+      updateToast(toastId, error instanceof Error ? error.message : "Kapak seçimi kaydedilemedi.", "error");
+    } finally {
+      setSelectingCoverVariantId("");
+    }
+  }
+
   async function handleLogoUpload(file: File) {
     if (!file.type.startsWith("image/")) {
       addToast("Yalnızca görsel dosyası yükleyebilirsin.", "error");
@@ -462,6 +550,7 @@ export function WorkspaceScreen({
       if (format === "pdf") trackEvent("pdf_export_completed", { slug });
       if (format === "epub") trackEvent("epub_export_completed", { slug });
       if (!hadExportBefore) trackEvent("first_export_success", { slug, format });
+      if (!hadExportBefore && !hasReferralDialogBeenShown()) setShowReferralDialog(true);
       if (currentDraft.generate_cover) trackEvent("cover_generated", { slug, format });
     } catch (error) {
       if (isBackendUnavailableError(error)) {
@@ -906,31 +995,8 @@ export function WorkspaceScreen({
                       slug={slug}
                       variant={variant}
                       selected={variant.id === selectedCoverVariantId}
-                      onSelect={() =>
-                        updateDraft({
-                          cover_variants: coverVariants,
-                          selected_cover_variant: variant.id,
-                          recommended_cover_variant:
-                            currentDraft.recommended_cover_variant ||
-                            coverVariants.find((item) => item.recommended)?.id ||
-                            variant.id,
-                          back_cover_variant_family: variant.family,
-                          cover_family: variant.family,
-                          cover_branch: currentDraft.cover_branch,
-                          cover_genre: variant.genre || currentDraft.cover_genre,
-                          cover_subtopic: variant.subtopic || currentDraft.cover_subtopic,
-                          cover_palette_key: variant.paletteKey || currentDraft.cover_palette_key,
-                          cover_layout_key: variant.layout || currentDraft.cover_layout_key,
-                          cover_motif: variant.motif || currentDraft.cover_motif,
-                          cover_art_image: variant.art_image || currentDraft.cover_art_image,
-                          cover_image: variant.front_image,
-                          back_cover_image: variant.back_image,
-                          cover_template: variant.template || currentDraft.cover_template,
-                          cover_variant_count: coverVariants.length,
-                          cover_composed: true,
-                          cover_lab_version: currentDraft.cover_lab_version || "adaptive-cover-lab-v1",
-                        })
-                      }
+                      selecting={selectingCoverVariantId === variant.id}
+                      onSelect={() => void handleSelectCoverVariant(variant)}
                     />
                   ))}
                 </div>
@@ -985,6 +1051,7 @@ export function WorkspaceScreen({
               <Card><CardContent><div className="text-sm text-muted-foreground">Henüz çıktı yok.</div></CardContent></Card>
             ) : null}
           </div>
+          <ReferralBanner />
         </TabsContent>
 
         {/* ── SETTINGS ── */}
@@ -1023,6 +1090,7 @@ export function WorkspaceScreen({
       </Tabs>
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      <ReferralShareDialog open={showReferralDialog} onOpenChange={setShowReferralDialog} />
     </AppFrame>
   );
 }

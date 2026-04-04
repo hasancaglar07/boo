@@ -34,7 +34,7 @@ export function PricingCreativeSection({
       features: premiumPlan.features,
       popular: false,
       accentClassName: "text-foreground",
-      ctaLabel: "$4 ile Kitabımı Çıkar",
+      ctaLabel: "$4 ile Bu Kitabı Aç",
       ctaHref: "/start/topic?plan=tek-kitap",
     },
     {
@@ -49,7 +49,7 @@ export function PricingCreativeSection({
       features: plans[0].features,
       popular: false,
       accentClassName: "text-foreground",
-      ctaLabel: "Starter ile Başla",
+      ctaLabel: "Başlangıç Planıyla Başla",
       ctaHref: `/start/topic?plan=starter${billingCycle === "annual" ? "&billing=annual" : ""}`,
     },
     {
@@ -65,7 +65,7 @@ export function PricingCreativeSection({
       features: plans[1].features,
       popular: true,
       accentClassName: "text-primary border-primary bg-primary/10",
-      ctaLabel: "Yazar Planına Geç",
+      ctaLabel: "En Mantıklı Plan: Yazar",
       ctaHref: `/start/topic?plan=creator${billingCycle === "annual" ? "&billing=annual" : ""}`,
     },
     {

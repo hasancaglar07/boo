@@ -1,0 +1,8 @@
+services:
+  dashboard:
+    ports:
+      - "127.0.0.1:${BOOK_DASHBOARD_BIND_PORT:-8765}:8765"
+
+  web:
+    ports:
+      - "127.0.0.1:${BOOK_WEB_BIND_PORT:-3000}:3000"

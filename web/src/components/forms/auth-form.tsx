@@ -19,7 +19,7 @@ import {
   type PreviewAuthProviders,
 } from "@/lib/preview-auth";
 
-const DEFAULT_GOAL = "İlk kitabımı hızlıca üretmek istiyorum.";
+const DEFAULT_GOAL = "İlk kitabımı hızlı ve düzenli biçimde hazırlamak istiyorum.";
 
 type AuthFormMode = "login" | "register";
 type AuthFormMethod = "google" | "magic" | "credentials";
@@ -72,9 +72,9 @@ export function AuthForm({
   const checkEmail = searchParams.get("checkEmail");
 
   const [name, setName] = useState(
-    mode === "register" && storedAccount.name !== "Book Creator" ? storedAccount.name : "",
+    mode === "register" && storedAccount.name !== "Kitap Sahibi" ? storedAccount.name : "",
   );
-  const [email, setEmail] = useState(storedAccount.email !== "demo@example.com" ? storedAccount.email : "");
+  const [email, setEmail] = useState(storedAccount.email !== "ornek@mail.com" ? storedAccount.email : "");
   const goal =
     storedAccount.goal && storedAccount.goal !== DEFAULT_GOAL ? storedAccount.goal : "";
   const [password, setPassword] = useState("");
@@ -120,11 +120,11 @@ export function AuthForm({
     };
   }, [next, redirectIfAuthenticated, router]);
 
-  const title = mode === "login" ? "Tekrar hoş geldin" : "Kitabını yazmaya başla";
+  const title = mode === "login" ? "Kitabına kaldığın yerden devam et" : "Ön izlemeyi kaydet ve devam et";
   const description =
     mode === "login"
-      ? "Google, magic link veya şifrenle giriş yap. Preview, kütüphane ve ödeme akışı aynı hesapta kalır."
-      : "Tek email alanı ile başla. Google, magic link veya şifreli hesap seçeneklerinden birini seç; preview kaybolmaz.";
+      ? "Google, e-posta bağlantısı veya şifrenle giriş yap. Ön izleme, kütüphane ve ödeme akışı aynı hesapta kalır."
+      : "Google, e-posta bağlantısı veya şifreli hesap seçeneklerinden biriyle başla. Bu adım ödeme istemez; yalnızca ön izlemenin kaybolmamasını engeller.";
 
   const emailTrimmed = email.trim().toLowerCase();
   const nameTrimmed = name.trim();
@@ -140,11 +140,11 @@ export function AuthForm({
   const submitLabel =
     mode === "login"
       ? source === "generate_gate"
-        ? "Giriş Yap ve Kitabı Başlat"
-        : "Giriş Yap"
+        ? "Giriş Yap ve Ön İzlemeye Devam Et"
+        : "Giriş Yap ve Devam Et"
       : source === "generate_gate"
-        ? "Hesabımı Oluştur ve Kitabı Başlat"
-        : "Hesabımı Oluştur ve Başlat";
+        ? "Hesabımı Oluştur ve Ön İzlemeyi Başlat"
+        : "Hesabımı Oluştur ve Ön İzlemeyi Kaydet";
 
   function emitGenerateGateEvent(event: "generate_auth_gate_method_selected" | "generate_auth_gate_failed", properties: Record<string, string>) {
     if (source !== "generate_gate") return;
@@ -159,8 +159,8 @@ export function AuthForm({
     emitGenerateGateEvent("generate_auth_gate_method_selected", { method: "google", mode });
     if (mode === "register") {
       setAccount({
-        name: nameTrimmed || storedAccount.name || "Book Creator",
-        email: emailTrimmed || storedAccount.email || "demo@example.com",
+        name: nameTrimmed || storedAccount.name || "Kitap Sahibi",
+        email: emailTrimmed || storedAccount.email || "ornek@mail.com",
         goal: goalTrimmed || storedAccount.goal || DEFAULT_GOAL,
         publisherImprint: storedAccount.publisherImprint || "",
         publisherLogoUrl: storedAccount.publisherLogoUrl || "",
@@ -174,7 +174,7 @@ export function AuthForm({
 
   async function handleMagicLink() {
     if (!emailTrimmed) {
-      const nextError = "Magic link için e-posta adresi gerekli.";
+      const nextError = "E-posta bağlantısı için bir e-posta adresi gerekli.";
       setError(nextError);
       trackEvent("auth_form_failed", { mode, method: "magic", reason: "missing_email", source });
       emitGenerateGateEvent("generate_auth_gate_failed", { method: "magic", mode, reason: "missing_email" });
@@ -194,7 +194,7 @@ export function AuthForm({
     }).catch(() => null);
 
     if (result?.error) {
-      setError("Magic link gönderilemedi. Lütfen tekrar dene.");
+      setError("E-posta bağlantısı gönderilemedi. Lütfen tekrar dene.");
       trackEvent("auth_form_failed", { mode, method: "magic", reason: "send_failed", source });
       emitGenerateGateEvent("generate_auth_gate_failed", { method: "magic", mode, reason: "send_failed" });
       setBusyMethod(null);
@@ -203,7 +203,7 @@ export function AuthForm({
 
     if (mode === "register") {
       setAccount({
-        name: nameTrimmed || storedAccount.name || "Book Creator",
+        name: nameTrimmed || storedAccount.name || "Kitap Sahibi",
         email: emailTrimmed,
         goal: goalTrimmed || storedAccount.goal || DEFAULT_GOAL,
         publisherImprint: storedAccount.publisherImprint || "",
@@ -215,7 +215,7 @@ export function AuthForm({
     }
 
     trackEvent("magic_link_sent", { mode, source });
-    setMessage("Magic link gönderildi. Gelen kutunu kontrol et.");
+    setMessage("E-posta bağlantısı gönderildi. Gelen kutunu kontrol et.");
     setBusyMethod(null);
   }
 
@@ -319,7 +319,7 @@ export function AuthForm({
       }
 
       const account = {
-        name: nameTrimmed || storedAccount.name || "Book Creator",
+        name: nameTrimmed || storedAccount.name || "Kitap Sahibi",
         email: emailTrimmed,
         goal: goalTrimmed || storedAccount.goal || DEFAULT_GOAL,
         publisherImprint: storedAccount.publisherImprint || "",
@@ -356,7 +356,7 @@ export function AuthForm({
       {showHeader ? (
         <div className={variant === "page" ? "mb-8" : "mb-6"}>
           <div className="text-sm font-medium text-muted-foreground">
-            {mode === "login" ? "Giriş Yap" : "Ücretsiz Kaydol"}
+            {mode === "login" ? "Giriş Yap" : "Ön İzlemeyi Kaydet"}
           </div>
           <h1 className={variant === "page" ? "mt-3 text-3xl font-semibold text-foreground" : "mt-3 text-2xl font-semibold text-foreground"}>
             {title}
@@ -412,11 +412,11 @@ export function AuthForm({
             ) : (
               <Mail className="mr-2 size-4" />
             )}
-            Magic link gönder
+            E-posta bağlantısı gönder
           </Button>
 
           <p className="text-xs leading-6 text-muted-foreground">
-            Şifre istemeden girmek istersen emailine tek kullanımlık bağlantı göndeririz.
+            Şifre kullanmadan ilerlemek istersen e-postana tek kullanımlık bağlantı göndeririz. Ön izleme aynı hesapta kalır.
           </p>
         </div>
       </div>
@@ -470,7 +470,7 @@ export function AuthForm({
           </div>
           {mode === "register" ? (
             <p className="mt-2 text-xs leading-6 text-muted-foreground">
-              En az 8 karakter kullan. İstersen şifre yerine üstteki magic link seçeneğini de kullanabilirsin.
+              En az 8 karakter kullan. İstersen şifre yerine üstteki e-posta bağlantısı seçeneğini de kullanabilirsin; ikisi de aynı sonucu verir.
             </p>
           ) : null}
         </div>

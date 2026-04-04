@@ -9,9 +9,9 @@ import { supportChannels } from "@/lib/marketing-data";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Book Generator İletişim | Destek ve Faturalama",
+  title: "Kitap Oluşturucu İletişim | Destek ve Faturalama",
   description:
-    "Book Generator destek, teknik yardım, hesap erişimi ve faturalama talepleri için iletişim kanallarını tek sayfada bulun ve hızlı yanıt alın.",
+    "Kitap Oluşturucu destek, teknik yardım, hesap erişimi ve faturalama talepleri için iletişim kanallarını tek sayfada bulun ve hızlı yanıt alın.",
   path: "/contact",
   keywords: ["book generator iletişim", "kitap yazma desteği", "faturalama desteği"],
 });
@@ -41,10 +41,10 @@ export default function ContactPage() {
         <div className="mb-8">
           <Badge>İletişim</Badge>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-            Sana bir iş günü içinde döneriz.
+            Takıldığın yeri yaz. Hızlıca çözelim.
           </h1>
           <p className="mt-2 text-sm leading-7 text-muted-foreground">
-            Konu başlığını net yaz, daha hızlı yanıt alırsın.
+            Konu başlığını net yaz, doğru ekip daha hızlı yanıt versin.
           </p>
         </div>
         <ContactForm />

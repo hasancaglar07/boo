@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from generate_showcase_ai_covers import (  # noqa: E402
     COVER_LAB_VERSION,
+    SERVICE_CHOICES,
     build_cover_variants,
     infer_cover_branch,
     infer_cover_genre,
@@ -124,7 +125,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--service",
         default="auto",
-        choices=["auto", "grok-imagine", "nano-banana-pro", "nano-banana-2"],
+        choices=SERVICE_CHOICES,
         help="Cover generation service order.",
     )
     parser.add_argument("--force", action="store_true", help="Regenerate AI art and composed variants.")

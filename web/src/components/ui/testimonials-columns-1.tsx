@@ -68,9 +68,6 @@ export const TestimonialsColumn = ({
                 className="w-full max-w-xs rounded-[28px] border border-border bg-card/90 p-6 shadow-sm backdrop-blur-sm"
                 key={`${name}-${index}-${duplicateIndex}`}
               >
-                <div className="mb-3 flex items-center gap-0.5 text-sm text-[#f5a623]">
-                  {"★★★★★"}
-                </div>
                 <p className="text-sm leading-7 text-foreground">{text}</p>
                 <div className="mt-5 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -140,18 +137,6 @@ export function TestimonialsColumnsSection({
           <p className="mt-5 text-pretty text-base leading-8 text-muted-foreground">
             {description}
           </p>
-
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-sm">
-            <span className="flex items-center gap-1.5">
-              <span className="text-[#f5a623]">★★★★★</span>
-              <span className="font-semibold text-foreground">4.9/5</span>
-              <span className="text-muted-foreground">ortalama puan</span>
-            </span>
-            <span className="h-3.5 w-px bg-border" />
-            <span className="text-muted-foreground">
-              <span className="font-semibold text-foreground">1,240+</span> yazar
-            </span>
-          </div>
         </motion.div>
 
         <div className="mt-12 flex justify-center gap-6 [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_82%,transparent)]">

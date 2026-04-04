@@ -73,6 +73,9 @@ DEFAULT_SETTINGS = {
     "GEMINI_API_KEY": "",
     "OPENAI_API_KEY": "",
     "GROQ_API_KEY": "",
+    "GOOGLE_API_KEY": "",
+    "GOOGLE_CLOUD_PROJECT": "",
+    "GOOGLE_CLOUD_LOCATION": "",
     "default_author": "Ihsan",
     "default_publisher": "Speedy Quick Publishing",
     "ollama_enabled": True,
@@ -87,6 +90,7 @@ SECRET_SETTING_KEYS = {
     "GEMINI_API_KEY",
     "OPENAI_API_KEY",
     "GROQ_API_KEY",
+    "GOOGLE_API_KEY",
     "cover_password",
 }
 
@@ -563,6 +567,7 @@ def read_metadata(book_dir: Path) -> dict[str, Any]:
         "recommended_cover_variant": "",
         "back_cover_variant_family": "",
         "cover_family": "",
+        "cover_text_strategy": "",
         "cover_branch": "",
         "cover_genre": "",
         "cover_subtopic": "",
@@ -648,6 +653,9 @@ def normalize_cover_variants(raw: Any) -> list[dict[str, Any]]:
                 "provider": str(item.get("provider") or "").strip(),
                 "template": str(item.get("template") or "").strip(),
                 "preferred_zone": str(item.get("preferred_zone") or "").strip(),
+                "render_mode": str(item.get("render_mode") or "").strip(),
+                "text_strategy": str(item.get("text_strategy") or "").strip(),
+                "text_validation": item.get("text_validation") if isinstance(item.get("text_validation"), dict) else {},
             }
         )
     return variants
@@ -686,9 +694,15 @@ def sync_selected_cover_assets(book_dir: Path, metadata: dict[str, Any]) -> dict
     if source_front_svg:
         shutil.copyfile(source_front_svg, assets_dir / "front_cover_final.svg")
         shutil.copyfile(source_front_svg, assets_dir / "showcase_front_cover.svg")
+    else:
+        (assets_dir / "front_cover_final.svg").unlink(missing_ok=True)
+        (assets_dir / "showcase_front_cover.svg").unlink(missing_ok=True)
     if source_back_svg:
         shutil.copyfile(source_back_svg, assets_dir / "back_cover_final.svg")
         shutil.copyfile(source_back_svg, assets_dir / "showcase_back_cover.svg")
+    else:
+        (assets_dir / "back_cover_final.svg").unlink(missing_ok=True)
+        (assets_dir / "showcase_back_cover.svg").unlink(missing_ok=True)
     if source_art:
         shutil.copyfile(source_art, assets_dir / "ai_front_cover.png")
 
@@ -1137,7 +1151,15 @@ def command_env(settings: dict[str, Any] | None = None, overrides: dict[str, str
         env.pop("CODEFAST_API_KEY", None)
         env.pop("codefast", None)
 
-    for key in ("GEMINI_API_KEY", "OPENAI_API_KEY", "GROQ_API_KEY", "CODEFAST_API_KEY"):
+    for key in (
+        "GEMINI_API_KEY",
+        "OPENAI_API_KEY",
+        "GROQ_API_KEY",
+        "CODEFAST_API_KEY",
+        "GOOGLE_API_KEY",
+        "GOOGLE_CLOUD_PROJECT",
+        "GOOGLE_CLOUD_LOCATION",
+    ):
         value = str(settings.get(key, "") or env.get(key, "") or "")
         if value:
             env[key] = value

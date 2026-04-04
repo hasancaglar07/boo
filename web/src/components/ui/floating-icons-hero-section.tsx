@@ -138,13 +138,22 @@ const FloatingItem = ({
         {isCoverItem(asset) ? (
           <>
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.26),transparent_54%)]" />
-            <div className="relative flex h-full w-full flex-col justify-between p-2">
-              <span className="text-[7px] font-medium tracking-[0.18em] text-white/80">{asset.cover.badge}</span>
-              <div>
-                <p className="text-[9px] font-semibold leading-[1.25] text-white">{asset.cover.title}</p>
-                <p className="mt-1 text-[7px] tracking-[0.08em] text-white/80">{asset.cover.author}</p>
+            {asset.cover.imageUrl ? (
+              <>
+                <div className="pointer-events-none absolute inset-0 ring-1 ring-white/12" />
+                <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-white/18 bg-black/45 px-2 py-1 text-[6px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-sm">
+                  {asset.cover.badge}
+                </div>
+              </>
+            ) : (
+              <div className="relative flex h-full w-full flex-col justify-between p-2">
+                <span className="text-[7px] font-medium tracking-[0.18em] text-white/80">{asset.cover.badge}</span>
+                <div>
+                  <p className="text-[9px] font-semibold leading-[1.25] text-white">{asset.cover.title}</p>
+                  <p className="mt-1 text-[7px] tracking-[0.08em] text-white/80">{asset.cover.author}</p>
+                </div>
               </div>
-            </div>
+            )}
           </>
         ) : (
           <asset.icon className="h-6 w-6 text-foreground md:h-7 md:w-7" />
@@ -207,14 +216,10 @@ const FloatingIconsHero = React.forwardRef<
         {/* Social Proof Bar */}
         {socialProof && (
           <div className="mx-auto mb-6 inline-flex items-center gap-3 rounded-full border border-border/80 bg-card/80 px-5 py-2.5 text-sm text-muted-foreground backdrop-blur-sm">
-            <span className="flex items-center gap-1.5">
-              <span className="text-[#f5a623] tracking-tight">★★★★★</span>
-              <span className="font-semibold text-foreground">{socialProof.rating}</span>
-            </span>
+            <span className="font-semibold text-foreground">{socialProof.rating}</span>
             <span className="h-3.5 w-px bg-border" />
             <span>
               <span className="font-semibold text-foreground">{socialProof.count}</span>
-              {" yazar kitap yayınladı"}
             </span>
           </div>
         )}

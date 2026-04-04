@@ -6,13 +6,20 @@ import { LoginLogo } from "@/components/forms/login-logo";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Giriş | Book Generator",
-  description: "Book Generator oturumunu ac, wizard akisina gec ve kitap uretimine kaldigin yerden devam et.",
+  title: "Giriş | Kitap Oluşturucu",
+  description: "Kitap Oluşturucu oturumunu aç, sihirbaz akışına geç ve kitap üretimine kaldığın yerden devam et.",
   path: "/login",
   noIndex: true,
 });
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const verified = params.verified === "1";
+
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 py-10">
       <div className="hero-glow" />
@@ -21,6 +28,14 @@ export default function LoginPage() {
       </div>
       <div className="w-full max-w-lg space-y-6">
         <LoginLogo />
+        {verified && (
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/8 px-5 py-4 text-sm text-emerald-700 dark:text-emerald-400">
+            <strong>E-posta doğrulandı.</strong> Şimdi giriş yaparak satın alma akışına devam edebilirsin.
+          </div>
+        )}
+        <div className="text-center text-sm leading-7 text-muted-foreground">
+          Önizleme, kütüphane ve ödeme akışı aynı hesapta kalır. Giriş yap, kitabın kaldığı yerden devam etsin.
+        </div>
         <AuthForm mode="login" />
       </div>
     </div>

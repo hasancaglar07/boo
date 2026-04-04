@@ -23,6 +23,7 @@ import {
   resolveRepoRoot,
   type ShowcasePortfolioEntry,
 } from "@/lib/showcase-manifest";
+import { siteExamplePublicCoverAsset } from "@/lib/site-real-books";
 import { titleCase } from "@/lib/utils";
 
 type DashboardMeta = {
@@ -118,13 +119,28 @@ function normalizeSlashes(value: string) {
   return value.replace(/\\/g, "/");
 }
 
-function buildExampleAssetUrl(slug: string, relativePath: string) {
+function buildExampleAssetUrl(slug: string, relativePath: string, version?: string) {
   const encoded = normalizeSlashes(relativePath)
     .split("/")
     .filter(Boolean)
     .map((segment) => encodeURIComponent(segment))
     .join("/");
-  return `/api/examples/assets/${encodeURIComponent(slug)}/${encoded}`;
+  const query = version ? `?v=${encodeURIComponent(version)}` : "";
+  return `/api/examples/assets/${encodeURIComponent(slug)}/${encoded}${query}`;
+}
+
+function buildPublicCoverAssetUrl(slug: string, relativePath: string, version?: string) {
+  const fileName = normalizeSlashes(relativePath).split("/").filter(Boolean).pop();
+  if (!fileName) return undefined;
+  const query = version ? `?v=${encodeURIComponent(version)}` : "";
+  return `/showcase-covers/${encodeURIComponent(slug)}/${encodeURIComponent(fileName)}${query}`;
+}
+
+async function buildVersionedExampleAssetUrl(slug: string, bookDir: string, relativePath?: string) {
+  if (!relativePath) return undefined;
+  const fileStat = await safeStat(path.join(bookDir, relativePath));
+  const version = fileStat ? `${fileStat.size}-${Math.round(fileStat.mtimeMs)}` : "current";
+  return buildExampleAssetUrl(slug, relativePath, version);
 }
 
 async function readMaybeText(targetPath: string) {
@@ -295,12 +311,13 @@ async function pickAssetPath(bookDir: string, candidates: string[], fallbackPatt
   return matched ? `assets/${matched}` : "";
 }
 
-async function resolveCoverPaths(bookDir: string, meta: DashboardMeta) {
+async function resolveCoverPaths(bookDir: string, slug: string, meta: DashboardMeta) {
   const metaCover = normalizeSlashes(String(meta.cover_image || ""));
   const preferredMetaCover = metaCover;
+  const preferredPublicCover = normalizeSlashes(`assets/${siteExamplePublicCoverAsset(slug)}`);
   const primaryCover = await pickAssetPath(
     bookDir,
-    [preferredMetaCover, ...PRIMARY_COVER_CANDIDATES],
+    [preferredPublicCover, preferredMetaCover, ...PRIMARY_COVER_CANDIDATES],
     /(?:front_cover(?:_final)?|generated_front_cover|showcase_front_cover)\.(png|webp|jpe?g|svg)$/i,
   );
   const fallbackCover = await pickAssetPath(
@@ -350,7 +367,7 @@ async function resolveExports(bookDir: string, slug: string) {
       const asset: ExampleAsset = {
         label: extension.slice(1).toUpperCase(),
         relativePath,
-        url: buildExampleAssetUrl(slug, relativePath),
+        url: buildExampleAssetUrl(slug, relativePath, fileStat ? `${fileStat.size}-${Math.round(fileStat.mtimeMs)}` : undefined),
         size: fileStat?.size,
       };
 
@@ -405,7 +422,7 @@ async function buildResolvedExample(curated: ShowcasePortfolioEntry, repoRoot: s
   const firstOutlineTitle = parsedOutline.outline.find((item) => item.num === firstChapterNumber)?.title || parsedOutline.outline[0]?.title || curated.title;
   const preview = parsePreviewText(firstChapterRaw, languageCode, firstOutlineTitle, firstChapterNumber);
   const summary = String(meta.description || "").trim() || curated.summary || summarizeText(preview.text, 240);
-  const coverPaths = await resolveCoverPaths(bookDir, meta);
+  const coverPaths = await resolveCoverPaths(bookDir, curated.slug, meta);
   const exportsBundle = await resolveExports(bookDir, curated.slug);
   const chapters = parsedOutline.outline.length || chapterFiles.length || curated.chapterCount;
   const direction = publicDirection(languageCode);
@@ -438,6 +455,23 @@ async function buildResolvedExample(curated: ShowcasePortfolioEntry, repoRoot: s
     coverPaths.heroCover,
   ].filter((value): value is string => Boolean(value));
 
+  const primaryCoverStat = coverPaths.primaryCover ? await safeStat(path.join(bookDir, coverPaths.primaryCover)) : null;
+  const fallbackCoverStat = coverPaths.fallbackCover ? await safeStat(path.join(bookDir, coverPaths.fallbackCover)) : null;
+  const backCoverStat = coverPaths.backCover ? await safeStat(path.join(bookDir, coverPaths.backCover)) : null;
+  const brandingLogoStat = coverPaths.brandingLogo ? await safeStat(path.join(bookDir, coverPaths.brandingLogo)) : null;
+  const primaryCoverUrl = coverPaths.primaryCover
+    ? buildPublicCoverAssetUrl(curated.slug, coverPaths.primaryCover, primaryCoverStat ? `${primaryCoverStat.size}-${Math.round(primaryCoverStat.mtimeMs)}` : "current")
+    : undefined;
+  const fallbackCoverUrl = coverPaths.fallbackCover
+    ? buildPublicCoverAssetUrl(curated.slug, coverPaths.fallbackCover, fallbackCoverStat ? `${fallbackCoverStat.size}-${Math.round(fallbackCoverStat.mtimeMs)}` : "current")
+    : undefined;
+  const backCoverUrl = coverPaths.backCover
+    ? buildPublicCoverAssetUrl(curated.slug, coverPaths.backCover, backCoverStat ? `${backCoverStat.size}-${Math.round(backCoverStat.mtimeMs)}` : "current")
+    : undefined;
+  const brandingLogoUrl = coverPaths.brandingLogo
+    ? buildPublicCoverAssetUrl(curated.slug, coverPaths.brandingLogo, brandingLogoStat ? `${brandingLogoStat.size}-${Math.round(brandingLogoStat.mtimeMs)}` : "current")
+    : undefined;
+
   const common: ExampleCardEntry = {
     id: curated.slug,
     slug: curated.slug,
@@ -461,7 +495,7 @@ async function buildResolvedExample(curated: ShowcasePortfolioEntry, repoRoot: s
     accentColor: curated.accentColor,
     textAccent: curated.textAccent,
     brandingMark: String(meta.branding_mark || "").trim() || curated.brandingMark,
-    brandingLogoUrl: coverPaths.brandingLogo ? buildExampleAssetUrl(curated.slug, coverPaths.brandingLogo) : undefined,
+    brandingLogoUrl,
     coverBrief: String(meta.cover_brief || "").trim() || curated.coverBrief,
     publisher: cleanupTitle(meta.publisher) || curated.publisher,
     year: String(meta.year || "").trim() || curated.year,
@@ -477,9 +511,9 @@ async function buildResolvedExample(curated: ShowcasePortfolioEntry, repoRoot: s
       text: preview.text,
     },
     coverImages: {
-      primaryUrl: coverPaths.primaryCover ? buildExampleAssetUrl(curated.slug, coverPaths.primaryCover) : undefined,
-      fallbackUrl: coverPaths.fallbackCover ? buildExampleAssetUrl(curated.slug, coverPaths.fallbackCover) : undefined,
-      backUrl: coverPaths.backCover ? buildExampleAssetUrl(curated.slug, coverPaths.backCover) : undefined,
+      primaryUrl: primaryCoverUrl,
+      fallbackUrl: fallbackCoverUrl,
+      backUrl: backCoverUrl,
     },
     exports: exportsBundle.exports,
   };

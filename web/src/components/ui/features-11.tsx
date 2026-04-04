@@ -45,12 +45,12 @@ function MockWindow({
 function renderVisual(visual: FeatureVisual) {
   if (visual === "editor") {
     return (
-      <MockWindow title="Outline + draft">
+      <MockWindow title="Bölüm Planı + Taslak">
         <div className="space-y-3">
           {[
-            ["01", "Audience promise", "Clear outcome for a specific reader."],
-            ["02", "Chapter structure", "Six clean sections with examples."],
-            ["03", "Export ready", "Front matter, cover and EPUB flow."],
+            ["01", "Okur vaadi", "Belirli bir okur için net sonuç."],
+            ["02", "Bölüm yapısı", "Örneklerle güçlenmiş altı temiz bölüm."],
+            ["03", "Çıktıya hazır", "Ön sayfalar, kapak ve EPUB akışı."],
           ].map(([label, title, text]) => (
             <div key={title} className="rounded-2xl border border-border/80 bg-card px-4 py-3">
               <div className="flex items-center gap-3">
@@ -69,9 +69,9 @@ function renderVisual(visual: FeatureVisual) {
     return (
       <div className="relative flex h-full items-end justify-center overflow-hidden rounded-[22px] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_10%,transparent),transparent)] px-4 pb-3 pt-8">
         {[
-          ["Prompt Systems", "amber", "Maya Brooks"],
-          ["Research Notes", "zinc", "David Hale"],
-          ["Write to Publish", "orange", "Ayla Kent"],
+          ["Komut Sistemleri", "amber", "Maya Brooks"],
+          ["Araştırma Notları", "zinc", "David Hale"],
+          ["Yayına Giden Yol", "orange", "Ayla Kent"],
         ].map(([title, tone, author], index) => (
           <div
             key={title}
@@ -85,7 +85,7 @@ function renderVisual(visual: FeatureVisual) {
               index === 2 && "translate-y-6 rotate-[8deg]",
             )}
           >
-            <div className="text-[10px] uppercase tracking-[0.18em] text-white/70">Book</div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-white/70">Kitap</div>
             <div>
               <div className="text-sm font-semibold leading-5">{title}</div>
               <div className="mt-2 text-xs text-white/70">{author}</div>
@@ -98,15 +98,15 @@ function renderVisual(visual: FeatureVisual) {
 
   if (visual === "outline") {
     return (
-      <MockWindow title="Research + positioning">
+      <MockWindow title="Araştırma + Konumlama">
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-2xl border border-border/80 bg-card p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <SearchCode className="size-4 text-primary" />
-              Keyword clusters
+              Anahtar kelime kümeleri
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {["Reader pain", "Low competition", "KDP fit", "Fast promise"].map((chip) => (
+              {["Okur derdi", "Düşük rekabet", "KDP uyumu", "Hızlı vaat"].map((chip) => (
                 <span key={chip} className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">
                   {chip}
                 </span>
@@ -116,12 +116,12 @@ function renderVisual(visual: FeatureVisual) {
           <div className="rounded-2xl border border-border/80 bg-card p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <BookOpenText className="size-4 text-primary" />
-              Book outline
+              Kitap planı
             </div>
             <div className="mt-3 space-y-2 text-xs text-muted-foreground">
-              <div className="rounded-xl bg-background px-3 py-2">Hook the reader</div>
-              <div className="rounded-xl bg-background px-3 py-2">Show the system</div>
-              <div className="rounded-xl bg-background px-3 py-2">Ship the final export</div>
+              <div className="rounded-xl bg-background px-3 py-2">Okuru ilk anda yakala</div>
+              <div className="rounded-xl bg-background px-3 py-2">Sistemi net biçimde göster</div>
+              <div className="rounded-xl bg-background px-3 py-2">Son çıktıyı yayına hazırla</div>
             </div>
           </div>
         </div>
@@ -130,19 +130,19 @@ function renderVisual(visual: FeatureVisual) {
   }
 
   return (
-    <MockWindow title="Export pipeline">
+    <MockWindow title="Çıktı Akışı">
       <div className="grid gap-3 sm:grid-cols-2">
         {[
-          ["EPUB", "Primary delivery"],
-          ["PDF", "Fixed layout"],
-          ["Metadata", "Author, ISBN, publisher"],
-          ["Archive", "Timestamped export folder"],
+          ["EPUB", "Ana teslim biçimi"],
+          ["PDF", "Sabit yerleşim"],
+          ["Kitap bilgileri", "Yazar, ISBN, yayınevi"],
+          ["Arşiv", "Zaman damgalı çıktı klasörü"],
         ].map(([title, text]) => (
           <div key={title} className="rounded-2xl border border-border/80 bg-card p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              {title === "Archive" ? (
+              {title === "Arşiv" ? (
                 <FileArchive className="size-4 text-primary" />
-              ) : title === "Metadata" ? (
+              ) : title === "Kitap bilgileri" ? (
                 <SquareStack className="size-4 text-primary" />
               ) : (
                 <ArrowUpRight className="size-4 text-primary" />

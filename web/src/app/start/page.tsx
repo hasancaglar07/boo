@@ -21,10 +21,10 @@ export default function StartPage() {
           Book Generator
         </p>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight mb-4">
-          Fikrinden yayına hazır kitaba.
+          Konunu yaz. Kitabını başlat.
         </h1>
         <p className="text-lg text-muted-foreground">
-          Konunu gir, wizard seni yönlendirsin. 10 dakikada outline, kapak ve önizleme hazır.
+          En doğru ilk adım sihirbaz. Konunu gir, sistem seni yönlendirsin; kısa sürede bölüm planın, kapak yönün ve ilk önizlemen hazır olsun.
         </p>
       </div>
 
@@ -35,7 +35,7 @@ export default function StartPage() {
       <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 text-sm text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-          Ücretsiz önizleme — ödeme yok
+          Önce ücretsiz önizleme gör
         </span>
         <span className="hidden sm:inline text-border">•</span>
         <span className="flex items-center gap-1.5">

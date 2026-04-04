@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1920" viewBox="0 0 1200 1920" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgb(55, 101, 109)" />
+      <stop offset="52%" stop-color="rgb(9, 39, 46)" />
+      <stop offset="100%" stop-color="rgb(6, 14, 20)" />
+    </linearGradient>
+    <radialGradient id="glow" cx="78%" cy="10%" r="60%">
+      <stop offset="0%" stop-color="rgba(123, 230, 241, 0.38)" />
+      <stop offset="100%" stop-color="rgba(123, 230, 241, 0)" />
+    </radialGradient>
+    <linearGradient id="veil" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(6,9,16,0.1)" />
+      <stop offset="60%" stop-color="rgba(5,8,14,0.04)" />
+      <stop offset="100%" stop-color="rgba(3,4,8,0.24)" />
+    </linearGradient>
+    <filter id="soft-shadow" x="-12%" y="-12%" width="128%" height="128%">
+      <feDropShadow dx="0" dy="26" stdDeviation="34" flood-color="rgba(1,4,10,0.42)" />
+    </filter>
+    <filter id="grain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="2" seed="8" />
+      <feColorMatrix type="saturate" values="0" />
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0 0 0.04" />
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="1200" height="1920" fill="url(#bg)" />
+  <rect width="1200" height="1920" fill="url(#glow)" />
+  
+    <g opacity="0.2">
+      <rect x="169" y="120" width="3" height="1620" fill="rgba(123, 230, 241, 0.14)" /><rect x="294" y="120" width="3" height="1620" fill="rgba(123, 230, 241, 0.14)" /><rect x="410" y="120" width="3" height="1620" fill="rgba(123, 230, 241, 0.14)" /><rect x="530" y="120" width="3" height="1620" fill="rgba(123, 230, 241, 0.14)" /><rect x="663" y="120" width="3" height="1620" fill="rgba(123, 230, 241, 0.14)" /><rect x="780" y="120" width="3" height="1620" fill="rgba(123, 230, 241, 0.14)" /><rect x="904" y="120" width="3" height="1620" fill="rgba(123, 230, 241, 0.14)" /><rect x="1018" y="120" width="3" height="1620" fill="rgba(123, 230, 241, 0.14)" />
+    </g>
+    <g filter="url(#soft-shadow)">
+      <rect x="772" y="160" width="300" height="920" rx="32" fill="rgba(0, 0, 0, 0.82)" />
+      <rect x="912" y="240" width="10" height="900" fill="rgba(123, 230, 241, 0.82)" />
+      <rect x="522" y="540" width="260" height="860" rx="28" fill="rgba(0, 0, 0, 0.74)" />
+      <rect x="652" y="620" width="9" height="780" fill="rgba(123, 230, 241, 0.68)" />
+      <polygon points="338,1220 698,860 958,1110 578,1510" fill="rgba(0, 0, 0, 0.16)" />
+      <polygon points="700,260 1120,140 1180,640 780,740" fill="rgba(0, 0, 0, 0.14)" />
+    </g>
+    <circle cx="932" cy="340" r="220" fill="rgba(0, 0, 0, 0.12)" />
+    <circle cx="1007" cy="310" r="164" fill="rgba(0, 0, 0, 0.18)" />
+  
+  <rect width="1200" height="1920" fill="url(#veil)" />
+  <rect width="1200" height="1920" filter="url(#grain)" opacity="0.55" />
+</svg>

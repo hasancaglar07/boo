@@ -10,7 +10,7 @@ export type FunnelChapterRole = "opening" | "foundation" | "core" | "case" | "ad
 export type FunnelChapterLength = "short" | "medium" | "long";
 export const SUPPORTED_LANGUAGES = [
   { value: "Turkish", label: "Türkçe", description: "Yerel okur tonu, Türkçe bölüm akışı ve doğal başlık yapısı." },
-  { value: "English", label: "English", description: "International reader framing with clean English structure." },
+  { value: "English", label: "İngilizce", description: "Uluslararası okur için temiz, anlaşılır ve akıcı İngilizce yapı." },
   { value: "German", label: "Deutsch", description: "Daha teknik ve sistemli Alman okur beklentisine uygun çıktı." },
   { value: "French", label: "Français", description: "Daha editoryal ve akıcı Fransız okur ritmi." },
   { value: "Spanish", label: "Español", description: "Latin ve Avrupa pazarına uygun güçlü genel dil." },
@@ -101,13 +101,13 @@ export function isEnglishLanguage(language?: string) {
 }
 
 export function languageLabel(language?: string) {
-  return SUPPORTED_LANGUAGES.find((item) => item.value === language)?.label || String(language || "English");
+  return SUPPORTED_LANGUAGES.find((item) => item.value === language)?.label || String(language || "İngilizce");
 }
 
 export function languageDescription(language?: string) {
   return (
     SUPPORTED_LANGUAGES.find((item) => item.value === language)?.description ||
-    "Global okur için temiz ve profesyonel kitap akışı."
+    "Uluslararası okur için temiz ve profesyonel kitap akışı."
   );
 }
 
@@ -150,7 +150,7 @@ export function createDefaultFunnelDraft(): FunnelDraft {
     audience: "",
     language: "Turkish",
     authorName: "",
-    imprint: "Book Generator",
+    imprint: "Kitap Oluşturucu",
     logoText: "",
     logoUrl: "",
     authorBio: "",
@@ -576,8 +576,8 @@ export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
     title: (draft.title || titleCase(draft.topic)).trim(),
     subtitle: draft.subtitle.trim(),
     language: draft.language,
-    author: draft.authorName.trim() || author.trim() || "Book Creator",
-    publisher: draft.imprint.trim() || "Book Generator",
+    author: draft.authorName.trim() || author.trim() || "Kitap Sahibi",
+    publisher: draft.imprint.trim() || "Kitap Oluşturucu",
     year: String(new Date().getFullYear()),
     description: buildDraftDescription(draft),
     author_bio: draft.authorBio.trim(),

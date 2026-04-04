@@ -15,12 +15,13 @@ import { PricingCreativeSection } from "@/components/site/pricing-creative-secti
 import { SectionHeading } from "@/components/site/section-heading";
 import { Card, CardContent } from "@/components/ui/card";
 import { loadExamplesShowcaseData } from "@/lib/examples-data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, buildOgImageUrl } from "@/lib/seo";
+import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "AI Kitap Yazma Aracı: Fikirden EPUB’a Book Generator",
+  title: "Yapay Zeka Kitap Yazma Aracı: Fikirden EPUB’a Kitap Oluşturucu",
   description:
-    "Book Generator ile fikirden taslağa, bölüm yazımından EPUB/PDF çıktısına kadar tüm kitap üretim sürecini tek akışta yönet. İlk kitabını daha hızlı çıkar.",
+    "Kitap Oluşturucu ile konunu yaz, kitap taslağını çıkar, bölümleri oluştur ve EPUB ile PDF dosyanı al. İlk kitabını daha hızlı ve daha net hazırla.",
   path: "/",
   keywords: [
     "ai kitap yazma",
@@ -29,6 +30,10 @@ export const metadata: Metadata = buildPageMetadata({
     "kdp kitap hazırlama",
     "book generator",
   ],
+  ogImage: buildOgImageUrl(
+    "Yapay Zeka Kitap Yazma Aracı",
+    "Kitap Oluşturucu ile konunu yaz, kitap taslağını çıkar, bölümleri oluştur ve EPUB ile PDF dosyanı al."
+  ),
 });
 
 const HOME_SHOWCASE_SLUGS = [
@@ -58,7 +63,7 @@ export default async function HomePage() {
   const starterFaq: Array<[string, string]> = [
     [
       "AI ile yazılan içerik gerçekten kaliteli oluyor mu?",
-      "AI taslak oluşturur, kaliteyi sen belirlersin. Her bölümü düzenleyebilir, beğenmediğini yeniden üretebilirsin. Ürettiğimiz 2 kitap Amazon KDP kalite denetimini geçti ve şu an satışta.",
+      `AI taslak oluşturur, kaliteyi sen belirlersin. Her bölümü düzenleyebilir, beğenmediğini yeniden üretebilirsin. ${KDP_LIVE_BOOKS_CLAIM} ve kitaplarımız ${KDP_GUARANTEE_CLAIM} ile hazırlanır.`,
     ],
     [
       "Hiç kitap yazmadan çıktı alabilir miyim?",
@@ -66,7 +71,7 @@ export default async function HomePage() {
     ],
     [
       "Baştan sona ne kadar sürer?",
-      "Konunu gir, bir oturumda ilk EPUB'a ulaş. Bölüm sayısına göre çıktı hızı değişir.",
+      "Konunu gir, bir oturumda ilk EPUB'a ulaş. Çoğu kitap 30–90 dakika içinde tamamlanır; bölüm sayısı arttıkça üretim süresi de uzar.",
     ],
     [
       "Çıktıyı KDP'ye direkt yükleyebilir miyim?",
@@ -78,7 +83,7 @@ export default async function HomePage() {
     ],
     [
       "İngilizce kitap üretebilir miyim?",
-      "Evet. Arayüz Türkçe kalır, kitap içeriği English veya seçtiğin başka dilde üretilebilir.",
+      "Evet. Arayüz Türkçe kalır, kitap içeriği İngilizce veya seçtiğin başka dilde üretilebilir.",
     ],
     [
       "Taslağı beğenmezsem ne yaparım?",
@@ -95,10 +100,13 @@ export default async function HomePage() {
       <section className="border-b border-border/80 py-18">
         <div className="shell">
           <h2 className="text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-            Book Generator ne yapar? Bir cümlede.
+            Konunu yaz. Kitabın önüne gelsin.
           </h2>
           <p className="mt-4 max-w-3xl text-base leading-8 text-muted-foreground">
-            Book Generator, tek bir fikirden çok dilli, branded ve yayına hazır non-fiction kitap üretmeni sağlayan AI publishing studio'dur. Outline, bölüm yazımı, kapak ve EPUB/PDF export aynı yönlendirmeli akışta birleşir; süreç ChatGPT, Canva ve export araçları arasında dağılmaz.
+            Kitap Oluşturucu, tek bir fikirden çok dilli ve yayına hazır bilgi kitabı üretmeni sağlayan yapay zeka destekli kitap üretim sistemidir. Bölüm planı, bölüm yazımı, kapak ve EPUB ile PDF çıktısı aynı yönlendirmeli akışta birleşir; süreç farklı araçlar arasında dağılmaz.
+          </p>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
+            Önce ücretsiz önizlemeyi görürsün. Kitabın gerçekten çıkmaya değer olup olmadığı birkaç adımda netleşir; ödeme kararını daha sonra verirsin.
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-[24px] border border-border/80 bg-card/80 px-5 py-5 shadow-sm">
@@ -113,7 +121,7 @@ export default async function HomePage() {
             <div className="rounded-[24px] border border-border/80 bg-card/80 px-5 py-5 shadow-sm">
               <h3 className="text-base font-semibold text-foreground">Hangi sorunu çözer?</h3>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                Boş sayfa korkusunu ve dağınık araç zincirini kaldırır. Konu kararından teslim dosyasına tek yerde ilerlersin.
+                Boş sayfa korkusunu ve dağınık araç zincirini kaldırır. Hangi araçta ne var diye uğraşmak yerine tek akışta ilerler, kitabın tamamlanır.
               </p>
               <Link href="/compare" className="mt-3 inline-block text-xs font-medium text-primary/80 underline-offset-4 hover:underline">
                 Alternatiflere göre farkımız →
@@ -122,7 +130,7 @@ export default async function HomePage() {
             <div className="rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-5 py-5 shadow-sm">
               <h3 className="text-base font-semibold text-foreground">Elinde ne kalır?</h3>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                Düzenlenebilir bölüm içerikleri, kitap metadata’sı ve yayına hazır EPUB + PDF dosyaları.
+                Düzenlenebilir bölüm içerikleri, kitap bilgileri ve yayına hazır EPUB + PDF dosyaları. KDP mantığı ürünün içinde düşünülür.
               </p>
             </div>
           </div>
@@ -136,8 +144,8 @@ export default async function HomePage() {
       <section className="border-b border-border/80 py-18">
         <PricingCreativeSection
           tag="Planlar"
-          title="İlk kitabın için $4. Ghostwriter için $5.000."
-          description="Tek kitap için $4 Premium: tam içerik, EPUB+PDF export ve tam düzenleme erişimi. Ajans tutmak yerine bu hafta yayında ol."
+          title="İlk kitabını $4 ile aç. Bekleme, bu hafta çıkar."
+          description="Tek kitap için $4 erişim: tam içerik, EPUB + PDF çıktısı ve tam düzenleme erişimi. Önce önizlemeyi gör, sonra bu kitabı açmaya değer olup olmadığına karar ver."
         />
       </section>
 
@@ -173,14 +181,15 @@ export default async function HomePage() {
       </section>
 
       <MarketingCtaSection
-        title="Uzmanlığın kitap olacak. Bu hafta."
-        description="Brief gir, outline onayla, bölümleri üret, kapağı ekle. Yayın dosyan hazır — başka araç gerekmez."
+        title="Aklındaki kitabı bir yıl daha beklettirme."
+        description={`Konunu gir, bölüm planını gör, önizlemeyi aç — aynı akışta kapağın ve yayın dosyan hazır olur. ${NO_API_COST_CLAIM}, kredi kartı gerekmez ve kitaplar ${KDP_GUARANTEE_CLAIM} ile hazırlanır.`}
         items={[
           "5 soruluk hızlı sihirbaz",
-          "Otomatik outline + bölüm akışı",
-          "Kapak + export sistemi",
+          "Otomatik bölüm planı + bölüm akışı",
+          "Önce önizleme, sonra tam kitap",
+          "Kapak + çıktı sistemi",
           "EPUB önce, PDF sonra",
-          "Türkçe panel, English kitap desteği",
+          "Türkçe panel, İngilizce kitap desteği",
         ]}
       />
     </MarketingPage>

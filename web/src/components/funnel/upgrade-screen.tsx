@@ -12,7 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
@@ -27,22 +27,23 @@ import {
   type Book,
 } from "@/lib/dashboard-api";
 import { syncPreviewAuthState } from "@/lib/preview-auth";
+import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM, REFUND_GUARANTEE_CLAIM } from "@/lib/site-claims";
 import { cn } from "@/lib/utils";
 
 const WHAT_YOU_GET = [
   { icon: FileText, text: "Tüm bölümler — kilitli içerik yok" },
   { icon: Download, text: "PDF indir, Amazon KDP'ye hazır" },
-  { icon: BookOpen, text: "EPUB export — e-kitap mağazaları için" },
+  { icon: BookOpen, text: "EPUB çıktısı — e-kitap mağazaları için" },
   { icon: Zap, text: "Tam çalışma alanı ve düzenleme araçları" },
   { icon: Shield, text: "Kapak, arka kapak ve tüm varlıklar" },
-  { icon: CheckCircle2, text: "30 gün iade garantisi — risk yok" },
+  { icon: CheckCircle2, text: `${KDP_GUARANTEE_CLAIM} + ${REFUND_GUARANTEE_CLAIM}` },
 ];
 
 const TRUST_ITEMS = [
-  { label: "30 gün iade", icon: Shield },
+  { label: KDP_GUARANTEE_CLAIM, icon: Shield },
   { label: "Anında erişim", icon: Zap },
   { label: "Abonelik yok", icon: CheckCircle2 },
-  { label: "KDP uyumlu", icon: BookOpen },
+  { label: NO_API_COST_CLAIM, icon: BookOpen },
 ];
 
 const PLAN_COMPARE = [
@@ -62,12 +63,12 @@ const PLAN_COMPARE = [
       "Kapak ve arka kapak",
       "30 gün iade",
     ],
-    cta: "$4 ile Yayınla",
+    cta: "$4 ile Bu Kitabı Aç",
     ctaVariant: "primary" as const,
   },
   {
     id: "starter",
-    name: "Starter",
+    name: "Başlangıç",
     price: "$19",
     originalPrice: null,
     interval: "aylık",
@@ -81,13 +82,14 @@ const PLAN_COMPARE = [
       "Kapak üretimi",
       "Bölüm editörü",
     ],
-    cta: "$19/ay ile Başla",
+    cta: "$19/ay ile Üretime Devam Et",
     ctaVariant: "outline" as const,
   },
 ];
 
 export function UpgradeScreen({ slug }: { slug: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [books, setBooks] = useState<Book[]>([]);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
@@ -117,7 +119,10 @@ export function UpgradeScreen({ slug }: { slug: string }) {
       setEmailVerified(Boolean(payload?.emailVerified));
     });
     trackEvent("paywall_viewed", { slug, trigger: "upgrade_screen" });
-  }, [slug]);
+    if (searchParams.get("checkout") === "cancelled") {
+      trackEvent("checkout_cancelled", { slug, source: "stripe_return" });
+    }
+  }, [slug, searchParams]);
 
   if (backendUnavailable) {
     return (
@@ -135,7 +140,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
 
   const currentBook = books.find((b) => b.slug === slug) ?? null;
   const mockupBrand =
-    currentBook?.branding_mark || currentBook?.publisher || "Book Generator";
+    currentBook?.branding_mark || currentBook?.publisher || "Kitap Oluşturucu";
   const mockupLabel = currentBook?.cover_brief || "Ödeme sonrası tam ürün açılır";
 
   async function handleResendVerification() {
@@ -239,12 +244,12 @@ export function UpgradeScreen({ slug }: { slug: string }) {
               <div className="mt-5 space-y-2">
                 <div className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3">
                   <p className="text-xs font-semibold text-muted-foreground text-center">
-                    🎉 Bu hafta <strong className="text-foreground">237</strong> kitap üretildi
+                    <strong className="text-foreground">{KDP_LIVE_BOOKS_CLAIM}</strong>
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3">
                   <p className="text-xs font-semibold text-muted-foreground text-center">
-                    Bu ay <strong className="text-foreground">1.240+</strong> yazar kitabını yayınladı
+                    {NO_API_COST_CLAIM}. Kapağı ve preview'i gördükten sonra <strong className="text-foreground">ödeme kararı</strong> verirsin
                   </p>
                 </div>
               </div>
@@ -260,7 +265,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
                 Satın alma öncesi e-postanı doğrula
               </p>
               <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-                Hesabın hazır. Checkout başlamadan önce doğrulama linkine tıklaman gerekiyor. Bu adım yalnızca bir kez istenir.
+                Hesabın hazır. Ödeme başlamadan önce doğrulama bağlantısına tıklaman gerekiyor. Bu adım yalnızca bir kez istenir.
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <Button
@@ -282,11 +287,11 @@ export function UpgradeScreen({ slug }: { slug: string }) {
           <div>
             <div className="editorial-eyebrow mb-3">Kitabın hazır</div>
             <h1 className="text-4xl font-bold leading-tight text-foreground md:text-5xl xl:text-6xl">
-              $4 ile tam kitabı aç —<br className="hidden sm:block" />
-              <span className="text-primary">PDF&apos;i anında al</span>
+              $4 ile bu kitabı aç —<br className="hidden sm:block" />
+              <span className="text-primary">tamamını şimdi sahiplen</span>
             </h1>
             <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">
-              Preview hazır. Kalan bölümleri aç, PDF ve EPUB export et, Amazon KDP&apos;ye yükle. Bir kez öde, dosyalar senindir.
+              Ön izleme hazır. Kalan bölümleri aç, PDF ve EPUB olarak dışa aktar, Amazon KDP&apos;ye yükle. Önce değeri gördün; şimdi tamamını tek seferde açabilirsin.
             </p>
           </div>
 
@@ -326,7 +331,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
               {[
                 { label: "Serbest yazar ajansı", price: "$500+", strikethrough: true },
                 { label: "Freelance editör", price: "$200+", strikethrough: true },
-                { label: "Book Generator", price: "$4", strikethrough: false, highlight: true },
+                { label: "Kitap Oluşturucu", price: "$4", strikethrough: false, highlight: true },
               ].map(({ label, price, strikethrough, highlight }) => (
                 <div
                   key={label}
@@ -445,7 +450,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-foreground">$4 · Tek seferlik</p>
-            <p className="text-xs text-muted-foreground">30 gün iade · Anında erişim</p>
+            <p className="text-xs text-muted-foreground">30 gün iade · Tam kitabı aç</p>
           </div>
           <Button
             size="default"
@@ -453,7 +458,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
             onClick={() => handleBuy("premium")}
           >
             <Sparkles className="mr-1.5 size-3.5" aria-hidden="true" />
-            Şimdi Al
+            Kitabı Aç
           </Button>
         </div>
       </div>

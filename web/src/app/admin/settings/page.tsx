@@ -107,7 +107,7 @@ export default function AdminSettingsPage() {
               <label key={key} className="grid gap-1">
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">{key}</span>
                 <input
-                  defaultValue={value}
+                  value={form[key] ?? value}
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,

@@ -15,6 +15,7 @@ const primaryNav = [
 ];
 
 const secondaryNav = [
+  { href: "/tools", label: "Araçlar" },
   { href: "/resources", label: "Kaynaklar" },
   { href: "/blog", label: "Blog" },
   { href: "/use-cases", label: "Kullanım Alanları" },

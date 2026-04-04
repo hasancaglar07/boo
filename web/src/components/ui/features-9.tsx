@@ -125,7 +125,7 @@ export function Features9({
   locationDescription = "Anahtar kelime, konu kümeleri ve okur yönleri tek bakışta görülebilir.",
   supportTitle = "Destek ve düzeltme akışı",
   supportDescription = "Email, panel ve not sistemi ile sorun takibi ve düzeltme daha kontrollü ilerler.",
-  uptimeLabel = "Export hazır %99.99",
+  uptimeLabel = "Çıktı hazır %99,99",
   activityTitle = "Yazım ve düzenleme ritmi",
   activityDescription = "Outline, bölüm yazımı ve kalite düzenleme aynı zaman çizgisi içinde takip edilebilir.",
   chartData = defaultChartData,

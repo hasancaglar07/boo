@@ -7,6 +7,9 @@ import {
   mapValidatorLanguageToFunnelLanguage,
   type BookIdeaValidatorInput,
 } from "@/lib/book-idea-validator";
+import { type ContactSubject, PUBLIC_BILLING_EMAIL, PUBLIC_SUPPORT_EMAIL, contactSubjectLabel } from "@/lib/contact-shared";
+import { getLeadMagnetBySlug } from "@/lib/lead-magnets";
+import { getGenericMarketingToolBySlug, type MarketingToolValues } from "@/lib/marketing-tools";
 
 const resendApiKey = process.env.RESEND_API_KEY || "";
 const resendClient = resendApiKey ? new Resend(resendApiKey) : null;
@@ -17,6 +20,22 @@ export function authEmailFrom() {
 
 function textFromHtml(html: string) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function supportInboxForSubject(subject: ContactSubject) {
+  if (subject === "billing") {
+    return process.env.BILLING_EMAIL_TO || process.env.SUPPORT_EMAIL_TO || PUBLIC_BILLING_EMAIL;
+  }
+  return process.env.SUPPORT_EMAIL_TO || PUBLIC_SUPPORT_EMAIL;
 }
 
 async function deliverEmail(input: { to: string; subject: string; html: string }) {
@@ -150,6 +169,119 @@ export async function sendBookIdeaReportEmail(input: {
       <ol>${outlineItems}</ol>
       <p><strong>Sonraki adım:</strong> ${result.nextStep}</p>
       <p><a href="${previewUrl.toString()}">Bu fikri şimdi ücretsiz preview akışına taşı</a></p>
+    `,
+  });
+}
+
+export async function sendGenericMarketingToolReportEmail(input: {
+  to: string;
+  toolSlug: string;
+  values: MarketingToolValues;
+}) {
+  const tool = getGenericMarketingToolBySlug(input.toolSlug);
+  if (!tool) {
+    throw new Error("Geçersiz tool report isteği.");
+  }
+
+  const result = tool.evaluate(input.values);
+  const previewUrl = absoluteUrl(tool.buildPreviewHref(input.values));
+  const strongItems = result.strongestPoints.map((item) => `<li>${item}</li>`).join("");
+  const riskItems = result.risks.map((item) => `<li>${item}</li>`).join("");
+  const sectionHtml = result.reportSections
+    .map((section) => {
+      const listTag = section.ordered ? "ol" : "ul";
+      const items = section.items.map((item) => `<li>${item}</li>`).join("");
+      return `<p><strong>${section.title}</strong></p><${listTag}>${items}</${listTag}>`;
+    })
+    .join("");
+
+  await deliverEmail({
+    to: input.to,
+    subject: `${tool.name} raporun hazır: ${result.overallScore}/100`,
+    html: `
+      <p>${tool.name} raporun hazır.</p>
+      <p><strong>Skor:</strong> ${result.overallScore}/100<br /><strong>Verdict:</strong> ${result.verdict}<br /><strong>Önerilen format:</strong> ${result.recommendedFormat}</p>
+      <p><strong>Önerilen açı:</strong><br />${result.recommendedAngle}</p>
+      <p><strong>Güçlü yönler</strong></p>
+      <ul>${strongItems}</ul>
+      <p><strong>Riskler</strong></p>
+      <ul>${riskItems}</ul>
+      ${sectionHtml}
+      <p><strong>Sonraki adım:</strong> ${result.nextStep}</p>
+      <p><a href="${previewUrl}">Bu açıyı şimdi ücretsiz preview akışına taşı</a></p>
+    `,
+  });
+}
+
+export async function sendLeadMagnetDeliveryEmail(input: {
+  to: string;
+  leadMagnetSlug: string;
+}) {
+  const leadMagnet = getLeadMagnetBySlug(input.leadMagnetSlug);
+  if (!leadMagnet) {
+    throw new Error("Geçersiz lead magnet isteği.");
+  }
+
+  const deliveryHtml = leadMagnet.deliverySections
+    .map((section) => {
+      const tag = section.ordered ? "ol" : "ul";
+      const items = section.items.map((item) => `<li>${item}</li>`).join("");
+      return `<p><strong>${section.title}</strong></p><${tag}>${items}</${tag}>`;
+    })
+    .join("");
+
+  const instantAccessHtml = leadMagnet.instantAccessItems.map((item) => `<li>${item}</li>`).join("");
+  const nextStepUrl = absoluteUrl(leadMagnet.nextStepHref);
+  const secondaryUrl = absoluteUrl(leadMagnet.secondaryCtaHref);
+
+  await deliverEmail({
+    to: input.to,
+    subject: `${leadMagnet.title} hazır`,
+    html: `
+      <p>${leadMagnet.title} hazır.</p>
+      <p>${leadMagnet.description}</p>
+      ${deliveryHtml}
+      <p><strong>Hemen uygulayabileceğin hızlı adımlar</strong></p>
+      <ul>${instantAccessHtml}</ul>
+      <p><a href="${nextStepUrl}">${leadMagnet.nextStepLabel}</a></p>
+      <p><a href="${secondaryUrl}">${leadMagnet.secondaryCtaLabel}</a></p>
+    `,
+  });
+}
+
+export async function sendContactRequestEmails(input: {
+  name: string;
+  email: string;
+  subject: ContactSubject;
+  message: string;
+}) {
+  const safeName = escapeHtml(input.name);
+  const safeEmail = escapeHtml(input.email);
+  const safeMessage = escapeHtml(input.message).replace(/\n/g, "<br />");
+  const subjectLabel = contactSubjectLabel(input.subject);
+  const safeSubjectLabel = escapeHtml(subjectLabel);
+  const inbox = supportInboxForSubject(input.subject);
+
+  await deliverEmail({
+    to: inbox,
+    subject: `[Contact] ${subjectLabel} - ${input.name}`,
+    html: `
+      <p>Yeni bir iletişim talebi gönderildi.</p>
+      <p><strong>Ad:</strong> ${safeName}<br /><strong>E-posta:</strong> ${safeEmail}<br /><strong>Konu:</strong> ${safeSubjectLabel}</p>
+      <p><strong>Mesaj</strong></p>
+      <p>${safeMessage}</p>
+    `,
+  });
+
+  await deliverEmail({
+    to: input.email,
+    subject: "Mesajını aldık",
+    html: `
+      <p>Mesajını aldık.</p>
+      <p><strong>Konu:</strong> ${safeSubjectLabel}</p>
+      <p>Ekibimiz en kısa sürede sana geri dönecek. Gerekirse iletişim sayfasından ek bağlam paylaşabilirsin.</p>
+      <p><strong>Gönderdiğin mesaj</strong></p>
+      <p>${safeMessage}</p>
     `,
   });
 }

@@ -17,15 +17,15 @@ const sectionCtas: Record<string, { label: string; href: string }> = {
   "Kitap Üretimi": { label: "Örnekleri incele", href: "/examples" },
   "Kapak ve Tasarım": { label: "Örneklere bak", href: "/examples" },
   "Teslim ve Çıktılar": { label: "Planları karşılaştır", href: "/pricing" },
-  "Haklar ve Yayın": { label: "Ücretsiz preview başlat", href: "/start/topic" },
+  "Haklar ve Yayın": { label: "Ücretsiz önizleme başlat", href: "/start/topic" },
   "Abonelik ve Ödeme": { label: "Fiyatları gör", href: "/pricing" },
   "Destek": { label: "İletişime geç", href: "/contact" },
 };
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Book Generator SSS | AI Kitap Yazma Hakkında Sorular",
+  title: "Kitap Oluşturucu SSS | Yapay Zeka ile Kitap Yazma Soruları",
   description:
-    "Book Generator kullanım akışı, planlar, çıktı formatları, haklar, kapak, ödeme ve destek süreçleri hakkında en sık sorulan soruların kısa cevaplarını inceleyin.",
+    "Kitap Oluşturucu kullanım akışı, planlar, çıktı formatları, haklar, kapak, ödeme ve destek süreçleri hakkında en sık sorulan soruların kısa cevaplarını inceleyin.",
   path: "/faq",
   keywords: ["book generator sss", "ai kitap yazma soruları", "epub pdf çıktı"],
 });
@@ -61,10 +61,10 @@ export default function FaqPage() {
       <FAQPageHero />
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
-          <h1 className="sr-only">Book Generator sık sorulan sorular</h1>
+          <h1 className="sr-only">Kitap Oluşturucu sık sorulan sorular</h1>
           <SectionHeading
             badge="SSS"
-            title="Karar vermeden önce sorulan temel sorular."
+            title="Kararı geciktiren temel sorular."
             description="Ne üretildiği, nasıl çalıştığı, hangi çıktıları verdiği ve ilk kez kullanan biri için ne kadar anlaşılır olduğu burada netlenir."
             align="center"
           />
@@ -133,17 +133,49 @@ export default function FaqPage() {
               </section>
             );
           })}
+
+          <section className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="font-serif text-3xl font-semibold tracking-tight text-foreground">
+                Kimler için doğru değil?
+              </h2>
+              <Link
+                href="/use-cases"
+                className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Kimler için olduğunu gör <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardContent className="space-y-3">
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Bizim güçlü olduğumuz alan</h3>
+                  <p className="text-sm leading-8 text-muted-foreground">
+                    Rehber kitap, uzmanlık kitabı, müşteri çeken kısa kitap ve yayına hazır bilgi kitabı üretimi. Özellikle uzmanlar, eğitmenler, içerik üreticileri ve KDP odaklı kullanıcılar için.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="space-y-3">
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Doğru fit olmayan kullanım</h3>
+                  <p className="text-sm leading-8 text-muted-foreground">
+                    Roman, akademik tez, ağır dipnotlu çalışma veya teknik dokümantasyon için tasarlanmadı. Bu sınırlamayı açık söylemek güveni artırır; ürünü olduğundan farklı göstermeyiz.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
         </div>
       </section>
 
       <MarketingCtaSection
-        title="Soruların bittiyse sıradaki şey denemek."
-        description="Konu fikrini yaz, taslağı gör ve ilk EPUB akışını dene. Kararı sayfa üzerinde değil, ürün içinde netleştir."
+        title="Soruların bittiyse şimdi kendi kitabını başlat."
+        description="Konu fikrini yaz, taslağı gör ve ilk EPUB akışını dene. Kararı sayfa üzerinde değil, ürün içinde netleştir. 30 gün iade garantisi, kredi kartı gerekmez."
         items={[
           "İlk akışta net yönlendirme",
-          "Türkçe panel, English içerik",
-          "Outline ve export sistemi",
-          "Kademeli plan yapısı",
+          "Türkçe panel, İngilizce içerik",
+          "Bölüm planı ve çıktı sistemi",
+          "Önce önizleme, sonra tam kitap",
         ]}
       />
       <script

@@ -9,8 +9,8 @@ export function HomeHowItWorksSection() {
       <div className="shell">
         <SectionHeading
           badge="Nasıl Çalışır"
-          title="5 adımda ilk kitabın hazır."
-          description="Konudan yayına kadar her adım birbirine bağlı. Ayrı araç, ayrı sekme yok — tek akış."
+          title="5 adımda ilk kitabın tamamlanır."
+          description="Konudan EPUB çıktısına kadar her adım birbirine bağlı. Ayrı araç, ayrı sekme yok — tek akışta ilerler, ortada kaybolmazsın."
         />
 
         <div className="relative mt-12">

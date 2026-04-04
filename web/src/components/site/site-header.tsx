@@ -46,7 +46,7 @@ export function SiteHeader() {
           <span className="relative block h-10 w-[250px] overflow-hidden md:h-12 md:w-[320px] lg:w-[360px]">
             <Image
               src={logoSrc}
-              alt="Book Generator"
+              alt="Kitap Oluşturucu"
               className="h-full w-full object-contain object-left"
               fill
               priority

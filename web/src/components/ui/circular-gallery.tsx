@@ -10,6 +10,7 @@ export interface GalleryItem {
   subtitle: string;
   cover: {
     gradient: string;
+    imageUrl?: string;
     label?: string;
     stamp?: string;
     textColor?: string;
@@ -138,9 +139,21 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
                   className="relative h-full w-full overflow-hidden rounded-[28px] border border-border/80 bg-card/70 shadow-[0_24px_80px_rgba(0,0,0,0.18)] backdrop-blur-xl"
                   style={{ backfaceVisibility: "hidden" }}
                 >
-                  <div className="absolute inset-0" style={{ background: item.cover.gradient }} />
+                  <div
+                    className="absolute inset-0"
+                    style={
+                      item.cover.imageUrl
+                        ? {
+                            backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.12)), url(${item.cover.imageUrl}), ${item.cover.gradient}`,
+                            backgroundSize: "cover, cover, cover",
+                            backgroundPosition: "center, center, center",
+                          }
+                        : { background: item.cover.gradient }
+                    }
+                  />
                   <div className="absolute inset-[1px] rounded-[27px] bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.02)_28%,rgba(0,0,0,0.28)_100%)]" />
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.24),transparent_34%)] opacity-80" />
+                  {item.cover.imageUrl ? <div className="absolute inset-0 ring-1 ring-white/12" /> : null}
 
                   <div
                     className="relative flex h-full flex-col justify-between p-5 sm:p-6"
@@ -161,15 +174,21 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
                       ) : null}
                     </div>
 
-                    <div>
-                      <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.3em] opacity-70">
-                        {item.subtitle}
-                      </p>
-                      <h3 className="max-w-[11ch] font-serif text-[2rem] leading-[0.98] sm:text-[2.3rem]">
-                        {item.title}
-                      </h3>
-                      <p className="mt-6 text-sm font-medium opacity-85">{item.author}</p>
-                    </div>
+                    {item.cover.imageUrl ? (
+                      <div className="self-start rounded-full border border-white/16 bg-black/32 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.2em] text-white/82 backdrop-blur">
+                        Real Cover
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.3em] opacity-70">
+                          {item.subtitle}
+                        </p>
+                        <h3 className="max-w-[11ch] font-serif text-[2rem] leading-[0.98] sm:text-[2.3rem]">
+                          {item.title}
+                        </h3>
+                        <p className="mt-6 text-sm font-medium opacity-85">{item.author}</p>
+                      </div>
+                    )}
                   </div>
                 </article>
               </div>

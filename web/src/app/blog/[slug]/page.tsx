@@ -213,7 +213,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </div>
                 <div className="rounded-[20px] border border-border/70 bg-card/80 px-5 py-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Yayın notu</p>
-                  <p className="mt-2 text-sm leading-7 text-foreground">Book Generator editör ekibi tarafından hazırlanıp gözden geçirildi.</p>
+                  <p className="mt-2 text-sm leading-7 text-foreground">Kitap Oluşturucu editör ekibi tarafından hazırlanıp gözden geçirildi.</p>
                   <p className="mt-2 text-xs leading-6 text-muted-foreground">Amaç hukuki veya profesyonel tavsiye vermek değil; publishing kararlarını daha net almanı sağlamaktır.</p>
                 </div>
               </div>
@@ -264,7 +264,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 Kendi kitabını oluşturmaya hazır mısın?
               </h2>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                Hesap gerekmez. Konunu gir, 30 saniyede outline ve kapak önizlemeni gör.
+                Hesap gerekmez. Konunu gir, 30 saniyede bölüm planını ve kapak önizlemeni gör.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link

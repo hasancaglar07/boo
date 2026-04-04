@@ -12,9 +12,9 @@ import { deliverables, howItWorksPageSteps } from "@/lib/marketing-data";
 import { buildPageMetadata, absoluteUrl, siteConfig } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Book Generator Nasıl Çalışır? 3 Adımda Kitap Üretimi",
+  title: "Kitap Oluşturucu Nasıl Çalışır? 3 Adımda Kitap Üretimi",
   description:
-    "Book Generator ile kitap üretim sürecini adım adım keşfedin: brief oluşturma, outline onayı, bölüm üretimi ve EPUB/PDF teslim akışını tek sayfada görün.",
+    "Kitap Oluşturucu ile kitap üretim sürecini adım adım keşfedin: konu özeti oluşturma, bölüm planı onayı, bölüm üretimi ve EPUB/PDF teslim akışını tek sayfada görün.",
   path: "/how-it-works",
   keywords: ["kitap yazma süreci", "ai kitap üretimi adımları", "epub hazırlama"],
 });
@@ -54,8 +54,8 @@ export default function HowItWorksPage() {
   const howToSchema = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: "Book Generator ile Nasıl Kitap Üretilir?",
-    description: "AI destekli Book Generator ile 3 adımda kitap üretin: konu özetini girin, taslağı onaylayın, EPUB/PDF alın.",
+    name: "Kitap Oluşturucu ile Nasıl Kitap Üretilir?",
+    description: "Yapay zeka destekli Kitap Oluşturucu ile 3 adımda kitap üretin: konu özetini girin, taslağı onaylayın, EPUB/PDF alın.",
     inLanguage: "tr-TR",
     totalTime: "PT30M",
     url: absoluteUrl("/how-it-works"),
@@ -73,11 +73,11 @@ export default function HowItWorksPage() {
       <HowItWorksPageHero />
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
-          <h1 className="sr-only">Book Generator nasıl çalışır</h1>
+          <h1 className="sr-only">Kitap Oluşturucu nasıl çalışır</h1>
           <SectionHeading
             badge="Nasıl çalışır"
             title="Fikirden ilk EPUB dosyasına uzanan tek yol."
-            description="Bu ürün önce kararı netleştirir, sonra outline kurar, sonra bölümleri üretir. Yani önce yön, sonra yazı, sonra teslim."
+            description="Bu ürün önce kararı netleştirir, sonra bölüm planını kurar, sonra bölümleri üretir. Yani önce yön, sonra yazı, sonra teslim."
           />
 
           {/* Progress bar kaldırıldı — statik sayfada current step kavramı yok */}
@@ -93,6 +93,12 @@ export default function HowItWorksPage() {
                     <h2 className="text-2xl font-semibold tracking-tight text-foreground">{item.title}</h2>
                     <p className="text-sm leading-8 text-muted-foreground">{item.text}</p>
                   </div>
+                  {"output" in item && item.output ? (
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/70">Bu adımda elde edersin</p>
+                      <p className="mt-1 text-sm font-medium text-foreground">{item.output}</p>
+                    </div>
+                  ) : null}
                   <div className="border-t border-border/60 pt-4">
                     <Link
                       href="/start/topic"
@@ -112,8 +118,8 @@ export default function HowItWorksPage() {
       <section className="border-b border-border/80">
         <Features11
           badge="Akış detayı"
-          title="Kısa brief nasıl yayınlanabilir kitaba dönüşüyor?"
-          description="Aynı kitap içinde outline, araştırma, kapak ve export birbirini tamamlayan parçalar gibi işler."
+          title="Kısa konu özeti nasıl yayınlanabilir kitaba dönüşüyor?"
+          description="Aynı kitap içinde bölüm planı, araştırma, kapak ve çıktı birbirini tamamlayan parçalar gibi işler."
           cards={workflowCards}
         />
       </section>
@@ -154,10 +160,10 @@ export default function HowItWorksPage() {
 
       <MarketingCtaSection
         title="Boş ekrana bakarak değil, yönlendirilmiş bir sistemle başla."
-        description="Fikri netleştir, outline'i onayla ve ilk kitabı çıkar. Üretim süreci senin yerine düşünsün, sen yönü belirle."
+        description="Fikri netleştir, bölüm planını onayla ve ilk kitabı çıkar. Üretim süreci senin yerine düşünsün, sen yönü belirle."
         items={[
           "Kısa ve yönlendirilmiş başlangıç",
-          "Outline + bölüm akışı",
+          "Bölüm planı + bölüm akışı",
           "Araştırma ve kapak destekleri",
           "EPUB önce teslim mantığı",
         ]}

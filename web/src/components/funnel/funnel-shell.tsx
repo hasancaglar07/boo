@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FUNNEL_STEPS, type FunnelStep } from "@/lib/funnel-draft";
+import { getSeededSiteBooks, siteExamplePublicCoverUrl } from "@/lib/site-real-books";
 import { cn } from "@/lib/utils";
 
 const STEP_LABELS: Record<FunnelStep, string> = {
@@ -24,6 +25,7 @@ const STEP_ICONS: Record<FunnelStep, React.ComponentType<{ className?: string }>
 
 export function FunnelShell({
   step,
+  eyebrow,
   title,
   description,
   summary,
@@ -41,6 +43,7 @@ export function FunnelShell({
   const activeIndex = step ? FUNNEL_STEPS.indexOf(step) : -1;
   const embedded = mode === "embedded";
   const containerClass = embedded ? "mx-auto w-full max-w-[1240px]" : "shell";
+  const sceneBooks = getSeededSiteBooks(`${step || "preview"}:${title}`, 3);
 
   return (
     <div className={cn("text-foreground", embedded ? "w-full" : "min-h-dvh bg-background")}>
@@ -51,7 +54,7 @@ export function FunnelShell({
               <span className="relative block h-12 w-[220px] overflow-hidden sm:h-14 sm:w-[280px]">
                 <Image
                   src="/logo.png"
-                  alt="Book Generator"
+                  alt="Kitap Oluşturucu"
                   className="h-full w-full object-contain object-left dark:hidden"
                   fill
                   priority
@@ -59,7 +62,7 @@ export function FunnelShell({
                 />
                 <Image
                   src="/dark-logo.png"
-                  alt="Book Generator"
+                  alt="Kitap Oluşturucu"
                   className="hidden h-full w-full object-contain object-left dark:block"
                   fill
                   priority
@@ -148,7 +151,7 @@ export function FunnelShell({
           {/* Content */}
           <div>
             <div className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground/60">
-              {step ? `Adım ${activeIndex + 1} / ${FUNNEL_STEPS.length}` : "Book Generator"}
+              {step ? `Adım ${activeIndex + 1} / ${FUNNEL_STEPS.length}` : (eyebrow || "Kitap Oluşturucu")}
             </div>
             <h1 className="font-serif text-3xl font-bold leading-tight text-foreground md:text-4xl lg:text-[2.6rem]">
               {title}
@@ -182,7 +185,7 @@ export function FunnelShell({
 
           {/* Sidebar — hidden on mobile, sticky on lg+ */}
           <aside className="hidden lg:block space-y-4 lg:sticky lg:top-24 lg:h-fit">
-            {/* 3D Book mockup */}
+            {/* 3D Book scene */}
             <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5">
               <div
                 className="absolute inset-0 opacity-[0.03]"
@@ -192,41 +195,36 @@ export function FunnelShell({
               />
               <div className="relative">
                 <div className="flex items-start gap-4">
-                  {/* Book 3D */}
-                  <div className="relative shrink-0" style={{ perspective: "600px" }}>
-                    <div
-                      className="relative w-[56px] h-[76px] rounded-r-sm shadow-xl"
-                      style={{
-                        transformStyle: "preserve-3d",
-                        transform: "rotateY(-18deg) rotateX(4deg)",
-                        background: "linear-gradient(135deg, hsl(var(--foreground)/0.9) 0%, hsl(var(--foreground)/0.7) 100%)",
-                      }}
-                    >
-                      {/* Spine */}
+                  <div className="relative h-[104px] w-[88px] shrink-0" style={{ perspective: "1000px" }}>
+                    {sceneBooks.map((book, index) => (
                       <div
-                        className="absolute top-0 left-0 h-full rounded-l-sm"
+                        key={book.slug}
+                        className="absolute top-1/2 left-1/2 overflow-hidden rounded-[10px] border border-white/10 bg-stone-950 shadow-xl"
                         style={{
-                          width: "8px",
-                          transform: "rotateY(90deg) translateX(-4px)",
-                          transformOrigin: "left center",
-                          background: "hsl(var(--foreground)/0.5)",
+                          height: index === 1 ? "82px" : "76px",
+                          width: index === 1 ? "58px" : "54px",
+                          transformStyle: "preserve-3d",
+                          transform:
+                            index === 0
+                              ? "translate3d(-52px,-44px,0) rotateY(22deg) rotateX(3deg) rotateZ(-9deg)"
+                              : index === 1
+                                ? "translate3d(-18px,-38px,18px) rotateY(-8deg) rotateX(5deg) rotateZ(1deg)"
+                                : "translate3d(14px,-30px,-4px) rotateY(-26deg) rotateX(3deg) rotateZ(10deg)",
                         }}
-                      />
-                      {/* Cover content */}
-                      <div className="absolute inset-0 rounded-r-sm flex flex-col justify-between p-1.5 overflow-hidden">
-                        <div className="h-1 w-6 rounded-full bg-background/30" />
-                        <div className="space-y-0.5">
-                          <div className="h-0.5 w-8 rounded-full bg-background/25" />
-                          <div className="h-0.5 w-5 rounded-full bg-background/20" />
-                        </div>
-                        <div className="h-0.5 w-4 rounded-full bg-background/20" />
+                      >
+                        <Image
+                          src={siteExamplePublicCoverUrl(book.slug)}
+                          alt={`${book.title} kapağı`}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/16 via-transparent to-black/10" />
+                        <div className="pointer-events-none absolute left-0 top-0 h-full w-2 bg-black/26 shadow-inner" />
+                        <div className="pointer-events-none absolute inset-0 ring-1 ring-white/10" />
                       </div>
-                    </div>
-                    {/* Shadow */}
-                    <div
-                      className="absolute -bottom-1 left-1 right-2 h-3 rounded-full blur-md"
-                      style={{ background: "hsl(var(--foreground)/0.15)" }}
-                    />
+                    ))}
+                    <div className="absolute inset-x-2 bottom-1 h-4 rounded-full bg-black/12 blur-md" />
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -274,21 +272,21 @@ export function FunnelShell({
               <div className="flex items-center gap-2 mb-2">
                 <div className="size-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
                 <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/60">
-                  Ücretsiz preview
+                  Ücretsiz ön izleme
                 </div>
               </div>
               <div className="text-xs leading-5 text-muted-foreground">
-                Önce kapağı, outline'ı ve okunabilir preview'ı görürsün.{" "}
+                Önce kapağı, bölüm planını ve okunabilir ön izlemeyi görürsün.{" "}
                 <span className="text-foreground/70 font-medium">Tam kitap, PDF ve EPUB</span> daha sonra açılır.
               </div>
             </div>
 
             <div className="rounded-2xl border border-border/60 bg-card p-4">
               <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                Launch path
+                Yayın yolu
               </div>
               <div className="mt-2 text-xs leading-5 text-muted-foreground">
-                Bu akış pazarlama vaadini doğrulamak için tasarlandı: konu gir, preview gör, sonra unlock kararı ver.
+                Bu akış pazarlama vaadini doğrulamak için tasarlandı: konunu gir, ön izlemeyi gör, sonra kitabı açma kararını ver.
               </div>
             </div>
           </aside>

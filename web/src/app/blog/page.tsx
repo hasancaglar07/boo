@@ -22,32 +22,32 @@ export const metadata: Metadata = buildPageMetadata({
 const blogFeatureItems = [
   {
     title: "Haklar",
-    description: "AI ile uretilen icerikte kontrol, sahiplik ve kullanici rolu nasil konumlanir?",
+    description: "Yapay zeka ile üretilen içerikte kontrol, sahiplik ve kullanıcı rolü nasıl konumlanır?",
     icon: <BriefcaseBusiness className="size-4" />,
   },
   {
-    title: "Baslangic",
-    description: "Ilk kitaba baslarken konu, bolum sayisi ve kapsam nasil secilir?",
+    title: "Başlangıç",
+    description: "İlk kitaba başlarken konu, bölüm sayısı ve kapsam nasıl seçilir?",
     icon: <BookOpenText className="size-4" />,
   },
   {
-    title: "Yayin",
-    description: "EPUB, PDF ve platform uyumu gibi teslim sorularina kisa cevaplar.",
+    title: "Yayın",
+    description: "EPUB, PDF ve platform uyumu gibi teslim sorularına kısa cevaplar.",
     icon: <FileType2 className="size-4" />,
   },
   {
-    title: "Arastirma",
-    description: "Konu secimi, keyword mantigi ve talep dogrulama icin basit karar yazilari.",
+    title: "Araştırma",
+    description: "Konu seçimi, anahtar kelime mantığı ve talep doğrulama için basit karar yazıları.",
     icon: <SearchCheck className="size-4" />,
   },
   {
-    title: "Prompting",
-    description: "English brief, ton, hedef okur ve outline netligi icin pratik yonlendirmeler.",
+    title: "Komut Yazımı",
+    description: "İngilizce konu özeti, ton, hedef okur ve bölüm planı netliği için pratik yönlendirmeler.",
     icon: <KeyRound className="size-4" />,
   },
   {
     title: "Kapak",
-    description: "Kapagin guzel degil, islevsel olmasi icin dikkat edilmesi gerekenler.",
+    description: "Kapağın sadece güzel değil, satışa hizmet eden bir yüz olması için dikkat edilmesi gerekenler.",
     icon: <Palette className="size-4" />,
   },
 ] as const;
@@ -70,8 +70,8 @@ export default function BlogPage() {
           <h1 className="sr-only">Book Generator blog yazıları</h1>
           <SectionHeading
             badge="Blog"
-            title="Itiraz kiran ve karar hizlandiran yazilar."
-            description="Bu sayfa haber akisi degil; ilk kez kitap cikaran birinin aklindaki kritik sorulari hizla temizleyen kisa yazilar koleksiyonu."
+            title="İtiraz kıran, kararı hızlandıran yazılar."
+            description="Bu sayfa haber akışı değil; ilk kez kitap çıkaran birinin aklındaki kritik soruları hızla temizleyen kısa yazılar koleksiyonu."
           />
           <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
             Başlangıç için önce{" "}
@@ -88,6 +88,9 @@ export default function BlogPage() {
             </Link>{" "}
             sayfalarıyla kararını netleştirebilirsin.
           </p>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
+            Ama asıl netlik çoğu zaman okumaktan değil, kendi konu fikrini sisteme girip önizlemeyi görmekten gelir.
+          </p>
         </div>
       </section>
 
@@ -95,7 +98,7 @@ export default function BlogPage() {
         <Features4
           badge="Konular"
           title="Blogda hangi sorulara cevap var?"
-          description="Haklardan ilk planlamaya, format seciminden kapak kararina kadar farkli karar esiklerini hizlandiran kategoriler."
+          description="Haklardan ilk planlamaya, format seçiminden kapak kararına kadar farklı karar eşiklerini hızlandıran kategoriler."
           items={blogFeatureItems}
         />
       </section>
@@ -104,8 +107,8 @@ export default function BlogPage() {
         <div className="shell">
           <SectionHeading
             badge="Yazilar"
-            title="Tum yazilar"
-            description="Once ana itirazlari, sonra daha detayli karar noktalarini ele alan sade icerikler."
+            title="Tüm yazılar"
+            description="Önce ana itirazları, sonra daha detaylı karar noktalarını ele alan sade içerikler."
           />
 
           {/* Featured post */}
@@ -184,13 +187,13 @@ export default function BlogPage() {
       </section>
 
       <MarketingCtaSection
-        title="Okuduktan sonra sıradaki en iyi adım ürünü denemek."
-        description="Blog kararını hızlandırır ama asıl netlik ancak kendi kitap fikrini sisteme girdiğinde gelir."
+        title="Okuduktan sonra sıradaki en iyi adım kendi önizlemeni görmek."
+        description="Blog kararını hızlandırır ama asıl netlik ancak kendi kitap fikrini sisteme girdiğinde gelir. Önce önizlemeyi gör, sonra kitabı açmaya karar ver."
         items={[
           "Konu ve hedef okur girişi",
-          "Taslak ve outline oluşturma",
+          "Taslak ve bölüm planı oluşturma",
           "Bölüm üretimi ve düzenleme",
-          "EPUB odaklı teslim akışı",
+          "Önce önizleme, sonra tam kitap",
         ]}
       />
     </MarketingPage>

@@ -39,6 +39,82 @@ standalone_entrypoint() {
   echo "$(standalone_dir)/server.js"
 }
 
+build_marker() {
+  echo "$WEB_DIR/.next/BUILD_ID"
+}
+
+next_lock_file() {
+  echo "$WEB_DIR/.next/lock"
+}
+
+next_dev_lock_file() {
+  echo "$WEB_DIR/.next/dev/lock"
+}
+
+find_repo_next_pid() {
+  local mode="${1:-}"
+  if [ -z "$mode" ]; then
+    return 1
+  fi
+
+  ps -eo pid=,args= | awk -v mode="$mode" -v web_dir="$WEB_DIR" '
+    {
+      pid = $1
+      $1 = ""
+      sub(/^[[:space:]]+/, "", $0)
+      args = $0
+      if (index(args, web_dir) == 0) {
+        next
+      }
+      if (index(args, "node_modules/next/dist/bin/next") == 0 && index(args, "node_modules/.bin/next") == 0) {
+        next
+      }
+      pattern = "(^|[[:space:]])" mode "([[:space:]]|$)"
+      if (args ~ pattern) {
+        print pid
+        exit
+      }
+    }
+  '
+}
+
+clear_stale_next_lock() {
+  local mode="${1:-}"
+  local lock_file=""
+  local active_pid=""
+
+  case "$mode" in
+    build)
+      lock_file="$(next_lock_file)"
+      active_pid="$(find_repo_next_pid build)"
+      ;;
+    dev)
+      lock_file="$(next_dev_lock_file)"
+      active_pid="$(find_repo_next_pid dev)"
+      ;;
+    *)
+      echo "Bilinmeyen Next lock modu: $mode"
+      exit 1
+      ;;
+  esac
+
+  if [ ! -f "$lock_file" ]; then
+    return
+  fi
+
+  if [ -n "$active_pid" ]; then
+    return
+  fi
+
+  rm -f "$lock_file"
+  echo "Stale Next $mode lock temizlendi: $lock_file"
+}
+
+prepare_next_locks() {
+  clear_stale_next_lock build
+  clear_stale_next_lock dev
+}
+
 is_healthy() {
   curl -fsS --max-time 2 "$HEALTH_URL" >/dev/null 2>&1
 }
@@ -65,6 +141,31 @@ else:
 finally:
     sock.close()
 PY
+}
+
+listener_pid_for_port() {
+  ss -ltnp "sport = :$PORT" 2>/dev/null | awk 'match($0,/pid=([0-9]+)/,m){print m[1]; exit}'
+}
+
+is_repo_web_process() {
+  local pid="${1:-}"
+  if [ -z "$pid" ] || [ ! -d "/proc/$pid" ]; then
+    return 1
+  fi
+
+  local cwd
+  cwd="$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)"
+  if [ "$cwd" = "$WEB_DIR" ] || [ "$cwd" = "$(standalone_dir)" ]; then
+    return 0
+  fi
+
+  local args
+  args="$(ps -p "$pid" -o args= 2>/dev/null || true)"
+  if [[ "$args" == *"$WEB_DIR"* ]] || [[ "$args" == *"next-server"* ]] || [[ "$args" == *"server.js"* ]]; then
+    return 0
+  fi
+
+  return 1
 }
 
 recover_stale_server() {
@@ -142,6 +243,8 @@ repair_dependencies() {
 }
 
 ensure_build() {
+  prepare_next_locks
+
   case "$BUILD_MODE" in
     never)
       return
@@ -151,8 +254,11 @@ ensure_build() {
       run_pnpm build
       ;;
     auto)
-      if [ ! -f "$WEB_DIR/.next/BUILD_ID" ]; then
+      if [ ! -f "$(build_marker)" ]; then
         echo "Next build bulunamadi, build aliniyor..."
+        run_pnpm build
+      elif build_is_stale; then
+        echo "Kaynak dosyalar build'den yeni, build aliniyor..."
         run_pnpm build
       fi
       ;;
@@ -162,6 +268,46 @@ ensure_build() {
       exit 1
       ;;
   esac
+}
+
+build_is_stale() {
+  local marker
+  marker="$(build_marker)"
+
+  if [ ! -f "$marker" ]; then
+    return 0
+  fi
+
+  local path
+  for path in \
+    "$WEB_DIR/src" \
+    "$WEB_DIR/public" \
+    "$WEB_DIR/scripts"
+  do
+    if [ -d "$path" ] && find "$path" -type f -newer "$marker" -print -quit | grep -q .; then
+      return 0
+    fi
+  done
+
+  if [ -d "$WEB_DIR/prisma" ] && find "$WEB_DIR/prisma" -type f ! -name "dev.db" -newer "$marker" -print -quit | grep -q .; then
+    return 0
+  fi
+
+  for path in \
+    "$WEB_DIR/package.json" \
+    "$WEB_DIR/pnpm-lock.yaml" \
+    "$WEB_DIR/next.config.ts" \
+    "$WEB_DIR/postcss.config.mjs" \
+    "$WEB_DIR/components.json" \
+    "$WEB_DIR/tsconfig.json" \
+    "$ROOT_DIR/start-web.sh"
+  do
+    if [ -f "$path" ] && [ "$path" -nt "$marker" ]; then
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 has_standalone_build() {
@@ -209,6 +355,16 @@ stop_server_core() {
     fi
     rm -f "$PID_FILE"
   fi
+
+  local pid
+  pid="$(listener_pid_for_port)"
+  if is_repo_web_process "$pid"; then
+    kill "$pid"
+    rm -f "$PID_FILE"
+    echo "Web arayuz durduruldu."
+    return 0
+  fi
+
   echo "Takip edilen web sureci bulunamadi."
   return 1
 }

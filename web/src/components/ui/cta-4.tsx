@@ -1,6 +1,7 @@
 import { ArrowRight, Check, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { FULL_TRUST_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export interface Cta4Props {
   title?: string;
@@ -17,13 +18,6 @@ const defaultItems = [
   "Düzenlenebilir bölüm yapısı",
   "AI destekli araştırma katmanı",
 ] as const;
-
-const avatarUrls = [
-  "https://randomuser.me/api/portraits/women/44.jpg",
-  "https://randomuser.me/api/portraits/men/32.jpg",
-  "https://randomuser.me/api/portraits/women/68.jpg",
-  "https://randomuser.me/api/portraits/men/41.jpg",
-];
 
 export function Cta4({
   title = "İlk kitabını çıkarmak için tek net başlangıç.",
@@ -46,7 +40,7 @@ export function Cta4({
                 {/* Guarantee badge */}
                 <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#f0a27f]/30 bg-[#f0a27f]/10 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#f0a27f]">
                   <ShieldCheck className="size-3.5" />
-                  30 gün para iade garantisi
+                  %100 KDP onay garantisi
                 </div>
 
                 <h2 className="mb-3 text-balance text-3xl font-semibold tracking-tight text-white md:text-4xl">
@@ -62,26 +56,24 @@ export function Cta4({
                 </Button>
 
                 <p className="mt-3 text-xs text-stone-400">
-                  Kredi kartı gerekmez · İstediğin zaman iptal
+                  Kredi kartı gerekmez · {NO_API_COST_CLAIM}
                 </p>
 
                 {/* Social proof row */}
-                <div className="mt-6 flex items-center gap-3">
-                  <div className="flex -space-x-2">
-                    {avatarUrls.map((url, i) => (
-                      <img
-                        key={i}
-                        src={url}
-                        alt=""
-                        width={28}
-                        height={28}
-                        className="h-7 w-7 rounded-full border-2 border-[#2a1a10] object-cover"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-xs text-stone-400">
-                    <span className="font-semibold text-stone-200">Bu hafta 84 kişi</span> başladı
-                  </p>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {[
+                    KDP_LIVE_BOOKS_CLAIM,
+                    FULL_TRUST_CLAIM,
+                    "Önce preview, sonra ödeme",
+                    "Tek kitap için $4 unlock",
+                  ].map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-stone-300"
+                    >
+                      {item}
+                    </span>
+                  ))}
                 </div>
               </div>
 

@@ -6,11 +6,12 @@ import { MarketingPage } from "@/components/site/marketing-page";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Badge } from "@/components/ui/badge";
 import { buildPageMetadata } from "@/lib/seo";
+import { KDP_GUARANTEE_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Karşılaştırma | Book Generator vs Alternatifler",
+  title: "Karşılaştırma | Kitap Oluşturucu ve Alternatifler",
   description:
-    "Book Generator'ı manuel yazım, genel AI asistanları ve rakip araçlarla karşılaştır. Neden kitap üretimi için özel bir araç gerekir?",
+    "Kitap Oluşturucu'yu manuel yazım, genel yapay zeka asistanları ve rakip araçlarla karşılaştır. Neden kitap üretimi için özel bir araç gerekir?",
   path: "/compare",
   keywords: ["book generator karşılaştırma", "ai kitap yazma alternatifleri", "chatgpt kitap", "jasper alternatifleri"],
 });
@@ -33,7 +34,7 @@ const rows: CompareRow[] = [
   { feature: "KDP uyumlu PDF", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
   { feature: "Kapak görseli üretimi", bookGenerator: "yes", manualAI: "no", generalTools: "partial" },
   { feature: "Kaynakça / referans desteği", bookGenerator: "yes", manualAI: "partial", generalTools: "partial" },
-  { feature: "Çoklu AI provider (maliyet opt.)", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
+  { feature: "Kullanıcı ayrıca API ödemez", bookGenerator: "yes", manualAI: "no", generalTools: "partial", note: "Book Generator'da model maliyeti planın içindedir; bazı genel araçlarda ayrı maliyet çıkar." },
   { feature: "Yayın geçmişi ve revizyon", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
   { feature: "Türkçe kitap üretimi", bookGenerator: "yes", manualAI: "partial", generalTools: "partial", note: "Genel AI araçları Türkçe üretebilir ama yapı bozulabilir." },
   { feature: "KDP niş araştırma", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
@@ -100,18 +101,29 @@ export default function ComparePage() {
           <div className="mx-auto max-w-3xl text-center">
             <Badge className="mb-4">Karşılaştırma</Badge>
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              Book Generator vs{" "}
-              <span className="text-primary">alternatifler</span>
+              ChatGPT ile başlayabilirsin.{" "}
+              <span className="text-primary">Bitirmek için yetmeyebilir.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
-              Genel AI araçları veya manuel yazımla neden aynı sonucu alamazsın? İşte dürüst bir karşılaştırma.
+              Sorun model kalitesi değil; her bölüm için yeniden komut yazmak, tonu korumak, kapağı ayrı çözmek ve çıktıyı ayrı tamamlamak. Kitap Oluşturucu bu dağınık zinciri tek akışta toplar.
             </p>
             <div className="mx-auto mt-8 max-w-3xl rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 text-left shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
               <p className="mt-2 text-sm leading-7 text-foreground">
-                Book Generator, ChatGPT veya genel AI araçlarının yerine geçen genel bir chatbot değil; tek bir fikirden outline, chapter, cover ve export üreten özel bir AI publishing studio'dur. Farkı model kalitesinden çok, kitap üretimine özel workflow, editör ve publish-ready çıktı sunmasıdır.
+                Kitap Oluşturucu, ChatGPT veya genel yapay zeka araçlarının yerine geçen genel bir sohbet aracı değil; tek bir fikirden bölüm planı, bölüm, kapak ve çıktı üreten özel bir kitap üretim sistemidir. Farkı model kalitesinden çok, kitap üretimine özel akış, editör ve yayına hazır çıktı sunmasıdır.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border/80 py-14">
+        <div className="shell">
+          <div className="mx-auto max-w-4xl rounded-[24px] border border-border/80 bg-card/80 px-6 py-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Manuel yolun gizli maliyeti</p>
+            <p className="mt-3 text-base leading-8 text-foreground">
+              10–30 saatlik iş akışı tek araçta yönetilemiyor: araştırma bir yerde, taslak başka bir yerde, kapak ayrı, çıktı ayrı. Bu dağınıklık kitabın yarım kalmasının en yaygın nedeni. Kitap Oluşturucu bu zinciri tek bir akışta toplar.
+            </p>
           </div>
         </div>
       </section>
@@ -129,7 +141,7 @@ export default function ComparePage() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="pb-4 pl-2 text-left font-medium text-muted-foreground">Özellik</th>
-                  <th className="pb-4 text-center font-semibold text-foreground">Book Generator</th>
+                  <th className="pb-4 text-center font-semibold text-foreground">Kitap Oluşturucu</th>
                   <th className="pb-4 text-center font-medium text-muted-foreground">Manuel AI</th>
                   <th className="pb-4 pr-2 text-center font-medium text-muted-foreground">Genel Araçlar</th>
                 </tr>
@@ -209,13 +221,13 @@ export default function ComparePage() {
       </section>
 
       <MarketingCtaSection
-        title="Kitap üretimine özel bir araç dene."
-        description="Book Generator'ı 14 gün ücretsiz dene. Kurulum yok, kredi kartı yok. Genel araçlarla kaybettiğin zamanı geri al."
+        title="Genel araçlarla vakit kaybetmek yerine kendi konunla farkı gör."
+        description={`Önce önizlemeyi gör, sonra bu kitabı açmaya değer olup olmadığına karar ver. Asıl fark sohbet aracı değil, yayına hazır akıştır. ${NO_API_COST_CLAIM} ve kitaplar ${KDP_GUARANTEE_CLAIM} ile hazırlanır.`}
         items={[
-          "Brief → Outline → Kitap zinciri",
+          "Konu özeti → bölüm planı → kitap zinciri",
           "KDP uyumlu EPUB / PDF",
           "Türkçe kitap desteği",
-          "14 gün ücretsiz",
+          "Önce önizleme, sonra tam kitap",
         ]}
       />
     </MarketingPage>

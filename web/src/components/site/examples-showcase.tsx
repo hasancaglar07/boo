@@ -26,13 +26,13 @@ import { cn } from "@/lib/utils";
 const pipeline = [
   {
     step: "01",
-    title: "Brief",
-    description: "Konu, hedef okur ve dil seçimi. 5 soruluk wizard.",
+    title: "Konu Özeti",
+    description: "Konu, hedef okur ve dil seçimi. 5 soruluk sihirbaz.",
     icon: Sparkles,
   },
   {
     step: "02",
-    title: "Outline",
+    title: "Bölüm Planı",
     description: "Bölüm mimarisi ve kitap vaadi. Onaydan sonra devam.",
     icon: Layers,
   },
@@ -45,12 +45,12 @@ const pipeline = [
   {
     step: "04",
     title: "Kapak",
-    description: "API ile üretilen ön kapak ve branded teslim yüzeyi.",
+    description: "API ile üretilen ön kapak ve teslim yüzeyi.",
     icon: BookOpen,
   },
   {
     step: "05",
-    title: "Export",
+    title: "Çıktılar",
     description: "EPUB, PDF ve HTML teslimi. Anında açılabilir.",
     icon: Download,
   },
@@ -138,7 +138,7 @@ function BookCover({
                 backgroundColor: "rgba(0,0,0,0.28)",
               }}
             >
-              AI COVER
+                  YAPAY ZEKA KAPAK
             </div>
           </>
         ) : (
@@ -175,7 +175,7 @@ function BookCover({
                 className="text-[6px] uppercase tracking-widest opacity-60"
                 style={{ color: item.textAccent }}
               >
-                SHOWCASE
+                ÖRNEK
               </div>
             </div>
             <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent" />
@@ -343,7 +343,7 @@ function OutlineModal({
 
         <div className="flex border-b border-border/60 bg-background/50">
           {(["outline", "chapter", "export"] as const).map((tab) => {
-            const labels = { outline: "İçindekiler", chapter: "İlk Bölüm", export: "Export" };
+            const labels = { outline: "İçindekiler", chapter: "İlk Bölüm", export: "Çıktılar" };
             return (
               <button
                 key={tab}
@@ -395,7 +395,7 @@ function OutlineModal({
                 </div>
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Branding
+                    Marka
                   </div>
                   <div className="mt-2 flex items-center gap-3">
                     {item.brandingLogoUrl ? (
@@ -407,7 +407,7 @@ function OutlineModal({
                     ) : null}
                     <div>
                       <div className="text-sm font-semibold text-foreground">
-                        {item.brandingMark || item.publisher || "Brand"}
+                        {item.brandingMark || item.publisher || "Marka"}
                       </div>
                       {item.coverBrief ? (
                         <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.coverBrief}</p>
@@ -436,7 +436,7 @@ function OutlineModal({
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-border/70 bg-background/40 p-5 text-sm text-muted-foreground">
-                  Outline dosyası bulundu ama yapı okunabilir bir liste olarak parse edilemedi.
+                  Bölüm planı bulundu ama yapı okunabilir bir liste olarak çözülemedi.
                 </div>
               )}
             </div>
@@ -487,28 +487,28 @@ function OutlineModal({
               <div className="mb-4">
                 <h4 className="font-serif text-lg font-semibold text-foreground">Teslim Formatları</h4>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Sadece gerçekten üretilmiş export dosyaları aktif kalır.
+                  Sadece gerçekten üretilmiş çıktı dosyaları aktif kalır.
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 <ExportCard
                   item={item}
                   format="EPUB"
-                  description="E-okuyucu için gerçek export"
+                  description="E-okuyucu için gerçek çıktı"
                   asset={item.exports.epub}
                   icon={BookOpen}
                 />
                 <ExportCard
                   item={item}
                   format="PDF"
-                  description="Baskı veya paylaşım için export"
+                  description="Baskı veya paylaşım için çıktı"
                   asset={item.exports.pdf}
                   icon={FileText}
                 />
                 <ExportCard
                   item={item}
                   format="HTML"
-                  description="Web önizleme için export"
+                  description="Web önizleme için çıktı"
                   asset={item.exports.html}
                   icon={Globe}
                 />
@@ -519,7 +519,7 @@ function OutlineModal({
                   <CheckCircle2 className="size-4 flex-shrink-0 text-emerald-500" />
                   {availableFormats(item).length
                     ? `${availableFormats(item).join(", ")} dosyaları public read-only route üzerinden açılır.`
-                    : "Bu örnek için export dosyası henüz public vitrinde gösterilecek seviyeye gelmemiş."}
+                    : "Bu örnek için çıktı dosyası henüz vitrinde gösterilecek seviyeye gelmemiş."}
                 </div>
               </div>
             </div>
@@ -547,7 +547,7 @@ function OutlineModal({
                 onClose();
               }}
             >
-              Bunu sen yaz <ArrowRight className="size-4" />
+              Buna Benzer Kitap Başlat <ArrowRight className="size-4" />
             </Link>
           </div>
         </div>
@@ -689,7 +689,7 @@ export function ExamplesShowcase({
                     {[
                       { label: "Bölüm", value: String(item.chapters) },
                       { label: "Dil", value: item.language },
-                      { label: "Export", value: exportSummary(item) },
+                      { label: "Çıktı", value: exportSummary(item) },
                     ].map(({ label, value }) => (
                       <div
                         key={`${item.id}-${label}`}
@@ -740,6 +740,13 @@ export function ExamplesShowcase({
                       Oku <ArrowRight className="size-3.5" />
                     </Link>
                   </div>
+                  <Link
+                    href="/start/topic"
+                    className="mt-2 inline-flex w-full items-center justify-center gap-1 text-xs font-medium text-primary hover:underline"
+                    onClick={() => trackEvent("examples_start_similar_clicked", { slug: item.slug, location: "grid_card" })}
+                  >
+                    Buna Benzer Kitap Başlat <ArrowRight className="size-3" />
+                  </Link>
                 </div>
               </div>
             ))}
@@ -791,7 +798,7 @@ export function ExamplesShowcase({
         <div className="shell">
           <SectionHeading
             badge="Üretim zinciri"
-            title="Outline'dan export'a kadar görülebilir akış"
+            title="Bölüm planından çıktıya kadar görülebilir akış"
             description="Her adım ayrı bir ekran. Nerede olduğunu, ne geldiğini her zaman bilirsin."
           />
 

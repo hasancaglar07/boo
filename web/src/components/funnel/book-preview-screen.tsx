@@ -56,6 +56,7 @@ import {
 import { languageLabel } from "@/lib/funnel-draft";
 import { loadFunnelDraft } from "@/lib/funnel-draft";
 import { syncPreviewAuthState } from "@/lib/preview-auth";
+import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 import { cn } from "@/lib/utils";
 
 const EMPTY_GENERATION: BookStatus = {
@@ -892,6 +893,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   // Stripe başarılı ödeme sonrası auth state güncelle
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
+      trackEvent("checkout_completed", { slug, source: "stripe_return" });
       void syncPreviewAuthState().then((payload) => {
         setAuthenticated(Boolean(payload?.authenticated));
       });
@@ -900,7 +902,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       url.searchParams.delete("session_id");
       router.replace(url.pathname + (url.search || ""));
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, slug]);
 
   const hydrate = useCallback(async () => {
     try {
@@ -1427,12 +1429,14 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
             <Card>
               <CardContent className="space-y-3 p-5">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Proof
+                  Kanıt
                 </div>
                 {[
-                  "Bu ay 1.240+ kitap preview’ı üretildi",
-                  "Ajans / ghostwriter maliyetinin çok altında",
-                  "Kapağı seçip sonra ödeme yapabildiğin editorial akış",
+                  KDP_LIVE_BOOKS_CLAIM,
+                  KDP_GUARANTEE_CLAIM,
+                  NO_API_COST_CLAIM,
+                  "Kapağı ve preview'i görmeden ödeme yapmazsın",
+                  "Tek akışta preview, upgrade ve export kararı",
                 ].map((item) => (
                   <div
                     key={item}

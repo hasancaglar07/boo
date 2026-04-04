@@ -23,26 +23,26 @@ const features: Feature[] = [
   { id: "kapak",          name: "Aylık kapak hakkı",              premium: 3,       starter: 20,      creator: 60,   pro: 200 },
 
   // Temel üretim
-  { id: "wizard",         name: "5 adımlı yönlendirmeli wizard",  premium: true,    starter: true,    creator: true, pro: true },
-  { id: "outline",        name: "AI outline üretimi",             premium: true,    starter: true,    creator: true, pro: true },
+  { id: "wizard",         name: "5 adımlı yönlendirmeli sihirbaz", premium: true,    starter: true,    creator: true, pro: true },
+  { id: "outline",        name: "Yapay zeka bölüm planı üretimi", premium: true,    starter: true,    creator: true, pro: true },
   { id: "bolum",          name: "Bölüm yazımı + yeniden üretim",  premium: true,    starter: true,    creator: true, pro: true },
   { id: "editor",         name: "Bölüm editörü",                  premium: true,    starter: true,    creator: true, pro: true },
   { id: "ton",            name: "Ton ve hedef kitle ayarı",        premium: true,    starter: true,    creator: true, pro: true },
 
   // Kapak & tasarım
-  { id: "cover-ai",       name: "AI kapak üretimi",               premium: true,    starter: true,    creator: true, pro: true },
+  { id: "cover-ai",       name: "Yapay zeka kapak üretimi",       premium: true,    starter: true,    creator: true, pro: true },
   { id: "cover-style",    name: "Kapak stili seçimi (3 tema)",     premium: true,    starter: true,    creator: true, pro: true },
   { id: "cover-custom",   name: "Renk paleti özelleştirme",        premium: true,    starter: true,    creator: true, pro: true },
 
   // Çıktı formatları
-  { id: "epub",           name: "EPUB export",                    premium: true,    starter: true,    creator: true, pro: true },
-  { id: "pdf",            name: "PDF export — KDP'ye hazır",      premium: true,    starter: true,    creator: true, pro: true },
-  { id: "html",           name: "HTML export",                    premium: false,   starter: false,   creator: true, pro: true },
-  { id: "markdown",       name: "Markdown export",                premium: false,   starter: false,   creator: true, pro: true },
+  { id: "epub",           name: "EPUB çıktısı",                   premium: true,    starter: true,    creator: true, pro: true },
+  { id: "pdf",            name: "PDF çıktısı — KDP'ye hazır",     premium: true,    starter: true,    creator: true, pro: true },
+  { id: "html",           name: "HTML çıktısı",                   premium: false,   starter: false,   creator: true, pro: true },
+  { id: "markdown",       name: "Markdown çıktısı",               premium: false,   starter: false,   creator: true, pro: true },
 
   // Araştırma & analiz
   { id: "arastirma",      name: "Araştırma merkezi",              premium: false,   starter: false,   creator: true, pro: true },
-  { id: "keyword",        name: "KDP keyword analizi",            premium: false,   starter: false,   creator: true, pro: true },
+  { id: "keyword",        name: "KDP anahtar kelime analizi",     premium: false,   starter: false,   creator: true, pro: true },
   { id: "pazar",          name: "Pazar boşluğu analizi",          premium: false,   starter: false,   creator: true, pro: true },
 
   // Dil & dizi
@@ -52,12 +52,13 @@ const features: Feature[] = [
 
   // Platform
   { id: "workspace",      name: "Kitap çalışma alanı",            premium: false,   starter: true,    creator: true, pro: true },
-  { id: "api",            name: "API erişimi",                    premium: false,   starter: false,   creator: false, pro: true },
+  { id: "api-cost",       name: "Kullanıcı API ücreti ödemez",    premium: true,    starter: true,    creator: true, pro: true },
+  { id: "api",            name: "API ve otomasyon erişimi",       premium: false,   starter: false,   creator: false, pro: true },
 
   // Destek
-  { id: "destek",         name: "Email destek",                   premium: true,    starter: true,    creator: true, pro: true },
+  { id: "destek",         name: "E-posta desteği",                premium: true,    starter: true,    creator: true, pro: true },
   { id: "oncelik",        name: "Öncelikli destek",               premium: false,   starter: false,   creator: true, pro: true },
-  { id: "onboarding",     name: "Özel onboarding",                premium: false,   starter: false,   creator: false, pro: true },
+  { id: "onboarding",     name: "Özel başlangıç desteği",         premium: false,   starter: false,   creator: false, pro: true },
 ];
 
 const plans = [
@@ -71,7 +72,7 @@ const plans = [
   },
   {
     id: "starter",
-    name: "Starter",
+    name: "Başlangıç",
     price: 19,
     description: "10 kitap / ay",
     popular: false,
@@ -113,7 +114,7 @@ export function PricingComparisonTable() {
               Plan Karşılaştırması
             </h2>
             <p className="mt-2 text-muted-foreground">
-              Hangi plan size en uygun? Özellikleri yan yana karşılaştır.
+              Hangi plan sana en uygun? Özellikleri yan yana karşılaştır.
             </p>
           </div>
 
@@ -230,10 +231,10 @@ export function PricingComparisonTable() {
               </div>
               <div>
                 <p className="font-semibold text-foreground">
-                  Yıllık planla %20 tasarruf edin
+                  Yıllık planla %20 tasarruf et
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Aylık plana göre yıllık toplamda 2 ay ücretsiz kazanırsınız.
+                  Aylık plana göre yıllık toplamda 2 ay ücretsiz kazanırsın.
                 </p>
               </div>
             </div>

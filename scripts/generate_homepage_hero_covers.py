@@ -9,6 +9,7 @@ from typing import Any
 
 from generate_showcase_ai_covers import (
     BOOK_OUTPUTS_DIR,
+    SERVICE_CHOICES,
     TEXT_RISK_REJECT_THRESHOLD,
     compose_cover_bundle,
     families_for_entry,
@@ -63,7 +64,10 @@ STYLE_VARIANTS: tuple[dict[str, str], ...] = (
     },
 )
 
-HERO_MAX_ATTEMPTS_PER_STYLE = 5
+try:
+    HERO_MAX_ATTEMPTS_PER_STYLE = max(1, int(__import__("os").environ.get("SHOWCASE_HERO_MAX_ATTEMPTS", "5")))
+except ValueError:
+    HERO_MAX_ATTEMPTS_PER_STYLE = 5
 HERO_TEXT_RISK_ACCEPT_THRESHOLD = 12.0
 HERO_TEXT_RISK_MAX_KEEP_THRESHOLD = 18.0
 
@@ -82,7 +86,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--service",
         default="auto",
-        choices=["auto", "grok-imagine", "nano-banana-pro", "nano-banana-2"],
+        choices=SERVICE_CHOICES,
         help="Image generation service order.",
     )
     parser.add_argument("--slug", action="append", default=[], help="Generate only specific hero slug(s).")
@@ -212,7 +216,7 @@ def pick_short_subtitle(entry: dict[str, Any]) -> str:
 
 
 def generate_best_art(entry: dict[str, Any], output_path: Path, service: str, api_key: str) -> dict[str, Any]:
-    providers = normalize_service(service)
+    providers = normalize_service(service, entry)
     best_score: tuple[float, float] | None = None
     best_payload: dict[str, Any] | None = None
     best_provider = ""

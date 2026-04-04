@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { cookies } from "next/headers";
 import { z } from "zod";
 
 import { resolveBootstrapRole } from "@/lib/auth/bootstrap";
@@ -9,6 +10,7 @@ import { hashPassword, hashToken, normalizeEmail, randomToken } from "@/lib/auth
 import { sendEmailVerificationEmail } from "@/lib/auth/mailer";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import { prisma } from "@/lib/prisma";
+import { handleReferralConversion } from "@/lib/referral";
 
 const registerSchema = z.object({
   name: z.string().trim().min(2),
@@ -81,6 +83,17 @@ export async function POST(request: NextRequest) {
     actorUserId: user.id,
     request,
   });
+
+  // Non-blocking referral conversion
+  try {
+    const cookieStore = await cookies();
+    const refCode = cookieStore.get("ref_code")?.value;
+    if (refCode) {
+      void handleReferralConversion(prisma, user.id, refCode);
+    }
+  } catch {
+    // never fail registration due to referral errors
+  }
 
   return NextResponse.json({
     ok: true,

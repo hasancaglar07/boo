@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import difflib
 import hashlib
 import json
 import os
@@ -11,6 +12,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -29,20 +31,94 @@ DEFAULT_ENV_FILES = [
     ROOT / "web" / ".env.local",
     ROOT / "web" / ".env",
 ]
-KEY_NAMES = ("CODEFAST_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY")
+LEGACY_KEY_NAMES = ("CODEFAST_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY")
+VERTEX_API_KEY_NAMES = ("GOOGLE_API_KEY", "VERTEX_API_KEY", "GOOGLE_GENAI_API_KEY")
+VERTEX_PROJECT_NAMES = ("GOOGLE_CLOUD_PROJECT", "GOOGLE_PROJECT_ID", "VERTEX_PROJECT_ID")
+VERTEX_LOCATION_NAMES = ("GOOGLE_CLOUD_LOCATION", "VERTEX_LOCATION")
 GROK_IMAGE_URL = "https://grokapi.codefast.app/v1/images/generations"
 GROK_HISTORY_URL = "https://grokapi.codefast.app/v1/history?page=1&per_page=10"
 NANO_IMAGE_URL = "https://geminiapi.codefast.app/v1/image"
 NANO_STATUS_URL = "https://geminiapi.codefast.app/v1/image/status"
+VERTEX_IMAGEN_URL_TEMPLATE = "https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/publishers/google/models/{model}:predict?key={api_key}"
+VERTEX_GEMINI_IMAGE_URL_TEMPLATE = "https://aiplatform.googleapis.com/v1/publishers/google/models/{model}:generateContent?key={api_key}"
+VERTEX_GEMINI_TEXT_URL_TEMPLATE = "https://aiplatform.googleapis.com/v1/publishers/google/models/{model}:generateContent?key={api_key}"
 NANO_MODELS = {
     "nano-banana-pro": "gemini-3.0-pro",
     "nano-banana-2": "gemini-3.1-flash",
 }
+VERTEX_IMAGEN_MODELS = {
+    "vertex-imagen-fast": {
+        "model": "imagen-4.0-fast-generate-001",
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": "3:4",
+            "sampleImageSize": "1K",
+            "language": "en",
+            "personGeneration": "allow_adult",
+            "safetySetting": "block_medium_and_above",
+            "addWatermark": True,
+            "enhancePrompt": False,
+            "outputOptions": {"mimeType": "image/png"},
+        },
+    },
+    "vertex-imagen-standard": {
+        "model": "imagen-4.0-generate-001",
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": "3:4",
+            "sampleImageSize": "1K",
+            "language": "en",
+            "personGeneration": "allow_adult",
+            "safetySetting": "block_medium_and_above",
+            "addWatermark": True,
+            "enhancePrompt": True,
+            "outputOptions": {"mimeType": "image/png"},
+        },
+    },
+    "vertex-imagen-ultra": {
+        "model": "imagen-4.0-ultra-generate-001",
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": "3:4",
+            "sampleImageSize": "1K",
+            "language": "en",
+            "personGeneration": "allow_adult",
+            "safetySetting": "block_medium_and_above",
+            "addWatermark": True,
+            "enhancePrompt": True,
+            "outputOptions": {"mimeType": "image/png"},
+        },
+    },
+}
+SERVICE_CHOICES = (
+    "auto",
+    "vertex-imagen-standard",
+    "vertex-imagen-ultra",
+    "vertex-gemini-flash-image",
+    "vertex-imagen-fast",
+    "grok-imagine",
+    "nano-banana-pro",
+    "nano-banana-2",
+)
+AI_TEXT_ALLOWED_LANGUAGES = {"English", "Spanish", "Portuguese", "Italian", "Dutch"}
+AI_TEXT_HYBRID_TITLE_MAX = 42
+AI_TEXT_HYBRID_SUBTITLE_MAX = 40
+AI_TEXT_MINIMAL_TITLE_MAX = 48
+AI_TEXT_AUTHOR_MAX = 24
+AI_TEXT_TITLE_MIN_SCORE = 0.8
+AI_TEXT_SUBTITLE_MIN_SCORE = 0.72
+AI_TEXT_AUTHOR_MIN_SCORE = 0.68
+AI_TEXT_OCR_MODEL = "gemini-2.5-flash-lite"
+AI_TEXT_OCR_TIMEOUT = 120
+AI_TEXT_MAX_ATTEMPTS = 3
 VARIANT_COUNT = 3
 POLL_ATTEMPTS = 24
 POLL_INTERVAL_SECONDS = 4
 COVER_LAB_VERSION = "genre-matrix-v3"
-MAX_ART_ATTEMPTS_PER_VARIANT = 8
+try:
+    MAX_ART_ATTEMPTS_PER_VARIANT = max(1, int(os.environ.get("SHOWCASE_MAX_ART_ATTEMPTS", "8")))
+except ValueError:
+    MAX_ART_ATTEMPTS_PER_VARIANT = 8
 TEXT_RISK_REJECT_THRESHOLD = 24.0
 TEXT_RISK_REUSE_THRESHOLD = 18.0
 GENRE_MATRIX: dict[str, dict[str, Any]] = {
@@ -301,14 +377,44 @@ def load_env_file(env_path: Path) -> None:
         os.environ[key] = value
 
 
-def resolve_api_key() -> str:
-    for env_path in DEFAULT_ENV_FILES:
-        load_env_file(env_path)
-    for name in KEY_NAMES:
+def resolve_env_value(*candidate_names: str) -> str:
+    for name in candidate_names:
         value = os.environ.get(name, "").strip()
         if value:
             return value
+    return ""
+
+
+def resolve_api_key() -> str:
+    for env_path in DEFAULT_ENV_FILES:
+        load_env_file(env_path)
+    for names in (VERTEX_API_KEY_NAMES, LEGACY_KEY_NAMES):
+        for name in names:
+            value = os.environ.get(name, "").strip()
+            if value:
+                return value
     raise SystemExit("No cover API key found in environment or local env files.")
+
+
+def resolve_legacy_api_key() -> str:
+    for env_path in DEFAULT_ENV_FILES:
+        load_env_file(env_path)
+    return resolve_env_value(*LEGACY_KEY_NAMES)
+
+
+def resolve_vertex_config() -> dict[str, str] | None:
+    for env_path in DEFAULT_ENV_FILES:
+        load_env_file(env_path)
+    api_key = resolve_env_value(*VERTEX_API_KEY_NAMES)
+    project = resolve_env_value(*VERTEX_PROJECT_NAMES)
+    location = resolve_env_value(*VERTEX_LOCATION_NAMES) or "us-central1"
+    if not api_key or not project:
+        return None
+    return {
+        "api_key": api_key,
+        "project": project,
+        "location": location,
+    }
 
 
 def load_manifest() -> list[dict[str, Any]]:
@@ -637,10 +743,183 @@ def cover_hierarchy_for_variant(entry: dict[str, Any], family: dict[str, Any]) -
     return "title-first"
 
 
-def normalize_service(service: str) -> list[str]:
-    if service == "auto":
-        return ["grok-imagine", "nano-banana-pro", "nano-banana-2"]
-    return [service]
+def normalize_service(service: str, entry: dict[str, Any] | None = None) -> list[str]:
+    if service != "auto":
+        return [service]
+    providers = ["vertex-imagen-standard", "vertex-imagen-ultra"]
+    if entry:
+        normalized = normalized_cover_entry(entry)
+        branch = infer_cover_branch(normalized)
+        genre = infer_cover_genre(normalized, branch)
+        if branch == "children" or genre == "education":
+            providers.append("vertex-gemini-flash-image")
+    providers.extend(["grok-imagine", "nano-banana-pro", "nano-banana-2"])
+    return providers
+
+
+def normalize_compare_text(value: str) -> str:
+    text = unicodedata.normalize("NFKD", value or "")
+    text = "".join(char for char in text if not unicodedata.combining(char))
+    text = text.casefold()
+    text = re.sub(r"[^a-z0-9\\s]", " ", text)
+    return re.sub(r"\\s+", " ", text).strip()
+
+
+def compare_text_score(expected: str, observed: str) -> float:
+    expected_norm = normalize_compare_text(expected)
+    observed_norm = normalize_compare_text(observed)
+    if not expected_norm or not observed_norm:
+        return 0.0
+    if expected_norm == observed_norm:
+        return 1.0
+    expected_tokens = set(expected_norm.split())
+    observed_tokens = set(observed_norm.split())
+    token_overlap = len(expected_tokens & observed_tokens) / max(1, len(expected_tokens))
+    sequence = difflib.SequenceMatcher(None, expected_norm, observed_norm).ratio()
+    score = (sequence * 0.65) + (token_overlap * 0.35)
+    if expected_norm in observed_norm:
+        score = max(score, 0.94)
+    return round(min(score, 0.999), 4)
+
+
+def ai_text_strategy_for_entry(entry: dict[str, Any]) -> str:
+    entry = normalized_cover_entry(entry)
+    branch = infer_cover_branch(entry)
+    if branch == "children":
+        return "studio-safe"
+    language = str(entry.get("languageCode") or "").strip() or "English"
+    title = str(entry.get("title") or "").strip()
+    subtitle = str(entry.get("subtitle") or "").strip()
+    author = str(entry.get("author") or "").strip()
+    if language not in AI_TEXT_ALLOWED_LANGUAGES:
+        return "studio-safe"
+    if not title or len(title) > AI_TEXT_MINIMAL_TITLE_MAX:
+        return "studio-safe"
+    if author and len(author) > AI_TEXT_AUTHOR_MAX:
+        return "studio-safe"
+    return "hybrid-ai-text"
+
+
+def truncate_words(text: str, max_chars: int) -> str:
+    words = text.split()
+    if not words:
+        return ""
+    current: list[str] = []
+    for word in words:
+        candidate = " ".join([*current, word]).strip()
+        if len(candidate) > max_chars:
+            break
+        current.append(word)
+    return " ".join(current).strip()
+
+
+def ai_signature_subtitle(entry: dict[str, Any]) -> str:
+    subtitle = str(entry.get("subtitle") or "").strip()
+    if not subtitle:
+        return ""
+    if len(subtitle) <= AI_TEXT_HYBRID_SUBTITLE_MAX:
+        return subtitle
+
+    candidates = [part.strip(" -,:;.") for part in re.split(r"[;:.!?]|(?:\s[-–—]\s)|,\s", subtitle) if part.strip()]
+    strong_candidates = [candidate for candidate in candidates if len(candidate) >= 18 and len(candidate.split()) >= 3]
+    for candidate in strong_candidates:
+        if len(candidate) <= AI_TEXT_HYBRID_SUBTITLE_MAX:
+            return candidate
+    if candidates:
+        first_candidate = candidates[0]
+        truncated = truncate_words(first_candidate, AI_TEXT_HYBRID_SUBTITLE_MAX)
+        if truncated and len(truncated.split()) >= 3:
+            return truncated
+
+    summary = str(entry.get("summary") or "").strip()
+    if summary:
+        summary_candidates = [part.strip(" -,:;.") for part in re.split(r"[;:.!?]|(?:\s[-–—]\s)|,\s", summary) if part.strip()]
+        for candidate in summary_candidates:
+            if candidate and len(candidate) >= 18 and len(candidate.split()) >= 3 and len(candidate) <= AI_TEXT_HYBRID_SUBTITLE_MAX:
+                return candidate
+        if summary_candidates:
+            truncated = truncate_words(summary_candidates[0], AI_TEXT_HYBRID_SUBTITLE_MAX)
+            if truncated and len(truncated.split()) >= 3:
+                return truncated
+
+    return truncate_words(subtitle, AI_TEXT_HYBRID_SUBTITLE_MAX)
+
+
+def ai_text_targets(entry: dict[str, Any], mode: str) -> dict[str, str]:
+    title = str(entry.get("title") or "").strip()
+    author = str(entry.get("author") or "").strip()
+    subtitle = ""
+    if mode == "ai-signature":
+        subtitle = ai_signature_subtitle(entry)
+    return {
+        "title": title,
+        "subtitle": subtitle,
+        "author": author,
+    }
+
+
+def has_disallowed_text_prefix(fields: dict[str, str]) -> bool:
+    for key in ("title", "subtitle", "author"):
+        value = str(fields.get(key) or "").strip()
+        if not value:
+            continue
+        if value[0] in {"#", "@", "*", "•"}:
+            return True
+        lowered = value.casefold()
+        if lowered.startswith(("author:", "author ", "title:", "title ", "subtitle:", "subtitle ")):
+            return True
+    return False
+
+
+def variant_specs_for_entry(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    entry = normalized_cover_entry(entry)
+    families = list(families_for_entry(entry))
+    strategy = ai_text_strategy_for_entry(entry)
+    if strategy != "hybrid-ai-text":
+        return [
+            {
+                "id": str(family["id"]),
+                "label": str(family["label"]),
+                "family": family,
+                "render_mode": "studio-exact",
+                "text_strategy": "studio-safe",
+            }
+            for family in families
+        ]
+
+    return [
+        {
+            "id": f"{families[0]['id']}-signature",
+            "label": "Signature",
+            "family": families[0],
+            "render_mode": "ai-signature",
+            "text_strategy": strategy,
+        },
+        {
+            "id": f"{families[1]['id']}-minimal",
+            "label": "Minimal",
+            "family": families[1],
+            "render_mode": "ai-minimal",
+            "text_strategy": strategy,
+        },
+        {
+            "id": f"{families[2]['id']}-exact",
+            "label": "Exact",
+            "family": families[2],
+            "render_mode": "studio-exact",
+            "text_strategy": strategy,
+        },
+    ]
+
+
+def ai_text_providers_for_entry(service: str, entry: dict[str, Any]) -> list[str]:
+    ordered = normalize_service(service, entry)
+    allowed = [
+        provider
+        for provider in ordered
+        if provider in {"vertex-imagen-standard", "vertex-imagen-ultra", "grok-imagine", "nano-banana-pro", "nano-banana-2"}
+    ]
+    return allowed or ordered
 
 
 def extract_from_payload(payload: Any, *paths: tuple[Any, ...]) -> Any:
@@ -700,6 +979,243 @@ def save_image_from_payload(payload: dict[str, Any], output_path: Path) -> bool:
         return output_path.stat().st_size > 0
 
     return False
+
+
+def save_vertex_imagen_prediction(prediction: dict[str, Any], output_path: Path) -> bool:
+    b64 = str(prediction.get("bytesBase64Encoded") or "").strip()
+    if not b64:
+        return False
+    output_path.write_bytes(base64.b64decode(b64))
+    return output_path.stat().st_size > 0
+
+
+def generate_with_vertex_imagen(prompt: str, output_path: Path, provider: str) -> bool:
+    config = resolve_vertex_config()
+    if not config:
+        return False
+    model_config = VERTEX_IMAGEN_MODELS.get(provider)
+    if not model_config:
+        return False
+    response = requests.post(
+        VERTEX_IMAGEN_URL_TEMPLATE.format(
+            location=config["location"],
+            project=config["project"],
+            model=model_config["model"],
+            api_key=config["api_key"],
+        ),
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        json={
+            "instances": [{"prompt": prompt}],
+            "parameters": model_config["parameters"],
+        },
+        timeout=240,
+    )
+    payload = safe_json_response(response)
+    prediction = (payload.get("predictions") or [{}])[0]
+    return response.ok and save_vertex_imagen_prediction(prediction, output_path)
+
+
+def generate_with_vertex_gemini(prompt: str, output_path: Path) -> bool:
+    config = resolve_vertex_config()
+    if not config:
+        return False
+    response = requests.post(
+        VERTEX_GEMINI_IMAGE_URL_TEMPLATE.format(
+            model="gemini-2.5-flash-image",
+            api_key=config["api_key"],
+        ),
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        json={
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "responseModalities": ["TEXT", "IMAGE"],
+                "imageConfig": {"aspectRatio": "3:4"},
+            },
+        },
+        timeout=240,
+    )
+    payload = safe_json_response(response)
+    if not response.ok:
+        return False
+    for candidate in payload.get("candidates") or []:
+        content = candidate.get("content") or {}
+        for part in content.get("parts") or []:
+            inline_data = part.get("inlineData") or {}
+            b64 = str(inline_data.get("data") or "").strip()
+            if not b64:
+                continue
+            output_path.write_bytes(base64.b64decode(b64))
+            return output_path.stat().st_size > 0
+    return False
+
+
+def ai_text_prompt(entry: dict[str, Any], family: dict[str, Any], mode: str, attempt_index: int = 1) -> str:
+    entry = normalized_cover_entry(entry)
+    targets = ai_text_targets(entry, mode)
+    title = targets["title"]
+    subtitle = targets["subtitle"]
+    author = targets["author"]
+    category = str(entry.get("category") or "").strip().lower() or "nonfiction"
+    topic = derive_visual_topic(entry)
+    style = str(family.get("artDirection") or "").strip()
+    title_instruction = f'Render the exact title text: "{title}".'
+    subtitle_instruction = f'Render the exact subtitle text: "{subtitle}".' if subtitle and mode == "ai-signature" else ""
+    author_instruction = f'Render the exact author name: "{author}".' if author else ""
+    minimal_instruction = (
+        "Use a very clean hierarchy: dominant title, optional small author, and no extra copy. The title may wrap to two lines if needed, but the exact words must stay intact and in the same order."
+        if mode == "ai-minimal"
+        else "Use a premium bookstore hierarchy: dominant title, controlled subtitle, and author line."
+    )
+    retry_instruction = ""
+    if attempt_index > 1:
+        retry_instruction = (
+            " Retry rule: the previous attempt likely misspelled or distorted text. "
+            "Keep the wording exact, remove any extra characters, and do not invent punctuation."
+        )
+    return (
+        f"Create a finished premium portrait {category} book cover, not just background art. "
+        f"Art direction: {topic}. Visual language: {style}. "
+        f"{title_instruction} {subtitle_instruction} {author_instruction} "
+        f"{minimal_instruction} "
+        "Only render the requested title, subtitle, and author. Do not add any other words, badges, blurbs, fake endorsements, logos, watermarks, glyphs, icons, publisher names, or extra typography. "
+        "Do not add prefixed characters such as #, bullets, quote marks, labels like Author:, or decorative prefixes before any line of text. "
+        "The text must be crisp, professional, centered or cleanly aligned, and look like a real bookstore-ready cover. "
+        "No misspellings. No random extra letters. No gibberish. No ghost text in the background. "
+        f"{retry_instruction}"
+    ).strip()
+
+
+def extract_text_candidate(payload: dict[str, Any]) -> str:
+    for candidate in payload.get("candidates") or []:
+        content = candidate.get("content") or {}
+        texts: list[str] = []
+        for part in content.get("parts") or []:
+            text = str(part.get("text") or "").strip()
+            if text:
+                texts.append(text)
+        if texts:
+            return "\n".join(texts).strip()
+    return ""
+
+
+def ocr_cover_fields(image_path: Path) -> dict[str, str]:
+    config = resolve_vertex_config()
+    if not config or not image_path.exists():
+        return {"title": "", "subtitle": "", "author": "", "all_text": ""}
+    encoded = base64.b64encode(image_path.read_bytes()).decode("ascii")
+    response = requests.post(
+        VERTEX_GEMINI_TEXT_URL_TEMPLATE.format(model=AI_TEXT_OCR_MODEL, api_key=config["api_key"]),
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        json={
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": (
+                                "Read all visible text on this book cover image. "
+                                "Return strict JSON with keys title, subtitle, author, and all_text. "
+                                "If a field is missing or unreadable, use an empty string."
+                            )
+                        },
+                        {"inlineData": {"mimeType": "image/png", "data": encoded}},
+                    ],
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0,
+                "responseMimeType": "application/json",
+            },
+        },
+        timeout=AI_TEXT_OCR_TIMEOUT,
+    )
+    payload = safe_json_response(response)
+    raw_text = extract_text_candidate(payload)
+    if not raw_text:
+        return {"title": "", "subtitle": "", "author": "", "all_text": ""}
+    try:
+        parsed = json.loads(raw_text)
+    except json.JSONDecodeError:
+        return {"title": "", "subtitle": "", "author": "", "all_text": raw_text}
+    return {
+        "title": str(parsed.get("title") or "").strip(),
+        "subtitle": str(parsed.get("subtitle") or "").strip(),
+        "author": str(parsed.get("author") or "").strip(),
+        "all_text": str(parsed.get("all_text") or "").strip(),
+    }
+
+
+def validate_ai_cover_text(entry: dict[str, Any], image_path: Path, mode: str) -> dict[str, Any]:
+    fields = ocr_cover_fields(image_path)
+    targets = ai_text_targets(entry, mode)
+    title = targets["title"]
+    subtitle = targets["subtitle"]
+    author = targets["author"]
+    title_observed = fields["title"] or fields["all_text"]
+    if mode == "ai-minimal":
+        title_observed = " ".join(part for part in (fields["title"], fields["subtitle"]) if part).strip() or fields["all_text"]
+    subtitle_observed = fields["subtitle"] or fields["all_text"]
+    author_observed = fields["author"] or fields["all_text"]
+    title_score = compare_text_score(title, title_observed)
+    subtitle_score = compare_text_score(subtitle, subtitle_observed) if subtitle and mode == "ai-signature" else 1.0
+    author_score = compare_text_score(author, author_observed) if author else 1.0
+    prefix_guard = has_disallowed_text_prefix(fields)
+    valid = title_score >= AI_TEXT_TITLE_MIN_SCORE and author_score >= AI_TEXT_AUTHOR_MIN_SCORE
+    if mode == "ai-signature" and subtitle:
+        valid = valid and subtitle_score >= AI_TEXT_SUBTITLE_MIN_SCORE
+    valid = valid and not prefix_guard
+    return {
+        "valid": bool(valid),
+        "ocrText": "\n".join(part for part in fields.values() if part).strip(),
+        "ocrFields": fields,
+        "targets": targets,
+        "prefixGuardFailed": prefix_guard,
+        "titleScore": round(title_score, 4),
+        "subtitleScore": round(subtitle_score, 4),
+        "authorScore": round(author_score, 4),
+    }
+
+
+def generate_ai_finished_cover(
+    entry: dict[str, Any],
+    family: dict[str, Any],
+    output_path: Path,
+    providers: list[str],
+    api_key: str,
+    mode: str,
+) -> dict[str, Any] | None:
+    best: dict[str, Any] | None = None
+    for attempt_index in range(1, AI_TEXT_MAX_ATTEMPTS + 1):
+        prompt = ai_text_prompt(entry, family, mode, attempt_index)
+        for provider in providers:
+            with tempfile.TemporaryDirectory(prefix=f"ai-text-cover-{entry['slug']}-{mode}-") as temp_dir:
+                temp_image = Path(temp_dir) / "cover.png"
+                if not generate_variant(prompt, temp_image, api_key, provider):
+                    continue
+                validation = validate_ai_cover_text(entry, temp_image, mode)
+                candidate = {
+                    "provider": provider,
+                    "validation": validation,
+                    "path": temp_image,
+                }
+                if best is None or (
+                    validation["titleScore"] + validation["subtitleScore"] + validation["authorScore"]
+                    > best["validation"]["titleScore"] + best["validation"]["subtitleScore"] + best["validation"]["authorScore"]
+                ):
+                    shutil.copyfile(temp_image, output_path)
+                    best = {
+                        "provider": provider,
+                        "validation": validation,
+                        "path": output_path,
+                    }
+                if validation["valid"]:
+                    shutil.copyfile(temp_image, output_path)
+                    return {
+                        "provider": provider,
+                        "validation": validation,
+                        "path": output_path,
+                    }
+    return best
 
 
 def generate_with_grok(prompt: str, output_path: Path, api_key: str) -> bool:
@@ -1077,10 +1593,17 @@ def compose_cover_bundle(
 
 
 def generate_variant(prompt: str, output_path: Path, api_key: str, provider: str) -> bool:
+    if provider in VERTEX_IMAGEN_MODELS:
+        return generate_with_vertex_imagen(prompt, output_path, provider)
+    if provider == "vertex-gemini-flash-image":
+        return generate_with_vertex_gemini(prompt, output_path)
+    legacy_key = resolve_legacy_api_key() or api_key
+    if not legacy_key:
+        return False
     if provider == "grok-imagine":
-        return generate_with_grok(prompt, output_path, api_key)
+        return generate_with_grok(prompt, output_path, legacy_key)
     if provider in NANO_MODELS:
-        return generate_with_nano(prompt, output_path, api_key, NANO_MODELS[provider])
+        return generate_with_nano(prompt, output_path, legacy_key, NANO_MODELS[provider])
     return False
 
 
@@ -1094,7 +1617,7 @@ def ensure_variant_art(entry: dict[str, Any], assets_dir: Path, api_key: str, se
     entry = normalized_cover_entry(entry)
     generated: list[dict[str, Any]] = []
     legacy_ai_cover = assets_dir / "ai_front_cover.png"
-    providers = normalize_service(service)
+    providers = normalize_service(service, entry)
 
     for family in families_for_entry(entry):
         variant_index = int(family["art_variant"])
@@ -1220,13 +1743,23 @@ def art_quality_score(art: dict[str, Any]) -> float:
 
 
 def asset_source(book_dir: Path, relative_path: str) -> Path:
-    return (book_dir / relative_path).resolve()
+    relative = str(relative_path or "").strip()
+    if not relative:
+        return book_dir / "__missing_asset__"
+    return (book_dir / relative).resolve()
 
 
 def copy_if_exists(source: Path, destination: Path) -> None:
     if source.exists():
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, destination)
+
+
+def copy_or_remove(source: Path, destination: Path) -> None:
+    if source.exists():
+        copy_if_exists(source, destination)
+    else:
+        destination.unlink(missing_ok=True)
 
 
 def promote_selected_variant(book_dir: Path, selected_variant: dict[str, Any]) -> None:
@@ -1239,12 +1772,12 @@ def promote_selected_variant(book_dir: Path, selected_variant: dict[str, Any]) -
 
     copy_if_exists(selected_front, assets_dir / "front_cover_final.png")
     copy_if_exists(selected_back, assets_dir / "back_cover_final.png")
-    copy_if_exists(selected_front_svg, assets_dir / "front_cover_final.svg")
-    copy_if_exists(selected_back_svg, assets_dir / "back_cover_final.svg")
+    copy_or_remove(selected_front_svg, assets_dir / "front_cover_final.svg")
+    copy_or_remove(selected_back_svg, assets_dir / "back_cover_final.svg")
     copy_if_exists(selected_front, assets_dir / "showcase_front_cover.png")
-    copy_if_exists(selected_front_svg, assets_dir / "showcase_front_cover.svg")
+    copy_or_remove(selected_front_svg, assets_dir / "showcase_front_cover.svg")
     copy_if_exists(selected_back, assets_dir / "showcase_back_cover.png")
-    copy_if_exists(selected_back_svg, assets_dir / "showcase_back_cover.svg")
+    copy_or_remove(selected_back_svg, assets_dir / "showcase_back_cover.svg")
     copy_if_exists(selected_art, assets_dir / "ai_front_cover.png")
 
 
@@ -1285,24 +1818,33 @@ def build_cover_variants(
     )
     fallback_art = art_scores[0]
 
+    variant_specs = variant_specs_for_entry(entry)
     cover_variants: list[dict[str, Any]] = []
-    for family in families_for_entry(entry):
+    for spec in variant_specs:
+        family = spec["family"]
         art = by_variant.get(int(family["art_variant"])) or fallback_art
         family_id = str(family["id"])
+        variant_id = str(spec["id"])
         palette_key = palette_key_for_variant(entry, family)
         layout_key = layout_key_for_variant(entry, family)
         motif = motif_for_variant(entry, family)
         preferred_zone = preferred_zone_for_layout(layout_key, str(art.get("preferredZone") or ""))
+        render_mode = str(spec.get("render_mode") or "studio-exact")
+        studio_front_name = f"front_cover_{variant_id}.png"
+        studio_front_svg = f"front_cover_{variant_id}.svg"
+        if render_mode != "studio-exact":
+            studio_front_name = f"front_cover_{variant_id}_studio.png"
+            studio_front_svg = f"front_cover_{variant_id}_studio.svg"
         composition = compose_cover_bundle(
             entry,
             book_dir,
             Path(art["path"]),
             preferred_zone,
             family_id=family_id,
-            front_svg_name=f"front_cover_{family_id}.svg",
-            front_png_name=f"front_cover_{family_id}.png",
-            back_svg_name=f"back_cover_{family_id}.svg",
-            back_png_name=f"back_cover_{family_id}.png",
+            front_svg_name=studio_front_svg,
+            front_png_name=studio_front_name,
+            back_svg_name=f"back_cover_{variant_id}.svg",
+            back_png_name=f"back_cover_{variant_id}.png",
             config_overrides={
                 "coverTemplateHint": template_hint_for_variant(entry, family),
                 "titleTone": title_tone_for_variant(entry, family),
@@ -1317,26 +1859,62 @@ def build_cover_variants(
                 "preferredZone": preferred_zone,
             },
         )
+        front_image = f"assets/{studio_front_name}"
+        front_svg = f"assets/{studio_front_svg}"
+        provider = art.get("provider") or service
+        validation_payload: dict[str, Any] | None = None
+        effective_render_mode = render_mode
+
+        if render_mode in {"ai-signature", "ai-minimal"}:
+            ai_front_path = assets_dir / f"front_cover_{variant_id}.png"
+            ai_result = generate_ai_finished_cover(
+                entry,
+                family,
+                ai_front_path,
+                ai_text_providers_for_entry(service, entry),
+                api_key,
+                render_mode,
+            )
+            if ai_result and ai_result.get("validation", {}).get("valid"):
+                front_image = f"assets/front_cover_{variant_id}.png"
+                front_svg = ""
+                provider = str(ai_result.get("provider") or provider)
+                validation_payload = dict(ai_result.get("validation") or {})
+            else:
+                effective_render_mode = "studio-exact-fallback"
+                validation_payload = dict((ai_result or {}).get("validation") or {})
+
+        score_bonus = 10.0
+        if effective_render_mode == "ai-signature":
+            score_bonus = 18.0
+        elif effective_render_mode == "ai-minimal":
+            score_bonus = 15.0
+        elif effective_render_mode == "studio-exact-fallback":
+            score_bonus = 9.0
+
         cover_variants.append(
             {
-                "id": family_id,
+                "id": variant_id,
                 "family": family_id,
-                "label": family["label"],
+                "label": spec["label"],
                 "genre": entry["coverGenre"],
                 "subtopic": entry["coverSubtopic"],
                 "layout": layout_key,
                 "motif": motif,
                 "paletteKey": palette_key,
-                "front_image": f"assets/front_cover_{family_id}.png",
-                "front_svg": f"assets/front_cover_{family_id}.svg",
-                "back_image": f"assets/back_cover_{family_id}.png",
-                "back_svg": f"assets/back_cover_{family_id}.svg",
+                "front_image": front_image,
+                "front_svg": front_svg,
+                "back_image": f"assets/back_cover_{variant_id}.png",
+                "back_svg": f"assets/back_cover_{variant_id}.svg",
                 "art_image": f"assets/{Path(str(art['path'])).name}",
-                "score": round(art_quality_score(art) + family_fit_bonus(entry, family_id), 2),
+                "score": round(art_quality_score(art) + family_fit_bonus(entry, family_id) + score_bonus, 2),
                 "recommended": False,
-                "provider": art.get("provider") or service,
+                "provider": provider,
                 "template": composition.get("template") or derive_cover_template_hint(entry),
                 "preferred_zone": preferred_zone,
+                "render_mode": effective_render_mode,
+                "text_strategy": str(spec.get("text_strategy") or "studio-safe"),
+                "text_validation": validation_payload or {},
             }
         )
 
@@ -1370,6 +1948,7 @@ def build_cover_variants(
             "cover_variant_count": len(cover_variants),
             "cover_generation_provider": selected_variant.get("provider") or service,
             "cover_composed": True,
+            "cover_text_strategy": ai_text_strategy_for_entry(entry),
             "cover_branch": entry["coverBranch"],
             "cover_genre": entry["coverGenre"],
             "cover_subtopic": entry["coverSubtopic"],
@@ -1416,7 +1995,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--service",
         default="auto",
-        choices=["auto", "grok-imagine", "nano-banana-pro", "nano-banana-2"],
+        choices=SERVICE_CHOICES,
         help="Cover generation service order.",
     )
     parser.add_argument("--slug", action="append", default=[], help="Generate only specific showcase slug(s).")

@@ -641,8 +641,8 @@ export function BookIdeaValidatorTool() {
                     <ArrowRight className="size-4" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="min-w-[220px] border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={() => trackEvent("tool_cta_clicked", { tool: "book_idea_validator", destination: "resources" })}>
-                  <Link href="/resources">Diğer Kaynakları Gör</Link>
+                <Button asChild variant="outline" size="lg" className="min-w-[220px] border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={() => trackEvent("tool_cta_clicked", { tool: "book_idea_validator", destination: "tools_hub" })}>
+                  <Link href="/tools">Diğer Araçları Gör</Link>
                 </Button>
               </div>
             </div>

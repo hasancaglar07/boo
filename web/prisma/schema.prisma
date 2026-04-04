@@ -86,6 +86,8 @@ model User {
   createdAdminNotes     AdminNote[]              @relation("AdminNoteAuthor")
   billingRecords        BillingRecord[]
   moderationReviews     ModerationReview[]       @relation("ModerationReviewer")
+  referralCode          ReferralCode?
+  referralConversion    ReferralConversion?      @relation("ReferralConversionNewUser")
 }
 
 model Account {
@@ -332,6 +334,29 @@ model FeatureFlag {
   enabled     Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ReferralCode {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  code      String   @unique
+  clicks    Int      @default(0)
+  createdAt DateTime @default(now())
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversions ReferralConversion[]
+}
+
+model ReferralConversion {
+  id             String   @id @default(cuid())
+  referralCodeId String
+  newUserId      String   @unique
+  convertedAt    DateTime @default(now())
+  rewardGranted  Boolean  @default(false)
+  rewardType     String   @default("book_credit")
+
+  referralCode ReferralCode @relation(fields: [referralCodeId], references: [id])
+  newUser      User         @relation("ReferralConversionNewUser", fields: [newUserId], references: [id], onDelete: Cascade)
 }
 
 model ModerationReview {

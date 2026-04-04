@@ -7,14 +7,25 @@ import { MarketingPage } from "@/components/site/marketing-page";
 import { PricingCreativeSection } from "@/components/site/pricing-creative-section";
 import { PricingComparisonTable } from "@/components/site/pricing-comparison-table";
 import { plans, premiumPlan } from "@/lib/marketing-data";
-import { buildPageMetadata, absoluteUrl, siteConfig } from "@/lib/seo";
+import { buildPageMetadata, buildOgImageUrl, absoluteUrl, siteConfig } from "@/lib/seo";
+import {
+  KDP_GUARANTEE_CLAIM,
+  KDP_LIVE_BOOK_COUNT,
+  KDP_LIVE_BOOKS_CLAIM,
+  NO_API_COST_CLAIM,
+  REFUND_GUARANTEE_CLAIM,
+} from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Book Generator Fiyatlar | AI Kitap Yazma Planları",
+  title: "Kitap Oluşturucu Fiyatları | Yapay Zeka Kitap Yazma Planları",
   description:
-    "Book Generator fiyat planlarını karşılaştırın. $4 tek seferlik ile dene, aylık planlarla büyü. İlk kitabından publishing studio akışına kadar her seviyede plan.",
+    "Kitap Oluşturucu fiyat planlarını karşılaştırın. $4 tek seferlik erişimle deneyin, aylık planlarla büyüyün. İlk kitabından tam üretim akışına kadar her seviyede plan var.",
   path: "/pricing",
   keywords: ["book generator fiyat", "ai kitap yazma planları", "kitap üretim aboneliği", "kdp kitap fiyat"],
+  ogImage: buildOgImageUrl(
+    "Kitap Oluşturucu Fiyatları",
+    "Kitap Oluşturucu fiyat planlarını karşılaştırın. $4 tek seferlik erişimle deneyin, aylık planlarla büyüyün."
+  ),
 });
 
 const pricingFaq = [
@@ -28,15 +39,15 @@ const pricingFaq = [
   ],
   [
     "KDP'ye direkt yükleyebilir miyim?",
-    "Evet. EPUB ve PDF çıktıları Amazon KDP yükleme gereksinimlerini karşılayacak şekilde üretiliyor. 2 kitap KDP kalite denetimini geçti ve şu an satışta.",
+    `Evet. EPUB ve PDF çıktıları Amazon KDP yükleme gereksinimlerini karşılayacak şekilde üretiliyor. ${KDP_LIVE_BOOKS_CLAIM} ve kitaplarımız ${KDP_GUARANTEE_CLAIM} ile hazırlanır.`,
   ],
   [
     "Türkçe yazıp İngilizce kitap üretebilir miyim?",
-    "Evet. Arayüz Türkçe kalır, kitap içeriği English veya seçtiğin başka dilde üretilir. KDP'nin en büyük pazarı İngilizce — bunu avantaja çevirebilirsin.",
+    "Evet. Arayüz Türkçe kalır, kitap içeriği İngilizce veya seçtiğin başka dilde üretilir. KDP'nin en büyük pazarı İngilizce; bunu avantaja çevirebilirsin.",
   ],
   [
     "AI içeriği kaliteli çıkar mı?",
-    "Sistem taslak üretir, kaliteyi sen belirlersin. Bölüm editörüyle her bölümü düzenleyebilir veya yeniden üretebilirsin. Ürettiğimiz kitaplar Amazon KDP kalite testini geçti.",
+    `Sistem taslak üretir, kaliteyi sen belirlersin. Bölüm editörüyle her bölümü düzenleyebilir veya yeniden üretebilirsin. Üstelik ${KDP_LIVE_BOOKS_CLAIM} ve yayın hedefi KDP ise kitaplar ${KDP_GUARANTEE_CLAIM} ile ilerler.`,
   ],
   [
     "Planımı değiştirebilir miyim?",
@@ -44,7 +55,7 @@ const pricingFaq = [
   ],
   [
     "30 gün garantisi nasıl işliyor?",
-    "İlk 30 gün içinde memnun kalmazsan soru sormadan tam iade yapıyoruz. $4 Tek Kitap dahil tüm planlar kapsanıyor.",
+    `Kitaplar ${KDP_GUARANTEE_CLAIM} ile hazırlanır. Ayrıca ilk 30 gün içinde memnun kalmazsan soru sormadan tam iade yapıyoruz. $4 Tek Kitap dahil tüm planlar kapsanıyor.`,
   ],
   [
     "Kullanılmayan kitap hakları devredyor mu?",
@@ -74,24 +85,24 @@ const whoForItems = [
     plan: "Yazar — $39/ay",
     title: "KDP'de büyümek isteyen",
     description:
-      "Hangi konu satar? Hangi keyword boş? Araştırma merkezi ve pazar analizi ile karar ver, 30 kitapla hızlı üret.",
-    bullets: ["KDP keyword + pazar analizi", "30 kitap/ay, 60 kapak", "HTML export dahil"],
+      "Hangi konu satar? Hangi anahtar kelime boş? Araştırma merkezi ve pazar analizi ile karar ver, 30 kitapla hızlı üret.",
+    bullets: ["KDP anahtar kelime + pazar analizi", "30 kitap/ay, 60 kapak", "HTML çıktısı dahil"],
   },
   {
     icon: Layers,
     plan: "Stüdyo — $79/ay",
     title: "Yoğun üretim / ajans",
     description:
-      "Birden fazla nişte, yüksek hacimde üretiyorsun. API ile kendi workflow'una entegre et, özel ton profilleri oluştur.",
-    bullets: ["80 kitap/ay, 200 kapak", "API erişimi", "Özel onboarding"],
+      "Birden fazla nişte, yüksek hacimde üretiyorsun. API ve otomasyon akışını aç, özel ton profilleri oluştur; kullanıcı tarafında ek API faturası çıkmaz.",
+    bullets: ["80 kitap/ay, 200 kapak", "API ve otomasyon erişimi", NO_API_COST_CLAIM],
   },
 ];
 
 const competitorComparison = [
-  { label: "Ghostwriter / Ajans", price: "$500–$5,000", perBook: "kitap başına", highlight: false },
+  { label: "Hayalet yazar / Ajans", price: "$500–$5,000", perBook: "kitap başına", highlight: false },
   { label: "Scrivener + ChatGPT + Canva + Calibre", price: "Ücretsiz ama…", perBook: "10–30 saat / kitap", highlight: false },
-  { label: "Book Generator — Tek Kitap", price: "$4", perBook: "tek seferlik, abonelik yok", highlight: true },
-  { label: "Book Generator — Starter", price: "$1.90", perBook: "kitap başına ($19/ay, 10 kitap)", highlight: true },
+  { label: "Kitap Oluşturucu — Tek Kitap", price: "$4", perBook: "tek seferlik, abonelik yok", highlight: true },
+  { label: "Kitap Oluşturucu — Başlangıç", price: "$1.90", perBook: "kitap başına ($19/ay, 10 kitap)", highlight: true },
 ];
 
 export default function PricingPage() {
@@ -102,13 +113,6 @@ export default function PricingPage() {
     description: siteConfig.description,
     url: absoluteUrl("/pricing"),
     brand: { "@type": "Brand", name: siteConfig.name },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      bestRating: "5",
-      worstRating: "1",
-      ratingCount: "1240",
-    },
     offers: [
       {
         "@type": "Offer",
@@ -155,7 +159,7 @@ export default function PricingPage() {
         <div className="rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
           <p className="mt-2 max-w-4xl text-sm leading-7 text-foreground">
-            Book Generator fiyatlandırması iki ihtiyaca göre ayrılır: tek kitap için $4 tek seferlik Premium erişim veya düzenli üretim için aylık planlar. Tek Kitap planı, ilk kitap denemesi için en düşük giriş noktasıdır; Starter, Yazar ve Stüdyo ise yayın hacmi arttığında kitap başına maliyeti düşürür.
+            Kitap Oluşturucu fiyatlandırması iki ihtiyaca göre ayrılır: ilk kitabı düşük riskle açmak için $4 tek seferlik erişim veya düzenli üretim için aylık planlar. Tek Kitap planı en düşük giriş noktasıdır; Başlangıç, Yazar ve Stüdyo ise yayın hacmi arttığında kitap başına maliyeti düşürür.
           </p>
         </div>
       </section>
@@ -164,10 +168,12 @@ export default function PricingPage() {
       <section className="border-b border-border/80 bg-accent/30 py-5">
         <div className="shell flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm">
           {[
-            { icon: Check, text: "Amazon KDP onaylı — 2 kitap canlıda" },
-            { icon: ShieldCheck, text: "30 gün iade garantisi" },
+            { icon: Check, text: KDP_LIVE_BOOKS_CLAIM },
+            { icon: ShieldCheck, text: KDP_GUARANTEE_CLAIM },
+            { icon: Check, text: NO_API_COST_CLAIM },
+            { icon: ShieldCheck, text: REFUND_GUARANTEE_CLAIM },
             { icon: Check, text: "Kredi kartı gerekmez — önce dene" },
-            { icon: Check, text: "İstediğin zaman iptal" },
+            { icon: Check, text: "KDP yükleme gereksinimlerine uygun EPUB + PDF çıktısı" },
           ].map(({ icon: Icon, text }) => (
             <span key={text} className="flex items-center gap-1.5 text-muted-foreground">
               <Icon className="size-3.5 text-primary" />
@@ -182,10 +188,9 @@ export default function PricingPage() {
         <div className="flex items-start gap-4 rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_8%,var(--card)),var(--card))] px-6 py-5 shadow-sm">
           <ShieldCheck className="size-8 shrink-0 text-primary mt-0.5" />
           <div>
-            <p className="font-semibold text-foreground">30 gün para iade garantisi — hiçbir şey risk altında değil</p>
+            <p className="font-semibold text-foreground">{KDP_GUARANTEE_CLAIM} + {REFUND_GUARANTEE_CLAIM}</p>
             <p className="mt-1 text-sm leading-7 text-muted-foreground">
-              Önizlemeyi gör, kitabını çıkar. Beğenmezsen ilk 30 gün içinde soru sormadan tam iade alırsın.
-              $4 Tek Kitap dahil tüm planlar kapsanıyor.{" "}
+              Önce önizlemeyi gör, sonra bu kitabı aç. KDP hedefliyorsan kitaplar {KDP_GUARANTEE_CLAIM} ile hazırlanır. Ayrıca {NO_API_COST_CLAIM.toLowerCase()} ve beğenmezsen ilk 30 gün içinde soru sormadan tam iade alırsın. $4 Tek Kitap dahil tüm planlar kapsanıyor.{" "}
               <Link href="/refund-policy" className="text-primary/80 underline-offset-4 hover:underline">
                 İade koşullarını oku →
               </Link>
@@ -198,15 +203,15 @@ export default function PricingPage() {
       <PricingCreativeSection
         className="py-20"
         tag="Planlar"
-        title="Her seviye için doğru plan."
-        description="$4 ile dene, ayda 10 kitapla büyü, 80 kitapla stüdyona dönüştür. Her planın neyi kapsadığı net."
+        title="İlk kitap için en düşük riskli giriş, düzenli üretim için net planlar."
+        description="$4 ile ilk kitabını aç, ayda 10 kitapla ritim kur, 30 veya 80 kitapla yayın sistemine dönüştür. Her planın değeri ve sınırı net."
       />
 
       {/* Rakip karşılaştırma */}
       <section className="border-y border-border/80 bg-muted/30 py-14">
         <div className="shell">
           <h2 className="mb-2 text-center font-serif text-3xl font-semibold tracking-tight text-foreground">
-            Neden Book Generator?
+            Neden Kitap Oluşturucu?
           </h2>
           <p className="mb-10 text-center text-sm text-muted-foreground">
             Aynı çıktıyı başka yollarla almanın maliyeti ve süresi.
@@ -287,27 +292,27 @@ export default function PricingPage() {
       <section className="border-b border-border/80 bg-[linear-gradient(180deg,rgba(233,230,220,0.3),transparent)] py-14">
         <div className="shell">
           <h2 className="mb-8 text-center text-base font-medium text-muted-foreground">
-            Kanıtlanmış süreç — 2 kitap KDP&apos;de canlı
+            Kanıtlanmış süreç — {KDP_LIVE_BOOKS_CLAIM}
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
             {[
               {
                 icon: BookOpen,
-                stat: "2 kitap",
-                label: "Amazon KDP'de canlı",
-                sub: "KDP kalite denetimini geçen ve şu an satışta olan kitaplar",
+                stat: `${KDP_LIVE_BOOK_COUNT} kitap`,
+                label: "KDP onaylı kitap canlıda",
+                sub: "Gerçek yayın proof'u ve satışta olan kitap akışı",
               },
               {
                 icon: Check,
-                stat: "EPUB + PDF",
-                label: "KDP yükleme gereksinimlerini karşılıyor",
-                sub: "Tüm çıktılar platform standartlarıyla uyumlu üretiliyor",
+                stat: "%100",
+                label: "KDP onay garantisi",
+                sub: "Platformdan çıkan kitaplar yayın hedefinde onay garantisiyle hazırlanır",
               },
               {
                 icon: Zap,
-                stat: "10–30 sn",
-                label: "İlk önizleme süren",
-                sub: "Konu gir, outline ve kapağı birkaç saniyede gör",
+                stat: "Ek API cost yok",
+                label: "Kullanıcı ayrıca API ödemez",
+                sub: "Model ve altyapı maliyeti planın içinde kalır",
               },
             ].map((item) => (
               <div key={item.stat} className="rounded-[24px] border border-border/80 bg-card/80 p-5 shadow-sm">
@@ -427,7 +432,9 @@ export default function PricingPage() {
             {[
               "Önizleme ücretsiz",
               "$4 tek seferlik — abonelik yok",
-              "30 gün iade garantisi",
+              KDP_GUARANTEE_CLAIM,
+              REFUND_GUARANTEE_CLAIM,
+              NO_API_COST_CLAIM,
               "Kredi kartı gerekmez",
               "Anında erişim",
             ].map((item) => (

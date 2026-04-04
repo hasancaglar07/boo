@@ -19,7 +19,7 @@ import {
   type PreviewAuthProviders,
 } from "@/lib/preview-auth";
 
-const DEFAULT_GOAL = "İlk kitabımı hızlıca önizlemek istiyorum.";
+const DEFAULT_GOAL = "İlk kitabımı hızlıca ön izlemek istiyorum.";
 
 export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   const router = useRouter();
@@ -28,8 +28,8 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   const next = searchParams.get("next") || "/app/library";
   const slug = searchParams.get("slug") || "";
 
-  const [name, setName] = useState(existingAccount.name !== "Book Creator" ? existingAccount.name : "");
-  const [email, setEmail] = useState(existingAccount.email !== "demo@example.com" ? existingAccount.email : "");
+  const [name, setName] = useState(existingAccount.name !== "Kitap Sahibi" ? existingAccount.name : "");
+  const [email, setEmail] = useState(existingAccount.email !== "ornek@mail.com" ? existingAccount.email : "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -71,12 +71,12 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   }, [mode, next, router, slug]);
 
   function rememberDraftIdentity() {
-    const normalizedEmail = email.trim().toLowerCase() || existingAccount.email || "demo@example.com";
+    const normalizedEmail = email.trim().toLowerCase() || existingAccount.email || "ornek@mail.com";
     const normalizedName =
       name.trim() ||
       existingAccount.name ||
       normalizedEmail.split("@")[0].replace(/[._-]+/g, " ") ||
-      "Book Creator";
+      "Kitap Sahibi";
 
     setAccount({
       name: normalizedName,
@@ -91,7 +91,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
       saveFunnelDraft({
         ...draft,
         authorName: draft.authorName || normalizedName,
-        imprint: draft.imprint || "Book Generator",
+        imprint: draft.imprint || "Kitap Oluşturucu",
         updatedAt: new Date().toISOString(),
       });
     }
@@ -117,7 +117,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   async function handleMagicLink() {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail) {
-      setError("Magic link için e-posta adresi gerekli.");
+      setError("E-posta bağlantısı için e-posta adresi gerekli.");
       trackEvent("auth_form_failed", { mode, method: "magic", reason: "missing_email", source: "continue_auth", slug });
       return;
     }
@@ -134,7 +134,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
     }).catch(() => null);
 
     if (result?.error) {
-      setError("Magic link gönderilemedi. Lütfen tekrar dene.");
+      setError("E-posta bağlantısı gönderilemedi. Lütfen tekrar dene.");
       trackEvent("auth_form_failed", { mode, method: "magic", reason: "send_failed", source: "continue_auth", slug });
       setBusyMethod(null);
       return;
@@ -247,11 +247,11 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
     router.push(next);
   }
 
-  const title = mode === "signup" ? "Preview'ını kaybetme" : "Kaldığın preview'a dön";
+  const title = mode === "signup" ? "Ön izlemeni kaybetme" : "Kaldığın ön izlemeye dön";
   const description =
     mode === "signup"
-      ? "Preview ve kitap taslağını hesabına bağla. Hazır olduğunda aynı yerden aç, sonra unlock veya export kararını aynı hesapta ver."
-      : "Daha önce başlattığın kitabı hesabına bağla ve preview ekranına geri dön.";
+      ? "Ön izleme ve kitap taslağını hesabına bağla. Hazır olduğunda aynı yerden aç, sonra kitabı açma ya da çıktı alma kararını aynı hesapta ver."
+      : "Daha önce başlattığın kitabı hesabına bağla ve ön izleme ekranına geri dön.";
 
   return (
     <FunnelShell
@@ -268,7 +268,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
         <div className="rounded-[28px] border border-primary/20 bg-primary/8 p-5 md:p-6">
           <div className="text-lg font-semibold text-foreground">Kayıt değil, kitap bağlantısı</div>
           <p className="mt-2 text-sm leading-7 text-muted-foreground">
-            Bu adım bir engel değil. Hazırladığın preview'ı ve kitap taslağını hesabına bağlıyoruz; tekrar geldiğinde seni aynı yerden karşılasın. Burada ödeme istemiyoruz.
+            Bu adım bir engel değil. Hazırladığın ön izlemeyi ve kitap taslağını hesabına bağlıyoruz; tekrar geldiğinde seni aynı yerden karşılasın. Burada ödeme istemiyoruz.
           </p>
         </div>
 
@@ -278,7 +278,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
               Şimdi açılan
             </div>
             <div className="mt-2 text-sm leading-6 text-foreground">
-              Kapak, outline ve ücretsiz preview.
+              Kapak, bölüm planı ve ücretsiz ön izleme.
             </div>
           </div>
           <div className="rounded-[22px] border border-border/70 bg-card/70 px-4 py-4">
@@ -286,7 +286,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
               Sonra karar verirsin
             </div>
             <div className="mt-2 text-sm leading-6 text-foreground">
-              Beğenirsen tam kitabı, PDF'i ve EPUB'u unlock edersin.
+              Beğenirsen tam kitabı, PDF'i ve EPUB'u açarsın.
             </div>
           </div>
           <div className="rounded-[22px] border border-primary/20 bg-primary/5 px-4 py-4">
@@ -425,7 +425,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
           {mode === "signup" ? (
             <div className="rounded-[20px] border border-dashed border-border/70 bg-background/50 px-4 py-3 text-center">
               <p className="text-xs leading-6 text-muted-foreground">
-                İstersen önce preview'a dönebilirsin. Ama kitabını daha sonra bulmak, unlock etmek ve export almak için hesabına bağlaman gerekecek.
+                İstersen önce ön izlemeye dönebilirsin. Ama kitabını daha sonra bulmak, açmak ve çıktı almak için hesabına bağlaman gerekecek.
               </p>
               <button
                 type="button"
@@ -433,7 +433,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
                 disabled={busyMethod !== null}
                 onClick={handleSkip}
               >
-                {busyMethod === "skip" ? "Önizlemeye gidiliyor..." : "Yine de preview'a dön"}
+                {busyMethod === "skip" ? "Ön izlemeye gidiliyor..." : "Yine de ön izlemeye dön"}
               </button>
             </div>
           ) : null}

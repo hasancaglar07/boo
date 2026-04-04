@@ -1,0 +1,789 @@
+[
+  {
+    "slug": "authority-in-100-pages",
+    "title": "Authority in 100 Pages",
+    "author": "Mara Ellison",
+    "language": "English",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "exact",
+    "signature": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/authority-in-100-pages/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 0.4037,
+      "subtitleScore": 0.15,
+      "authorScore": 1.0,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Authority in 100 Pages",
+        "subtitle": "Turn one proven method into a trusted",
+        "author": "Mara Ellison"
+      }
+    },
+    "minimal": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/authority-in-100-pages/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Authority in 100 Pages",
+        "subtitle": "",
+        "author": "Mara Ellison"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/authority-in-100-pages/assets/front_cover_clean-signal.png",
+      "label": "Exact",
+      "family": "clean-signal"
+    }
+  },
+  {
+    "slug": "silent-offers",
+    "title": "Silent Offers",
+    "author": "Jonah Vale",
+    "language": "English",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "exact",
+    "signature": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/silent-offers/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 0.6446,
+      "authorScore": 1.0,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Silent Offers",
+        "subtitle": "Build demand before the pitch by",
+        "author": "Jonah Vale"
+      }
+    },
+    "minimal": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/silent-offers/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 0.94,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Silent Offers",
+        "subtitle": "",
+        "author": "Jonah Vale"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/silent-offers/assets/front_cover_clean-signal.png",
+      "label": "Exact",
+      "family": "clean-signal"
+    }
+  },
+  {
+    "slug": "prompt-systems-for-small-teams",
+    "title": "Prompt Systems for Small Teams",
+    "author": "Priya North",
+    "language": "English",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "minimal",
+    "signature": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/prompt-systems-for-small-teams/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 0.7129,
+      "authorScore": 0.94,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Prompt Systems for Small Teams",
+        "subtitle": "Replace ad hoc prompting with reusable",
+        "author": "Priya North"
+      }
+    },
+    "minimal": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/prompt-systems-for-small-teams/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Prompt Systems for Small Teams",
+        "subtitle": "",
+        "author": "Priya North"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/prompt-systems-for-small-teams/assets/front_cover_calm-tech.png",
+      "label": "Exact",
+      "family": "calm-tech"
+    }
+  },
+  {
+    "slug": "parent-friendly-stem-at-home",
+    "title": "Parent-Friendly STEM at Home",
+    "author": "Lena Park",
+    "language": "English",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "signature",
+    "signature": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/parent-friendly-stem-at-home/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Parent-Friendly STEM at Home",
+        "subtitle": "and zero classroom jargon",
+        "author": "Lena Park"
+      }
+    },
+    "minimal": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/parent-friendly-stem-at-home/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Parent-Friendly STEM at Home",
+        "subtitle": "",
+        "author": "Lena Park"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/parent-friendly-stem-at-home/assets/front_cover_curious-learning.png",
+      "label": "Exact",
+      "family": "curious-learning"
+    }
+  },
+  {
+    "slug": "focus-by-design",
+    "title": "Focus by Design",
+    "author": "Elaine Mercer",
+    "language": "English",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "exact",
+    "signature": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/focus-by-design/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 0.0127,
+      "authorScore": 0.0092,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Focus by Design",
+        "subtitle": "Stop negotiating with distraction and",
+        "author": "Elaine Mercer"
+      }
+    },
+    "minimal": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/focus-by-design/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 0.775,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Focus by Design",
+        "subtitle": "",
+        "author": "Elaine Mercer"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/focus-by-design/assets/front_cover_elevated-reset.png",
+      "label": "Exact",
+      "family": "elevated-reset"
+    }
+  },
+  {
+    "slug": "quiet-leadership-for-remote-teams",
+    "title": "Quiet Leadership for Remote Teams",
+    "author": "Nadia Brooks",
+    "language": "English",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "exact",
+    "signature": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/quiet-leadership-for-remote-teams/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 0.5645,
+      "subtitleScore": 0.94,
+      "authorScore": 1.0,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Quiet Leadership for Remote Teams",
+        "subtitle": "better written communication",
+        "author": "Nadia Brooks"
+      }
+    },
+    "minimal": {
+      "status": "failed",
+      "valid": false,
+      "provider": "",
+      "image": "",
+      "titleScore": 0.0,
+      "subtitleScore": 0.0,
+      "authorScore": 0.0,
+      "prefixGuardFailed": false,
+      "targets": {}
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/quiet-leadership-for-remote-teams/assets/front_cover_clean-signal.png",
+      "label": "Exact",
+      "family": "clean-signal"
+    }
+  },
+  {
+    "slug": "tu-metodo-hecho-libro",
+    "title": "Tu Método Hecho Libro",
+    "author": "Lucía Ferrer",
+    "language": "Spanish",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "minimal",
+    "signature": {
+      "status": "failed",
+      "valid": false,
+      "provider": "",
+      "image": "",
+      "titleScore": 0.0,
+      "subtitleScore": 0.0,
+      "authorScore": 0.0,
+      "prefixGuardFailed": false,
+      "targets": {}
+    },
+    "minimal": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/tu-metodo-hecho-libro/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Tu Método Hecho Libro",
+        "subtitle": "",
+        "author": "Lucía Ferrer"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/tu-metodo-hecho-libro/assets/front_cover_modern-mentor.png",
+      "label": "Exact",
+      "family": "modern-mentor"
+    }
+  },
+  {
+    "slug": "el-negocio-experto-sin-agencia",
+    "title": "El Negocio Experto Sin Agencia",
+    "author": "Mateo Rivas",
+    "language": "Spanish",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "minimal",
+    "signature": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/el-negocio-experto-sin-agencia/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "El Negocio Experto Sin Agencia",
+        "subtitle": "Diseña una operación liviana que te",
+        "author": "Mateo Rivas"
+      }
+    },
+    "minimal": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/el-negocio-experto-sin-agencia/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "El Negocio Experto Sin Agencia",
+        "subtitle": "",
+        "author": "Mateo Rivas"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/el-negocio-experto-sin-agencia/assets/front_cover_clean-signal.png",
+      "label": "Exact",
+      "family": "clean-signal"
+    }
+  },
+  {
+    "slug": "productividad-profunda-con-ia",
+    "title": "Productividad Profunda con IA",
+    "author": "Carla Montes",
+    "language": "Spanish",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "signature",
+    "signature": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/productividad-profunda-con-ia/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 0.94,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Productividad Profunda con IA",
+        "subtitle": "Usa la inteligencia artificial para",
+        "author": "Carla Montes"
+      }
+    },
+    "minimal": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/productividad-profunda-con-ia/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Productividad Profunda con IA",
+        "subtitle": "",
+        "author": "Carla Montes"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/productividad-profunda-con-ia/assets/front_cover_calm-tech.png",
+      "label": "Exact",
+      "family": "calm-tech"
+    }
+  },
+  {
+    "slug": "hablar-para-ensenar",
+    "title": "Hablar para Enseñar",
+    "author": "Sofía Armenta",
+    "language": "Spanish",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "signature",
+    "signature": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/hablar-para-ensenar/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 0.919,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Hablar para Enseñar",
+        "subtitle": "Este libro muestra a docentes",
+        "author": "Sofía Armenta"
+      }
+    },
+    "minimal": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/hablar-para-ensenar/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Hablar para Enseñar",
+        "subtitle": "",
+        "author": "Sofía Armenta"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/hablar-para-ensenar/assets/front_cover_curious-learning.png",
+      "label": "Exact",
+      "family": "curious-learning"
+    }
+  },
+  {
+    "slug": "seu-conhecimento-vira-receita",
+    "title": "Seu Conhecimento Vira Receita",
+    "author": "Lívia Amaral",
+    "language": "Portuguese",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "exact",
+    "signature": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/seu-conhecimento-vira-receita/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 0.6554,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Seu Conhecimento Vira Receita",
+        "subtitle": "Transforme o que você já sabe em um",
+        "author": "Lívia Amaral"
+      }
+    },
+    "minimal": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/seu-conhecimento-vira-receita/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Seu Conhecimento Vira Receita",
+        "subtitle": "",
+        "author": "Lívia Amaral"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/seu-conhecimento-vira-receita/assets/front_cover_modern-mentor.png",
+      "label": "Exact",
+      "family": "modern-mentor"
+    }
+  },
+  {
+    "slug": "ia-pratica-para-negocios-pequenos",
+    "title": "IA Prática para Negócios Pequenos",
+    "author": "Rafael Couto",
+    "language": "Portuguese",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "minimal",
+    "signature": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/ia-pratica-para-negocios-pequenos/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 0.7878,
+      "subtitleScore": 0.922,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "IA Prática para Negócios Pequenos",
+        "subtitle": "Aplique inteligência artificial onde ela",
+        "author": "Rafael Couto"
+      }
+    },
+    "minimal": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/ia-pratica-para-negocios-pequenos/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "IA Prática para Negócios Pequenos",
+        "subtitle": "",
+        "author": "Rafael Couto"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/ia-pratica-para-negocios-pequenos/assets/front_cover_calm-tech.png",
+      "label": "Exact",
+      "family": "calm-tech"
+    }
+  },
+  {
+    "slug": "energia-calma-resultados-grandes",
+    "title": "Energia Calma, Resultados Grandes",
+    "author": "Marina Freitas",
+    "language": "Portuguese",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "minimal",
+    "signature": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/energia-calma-resultados-grandes/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 0.4938,
+      "subtitleScore": 0.568,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Energia Calma, Resultados Grandes",
+        "subtitle": "recuperação e execução relevante",
+        "author": "Marina Freitas"
+      }
+    },
+    "minimal": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/energia-calma-resultados-grandes/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Energia Calma, Resultados Grandes",
+        "subtitle": "",
+        "author": "Marina Freitas"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/energia-calma-resultados-grandes/assets/front_cover_elevated-reset.png",
+      "label": "Exact",
+      "family": "elevated-reset"
+    }
+  },
+  {
+    "slug": "il-libro-che-vende-la-tua-competenza",
+    "title": "Il Libro che Vende la Tua Competenza",
+    "author": "Giulia Rinaldi",
+    "language": "Italian",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "signature",
+    "signature": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/il-libro-che-vende-la-tua-competenza/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Il Libro che Vende la Tua Competenza",
+        "subtitle": "Trasforma la tua esperienza in un libro",
+        "author": "Giulia Rinaldi"
+      }
+    },
+    "minimal": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/il-libro-che-vende-la-tua-competenza/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 0.94,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Il Libro che Vende la Tua Competenza",
+        "subtitle": "",
+        "author": "Giulia Rinaldi"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/il-libro-che-vende-la-tua-competenza/assets/front_cover_modern-mentor.png",
+      "label": "Exact",
+      "family": "modern-mentor"
+    }
+  },
+  {
+    "slug": "metodo-profondo-per-lavorare-meglio",
+    "title": "Metodo Profondo per Lavorare Meglio",
+    "author": "Lorenzo Bassi",
+    "language": "Italian",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "minimal",
+    "signature": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/metodo-profondo-per-lavorare-meglio/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 0.53,
+      "subtitleScore": 0.4417,
+      "authorScore": 1.0,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Metodo Profondo per Lavorare Meglio",
+        "subtitle": "ordinato e convincente",
+        "author": "Lorenzo Bassi"
+      }
+    },
+    "minimal": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/metodo-profondo-per-lavorare-meglio/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Metodo Profondo per Lavorare Meglio",
+        "subtitle": "",
+        "author": "Lorenzo Bassi"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/metodo-profondo-per-lavorare-meglio/assets/front_cover_elevated-reset.png",
+      "label": "Exact",
+      "family": "elevated-reset"
+    }
+  },
+  {
+    "slug": "van-expertise-naar-boekmerk",
+    "title": "Van Expertise naar Boekmerk",
+    "author": "Sanne de Vries",
+    "language": "Dutch",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "signature",
+    "signature": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/van-expertise-naar-boekmerk/ai-signature-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Van Expertise naar Boekmerk",
+        "subtitle": "Maak van je kennis een boek dat",
+        "author": "Sanne de Vries"
+      }
+    },
+    "minimal": {
+      "status": "fallback",
+      "valid": false,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/van-expertise-naar-boekmerk/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 0.75,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": true,
+      "targets": {
+        "title": "Van Expertise naar Boekmerk",
+        "subtitle": "",
+        "author": "Sanne de Vries"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/van-expertise-naar-boekmerk/assets/front_cover_modern-mentor.png",
+      "label": "Exact",
+      "family": "modern-mentor"
+    }
+  },
+  {
+    "slug": "rust-ritme-resultaat",
+    "title": "Rust, Ritme en Resultaat",
+    "author": "Joris Meijer",
+    "language": "Dutch",
+    "status": "audited",
+    "providersTried": [
+      "vertex-imagen-standard"
+    ],
+    "recommendation": "minimal",
+    "signature": {
+      "status": "failed",
+      "valid": false,
+      "provider": "",
+      "image": "",
+      "titleScore": 0.0,
+      "subtitleScore": 0.0,
+      "authorScore": 0.0,
+      "prefixGuardFailed": false,
+      "targets": {}
+    },
+    "minimal": {
+      "status": "valid",
+      "valid": true,
+      "provider": "vertex-imagen-standard",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/hybrid-cover-audit/rust-ritme-resultaat/ai-minimal-vertex-imagen-standard.png",
+      "titleScore": 1.0,
+      "subtitleScore": 1.0,
+      "authorScore": 1.0,
+      "prefixGuardFailed": false,
+      "targets": {
+        "title": "Rust, Ritme en Resultaat",
+        "subtitle": "",
+        "author": "Joris Meijer"
+      }
+    },
+    "exact": {
+      "status": "ready",
+      "image": "/mnt/c/Users/ihsan/Desktop/BOOK/book_outputs/rust-ritme-resultaat/assets/front_cover_elevated-reset.png",
+      "label": "Exact",
+      "family": "elevated-reset"
+    }
+  }
+]

@@ -1,3 +1,11 @@
+import { PUBLIC_BILLING_EMAIL, PUBLIC_SUPPORT_EMAIL } from "@/lib/contact-shared";
+import {
+  KDP_GUARANTEE_CLAIM,
+  KDP_LIVE_BOOKS_CLAIM,
+  NO_API_COST_CLAIM,
+  REFUND_GUARANTEE_CLAIM,
+} from "@/lib/site-claims";
+
 export const audienceGroups = [
   {
     title: "Uzmanlığını kitaba çevirmek isteyenler",
@@ -55,16 +63,19 @@ export const howItWorksPageSteps = [
     step: "1",
     title: "Konunu anlat",
     text: "Kitap konunu, hedef okurunu ve dilini sihirbaza gir. 5 kısa soru, sıfır boş sayfa.",
+    output: "Net kitap yönü ve başlık önerisi",
   },
   {
     step: "2",
     title: "Taslağı onayla, üretimi başlat",
     text: "AI başlık, bölüm akışı ve konu özetini önerir. Sen düzenler, onaylarsın. Sonra tek tıkla tüm kitabı üretirsin.",
+    output: "Görünür bölüm planı ve kitap yapısı",
   },
   {
     step: "3",
     title: "EPUB ve PDF'ini al",
     text: "Önizlemeyi gör, beğenirsen tam kitabı aç. Çıktı dosyaları KDP'ye yüklemeye hazır gelir.",
+    output: "Önizleme, EPUB ve PDF çıktı dosyaları",
   },
 ] as const;
 
@@ -83,7 +94,7 @@ export const premiumPlan = {
     "EPUB + PDF çıktısı — KDP'ye yüklemeye hazır",
     "Çok dilli üretim (Türkçe, İngilizce ve daha fazlası)",
     "Ton ve hedef kitle ayarı (sihirbazdan)",
-    "30 gün iade garantisi — risk yok",
+    `${KDP_GUARANTEE_CLAIM} + ${REFUND_GUARANTEE_CLAIM}`,
   ],
 } as const;
 
@@ -140,7 +151,8 @@ export const plans = [
     badge: null,
     perUnit: "kitap başına $0.99",
     annualMonthlyPrice: "$63",
-    description: "Tek bir kategoride değil, birden fazla nişte tam hızda çalış. Kapak fabrikası, seri üretim ve API ile kendi iş akışına entegre et.",
+    description:
+      "Tek bir kategoride değil, birden fazla nişte tam hızda çalış. Kapak fabrikası, seri üretim ve otomasyon akışını aç; kullanıcı tarafında ekstra API faturası çıkmaz.",
     features: [
       "Ayda 80 kitap üretimi — tam kapasite",
       "Ayda 200 kapak hakkı",
@@ -148,7 +160,8 @@ export const plans = [
       "Araştırma merkezi + gelişmiş KDP pazar analizi",
       "Seri ve tema bazlı toplu üretim",
       "Bölüm şablonları ve özelleştirilmiş ton profilleri",
-      "API erişimi — kendi sistemlerine entegre et",
+      "API ve otomasyon erişimi — kendi sistemlerine bağla",
+      NO_API_COST_CLAIM,
       "Öncelikli destek + özel başlangıç rehberliği",
     ],
   },
@@ -176,7 +189,7 @@ export const faqSections = [
       ],
       [
         "AI ile üretilen içerik gerçekten kullanılabilir kalitede mi?",
-        "Çıkan içerik yapılandırılmış bir taslak — profesyonel editör gibi değil, ama boş sayfayla başlamak yerine düzenlenmeye hazır bir iskelet. Her bölümü değiştirebilir, yeniden üretebilir veya kendi metninle değiştirebilirsin. Bu süreçle 2 kitap Amazon KDP'de yayında.",
+        `Çıkan içerik yapılandırılmış bir taslak — profesyonel editör gibi değil, ama boş sayfayla başlamak yerine düzenlenmeye hazır bir iskelet. Her bölümü değiştirebilir, yeniden üretebilir veya kendi metninle değiştirebilirsin. ${KDP_LIVE_BOOKS_CLAIM} ve kitaplarımız ${KDP_GUARANTEE_CLAIM} ile hazırlanır.`,
       ],
       [
         "Bu ürün kimin için uygun değil?",
@@ -247,7 +260,7 @@ export const faqSections = [
       ],
       [
         "EPUB dosyasını direkt Amazon KDP'ye yükleyebilir miyim?",
-        "Evet. Üretilen EPUB Amazon KDP'nin standart yükleme akışıyla uyumludur. Kapak ve metadata dahil olmak üzere bu süreçle 2 kitap KDP'de yayınlandı. Yayın öncesi kontrol listesi için blog bölümündeki KDP rehberine bakabilirsin.",
+        `Evet. Üretilen EPUB Amazon KDP'nin standart yükleme akışıyla uyumludur. Kapak ve metadata dahil olmak üzere ${KDP_LIVE_BOOKS_CLAIM}. Kitaplarımız ${KDP_GUARANTEE_CLAIM} ile hazırlanır; yayın öncesi kontrol listesi için blog bölümündeki KDP rehberine de bakabilirsin.`,
       ],
     ],
   },
@@ -312,12 +325,12 @@ export const supportChannels = [
   {
     title: "Genel destek",
     text: "Kullanım soruları, hesap erişimi ve teslim akışı için ana destek kanalı.",
-    value: "support@bookgenerator.local",
+    value: PUBLIC_SUPPORT_EMAIL,
   },
   {
     title: "Faturalama",
     text: "Plan, iptal ve ödeme sorunları için faturalama odaklı destek yolu.",
-    value: "billing@bookgenerator.local",
+    value: PUBLIC_BILLING_EMAIL,
   },
   {
     title: "Yanıt hedefi",
@@ -563,6 +576,25 @@ export const blogPosts = [
       ["Sadelik genellikle kazanır", "Kapak tasarımında en sık yapılan hata: çok fazla eleman sıkıştırmak. Birden fazla ana görsel, çok fazla metin, karmaşık arka plan deseni, çok sayıda renk, birden fazla yazı tipi — bunların bir arada kullanımı 'profesyonellik' vermez, aksine dağınıklık verir. En etkili kapaklar genellikle tek bir güçlü konsept, net bir başlık ve minimal bir düzenden oluşur. Okuru neye bakacağını bilmeden bırakma — gözünün ilk nereye gideceğini tasarla. Kapakta bir odak noktası olsun ve bütün diğer elemanlar bu odağı desteklesin. Bazen sadece güçlü tipografi ve sade bir arka plan rengi, karmaşık illüstrasyonlu bir kapaktan çok daha güçlü çalışır. Karmaşıklık pahalıya mı mal oldu? İyi tasarımcı paraya mı mal oldu? Sade ama etkili bir kapak, pahalı ama kalabalık bir kapaktan her zaman daha değerlidir."],
       ["KDP teknik gereksinimlerini karşıla", "Dijital kitap için KDP minimum 1000 piksel genişlik, ideal olarak 2560x1600 piksel çözünürlük ve 1.6:1 en boy oranı gerektiriyor. Bu şartları karşılamayan kapaklar ya yükleme sırasında reddediliyor ya da platformda pikselleşmiş ve bulanık görünüyor — her iki durum da profesyonellik algısını anında zedeliyor. Baskılı kitap için ön kapak, sırt ve arka kapak birleşik tek PDF olarak hazırlanmalı; sırt genişliği sayfa sayısına göre değişiyor ve KDP kendi ücretsiz şablon hesap aracını sunuyor. Renk uzayı CMYK değil RGB olmalı (dijital için), dosya formatı JPEG ya da TIFF tercih edilmeli. Book Generator kapak çıktılarını bu gereksinimlere uygun üretir — ama kendi tasarımını kullanıyorsan veya dışarıdan bir tasarımcıdan alıyorsan bu teknik gereksinimleri ilk toplantıda paylaş."],
       ["Son test: thumbnail ve rakip karşılaştırması", "Kapağı tamamladıktan sonra iki kısa test yap. Birinci test: kapağı 150x200 piksele küçült ve başlığın hâlâ okunabilir olup olmadığını kontrol et. Bu simülasyon sana Amazon listelerindeki gerçek görünümü gösterir. İkinci test: hedef kategorindeki 10-15 kitabın kapak görsellerini yan yana koy ve kendi kapağını aralarına ekle. Dikkat çekiyor mu? Kategoriye uygun görünüyor mu ama yeterince farklı mı? Kategorinin dilini konuşmak ve ayırt edici olmak aynı anda mümkün — ama kategorinin görsel dilini tamamen reddeden bir kapak okurda güvensizlik yaratır. Bu iki test toplam 10 dakika alır ve yayın öncesinde büyük sorunları yakalamanı sağlar. Kapak kararını mükemmeliyetçilikle sonsuz uzatmak yerine bu iki testi geç ve yayınla."],
+    ],
+  },
+  {
+    slug: "chatgpt-ile-outline-cikiyor-ama-kitap-neden-bitmiyor",
+    title: "ChatGPT ile Outline Çıkıyor Ama Kitap Neden Bitmiyor?",
+    summary: "ChatGPT ile başlayan ama bitirilemeyen kitap projelerinin gerçek sebebi model kalitesi değil, workflow kopukluğu ve bağlam kaybıdır.",
+    category: "Başlangıç",
+    readTime: "7 dk",
+    datePublished: "2026-04-03",
+    dateModified: "2026-04-03",
+    intro: "ChatGPT ile bir outline oluşturmak kolaydır. Birkaç bölüm başlığı çıkarmak da kolaydır. Ama aynı konuşmada 8 bölümü tutarlı üretmek, tonu korumak, kapsam kaymasını önlemek ve sonunda yayına hazır bir dosya çıkarmak — bunlar ayrı bir iş. Bu yazı, ChatGPT ile kitap projesinin neden sık sık yarıda kaldığını analiz ediyor ve hangi noktadan sonra özel bir kitap akışının fark yarattığını açıklıyor.",
+    sections: [
+      ["Outline üretmek kitap yazmak değil", "ChatGPT'ye 'X konusunda 10 bölümlük outline çıkar' dediğinde birkaç saniyede kullanılabilir bir yapı gelir. Bu hızlı başlangıç güçlüdür ama aldatıcıdır. Çünkü outline üretmek ile o outline'ı tutarlı biçimde kitaba dönüştürmek tamamen farklı operasyonlar gerektirir. Outline tek bir konuşmada çıkar; kitap ise her bölüm için ayrı bağlam, referans ve ton tutarlılığı ister. ChatGPT bu ikinci aşamada seni desteklemeye devam eder ama seni yönlendirmez."],
+      ["Bağlam kaybı her bölümde birikir", "ChatGPT'de uzun kitap projelerinin önündeki en büyük engel bağlam uzunluğu değil bağlam yönetimidir. 3. bölümü yazarken 1. bölümde söylediklerin hatırlatılmadıkça model sürüklenir: ton değişir, örnekler çakışır, terminoloji tutarsızlaşır. Bu problemi çözmek için sürekli 'yukarıda yazdıklarımı hatırla ve buna göre devam et' yazmak zorunda kalırsın. Her bölüm için bu döngüyü tekrar başlatmak özellikle 6-10 bölümlük kitaplarda zaman alıcı ve dağıtıcı hale gelir."],
+      ["Her bölüm yeni bir komut demek", "ChatGPT ile kitap yazan çoğu kişi şunu fark eder: 4. veya 5. bölümde her şeyi sıfırdan açıklamak zorunda kalmak üretim motivasyonunu düşürüyor. 'Senden şunu istiyorum, bu kitabın hedef kitlesi şu, tonu şöyle, bir önceki bölümde şunu söyledik, şimdi...' — bu giriş cümleleri her seferinde daha uzun hale geliyor. Kitap yazmanın keyfi giderek teknik operasyona dönüşüyor. Bu ChatGPT'nin kötü olduğu anlamına gelmiyor; kitap üretimi için tasarlanmamış bir araçla kitap yazmaya çalışmanın doğal sonucu."],
+      ["EPUB ve PDF çıkarmak ayrı bir operasyon", "ChatGPT metin üretir. Ama üretilen metin doğrudan KDP'ye yüklenebilir bir EPUB dosyasına dönüşmez. Calibre, Sigil, Vellum veya başka araçlarla export işlemini manuel yapman gerekir. Her araç ayrı öğrenme eğrisi ve zaman ister. Kapak ayrı; metadata düzenlemesi ayrı; bölüm formatlaması ayrı. Bu araç zinciri tek başına saatler alabilir ve çoğu zaman 'üretilmiş ama tamamlanmamış kitap' sorununa yol açar: metin hazır ama yayın dosyası yok."],
+      ["Workflow kopukluğu motivasyonu tüketir", "Bir kitap projesinin yarıda kalmasının en sık sebebi vakit yokluğu değil motivasyon düşüşüdür. Motivasyon çoğunlukla işin karmaşıklaşmasından düşer: her bölüm için prompt yeniden kurmak, ton tutarlılığını elle kontrol etmek, export zincirini ayrıca çözmek ve hangi aşamada ne kalındığını takip etmek. Bu sürtünmeler birikerek bir kitap projesini aylar içinde pasif nota döndürür."],
+      ["Fark sistem tasarımında", "ChatGPT'nin gücü ve kitap üretim sisteminin farkı model kalitesinde değildir. Fark iş akışı mimarisindedir: konu özetinden bölüm planına, bölüm planından tüm bölümlere, kapaktan EPUB çıktısına tek ve tutarlı bir akış. Bu akışta bağlam bir bölümden diğerine taşınır; ton profili tüm üretimi boyunca korunur; kapak ve export süreci ayrı operasyon gerektirmez. Sistem her adımda ne yapılacağını söyler — kullanıcı yön verir, ama operasyonu yönetmek zorunda kalmaz."],
+      ["ChatGPT iyi bir başlangıç noktası, ama bitiş noktası değil", "ChatGPT ile outline çıkarmak, fikir test etmek veya kısa içerik denemesi yapmak hâlâ mantıklı. Ama 6-12 bölümlük bir non-fiction kitabı baştan sona üretmek, tonu korumak, export zincirine hazır hale getirmek ve bunu düzenli tekrar edebilmek istiyorsan özel bir kitap üretim akışına geçiş noktasına geldin demektir. Outline çıkıyor ama kitap bitmiyor — bu şikayetin cevabı daha iyi prompt değil, daha iyi sistem."],
     ],
   },
 ] as const;

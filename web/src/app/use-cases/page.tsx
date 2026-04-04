@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { User, Users, Briefcase, GraduationCap, Globe, Mic, ArrowRight, CheckCircle2, Quote } from "lucide-react";
+import { User, Users, Briefcase, GraduationCap, Globe, Mic, ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
 import { MarketingCtaSection } from "@/components/site/marketing-cta-section";
@@ -10,9 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kimler İçin? | Book Generator",
+  title: "Kimler İçin? | Kitap Oluşturucu",
   description:
-    "Book Generator'ı kimin kullandığını ve neden tercih ettiğini öğren. Yazarlar, danışmanlar, eğitmenler, course creator'lar ve içerik üreticileri için AI publishing studio.",
+    "Kitap Oluşturucu'yu kimin kullandığını ve neden tercih ettiğini öğren. Yazarlar, danışmanlar, eğitmenler, kurs üreticileri ve içerik üreticileri için yapay zeka destekli kitap üretim sistemi.",
   path: "/use-cases",
   keywords: ["ai kitap üretimi", "danışman kitap yazma", "eğitmen kitap", "course creator kitap", "içerik üretici"],
 });
@@ -23,16 +23,14 @@ const segments = [
     badge: "Bireysel Yazarlar",
     title: "İlk kitabını çıkarmak isteyen yazarlar",
     description:
-      "Yazmak istediğin fikir var ama başlamak zor geliyor. Outline kafanda netleşmiyor, aylar geçiyor. Book Generator brief'inden outline'a, outline'dan bölüme senin yerine ilerliyor.",
+      "Yazmak istediğin fikir var ama başlamak zor geliyor. Bölüm planı kafanda netleşmiyor, aylar geçiyor. Kitap Oluşturucu konu özetinden bölüm planına, bölüm planından bölüme senin yerine ilerliyor.",
     benefits: [
-      "Fikrinden taslak outline 5 dakikada hazır",
+      "Fikrinden taslak bölüm planı 5 dakikada hazır",
       "Bölüm bölüm üretim — kaybolmadan ilerle",
       "Her seferinde tutarlı ses tonu",
       "EPUB ve PDF olarak doğrudan indir",
     ],
-    quote: "Üç yıldır kafamda olan kitabı 2 haftada taslak olarak çıkardım.",
-    quoteName: "Selin A.",
-    quoteRole: "İlk kez yayımlayan yazar",
+    outcome: "Uzun süredir ertelenen ilk rehber kitap, bölüm yapısı netleştiğinde haftalar içinde taslağa dönebilir.",
     cta: "Yazara özel başlangıç rehberi",
     ctaHref: "/resources",
     color: "bg-blue-50 border-blue-100",
@@ -43,16 +41,14 @@ const segments = [
     badge: "Danışmanlar & Koçlar",
     title: "Uzmanlığını kitaba dönüştürmek isteyen profesyoneller",
     description:
-      "Yıllarca biriktirdiğin bilgiyi kitap haline getirmek hem güvenilirliğini artırır hem yeni müşteri kapısı açar. Ama zaman yok. Book Generator uzmanlığını yapılandırılmış içeriğe dönüştürür.",
+      "Yıllarca biriktirdiğin bilgiyi kitap haline getirmek hem güvenilirliğini artırır hem yeni müşteri kapısı açar. Ama zaman yok. Kitap Oluşturucu uzmanlığını yapılandırılmış içeriğe dönüştürür.",
     benefits: [
-      "Müşteri çeken lead magnet kitaplar",
+      "Müşteri çeken kısa tanıtım kitapları",
       "Marka kimliğine uygun ses tonu",
       "Metodolojini aktaran chapter yapısı",
       "Kısa sürede çok sayıda niş kitap",
     ],
-    quote: "6 farklı niş konuda birer kitap ürettim. Hepsini lead magnet olarak kullanıyorum.",
-    quoteName: "Kerem T.",
-    quoteRole: "İş geliştirme danışmanı",
+    outcome: "Danışmanlık bilgisini kısa authority kitaba çevirmek, hizmete giriş ürünü ve güven yüzeyi olarak kullanılabilir.",
     cta: "Danışmanlar için rehber",
     ctaHref: "/resources",
     color: "bg-purple-50 border-purple-100",
@@ -60,19 +56,17 @@ const segments = [
   },
   {
     icon: GraduationCap,
-    badge: "Eğitmenler & Course Creator'lar",
+    badge: "Eğitmenler & Kurs Üreticileri",
     title: "Eğitim içeriğini rehber kitaba dönüştüren eğitmenler",
     description:
-      "Hazırladığın ders içerikleri, workshop notları ve kurs modülleri zaten var. Book Generator bunları tutarlı bir rehber kitap yapısına kavuşturur. Amaç akademik format değil; öğrencinin veya müşterinin okuyup uygulayacağı net, yayınlanabilir bir içerik çıkarmaktır.",
+      "Hazırladığın ders içerikleri, atölye notları ve kurs modülleri zaten var. Kitap Oluşturucu bunları tutarlı bir rehber kitap yapısına kavuşturur. Amaç akademik format değil; öğrencinin veya müşterinin okuyup uygulayacağı net, yayınlanabilir bir içerik çıkarmaktır.",
     benefits: [
       "Kurs modüllerinden kitap taslağı",
       "Öğretici ton ve bölüm yapısı",
       "Bölüm sonu özet ve aksiyon maddeleri",
-      "Lead magnet veya ücretli rehber olarak kullanma",
+      "Müşteri çeken kısa kitap veya ücretli rehber olarak kullanma",
     ],
-    quote: "Workshop içeriğimi bir rehber kitaba dönüştürdüm. Kurs satış sayfam için de güçlü bir authority asset oldu.",
-    quoteName: "Derya S.",
-    quoteRole: "Eğitmen ve course creator",
+    outcome: "Kurs veya workshop içeriği, öğrencinin okuyup uygulayabileceği rehber kitaba daha hızlı dönüşebilir.",
     cta: "Eğitimciler için başla",
     ctaHref: "/start/topic",
     color: "bg-green-50 border-green-100",
@@ -83,16 +77,14 @@ const segments = [
     badge: "KDP Yayıncılar",
     title: "Amazon KDP'de çok başlık yayınlayan yayıncılar",
     description:
-      "Aylık birden fazla başlık hedefliyorsun. Manuel yazmak bu hızı kesmez. Book Generator tüm yayın zincirini — araştırma, yazım, çıktı — otomatize eder.",
+      "Aylık birden fazla başlık hedefliyorsun. Elle yazmak bu hızı keser. Kitap Oluşturucu tüm yayın zincirini, yani araştırma, yazım ve çıktı akışını otomatikleştirir.",
     benefits: [
       "Aylık çok başlık üretim kapasitesi",
-      "Niş araştırma ve outline önerisi",
+      "Niş araştırma ve bölüm planı önerisi",
       "KDP uyumlu EPUB/PDF çıktısı",
       "Maliyet-çıktı optimizasyonu",
     ],
-    quote: "Ayda ortalama 4-5 kitap çıkarıyorum. Book Generator bu hızı mümkün kıldı.",
-    quoteName: "Mehmet B.",
-    quoteRole: "Bağımsız KDP yayıncısı",
+    outcome: "KDP odaklı kullanıcı için aynı akışta araştırma, taslak ve çıktı almak tekrarlı üretim kapasitesini artırır.",
     cta: "KDP yayıncı planına bak",
     ctaHref: "/pricing",
     color: "bg-orange-50 border-orange-100",
@@ -103,16 +95,14 @@ const segments = [
     badge: "İçerik Üreticileri",
     title: "Blog, podcast ve kursunu kitapla büyüten yaratıcılar",
     description:
-      "Yazdığın içerikler var, podcastini var, kurs materyalin var. Bunları bir araya getirip kitap olarak sunmak yeni bir gelir kapısı açar. Book Generator bu dönüşümü kolaylaştırır.",
+      "Yazdığın içerikler var, podcastin var, kurs materyalin var. Bunları bir araya getirip kitap olarak sunmak yeni bir gelir kapısı açar. Kitap Oluşturucu bu dönüşümü kolaylaştırır.",
     benefits: [
       "Mevcut içerikten kitap taslağı",
       "Okuyucu kitlesine hitap eden dil",
-      "Ek gelir ve lead magnet imkânı",
+      "Ek gelir ve müşteri toplama imkânı",
       "Hızlı güncelleme ve yeni baskı",
     ],
-    quote: "Podcast bölümlerimden oluşan bir kitap çıkardım. Dinleyicilerim çok sevdi.",
-    quoteName: "Zeynep M.",
-    quoteRole: "Podcast yapımcısı ve yazar",
+    outcome: "Dağınık blog, podcast veya kurs parçacıkları tek bir kitap kurgusunda toplanıp yeni gelir yüzeyine dönüşebilir.",
     cta: "İçerik üreticisi olarak başla",
     ctaHref: "/start/topic",
     color: "bg-rose-50 border-rose-100",
@@ -130,9 +120,7 @@ const segments = [
       "Kurum kültürü ve süreç kitapları",
       "Çok yazar desteği (ekip üretimi)",
     ],
-    quote: "Tüm oryantasyon sürecimizi bir kitaba aktardık. Yeni çalışanlar çok daha hızlı adapte oluyor.",
-    quoteName: "Alp D.",
-    quoteRole: "İK ve eğitim müdürü",
+    outcome: "Kurum içi bilgi, süreç veya oryantasyon akışı tek kitaba dönüştürüldüğünde tekrar kullanılabilir bir varlığa dahil olur.",
     cta: "Kurumsal plan için iletişime geç",
     ctaHref: "/contact",
     color: "bg-teal-50 border-teal-100",
@@ -164,16 +152,16 @@ export default function UseCasesPage() {
           <div className="mx-auto max-w-3xl text-center">
             <Badge className="mb-4">Kimler Kullanıyor?</Badge>
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              Kitap yazmak isteyen{" "}
-              <span className="text-primary">herkes için</span>
+              Herkes için değil.{" "}
+              <span className="text-primary">Doğru kullanıcı için çok güçlü.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
-              Bireysel yazardan kurumsal ekibe, danışmandan KDP yayıncısına. Book Generator farklı amaçlar için farklı şekillerde çalışır.
+              Bireysel yazardan kurumsal ekibe, danışmandan KDP yayıncısına. Kitap Oluşturucu farklı amaçlar için farklı şekillerde çalışır; ama en güçlü olduğu yer yayına hazır bilgi kitabı akışıdır.
             </p>
             <div className="mx-auto mt-8 max-w-3xl rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 text-left shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
               <p className="mt-2 text-sm leading-7 text-foreground">
-                Book Generator; uzmanlar, koçlar, eğitmenler, course creator'lar ve KDP yayıncıları için tasarlanmış çok dilli bir AI publishing studio'dur. Teknik dokümantasyon veya akademik tez üretiminden çok, authority book, rehber kitap, lead magnet ve publish-ready non-fiction üretiminde güçlüdür.
+                Kitap Oluşturucu; uzmanlar, koçlar, eğitmenler, kurs üreticileri ve KDP yayıncıları için tasarlanmış çok dilli bir yapay zeka destekli kitap üretim sistemidir. Teknik dokümantasyon veya akademik tez üretiminden çok, uzmanlık kitabı, rehber kitap, müşteri çeken kısa kitap ve yayına hazır bilgi kitabı üretiminde güçlüdür.
               </p>
             </div>
           </div>
@@ -219,7 +207,7 @@ export default function UseCasesPage() {
                       </Link>
                     </div>
 
-                    {/* Benefits + quote */}
+                    {/* Benefits + outcome */}
                     <div className="space-y-6">
                       <ul className="space-y-3">
                         {segment.benefits.map((b) => (
@@ -231,12 +219,10 @@ export default function UseCasesPage() {
                       </ul>
                       <Card className="border-border/60 bg-muted/40">
                         <CardContent className="p-5">
-                          <Quote className="mb-2 size-5 text-muted-foreground/60" />
-                          <p className="text-sm italic leading-7 text-foreground">{segment.quote}</p>
-                          <div className="mt-3">
-                            <p className="text-sm font-medium text-foreground">{segment.quoteName}</p>
-                            <p className="text-xs text-muted-foreground">{segment.quoteRole}</p>
-                          </div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                            Tipik çıktı
+                          </p>
+                          <p className="mt-3 text-sm leading-7 text-foreground">{segment.outcome}</p>
                         </CardContent>
                       </Card>
                     </div>
@@ -249,13 +235,13 @@ export default function UseCasesPage() {
       </section>
 
       <MarketingCtaSection
-        title="Hangi segmentten olursan ol, başlangıç aynı."
-        description="14 gün ücretsiz dene. Kredi kartı yok, kurulum yok. İlk kitabın için brief oluştur ve nasıl çalıştığını gör."
+        title="Hangi segmentten olursan ol, ilk adım aynı ve ücretsiz."
+        description="Kredi kartı olmadan önizlemeyi gör. Konu özetini oluştur, bölüm planını gör — bu kitabın gerçekten çıkmaya değer olup olmadığını netleştir. 30 gün iade garantisi."
         items={[
-          "5 dakikada ilk brief",
-          "Anında outline üretimi",
+          "5 dakikada ilk konu özeti",
+          "Anında bölüm planı üretimi",
+          "Önce önizleme, sonra tam kitap",
           "EPUB/PDF çıktısı",
-          "14 gün ücretsiz",
         ]}
       />
       <script

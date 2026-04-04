@@ -23,9 +23,31 @@ import {
 
 import type { ExampleCardEntry } from "@/lib/examples-shared";
 import { ExampleCoverArtwork } from "@/components/site/example-cover-artwork";
+import { SITE_REAL_BOOKS, siteExampleAssetUrl, siteExamplePublicCoverUrl } from "@/lib/site-real-books";
 import { cn } from "@/lib/utils";
 
 // Shared decorative floating book mini cards for hero backgrounds
+const DECORATIVE_ACCENT_COVERS = [
+  "authority-in-100-pages",
+  "silent-offers",
+  "prompt-systems-for-small-teams",
+  "parent-friendly-stem-at-home",
+  "focus-by-design",
+  "quiet-leadership-for-remote-teams",
+  "uzmanligini-kitaba-donustur",
+  "tu-metodo-hecho-libro",
+] as const;
+
+function pickAccentCover(className: string, delay: number) {
+  const key = `${className}:${delay}`;
+  let hash = 0;
+  for (const character of key) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }
+  const slug = DECORATIVE_ACCENT_COVERS[hash % DECORATIVE_ACCENT_COVERS.length];
+  return siteExamplePublicCoverUrl(slug);
+}
+
 function FloatingBookAccent({
   gradient,
   className,
@@ -35,6 +57,7 @@ function FloatingBookAccent({
   className: string;
   delay?: number;
 }) {
+  const imageUrl = React.useMemo(() => pickAccentCover(className, delay), [className, delay]);
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
@@ -48,10 +71,15 @@ function FloatingBookAccent({
         "pointer-events-none absolute hidden overflow-hidden rounded-[14px] shadow-xl md:block",
         className,
       )}
-      style={{ background: gradient }}
+      style={{
+        backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.12)), url(${imageUrl}), ${gradient}`,
+        backgroundSize: "cover, cover, cover",
+        backgroundPosition: "center, center, center",
+      }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent" />
       <div className="absolute left-0 top-0 h-full w-1.5 bg-black/20" />
+      <div className="absolute inset-0 ring-1 ring-white/10" />
     </motion.div>
   );
 }
@@ -140,7 +168,7 @@ export const AboutPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Amacımız tek: daha az karmaşıkla daha fazla insanın gerçekten kitabını tamamlamasını sağlamak.
+          Amacımız tek: gereksiz karmaşıklığı kaldırıp, uzmanlığı olan herkesin gerçekten kitabını tamamlayabilmesini sağlamak.
         </motion.p>
 
         {/* Principles Grid */}
@@ -227,7 +255,7 @@ export const PricingPageHero = React.forwardRef<
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
           Ghostwriter yerine{" "}
-          <span className="text-primary">$4.</span>
+          <span className="text-primary">bu hafta kitabın elinde olsun.</span>
         </motion.h1>
 
         <motion.p
@@ -236,8 +264,7 @@ export const PricingPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Bir kitap için ajans $500–$5,000 alır. Book Generator ile aynı çıktıyı, kendi kontrolünde, tek seferlik $4&apos;e üretirsin.
-          Önce kitabını gör — beğenmezsen ödemezsin.
+          İlk kitap için $4 ile tam erişim aç. Düzenli üretim için aylık planlara geç. Önce preview&apos;ı gör, sonra karar ver.
         </motion.p>
 
         {/* Ghostwriter anchor karşılaştırması */}
@@ -249,12 +276,12 @@ export const PricingPageHero = React.forwardRef<
         >
           <div className="text-center">
             <p className="font-semibold text-muted-foreground line-through">$500–$5,000</p>
-            <p className="text-xs text-muted-foreground/60">Ajans / ghostwriter</p>
+            <p className="text-xs text-muted-foreground/60">Ajans / hayalet yazar</p>
           </div>
           <div className="h-8 w-px bg-border" />
           <div className="text-center">
             <p className="font-semibold text-primary">$4</p>
-            <p className="text-xs text-muted-foreground/60">Book Generator</p>
+            <p className="text-xs text-muted-foreground/60">Kitap Oluşturucu</p>
           </div>
         </motion.div>
 
@@ -267,8 +294,8 @@ export const PricingPageHero = React.forwardRef<
         >
           {[
             { icon: Shield, text: "30 Gün İade Garantisi" },
-            { icon: CheckCircle2, text: "İstediğin Zaman İptal" },
-            { icon: Zap, text: "Anında Erişim" },
+            { icon: CheckCircle2, text: "Önce Önizleme Gör" },
+            { icon: Zap, text: "Tek Kitap için $4" },
             { icon: BookOpen, text: "Kredi Kartı Gerekmez" },
           ].map((badge, index) => (
             <motion.div
@@ -312,39 +339,26 @@ export const ExamplesPageHero = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const { items, ...rest } = props;
   const fallbackExamples: HeroExampleCard[] = [
-    {
-      slug: "example-one",
-      title: "Practical Prompting",
-      category: "Rehber Kitap",
-      coverGradient: "linear-gradient(135deg,#c96442,#8e4a30)",
-      spineColor: "#8e4a30",
-      textAccent: "#fff8ef",
-      coverImages: { primaryUrl: undefined, fallbackUrl: undefined, backUrl: undefined },
-      brandingMark: "PP",
-      language: "English",
-    },
-    {
-      slug: "example-two",
-      title: "Niche Offer OS",
-      category: "Business",
-      coverGradient: "linear-gradient(135deg,#312e81,#4338ca)",
-      spineColor: "#4338ca",
-      textAccent: "#f8f8ff",
-      coverImages: { primaryUrl: undefined, fallbackUrl: undefined, backUrl: undefined },
-      brandingMark: "NO",
-      language: "English",
-    },
-    {
-      slug: "example-three",
-      title: "Coaching Program",
-      category: "Uzmanlık",
-      coverGradient: "linear-gradient(135deg,#14532d,#15803d)",
-      spineColor: "#15803d",
-      textAccent: "#f3fff6",
-      coverImages: { primaryUrl: undefined, fallbackUrl: undefined, backUrl: undefined },
-      brandingMark: "CP",
-      language: "Türkçe",
-    },
+    ...SITE_REAL_BOOKS.slice(0, 3).map((book) => ({
+      slug: book.slug,
+      title: book.title,
+      category: book.category,
+      coverGradient: `linear-gradient(135deg,${book.palette[0]},${book.palette[1]})`,
+      spineColor: book.palette[0],
+      textAccent: book.palette[2],
+      coverImages: {
+        primaryUrl: siteExamplePublicCoverUrl(book.slug),
+        fallbackUrl: undefined,
+        backUrl: siteExampleAssetUrl(book.slug, "back_cover_final.png"),
+      },
+      brandingMark: book.author
+        .split(" ")
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase(),
+      language: book.language,
+    })),
   ];
   const examples: HeroExampleCard[] =
     items?.slice(0, 3).length
@@ -499,8 +513,8 @@ export const HowItWorksPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Fikirden ilk EPUB&apos;a{" "}
-          <span className="text-primary">tek net yol.</span>
+          Boş sayfadan değil,{" "}
+          <span className="text-primary">yönlendirilmiş bir preview&apos;dan başlarsın.</span>
         </motion.h1>
 
         <motion.p
@@ -509,7 +523,7 @@ export const HowItWorksPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Önce yön, sonra yazı, sonra teslim. Her adım bir sonrakini hazırlar, hiçbir şey ayrı araçta kaybolmaz.
+          Önce konu, sonra outline, sonra preview. Her adımda ne olacağını bilerek ilerlersin.
         </motion.p>
 
         {/* Steps Timeline */}
@@ -651,7 +665,7 @@ export const ContactPageHero = React.forwardRef<
   const contactMethods = [
     { icon: MessageCircle, label: "Destek", description: "Kullanım ve teknik sorular" },
     { icon: Clock, label: "1 İş Günü", description: "Ortalama yanıt süresi" },
-    { icon: Shield, label: "Güvenli", description: "Verin bizimle güvende" },
+    { icon: Shield, label: "Güvenli", description: "Verileriniz bizimle güvende" },
   ];
 
   return (

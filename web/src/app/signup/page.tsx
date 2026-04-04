@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { AuthForm } from "@/components/forms/auth-form";
+import { LoginLogo } from "@/components/forms/login-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kayıt Ol | Book Generator",
-  description: "Book Generator hesabı oluştur, preview'ını kaydet ve kitap akışına devam et.",
+  title: "Kayıt Ol | Kitap Oluşturucu",
+  description: "Kitap Oluşturucu hesabı oluştur, ön izlemeni kaydet ve kitap akışına devam et.",
   path: "/signup",
   noIndex: true,
 });
@@ -20,12 +20,10 @@ export default function SignupPage() {
         <ThemeToggle />
       </div>
       <div className="w-full max-w-lg space-y-6">
-        <Link href="/" className="mx-auto flex w-fit items-center gap-3 text-sm font-medium text-foreground">
-          <span className="flex size-10 items-center justify-center rounded-2xl border border-border bg-card">
-            BG
-          </span>
-          <span>Book Generator</span>
-        </Link>
+        <LoginLogo />
+        <div className="text-center text-sm leading-7 text-muted-foreground">
+          Bu adım ödeme için değil. Hazırlanan kitabını hesabına kaydetmek ve önizleme hazır olduğunda aynı yerden devam etmek için.
+        </div>
         <AuthForm mode="register" />
       </div>
     </div>

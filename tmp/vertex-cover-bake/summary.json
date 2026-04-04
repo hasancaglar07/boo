@@ -1,0 +1,141 @@
+[
+  {
+    "prompt": "Business Authority",
+    "model": "Imagen 4 Fast",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/business-authority/imagen-4-fast.png",
+    "note": null
+  },
+  {
+    "prompt": "Business Authority",
+    "model": "Imagen 4 Standard",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/business-authority/imagen-4-standard.png",
+    "note": "```\n<a:premium_portrait_editorial_background_artwork_1:0>\n```\n\n**Description of Artwork:**\n\nThis premium portrait editorial background artwork embodies the themes of authority and specialization within a niche. It features a composition dominated by **sculptural monolith forms**, suggestive of foundational principles and significant structures. These forms are rendered with a **matte charcoal** finish, giving them a timeless and grounded appearance. Strategic **warm brass lighting** emanates from within and around the monoliths, casting long, dramatic shadows that enhance their three-dimensionality and create a sense of focused illumination, symbolizing insight and influence.\n\nThe entire scene is imbued with a subtle yet palpable **fine paper grain texture**, lending an artisanal and thoughtful quality to the artwork, reminiscent of quality printed materials. **Cinematic depth** is achieved through careful layering and atmospheric perspective, drawing the viewer into a carefully constructed space. The monoliths are positioned to create a clear visual path, implying a journey of building expertise.\n\nCrucially, the artwork incorporates **generous calm negative space** near the top and bottom. This expansive, uncluttered area is deliberately left blank to accommodate future typography, ensuring that any titles, author names, or other textual elements will be showcased without competing with the visual narrative. The overall mood is one of quiet strength, sophisticated clarity, and the solid foundation of established authority within a specialized field.\n\n**No text, words, letters, numbers, symbols, logos, or watermarks are present in the artwork.** It is a purely visual piece designed to serve as a high-quality, conceptual backdrop."
+  },
+  {
+    "prompt": "Business Authority",
+    "model": "Imagen 4 Ultra",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/business-authority/imagen-4-ultra.png",
+    "note": "A premium portrait editorial background artwork for a nonfiction business book about building authority in a niche. The artwork features an abstract arrangement of sculptural monolith forms made of matte charcoal material. Warm brass lighting emanates from behind and between the monoliths, casting long, dramatic shadows and creating a sense of depth and gravitas. The overall texture of the image suggests a fine paper grain, giving it a tactile, sophisticated feel. The composition includes generous, calm negative space near the top and bottom, ideal for later typography. The cinematic depth is achieved through the interplay of light and shadow, and the arrangement of the forms. There is no visible text, symbols, logos, or watermarks within the artwork."
+  },
+  {
+    "prompt": "Business Authority",
+    "model": "Gemini 2.5 Flash Image",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/business-authority/gemini-2-5-flash-image.png",
+    "note": null
+  },
+  {
+    "prompt": "AI & Systems",
+    "model": "Imagen 4 Fast",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/ai-systems/imagen-4-fast.png",
+    "note": null
+  },
+  {
+    "prompt": "AI & Systems",
+    "model": "Imagen 4 Standard",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/ai-systems/imagen-4-standard.png",
+    "note": "```\n<still image>\n\n**Image Description:**\n\nA sophisticated and abstract digital background, layered and textured, designed for a premium editorial portrait. The overall impression is one of complex yet organized data, with a clean and professional aesthetic.\n\n**Core Elements:**\n\n*   **Layered Signal Grids:** Dominant in the background, these are not uniform but subtly varied. Imagine multiple overlapping grids, each with slightly different densities and patterns of lines (thin, glowing, almost imperceptibly broken). Some lines are perfectly straight, others have a very slight, almost organic undulation, hinting at dynamic processes. These grids recede into depth, creating a sense of infinite data space.\n*   **Midnight Navy Structure:** The foundational color palette is deep and rich. Midnight navy provides a calming, intellectual base. This isn't a flat color; within the navy, there are subtle textural variations – perhaps a very fine, almost imperceptible metallic sheen, or a slightly coarser, woven-like texture in certain areas, adding depth and tactility without being distracting.\n*   **Amber Light Traces:** Streaks and washes of warm amber light traverse the signal grids. These aren't harsh beams but soft, ethereal glows that appear to move and flow. They represent data flow or processing, creating visual interest and warmth against the cool navy. Some traces might be thin, like a single thread of light, while others are wider and more diffuse, illuminating larger sections of the grids.\n*   **Clean Interface Depth:** The composition creates a sense of spatial depth through carefully considered layering and atmospheric perspective. Elements in the foreground are slightly sharper, while those receding into the background become softer and more diffuse. There are no explicit interface elements like buttons or menus, but the overall feel is reminiscent of a high-tech display. Imagine a very slight, almost imperceptible blur or atmospheric haze in the deepest background layers.\n*   **Refined Texture:** Beyond the grid lines and base colors, subtle textures are woven throughout. This could include a very fine grain overlay, a hint of brushed metal effect on some darker structural elements, or a barely-there pixelated pattern integrated into the deeper grids. These textures are not aggressive but add to the premium, tactile feel.\n*   **Quiet Negative Space:** Crucially, a significant portion of the image, likely in the upper right or left quadrant, is left intentionally uncluttered. This area features a more open, softer gradient of the midnight navy, with only a very sparse presence of the signal grids or amber traces. This \"quiet\" zone is perfectly suited for overlaying typography, ensuring readability and focus on the editorial content.\n\n**Overall Impression:**\n\nThe image conveys intelligence, complexity, and thoughtful design. It feels both futuristic and grounded, providing a sophisticated backdrop that speaks to the intricacies of AI systems and workflow design without being overtly literal or distracting. The balance of light, shadow, and refined texture creates a premium, editorial aesthetic."
+  },
+  {
+    "prompt": "AI & Systems",
+    "model": "Imagen 4 Ultra",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/ai-systems/imagen-4-ultra.png",
+    "note": "A high-end portrait editorial background artwork for a nonfiction book. The artwork features abstract, layered signal grids, structured in a sophisticated midnight navy. Interspersed within the grids are subtle, elegant amber light traces that suggest data flow and connectivity. The composition incorporates elements of a clean interface, providing a sense of depth and advanced technology without being overly busy. Refined textures are visible throughout the structure, adding tactile quality. Significant quiet negative space is intentionally left on the left side, designed for future typography placement. No text or symbols of any kind are visible in the artwork."
+  },
+  {
+    "prompt": "AI & Systems",
+    "model": "Gemini 2.5 Flash Image",
+    "status": 200,
+    "path": null,
+    "note": null,
+    "body": {
+      "promptFeedback": {
+        "blockReason": "SAFETY",
+        "blockReasonMessage": "The prompt is blocked due to safety"
+      },
+      "usageMetadata": {
+        "promptTokenCount": 71,
+        "totalTokenCount": 71,
+        "trafficType": "ON_DEMAND",
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 71
+          }
+        ]
+      },
+      "modelVersion": "gemini-2.5-flash-image",
+      "createTime": "2026-04-02T10:07:52.698452Z",
+      "responseId": "-D_OadTQKuS9nvgPwPbbgAY"
+    }
+  },
+  {
+    "prompt": "Adult Education",
+    "model": "Imagen 4 Fast",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/adult-education/imagen-4-fast.png",
+    "note": null
+  },
+  {
+    "prompt": "Adult Education",
+    "model": "Imagen 4 Standard",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/adult-education/imagen-4-standard.png",
+    "note": "```\nA premium, approachable editorial background for an education book. The scene is bathed in soft daylight, creating a warm and inviting atmosphere. In the foreground, a gentle curve of warm ivory paper arcs across the bottom of the frame, providing a tactile, grounded element.  Above it, coral-colored paper shapes form elegant, soft arcs that loosely resemble orbits, suggesting the interconnectedness of STEM concepts. These orbital forms are composed of several slightly overlapping, subtly textured coral pieces, giving them depth and a handcrafted feel.  Scattered within these orbital paths are simple, rounded educational forms – think very abstract, clean spheres and perhaps a slightly elongated capsule shape, all in muted, complementary tones of ivory, pale peach, and a hint of dusty rose, designed to evoke scientific and mathematical concepts without being literal.\n\nThese elements are arranged with a clear sense of balance and flow, drawing the eye gently through the composition. The overall impression is one of learning as an exploration. Crucially, ample negative space is left on the right side of the frame, a clean, softly lit area of warm ivory, perfect for later typography. The background remains out of focus to ensure the focus is on the paper and abstract forms, yet maintains a pleasant softness and luminosity. There is no visible text, no numbers, no symbols, no logos, no watermark.\n```"
+  },
+  {
+    "prompt": "Adult Education",
+    "model": "Imagen 4 Ultra",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/adult-education/imagen-4-ultra.png",
+    "note": "A premium portrait editorial background artwork for an education book, featuring orbit-like educational forms and tactile paper arcs. The color palette is dominated by warm ivory and coral accents, with soft daylight casting gentle shadows and highlights. The composition is approachable and premium, with ample clear negative space for typography. The orbit-like forms are stylized, resembling simplified atomic models or planetary orbits, rendered in smooth, muted tones. The tactile paper arcs are arranged dynamically, some curving gently and others intersecting, adding depth and texture. The lighting is soft and natural, suggesting a home environment, with warm glows and subtle shifts in light and shadow. The overall impression is one of modern learning and scientific discovery within a comfortable, accessible setting. No visible text, words, letters, numbers, symbols, logos, or watermarks are present in the artwork."
+  },
+  {
+    "prompt": "Adult Education",
+    "model": "Gemini 2.5 Flash Image",
+    "status": 429,
+    "path": null,
+    "note": null,
+    "body": {
+      "error": {
+        "code": 429,
+        "message": "Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.",
+        "status": "RESOURCE_EXHAUSTED"
+      }
+    }
+  },
+  {
+    "prompt": "Children Storyworld",
+    "model": "Imagen 4 Fast",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/children-storyworld/imagen-4-fast.png",
+    "note": null
+  },
+  {
+    "prompt": "Children Storyworld",
+    "model": "Imagen 4 Standard",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/children-storyworld/imagen-4-standard.png",
+    "note": "## Gentle Nighttime Adventure - Portrait Storybook Background\n\n**Image Description:**\n\nA vertical portrait-oriented illustration depicts a serene, whimsical nighttime forest scene. The overall color palette is dominated by soft blues, lavenders, and warm golden-orange glows, creating a comforting moonlit atmosphere.\n\nThe foreground is a gentle slope of rounded, mossy hillocks, depicted with subtle texture and shadows. Scattered throughout are a few plump, stylized mushrooms in warm earth tones (browns, deep oranges, reds), their caps slightly glowing as if reflecting the moonlight. A few playful, rounded stones sit nestled in the grass.\n\nIn the mid-ground, a cluster of trees with smooth, rounded trunks and soft, fluffy canopies rise gracefully. The tree trunks are a warm, dark brown, while their foliage is a blend of deep blues and purples, edged with a soft, ethereal glow that emanates from behind. The canopies are drawn with a gentle, flowing quality, suggesting a slight breeze. One or two friendly-looking fireflies, depicted as tiny, warm yellow specks with a faint glow, hover near the trees.\n\nA gentle, meandering path, made of soft, light-colored pebbles, winds its way through the mid-ground and towards the background. It's wide enough to easily accommodate a character and is intentionally left open and clear for future character placement.\n\nThe background features a larger, more stylized full moon, depicted as a soft, luminous circle of warm yellow and white. It emits a gentle glow that bathes the entire scene in its light. Below the moon, the tops of more distant, rounded trees can be seen, their forms slightly hazier and less detailed, creating a sense of depth. A hint of a twinkling star (a tiny white dot with a faint halo) is visible near the moon.\n\nThe overall artistic style is painterly and inviting, with soft brushstrokes and a sense of hand-drawn charm. The shapes are intentionally rounded and friendly, avoiding any sharp edges or menacing elements. The composition features ample open space, particularly in the lower and central areas, ensuring plenty of room for typography placement without obstructing key visual elements. The entire image has a dreamlike, comforting quality, perfect for a gentle bedtime story."
+  },
+  {
+    "prompt": "Children Storyworld",
+    "model": "Imagen 4 Ultra",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/children-storyworld/imagen-4-ultra.png",
+    "note": "A premium, storybook-style background artwork for a children's book, featuring a gentle nighttime adventure. The scene is rendered in portrait orientation with rounded, playful shapes throughout. A soft, warm moonlit glow illuminates a whimsical forest path. Illustrated depth is achieved through layers of friendly, rounded trees and bushes in varying shades of blue, green, and purple, receding into the background. A clear, open space occupies the central foreground, subtly lighter to accommodate typography. The overall atmosphere is friendly and inviting, with a focus on simple, clean lines and a harmonious color palette."
+  },
+  {
+    "prompt": "Children Storyworld",
+    "model": "Gemini 2.5 Flash Image",
+    "status": 200,
+    "path": "/mnt/c/Users/ihsan/Desktop/BOOK/tmp/vertex-cover-bake/children-storyworld/gemini-2-5-flash-image.png",
+    "note": null
+  }
+]

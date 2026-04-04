@@ -57,7 +57,13 @@ function primaryExport(book: ExampleCardEntry) {
 }
 
 function ShowcaseBookCover({ book, className, sizes, priority = false, compact = false }: ShowcaseBookCoverProps) {
-  const coverUrl = bookCoverUrl(book);
+  const primaryCoverUrl = book.coverImages.primaryUrl;
+  const fallbackCoverUrl = book.coverImages.fallbackUrl;
+  const [currentUrl, setCurrentUrl] = React.useState(primaryCoverUrl || fallbackCoverUrl || "");
+
+  React.useEffect(() => {
+    setCurrentUrl(primaryCoverUrl || fallbackCoverUrl || "");
+  }, [primaryCoverUrl, fallbackCoverUrl]);
 
   return (
     <div
@@ -67,19 +73,27 @@ function ShowcaseBookCover({ book, className, sizes, priority = false, compact =
       )}
       style={{ background: coverBackground(book.coverGradient) }}
     >
-      {coverUrl ? (
+      {currentUrl ? (
         <Image
-          src={coverUrl}
+          src={currentUrl}
           alt={book.title}
           fill
           priority={priority}
           className="object-cover"
           sizes={sizes}
+          unoptimized
+          onError={() => {
+            if (currentUrl === primaryCoverUrl && fallbackCoverUrl && fallbackCoverUrl !== primaryCoverUrl) {
+              setCurrentUrl(fallbackCoverUrl);
+              return;
+            }
+            setCurrentUrl("");
+          }}
         />
       ) : null}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),transparent_24%,transparent_72%,rgba(0,0,0,0.14))]" />
       <div className="pointer-events-none absolute inset-y-0 left-0 w-3 bg-black/14" />
-      {!coverUrl ? (
+      {!currentUrl ? (
         <div className="relative flex h-full flex-col justify-between p-4 text-white">
           <span className="inline-flex w-fit rounded-full bg-black/25 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-white/80">
             {book.language}
@@ -179,7 +193,7 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
             <span className="text-primary">bu sistemle çıkardığı kitaplar.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-8 text-muted-foreground">
-            Her biri brief → outline → EPUB akışından geçti. Sen de aynı akışla bu hafta başlayabilirsin.
+            Her biri konu özeti → bölüm planı → EPUB akışından geçti. Sen de aynı akışla bu hafta başlayabilirsin.
           </p>
         </motion.div>
 
@@ -364,7 +378,7 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
                       <Button asChild size="lg" variant="outline" className="min-w-[220px] flex-1">
                         <a href={exportAsset.url} target="_blank" rel="noreferrer">
                           <Download className="mr-2 h-4 w-4" />
-                          {exportAsset.label || "Örnek Export'u Aç"}
+                          {exportAsset.label || "Örnek Çıktıyı Aç"}
                         </a>
                       </Button>
                     ) : (
@@ -456,7 +470,7 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
           className="mt-14 text-center"
         >
           <p className="text-base leading-8 text-muted-foreground">
-            Gerçek kapakları, gerçek metadata'sı ve gerçek export dosyalarıyla{" "}
+            Gerçek kapakları, gerçek kitap bilgileri ve gerçek çıktı dosyalarıyla{" "}
             <span className="font-semibold text-foreground">yayına hazır kitapları</span>{" "}
             görüyorsun. Aynı akışla kendi kitabını bu hafta çıkarabilirsin.
           </p>

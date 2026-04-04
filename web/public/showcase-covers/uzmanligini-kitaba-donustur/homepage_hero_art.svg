@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1920" viewBox="0 0 1200 1920" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgb(110, 88, 55)" />
+      <stop offset="52%" stop-color="rgb(54, 37, 20)" />
+      <stop offset="100%" stop-color="rgb(14, 11, 11)" />
+    </linearGradient>
+    <radialGradient id="glow" cx="78%" cy="10%" r="60%">
+      <stop offset="0%" stop-color="rgba(255, 200, 114, 0.38)" />
+      <stop offset="100%" stop-color="rgba(255, 200, 114, 0)" />
+    </radialGradient>
+    <linearGradient id="veil" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(6,9,16,0.1)" />
+      <stop offset="60%" stop-color="rgba(5,8,14,0.04)" />
+      <stop offset="100%" stop-color="rgba(3,4,8,0.24)" />
+    </linearGradient>
+    <filter id="soft-shadow" x="-12%" y="-12%" width="128%" height="128%">
+      <feDropShadow dx="0" dy="26" stdDeviation="34" flood-color="rgba(1,4,10,0.42)" />
+    </filter>
+    <filter id="grain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="2" seed="8" />
+      <feColorMatrix type="saturate" values="0" />
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0 0 0.04" />
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="1200" height="1920" fill="url(#bg)" />
+  <rect width="1200" height="1920" fill="url(#glow)" />
+  
+    <g filter="url(#soft-shadow)">
+      <rect x="140" y="210" width="920" height="1400" rx="70" fill="rgba(0, 0, 0, 0.2)" />
+      <rect x="210" y="360" width="470" height="980" rx="42" fill="rgba(239, 230, 215, 0.9)" />
+      <rect x="266" y="430" width="358" height="836" rx="24" fill="rgba(251, 246, 238, 0.98)" />
+      <circle cx="814" cy="562" r="124" fill="rgba(210, 176, 106, 0.2)" />
+      <circle cx="814" cy="562" r="78" fill="rgba(239, 215, 160, 0.3)" />
+      <circle cx="814" cy="562" r="34" fill="rgba(170, 116, 72, 0.45)" />
+      <rect x="760" y="816" width="182" height="114" rx="26" fill="rgba(43, 37, 32, 0.72)" />
+      <rect x="786" y="848" width="130" height="16" rx="8" fill="rgba(241, 234, 223, 0.34)" />
+      <rect x="786" y="880" width="100" height="16" rx="8" fill="rgba(241, 234, 223, 0.24)" />
+      <rect x="736" y="1032" width="224" height="246" rx="32" fill="rgba(223, 207, 182, 0.2)" />
+      <path d="M736 1220C784 1160 850 1126 932 1118" stroke="rgba(240, 219, 175, 0.3)" stroke-width="12" fill="none" stroke-linecap="round" />
+      <path d="M300 1112C410 1060 520 1050 620 1082" stroke="rgba(209, 174, 107, 0.16)" stroke-width="10" fill="none" stroke-linecap="round" />
+    </g>
+  
+  <rect width="1200" height="1920" fill="url(#veil)" />
+  <rect width="1200" height="1920" filter="url(#grain)" opacity="0.55" />
+</svg>

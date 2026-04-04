@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   BookCopy,
@@ -13,24 +14,31 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  getSeededSiteBooks,
+  siteExamplePublicCoverUrl,
+} from "@/lib/site-real-books";
+import { KDP_GUARANTEE_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 const workspacePoints = [
   {
     icon: Target,
-    title: "Konu kararından outline'a dakikalar içinde",
+    title: "Konu kararından bölüm planına dakikalar içinde",
     description: "Başlık, alt başlık ve bölüm sırası aynı ekranda toplanır. Boş sayfada bekleme yok.",
   },
   {
     icon: Zap,
-    title: "Araştırma doğrudan yazım kararlarına bağlanır",
-    description: "KDP skoru, keyword önerileri ve konu uyumu outline ile birlikte görünür.",
+    title: "Araştırma, bölüm planını doğrudan besler",
+    description: "KDP skoru ve anahtar kelime önerileri bölüm planıyla aynı ekranda görünür — hangi konunun satacağını daha kitap yazılmadan anlarsın.",
   },
   {
     icon: Clock,
     title: "İlk taslaktan yayın dosyasına tek çalışma alanı",
-    description: "Kapak, export ve metadata kitap bazında organize edilir; başka panel gerekmez.",
+    description: "Kapak, çıktı ve kitap bilgileri kitap bazında organize edilir; başka panel gerekmez.",
   },
 ] as const;
+
+const workspaceAssetBooks = getSeededSiteBooks("home-workspace-cover-scene", 3);
 
 export function HomeWorkspaceShowcaseSection() {
   return (
@@ -38,13 +46,13 @@ export function HomeWorkspaceShowcaseSection() {
       <div className="shell grid items-center gap-12 lg:grid-cols-[0.88fr_1.12fr]">
         <div>
           <div className="inline-flex items-center rounded-full border border-border bg-card px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.2em] text-primary/80">
-            Workspace
+            Çalışma alanı
           </div>
           <h2 className="mt-5 max-w-xl text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
             Proje panosu: tüm kitapların tek ekranda.
           </h2>
           <p className="mt-5 max-w-xl text-pretty text-base leading-8 text-muted-foreground md:text-lg">
-            Aktif bölümler, tamamlananlar, export geçmişi ve bir sonraki adım — dağınık dosyalar yerine tek bakışta durumu görürsün.
+            Aktif bölümler, tamamlananlar, çıktı geçmişi ve bir sonraki adım: dağınık dosyalar yerine tek bakışta durumu görürsün.
           </p>
 
           <div className="mt-8 space-y-4">
@@ -74,7 +82,7 @@ export function HomeWorkspaceShowcaseSection() {
           </div>
 
           <p className="mt-3 text-xs text-muted-foreground/70">
-            Önce kitabını gör, sonra karar ver — kredi kartı gerekmez.
+            Kredi kartı gerekmez · Önce önizleme gör, sonra karar ver · {NO_API_COST_CLAIM} · {KDP_GUARANTEE_CLAIM}
           </p>
         </div>
 
@@ -105,7 +113,7 @@ export function HomeWorkspaceShowcaseSection() {
                     {[
                       "Başlık ve alt başlık",
                       "Kitap açıklaması",
-                      "Outline düzenleme",
+                      "Bölüm planı düzenleme",
                       "Bölüm sırası",
                     ].map((item, index) => (
                       <div
@@ -151,7 +159,7 @@ export function HomeWorkspaceShowcaseSection() {
                     Araştırma paneli
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {["KDP score", "Keyword", "Topic fit", "Low competition"].map((chip) => (
+                    {["KDP puanı", "Anahtar kelime", "Konu uyumu", "Düşük rekabet"].map((chip) => (
                       <span
                         key={chip}
                         className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground"
@@ -168,18 +176,26 @@ export function HomeWorkspaceShowcaseSection() {
                     Kapak ve varlıklar
                   </div>
                   <div className="mt-4 flex items-end justify-center gap-3 rounded-[24px] border border-border/70 bg-background px-4 py-5">
-                    {[
-                      ["Cover", "h-28"],
-                      ["Export", "h-36"],
-                      ["Back", "h-24"],
-                    ].map(([label, height], index) => (
+                    {workspaceAssetBooks.map((book, index) => (
                       <motion.div
-                        key={label}
+                        key={book.slug}
                         animate={{ y: [0, index === 1 ? -4 : 4, 0] }}
                         transition={{ duration: 4.5 + index, repeat: Infinity, ease: "easeInOut" }}
-                        className={`${height} w-20 rounded-t-[24px] bg-[linear-gradient(180deg,#d48a66,#8e4a30)] px-3 py-3 text-xs font-medium tracking-[0.16em] text-white shadow-lg`}
+                        className={`relative overflow-hidden rounded-[18px] border border-black/10 bg-stone-950 shadow-lg ${
+                          index === 1 ? "h-36 w-24" : "h-28 w-20"
+                        }`}
                       >
-                        {label}
+                        <Image
+                          src={siteExamplePublicCoverUrl(book.slug)}
+                          alt={`${book.title} kapağı`}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent_20%,transparent_80%,rgba(0,0,0,0.12))]" />
+                        <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full border border-white/18 bg-black/40 px-2 py-1 text-[10px] font-medium tracking-[0.16em] text-white backdrop-blur-sm">
+                          {index === 1 ? "Öne çıkan" : "Kapak"}
+                        </div>
                       </motion.div>
                     ))}
                   </div>

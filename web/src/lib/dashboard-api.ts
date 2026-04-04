@@ -29,6 +29,27 @@ export type CoverVariant = {
   provider?: string;
   template?: string;
   preferred_zone?: string;
+  render_mode?: string;
+  text_strategy?: string;
+  text_validation?: {
+    valid?: boolean;
+    ocrText?: string;
+    ocrFields?: {
+      title?: string;
+      subtitle?: string;
+      author?: string;
+      all_text?: string;
+    };
+    targets?: {
+      title?: string;
+      subtitle?: string;
+      author?: string;
+    };
+    prefixGuardFailed?: boolean;
+    titleScore?: number;
+    subtitleScore?: number;
+    authorScore?: number;
+  };
 };
 
 export type Chapter = {
@@ -98,6 +119,7 @@ export type Book = {
   recommended_cover_variant?: string;
   back_cover_variant_family?: string;
   cover_family?: string;
+  cover_text_strategy?: string;
   cover_branch?: string;
   cover_genre?: string;
   cover_subtopic?: string;

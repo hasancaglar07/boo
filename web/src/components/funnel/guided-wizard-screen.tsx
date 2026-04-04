@@ -86,7 +86,7 @@ const GENERATION_STAGES = [
   "Başlık ve outline kaydediliyor",
   "Önizleme bölümleri hazırlanıyor",
   "Kilitli bölümler düzenleniyor",
-  "Preview ekranı açılıyor",
+  "Ön izleme ekranı açılıyor",
 ] as const;
 
 const BOOK_TYPE_DESCRIPTIONS: Record<FunnelBookType, string> = {
@@ -118,12 +118,12 @@ const COVER_DESCRIPTIONS: Record<FunnelCoverDirection, string> = {
 };
 
 const RANDOM_COVER_BRIEFS = [
-  "Premium guide edition",
-  "Strategy • Systems • Clarity",
-  "Practical framework",
-  "Field guide edition",
-  "Build • Learn • Apply",
-  "Blueprint for growth",
+  "Özel rehber baskısı",
+  "Strateji • Sistem • Netlik",
+  "Uygulamalı çerçeve",
+  "Saha rehberi baskısı",
+  "Kur • Öğren • Uygula",
+  "Büyüme planı",
 ] as const;
 
 const STYLE_COPY_BY_LANGUAGE: Partial<
@@ -742,7 +742,7 @@ export function GuidedWizardScreen({
       ...stored,
       currentStep: step,
       authorName: stored.authorName || account.name || "",
-      imprint: stored.imprint || "Book Generator",
+      imprint: stored.imprint || "Kitap Oluşturucu",
     };
     setDraft(nextDraft);
     saveFunnelDraft(nextDraft);
@@ -1028,7 +1028,7 @@ export function GuidedWizardScreen({
     updateDraft({
       ...style,
       authorName: forceReplace ? localized.authorName : draft.authorName || getAccount().name || localized.authorName,
-      imprint: forceReplace ? preset.imprint : draft.imprint && draft.imprint !== "Book Generator" ? draft.imprint : preset.imprint,
+      imprint: forceReplace ? preset.imprint : draft.imprint && draft.imprint !== "Kitap Oluşturucu" ? draft.imprint : preset.imprint,
       logoText: forceReplace ? preset.mark : draft.logoText || preset.mark,
       logoUrl: forceReplace ? preset.url : draft.logoUrl || preset.url,
       coverBrief: forceReplace ? localized.coverBrief : draft.coverBrief || localized.coverBrief || randomCoverBrief(),
@@ -1199,7 +1199,7 @@ export function GuidedWizardScreen({
   if (step === "topic") {
     return wrapInShell({
       title: "Kitabın konusu ne?",
-      description: "Bir fikir yazman yeterli. Bu adımdan sonra başlık, outline ve preview akışı onun etrafında kurulur.",
+      description: "1/5. Bir fikir yazman yeterli. Bu adım bittiğinde başlık önerileri ve kitap yönü görünür hale gelir.",
       children: (
         <div className="space-y-8">
           <div className="grid gap-3 md:grid-cols-3">
@@ -1216,7 +1216,7 @@ export function GuidedWizardScreen({
                 Sonraki çıktı
               </div>
               <div className="mt-2 text-sm leading-6 text-foreground">
-                Başlık önerileri ve bölüm planı otomatik gelir, istersen elle düzenlersin.
+                Başlık önerileri ve bölüm planı otomatik gelir. İstersen düzenler, istersen olduğu gibi ilerlersin.
               </div>
             </div>
             <div className="rounded-[20px] border border-primary/20 bg-primary/5 px-4 py-4">
@@ -1224,7 +1224,7 @@ export function GuidedWizardScreen({
                 Hedef
               </div>
               <div className="mt-2 text-sm leading-6 text-foreground">
-                Preview'ı hızlı gösterip tam kitabı unlock etmeye değer olup olmadığını netleştirmek.
+                Önce ön izlemeyi gösterip bu kitabı gerçekten çıkarmaya değer olup olmadığını hızla netleştirmek.
               </div>
             </div>
           </div>
@@ -1280,7 +1280,7 @@ export function GuidedWizardScreen({
 
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <Button size="lg" onClick={goNext}>
-              Devam Et
+              Başlık Önerilerine Geç
             </Button>
             <Button
               variant="outline"
@@ -1304,7 +1304,7 @@ export function GuidedWizardScreen({
   if (step === "title") {
     return wrapInShell({
       title: "Başlık ve alt başlık",
-      description: "Kendin yaz ya da AI’dan öneri al.",
+      description: "2/5. Kendin yaz ya da AI'dan öneri al. Bu adım bittiğinde kitap adı ve positioning netleşir.",
       children: (
         <div className="space-y-8">
           {!appShellEnabled ? <LiveBookCard draft={draft} /> : null}
@@ -1380,7 +1380,7 @@ export function GuidedWizardScreen({
               Geri
             </Button>
             <Button size="lg" onClick={goNext}>
-              Bölümleri Kur
+              Bölüm Planını Oluştur
             </Button>
           </div>
         </div>
@@ -1392,7 +1392,7 @@ export function GuidedWizardScreen({
   if (step === "outline") {
     return wrapInShell({
       title: "Bölüm planı",
-      description: "AI ile otomatik oluştur ya da kendin düzenle. En az 3 bölüm gerekli, ama hepsi aynı ritimde olmak zorunda değil.",
+      description: "3/5. AI ile otomatik oluştur ya da kendin düzenle. Bu adım bittiğinde kitabın omurgası görünür olur.",
       children: (
         <div className="space-y-6">
           <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
@@ -1421,12 +1421,12 @@ export function GuidedWizardScreen({
                 {formatWordCount(outlineWordEstimate.min)}-{formatWordCount(outlineWordEstimate.max)}
               </div>
               <div className="mt-2 text-sm leading-6 text-muted-foreground">
-                {isTurkishLanguage(draft.language) ? "kelime" : "words"}
+                kelime
               </div>
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
                 {isTurkishLanguage(draft.language)
                   ? "Bu sayı bölüm rollerine göre esnek dağılır; tüm bölümlerin aynı kelime bandında gitmesi hedeflenmez."
-                  : "This estimate flexes by chapter role; the plan avoids forcing every chapter into the same band."}
+                  : "Bu tahmin bölüm rollerine göre esnek dağılır; her bölümün aynı kelime aralığında gitmesi beklenmez."}
               </p>
             </div>
           </div>
@@ -1445,7 +1445,7 @@ export function GuidedWizardScreen({
                     ...draft.outline,
                     {
                       title: defaultChapterReference(draft.language, draft.outline.length + 1),
-                      summary: isTurkishLanguage(draft.language) ? "Bu bölümün kısa amacı." : "Short purpose of this section.",
+                      summary: isTurkishLanguage(draft.language) ? "Bu bölümün kısa amacı." : "Bu bölümün kısa amacı.",
                       role: "core",
                       length: draft.bookLength === "extended" ? "long" : "medium",
                     },
@@ -1525,7 +1525,7 @@ export function GuidedWizardScreen({
                     <div className="rounded-[16px] border border-border/60 bg-background/70 px-3 py-2">
                       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                         {formatWordCount(chapterWordRange(item.length, draft.bookLength).min)}-{formatWordCount(chapterWordRange(item.length, draft.bookLength).max)}{" "}
-                        {isTurkishLanguage(draft.language) ? "kelime" : "words"}
+                        kelime
                       </div>
                       <div className="mt-1 text-xs leading-5 text-muted-foreground">
                         {chapterRoleDescription(item.role, draft.language)}
@@ -1563,7 +1563,7 @@ export function GuidedWizardScreen({
               Geri
             </Button>
             <Button size="lg" onClick={goNext}>
-              Stili Seç
+              Stil ve Kapak Yönünü Seç
             </Button>
           </div>
         </div>
@@ -1575,7 +1575,7 @@ export function GuidedWizardScreen({
   if (step === "style") {
     return wrapInShell({
       title: "Dil ve stil",
-      description: "Bu ekran otomatik doldu. İstersen dili, markayı ve kapağın genel hissini burada değiştir.",
+      description: "4/5. Bu ekran otomatik doldu. Dili, markayı ve kapağın genel hissini seç; sonraki adımda ön izleme üretimi başlar.",
       children: (
         <div className="space-y-8">
           {!appShellEnabled ? <LiveBookCard draft={draft} /> : null}
@@ -1585,7 +1585,7 @@ export function GuidedWizardScreen({
               <div>
                 <div className="text-[15px] font-semibold text-foreground">AI stil paketi</div>
                 <div className="mt-1.5 text-sm leading-6 text-muted-foreground">
-                  Seçtiğin dile göre yazar adı, imprint, wordmark, kapak vurgu metni ve kısa biyografiyi otomatik üret.
+                  Seçtiğin dile göre yazar adı, yayınevi adı, logo metni, kapak vurgu metni ve kısa biyografiyi otomatik üret.
                 </div>
               </div>
               <Button size="sm" variant="outline" onClick={handleStyleAi} isLoading={aiLoading === "style"}>
@@ -1627,22 +1627,22 @@ export function GuidedWizardScreen({
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="imprint" className="text-sm font-semibold text-foreground">İmprint / yayınevi</label>
+              <label htmlFor="imprint" className="text-sm font-semibold text-foreground">Yayınevi adı</label>
               <Input
                 id="imprint"
                 value={draft.imprint}
                 onChange={(event) => updateDraft({ imprint: event.target.value })}
-                placeholder="örnek: North Peak Books"
+                placeholder="örnek: Kuzey Işık Yayınları"
                 className="h-11"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="logo-text" className="text-sm font-semibold text-foreground">Logo / wordmark metni</label>
+              <label htmlFor="logo-text" className="text-sm font-semibold text-foreground">Logo metni</label>
               <Input
                 id="logo-text"
                 value={draft.logoText}
                 onChange={(event) => updateDraft({ logoText: event.target.value })}
-                placeholder="örnek: IY Studio"
+                placeholder="örnek: İY Atölye"
                 className="h-11"
               />
             </div>
@@ -1652,12 +1652,12 @@ export function GuidedWizardScreen({
                 id="cover-brief"
                 value={draft.coverBrief}
                 onChange={(event) => updateDraft({ coverBrief: event.target.value })}
-                placeholder="örnek: Survival • Build • Explore"
+                placeholder="örnek: Güçlen • Kur • İlerle"
                 className="h-11"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="logo-url" className="text-sm font-semibold text-foreground">İstersen logo URL de ekleyebilirsin</label>
+              <label htmlFor="logo-url" className="text-sm font-semibold text-foreground">İstersen logo bağlantısı da ekleyebilirsin</label>
               <Input
                 id="logo-url"
                 value={draft.logoUrl.startsWith("data:image/") ? "" : draft.logoUrl}
@@ -1685,7 +1685,7 @@ export function GuidedWizardScreen({
               <div>
                 <div className="text-[15px] font-semibold text-foreground">Yayın evi logosu</div>
                 <div className="mt-1 text-sm leading-6 text-muted-foreground">
-                  Hazır yayın evi wordmark’larından birini seçebilir ya da kendi logonu yükleyebilirsin.
+                  Hazır yayınevi logolarından birini seçebilir ya da kendi logonu yükleyebilirsin.
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -1820,7 +1820,7 @@ export function GuidedWizardScreen({
               Geri
             </Button>
             <Button size="lg" onClick={goNext}>
-              Önizlemeyi Hazırla
+              Ön İzlemeyi Hazırla
             </Button>
           </div>
         </div>
@@ -1830,15 +1830,15 @@ export function GuidedWizardScreen({
 
   // ── GENERATE ───────────────────────────────────────────────────────────────
   return wrapInShell({
-    title: "Önizlemeyi başlat",
+    title: "Ön izlemeyi başlat",
     description: appShellEnabled
-      ? "Kitap vitrini tek akışta hazırlanır. Kapak ve ilk okunabilir bölüm arka planda canlı üretime girer."
-      : "Preview kaybolmasın diye bu aşamada hesabına bağlarız. Kitap doğrudan kütüphanene kaydolur ve üretim arka planda devam eder.",
+      ? "5/5. Kitap vitrini tek akışta hazırlanır. Kapak ve ilk okunabilir bölüm arka planda canlı üretime girer."
+      : "5/5. Ön izleme kaybolmasın diye bu aşamada hesabına bağlarız. Kitap doğrudan kütüphanene kaydolur ve üretim arka planda devam eder.",
     children: (
       aiLoading === "generate" ? (
         <GenerateLoadingScreen redirectPath={pendingRedirect || undefined} />
       ) : (
-        <div className="mx-auto max-w-3xl space-y-5">
+        <div className="mx-auto max-w-2xl space-y-5">
           <GenerateAuthGateDialog
             open={authGateOpen}
             onOpenChange={handleAuthGateOpenChange}
@@ -1847,44 +1847,59 @@ export function GuidedWizardScreen({
             onAuthenticated={() => requestGenerate("inline_auth")}
           />
 
-          <div className="rounded-[24px] border border-border/80 bg-background/72 p-6">
-            <div className="mb-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[18px] border border-border/80 bg-card px-4 py-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">1. önce</div>
-                <div className="mt-2 text-sm leading-6 text-foreground">Kapak ve preview hazırlanır.</div>
-              </div>
-              <div className="rounded-[18px] border border-border/80 bg-card px-4 py-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">2. sonra</div>
-                <div className="mt-2 text-sm leading-6 text-foreground">Değeri görür, düzenler ve karar verirsin.</div>
-              </div>
-              <div className="rounded-[18px] border border-primary/20 bg-primary/5 px-4 py-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">3. unlock</div>
-                <div className="mt-2 text-sm leading-6 text-foreground">Tam kitap, PDF ve EPUB daha sonra açılır.</div>
-              </div>
+          <div className="rounded-[24px] border border-border/80 bg-background/72 p-5 sm:p-6">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Son kontrol
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[18px] border border-border/80 bg-card px-4 py-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Başlık</div>
-                <div className="mt-2 text-lg font-semibold text-foreground">{draft.title}</div>
-              </div>
-              <div className="rounded-[18px] border border-border/80 bg-card px-4 py-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Dil</div>
-                <div className="mt-2 text-lg font-semibold text-foreground">{languageLabel(draft.language)}</div>
-              </div>
-              <div className="rounded-[18px] border border-border/80 bg-card px-4 py-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Bölüm sayısı</div>
-                <div className="mt-2 text-lg font-semibold text-foreground">{draft.outline.length} bölüm</div>
-              </div>
-              <div className="rounded-[18px] border border-border/80 bg-card px-4 py-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Branding</div>
-                <div className="mt-2 text-lg font-semibold text-foreground">{draft.imprint || draft.logoText || "Hazır"}</div>
-              </div>
+            <div className="mt-3">
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[30px]">
+                {draft.title}
+              </h2>
+              {draft.subtitle ? (
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                  {draft.subtitle}
+                </p>
+              ) : null}
             </div>
-            <div className="mt-5 rounded-[18px] border border-border/80 bg-card px-4 py-4 text-sm leading-7 text-muted-foreground">
-              {appShellEnabled
-                ? "Generate'a bastığında kitap aynı hesabın altında kaydedilir. İlk okunabilir bölüm gelir gelmez preview açılır; tam kitap ve export daha sonra unlock edilir."
-                : "Önce hesabını oluşturur veya giriş yaparsın. Bunun amacı preview'ı ve kitabını kaybetmemen. Sonra üretim başlar ve preview hazır olunca doğrudan kitabına dönersin."}
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border border-border/80 bg-card px-3 py-1.5 text-sm text-foreground">
+                {languageLabel(draft.language)}
+              </span>
+              <span className="rounded-full border border-border/80 bg-card px-3 py-1.5 text-sm text-foreground">
+                {draft.outline.length} bölüm
+              </span>
+              <span className="rounded-full border border-border/80 bg-card px-3 py-1.5 text-sm text-foreground">
+                {draft.imprint || draft.logoText || "Kitap Oluşturucu"}
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-3 border-t border-border/70 pt-5">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 rounded-full bg-primary/10 p-1 text-primary">
+                  <Check className="size-3.5" />
+                </div>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Ön izleme üretimi hemen başlar. Kapak, başlık vitrini ve ilk okunabilir bölüm arka planda hazırlanır.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-1 rounded-full bg-primary/10 p-1 text-primary">
+                  <Check className="size-3.5" />
+                </div>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Kitap hesabına kaydolur. Hazır olduğunda kütüphanende aynı yerden devam edersin.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-1 rounded-full bg-primary/10 p-1 text-primary">
+                  <Check className="size-3.5" />
+                </div>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Tam kitap, PDF ve EPUB daha sonra açılır. Bu adım yalnızca ön izleme üretimini başlatır; ödeme istemez.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -1899,7 +1914,7 @@ export function GuidedWizardScreen({
               Geri
             </Button>
             <Button size="lg" onClick={() => void requestGenerate()}>
-              {appShellEnabled ? "Önizlemeyi Oluştur" : "Hesabını Oluştur ve Önizlemeyi Başlat"}
+              {appShellEnabled ? "Ön İzlemeyi Oluştur" : "Hesabını Oluştur ve Ön İzlemeyi Başlat"}
             </Button>
             <Button
               variant="outline"
@@ -1914,8 +1929,8 @@ export function GuidedWizardScreen({
           </div>
           <p className="text-xs text-muted-foreground/70">
             {appShellEnabled
-              ? "Aynı hesapta devam et · Önce preview gör · Tam kitabı sonra unlock et"
-              : "Hesabına bağlanır · Preview kaybolmaz · Hazır olunca doğrudan geri dönersin"}
+              ? "Aynı hesapta devam et · Önce ön izlemeyi gör · Tam kitabı sonra aç"
+              : "Bu adım ödeme istemez · Kitap hesabına yazılır · Hazır olunca kütüphanende görünür"}
           </p>
         </div>
       )

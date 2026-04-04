@@ -16,13 +16,13 @@ const overviewItems = [
   {
     title: "Boş sayfada kalmak yok",
     description:
-      "Konu, hedef okur ve vaadi tek brief içinde topla. Sistem başlık, bölüm omurgası ve yayın yönünü saniyeler içinde önerir.",
+      "Konu, hedef okur ve vaadi tek konu özetinde topla. Sistem başlık, bölüm omurgası ve yayın yönünü saniyeler içinde önerir.",
     icon: SearchCheck,
   },
   {
     title: "Dağınık araç zinciri yok",
     description:
-      "Brief → outline → bölüm yazımı → kapak → export. Her adım birbirine bağlı, hiçbiri ayrı bir araçta kaybolmuyor.",
+      "Konu özeti → bölüm planı → bölüm yazımı → kapak → çıktı. Her adım birbirine bağlı, hiçbiri ayrı bir araçta kaybolmuyor.",
     icon: MessageSquareText,
   },
   {
@@ -93,13 +93,13 @@ export function HomeProductOverviewSection() {
           <div className="grid gap-4 lg:grid-cols-[260px_1fr_220px]">
             <div className="space-y-3 rounded-[28px] border border-white/8 bg-black/18 p-4">
               <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400">
-                Input
+                Girdi
               </div>
               {[
                 ["Kitap tipi", "Pratik rehber"],
                 ["Konu", "Email ile müşteri alma"],
                 ["Okur", "Solo danışmanlar"],
-                ["Dil", "English"],
+                ["Dil", "İngilizce"],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3">
                   <div className="text-[11px] uppercase tracking-[0.15em] text-stone-500">{label}</div>
@@ -126,7 +126,7 @@ export function HomeProductOverviewSection() {
                 <div className="rounded-[26px] border border-white/8 bg-white/4 p-5">
                   <div className="flex items-center gap-2 text-sm font-medium text-white">
                     <Sparkles className="size-4 text-[#f0a27f]" />
-                    AI kitap yönü
+                    Yapay zeka kitap yönü
                   </div>
                   <h3 className="mt-4 text-3xl font-semibold tracking-tight text-white">
                     Inbox to Income
@@ -178,7 +178,7 @@ export function HomeProductOverviewSection() {
                       Sistem notu
                     </div>
                     <p className="mt-3 text-sm leading-7 text-stone-300">
-                      Aynı brief ile kitap açıklaması, bölüm yapısı ve yazım sırası birlikte kurulur.
+                      Aynı konu özeti ile kitap açıklaması, bölüm yapısı ve yazım sırası birlikte kurulur.
                     </p>
                   </div>
                 </div>

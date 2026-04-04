@@ -3,21 +3,26 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Bell,
   BookOpen,
   ChevronLeft,
   ChevronRight,
   CreditCard,
   FileClock,
+  FileText,
   Flag,
   LayoutDashboard,
+  LogOut,
   Menu,
+  Receipt,
   Search,
   Settings2,
+  Share2,
   ShieldCheck,
+  ToggleLeft,
   Users,
   X,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -26,12 +31,15 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/books", label: "Books", icon: BookOpen },
-  { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { href: "/admin/subscriptions", label: "Subscriptions", icon: Receipt },
   { href: "/admin/billing", label: "Billing", icon: CreditCard },
+  { href: "/admin/referrals", label: "Referrals", icon: Share2 },
   { href: "/admin/analytics", label: "Analytics", icon: Search },
+  { href: "/admin/reports", label: "Reports", icon: FileText },
   { href: "/admin/jobs", label: "Jobs", icon: FileClock },
   { href: "/admin/audit", label: "Audit", icon: ShieldCheck },
   { href: "/admin/moderation", label: "Moderation", icon: Flag },
+  { href: "/admin/feature-flags", label: "Feature Flags", icon: ToggleLeft },
   { href: "/admin/settings", label: "Settings", icon: Settings2 },
 ] as const;
 
@@ -89,10 +97,16 @@ export function AdminShell({
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const title = useMemo(
-    () => NAV_ITEMS.find((item) => item.href === pathname)?.label || "Admin",
-    [pathname],
-  );
+  const title = useMemo(() => {
+    const match = [...NAV_ITEMS]
+      .filter(
+        (item) =>
+          item.href === pathname ||
+          (item.href !== "/admin" && pathname.startsWith(`${item.href}/`)),
+      )
+      .sort((a, b) => b.href.length - a.href.length)[0];
+    return match?.label || "Admin";
+  }, [pathname]);
 
   return (
     <div className="admin-root admin-shell">
@@ -135,7 +149,10 @@ export function AdminShell({
         <nav className="admin-scrollbar flex-1 overflow-y-auto px-3 py-2">
           <div className="space-y-1">
             {NAV_ITEMS.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const active =
+                item.href === "/admin"
+                  ? pathname === "/admin"
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
               return (
                 <Link
@@ -160,12 +177,32 @@ export function AdminShell({
 
         <div className="border-t border-white/10 px-4 py-4 text-xs text-white/70">
           {!collapsed ? (
-            <>
-              <div className="font-semibold text-white">{user.name || user.email || "Admin"}</div>
-              <div className="mt-1">{user.role}</div>
-            </>
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="truncate font-semibold text-white">{user.name || user.email || "Admin"}</div>
+                <div className="mt-0.5 truncate">{user.role}</div>
+              </div>
+              <button
+                type="button"
+                title="Çıkış yap"
+                onClick={() => void signOut({ callbackUrl: "/login" })}
+                className="flex shrink-0 items-center justify-center rounded-xl border border-white/10 p-2 text-white/60 transition hover:border-white/20 hover:text-white"
+              >
+                <LogOut className="size-4" />
+              </button>
+            </div>
           ) : (
-            <div className="text-center font-semibold text-white">{user.role.slice(0, 1)}</div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="text-center font-semibold text-white">{user.role.slice(0, 1)}</div>
+              <button
+                type="button"
+                title="Çıkış yap"
+                onClick={() => void signOut({ callbackUrl: "/login" })}
+                className="flex items-center justify-center rounded-xl border border-white/10 p-2 text-white/60 transition hover:border-white/20 hover:text-white"
+              >
+                <LogOut className="size-4" />
+              </button>
+            </div>
           )}
         </div>
       </aside>
@@ -189,12 +226,6 @@ export function AdminShell({
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
               <GlobalSearch />
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  className="inline-flex size-11 items-center justify-center rounded-2xl border border-[color:var(--admin-border)] bg-white/60 text-[color:var(--admin-text)] dark:bg-white/5"
-                >
-                  <Bell className="size-4" />
-                </button>
                 <div className="rounded-2xl border border-[color:var(--admin-border)] bg-white/60 px-4 py-2 text-sm dark:bg-white/5">
                   <div className="font-semibold text-[color:var(--admin-text)]">{user.name || "Admin"}</div>
                   <div className="admin-muted text-xs">{user.email}</div>

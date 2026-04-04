@@ -4,7 +4,10 @@ import Script from "next/script";
 
 import { AuthStateHydrator } from "@/components/auth/auth-state-hydrator";
 import { ChunkLoadRecovery } from "@/components/app/chunk-load-recovery";
+import { CookieConsent } from "@/components/app/cookie-consent";
+import { RefCodeDetector } from "@/components/app/ref-code-detector";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PUBLIC_BILLING_EMAIL, PUBLIC_SUPPORT_EMAIL } from "@/lib/contact-shared";
 import { absoluteUrl, metadataBaseUrl, siteConfig } from "@/lib/seo";
 
 import "./globals.css";
@@ -72,55 +75,105 @@ export default function RootLayout(props: LayoutProps<"/">) {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteConfig.name,
+    alternateName: siteConfig.alternateName,
     url: siteConfig.siteUrl,
     logo: absoluteUrl("/logo.png"),
+    description: siteConfig.description,
+    email: PUBLIC_SUPPORT_EMAIL,
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: PUBLIC_SUPPORT_EMAIL,
+        availableLanguage: ["tr", "en"],
+      },
+      {
+        "@type": "ContactPoint",
+        contactType: "billing support",
+        email: PUBLIC_BILLING_EMAIL,
+        availableLanguage: ["tr", "en"],
+      },
+    ],
   };
 
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: siteConfig.name,
+    alternateName: siteConfig.alternateName,
     url: siteConfig.siteUrl,
     inLanguage: "tr-TR",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${siteConfig.siteUrl}/blog?query={search_term_string}`,
-      "query-input": "required name=search_term_string",
-    },
+    description: siteConfig.description,
   };
 
   const softwareAppSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     name: siteConfig.name,
+    alternateName: siteConfig.alternateName,
     description: siteConfig.description,
     url: siteConfig.siteUrl,
     applicationCategory: "BusinessApplication",
+    applicationSubCategory: "AI publishing studio",
     operatingSystem: "Web",
     inLanguage: "tr-TR",
     offers: [
-      { "@type": "Offer", name: "Tek Kitap", price: "4", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "4", priceCurrency: "USD", unitText: "tek seferlik" } },
-      { "@type": "Offer", name: "Starter", price: "19", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "19", priceCurrency: "USD", unitText: "aylık", billingDuration: "P1M" } },
-      { "@type": "Offer", name: "Creator", price: "39", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "39", priceCurrency: "USD", unitText: "aylık", billingDuration: "P1M" } },
-      { "@type": "Offer", name: "Pro", price: "79", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "79", priceCurrency: "USD", unitText: "aylık", billingDuration: "P1M" } },
+      {
+        "@type": "Offer",
+        name: "Tek Kitap",
+        price: "4",
+        priceCurrency: "USD",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: "4",
+          priceCurrency: "USD",
+          unitText: "tek seferlik",
+        },
+      },
+      {
+        "@type": "Offer",
+        name: "Starter",
+        price: "19",
+        priceCurrency: "USD",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: "19",
+          priceCurrency: "USD",
+          unitText: "aylık",
+          billingDuration: "P1M",
+        },
+      },
+      {
+        "@type": "Offer",
+        name: "Creator",
+        price: "39",
+        priceCurrency: "USD",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: "39",
+          priceCurrency: "USD",
+          unitText: "aylık",
+          billingDuration: "P1M",
+        },
+      },
+      {
+        "@type": "Offer",
+        name: "Pro",
+        price: "79",
+        priceCurrency: "USD",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: "79",
+          priceCurrency: "USD",
+          unitText: "aylık",
+          billingDuration: "P1M",
+        },
+      },
     ],
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      bestRating: "5",
-      worstRating: "1",
-      ratingCount: "1240",
-    },
-  };
-
-  const speakableSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: siteConfig.name,
-    url: siteConfig.siteUrl,
-    speakable: {
-      "@type": "SpeakableSpecification",
-      cssSelector: ["h1", "h2", ".marketing-hero-description"],
+    provider: {
+      "@type": "Organization",
+      name: siteConfig.name,
+      url: siteConfig.siteUrl,
     },
   };
 
@@ -150,27 +203,37 @@ export default function RootLayout(props: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }}
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
-        />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <ChunkLoadRecovery />
           <AuthStateHydrator />
+          <RefCodeDetector />
           <div id="main-content" className="flex min-h-full flex-col">
             {children}
           </div>
+          <CookieConsent />
         </ThemeProvider>
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-GEEGMJ1L7R"
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID ?? "G-GEEGMJ1L7R"}`}
           strategy="afterInteractive"
         />
         <Script id="gtag-init" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
+            gtag('consent', 'default', {
+              analytics_storage: 'denied',
+              ad_storage: 'denied',
+            });
+            (function() {
+              try {
+                var c = localStorage.getItem('book-generator:cookie-consent');
+                if (c === 'granted' || c === 'denied') {
+                  gtag('consent', 'update', { analytics_storage: c, ad_storage: c });
+                }
+              } catch(e) {}
+            })();
             gtag('js', new Date());
-            gtag('config', 'G-GEEGMJ1L7R');
+            gtag('config', '${process.env.NEXT_PUBLIC_GA_ID ?? "G-GEEGMJ1L7R"}');
           `}
         </Script>
       </body>
