@@ -320,7 +320,7 @@ export function AccountScreen() {
                 </div>
                 <div className="mt-3 text-4xl font-bold text-foreground">{compactNumber(exports)}</div>
                 <div className="mt-2 text-sm text-muted-foreground">
-                  PDF / EPUB ve diğer export toplamı.
+                  PDF / EPUB ve diğer dışa aktarma toplamı.
                 </div>
               </CardContent>
             </Card>
@@ -365,7 +365,7 @@ export function AccountScreen() {
                   <div>
                     <div className="text-sm font-semibold text-foreground">E-posta doğrulandı</div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Hesabın ödeme, export ve tam erişim akışları için hazır.
+                      Hesabın ödeme, dışa aktarma ve tam erişim akışları için hazır.
                     </p>
                   </div>
                 </div>
@@ -384,7 +384,7 @@ export function AccountScreen() {
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">Profil bilgileri</h2>
                   <p className="text-sm text-muted-foreground">
-                    Kütüphane karşılama alanı ve wizard varsayımları bu bilgilerden beslenir.
+                    Kütüphane karşılama alanı ve sihirbaz varsayımları bu bilgilerden beslenir.
                   </p>
                 </div>
               </div>
@@ -419,7 +419,7 @@ export function AccountScreen() {
                   placeholder="Örnek: B2B ekipler için pratik bir prompting rehberi üretmek istiyorum."
                 />
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Bu alan hero mesajlarını ve ilk wizard varsayımlarını netleştirir.
+                  Bu alan hero mesajlarını ve ilk sihirbaz varsayımlarını netleştirir.
                 </p>
               </div>
 
@@ -469,7 +469,7 @@ export function AccountScreen() {
                         placeholder="örnek: North Peak Press"
                       />
                       <p className="mt-2 text-xs text-muted-foreground">
-                        Hazır logolardan farklı olarak kendi markanı wizard ve kapak önizlemesine otomatik taşır.
+                        Hazır logolardan farklı olarak kendi markanı sihirbaz ve kapak önizlemesine otomatik taşır.
                       </p>
                     </div>
 

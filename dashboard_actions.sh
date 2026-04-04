@@ -201,6 +201,14 @@ topic_suggest() {
     local niche="$1"
     local audience="${2:-general readers}"
     local category="${3:-non-fiction}"
+    local language
+    language="$(normalize_book_language "${4:-}")"
+    if [ -z "$language" ]; then
+        language="$(detect_book_language "$niche" "$audience" "$category")"
+    fi
+    if [ -z "$language" ]; then
+        language="English"
+    fi
 
     local system_prompt="You are a KDP strategist. Return valid JSON only."
     local user_prompt="Generate commercially promising book ideas.
@@ -208,6 +216,7 @@ topic_suggest() {
 Primary niche: ${niche}
 Audience: ${audience}
 Category: ${category}
+Output language: ${language}
 
 Return JSON with this exact shape:
 {
@@ -222,6 +231,7 @@ Rules:
 - 6 title suggestions
 - subtitles must be concrete
 - descriptions max 2 sentences
+- topics, titles, subtitles, and descriptions must all be in ${language}
 - output JSON only"
 
     local raw

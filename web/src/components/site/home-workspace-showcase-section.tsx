@@ -23,18 +23,18 @@ import { KDP_GUARANTEE_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 const workspacePoints = [
   {
     icon: Target,
-    title: "Konu kararından bölüm planına dakikalar içinde",
-    description: "Başlık, alt başlık ve bölüm sırası aynı ekranda toplanır. Boş sayfada bekleme yok.",
+    title: "Konu kararından KDP uyumlu taslağa dakikalar içinde",
+    description: "Başlık, alt başlık ve bölüm sırası aynı ekranda toplanır. Boş sayfada bekleme yok — yapay zeka yönlendirir.",
   },
   {
     icon: Zap,
-    title: "Araştırma, bölüm planını doğrudan besler",
-    description: "KDP skoru ve anahtar kelime önerileri bölüm planıyla aynı ekranda görünür — hangi konunun satacağını daha kitap yazılmadan anlarsın.",
+    title: "KDP skoru ve anahtar kelime araştırması bölüm planını besler",
+    description: "KDP pazar skoru ve anahtar kelime önerileri bölüm planıyla aynı ekranda — hangi konunun satacağını kitap yazılmadan anlarsın.",
   },
   {
     icon: Clock,
-    title: "İlk taslaktan yayın dosyasına tek çalışma alanı",
-    description: "Kapak, çıktı ve kitap bilgileri kitap bazında organize edilir; başka panel gerekmez.",
+    title: "İlk taslaktan EPUB ve PDF yayınına tek çalışma alanı",
+    description: "Kapak, çıktı ve kitap bilgileri kitap bazında organize edilir. Başka panel veya araca gerek yok.",
   },
 ] as const;
 
@@ -46,13 +46,13 @@ export function HomeWorkspaceShowcaseSection() {
       <div className="shell grid items-center gap-12 lg:grid-cols-[0.88fr_1.12fr]">
         <div>
           <div className="inline-flex items-center rounded-full border border-border bg-card px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.2em] text-primary/80">
-            Çalışma alanı
+            Çalışma Alanı
           </div>
           <h2 className="mt-5 max-w-xl text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-            Proje panosu: tüm kitapların tek ekranda.
+            Kitap Çalışma Alanı: Taslaktan Yayına Tek Panelden Yönet
           </h2>
           <p className="mt-5 max-w-xl text-pretty text-base leading-8 text-muted-foreground md:text-lg">
-            Aktif bölümler, tamamlananlar, çıktı geçmişi ve bir sonraki adım: dağınık dosyalar yerine tek bakışta durumu görürsün.
+            Aktif bölümler, tamamlananlar, EPUB ve PDF çıktı geçmişi ve bir sonraki adım: dağınık dosyalar yerine tek bakışta tüm kitap durumunu gör.
           </p>
 
           <div className="mt-8 space-y-4">

@@ -33,28 +33,28 @@ export const deliverables = [
 export const howItWorksSteps = [
   {
     step: "1",
-    title: "Konunu anlat",
-    text: "Kitap türünü, konunu ve hedef okurunu kısa cevaplarla gir. Boş sayfa yok — sihirbaz yönlendirir.",
+    title: "Kitap konunu ve türünü belirle",
+    text: "Kitap türünü, konunu ve hedef okurunu kısa cevaplarla gir. Boş sayfa yok — yapay zeka sihirbazı yönlendirir.",
   },
   {
     step: "2",
-    title: "Başlık ve taslağı onayla",
-    text: "AI başlık, alt başlık ve bölüm akışı önerir. Sen düzenler, onaylarsın — ya da sıfırdan yazarsın.",
+    title: "Taslak ve bölüm planını onayla",
+    text: "Yapay zeka başlık, alt başlık ve bölüm akışı önerir. Düzenler, onaylarsın — ya da sıfırdan yazarsın.",
   },
   {
     step: "3",
-    title: "Kitabını üret",
-    text: "Stil ve kapak yönünü seçip üretimi başlat. 10–30 saniyede ilk önizleme hazır.",
+    title: "Yapay zeka ile kitabını üret",
+    text: "Yazım stili ve kapak yönünü seçip üretimi başlat. 10–30 saniyede ilk önizleme hazır.",
   },
   {
     step: "4",
-    title: "Önizlemeyi incele",
+    title: "Ücretsiz önizlemeyi incele",
     text: "Kapak, bölüm listesi ve ilk %20 içeriği gör. Beğenmediysen geri dön ve değiştir.",
   },
   {
     step: "5",
-    title: "PDF ve EPUB'u al",
-    text: "Premium'a geç, tam kitabı aç, indir. Amazon KDP veya kendi kanalına yükle.",
+    title: "KDP uyumlu EPUB ve PDF'i indir",
+    text: "Tam erişim aç, kitabını indir. Amazon KDP veya kendi yayın kanalına yükle.",
   },
 ] as const;
 
@@ -85,7 +85,7 @@ export const premiumPlan = {
   price: "$4",
   interval: "tek seferlik",
   label: "1 kitap — abonelik yok, sonsuza sahip ol",
-  description: "Fikrin var, kitap mı olur diye merak ediyorsun. $4 ile tam erişim aç — taslak, tüm bölümler, kapak ve EPUB/PDF çıktısı. Bir kez öde, dosyalar senindir.",
+  description: "Bir kez öde, kitabın senin — taslaktan EPUB'a kadar her şey dahil, abonelik yok.",
   badge: "Dene ve karar ver",
   perUnit: null,
   features: [
@@ -108,7 +108,7 @@ export const plans = [
     badge: null,
     perUnit: "kitap başına $1.90",
     annualMonthlyPrice: "$15",
-    description: "Her ay düzenli kitap çıkar, sürecini otur ve kendi üretim ritmine gir. Başlamak için fazlasıyla yeterli.",
+    description: "Ayda 10 kitapla ritim kur — kitap başına $1.90, KDP'ye hazır çıktı.",
     features: [
       "Ayda 10 kitap üretimi",
       "Ayda 20 kapak hakkı — AI stilli, özelleştirilebilir",
@@ -130,7 +130,7 @@ export const plans = [
     perUnit: "kitap başına $1.30",
     annualMonthlyPrice: "$31",
     decoyNote: "Stüdyo'nun %37'si kadar kitap, fiyatının %49'u",
-    description: "Bir niş değil birden fazla konu üret. Araştırma merkezi ile hangi kitabın satacağını bil, KDP için optimize et, hızlı büyü.",
+    description: "Hangi konu satar? Araştır, 30 kitap üret, KDP'de büyü — kitap başına $1.30.",
     features: [
       "Ayda 30 kitap üretimi",
       "Ayda 60 kapak hakkı — tam özelleştirme",
@@ -151,8 +151,7 @@ export const plans = [
     badge: null,
     perUnit: "kitap başına $0.99",
     annualMonthlyPrice: "$63",
-    description:
-      "Tek bir kategoride değil, birden fazla nişte tam hızda çalış. Kapak fabrikası, seri üretim ve otomasyon akışını aç; kullanıcı tarafında ekstra API faturası çıkmaz.",
+    description: "80 kitap/ay, API erişimi, otomasyon — kitap başına $0.99, ek fatura yok.",
     features: [
       "Ayda 80 kitap üretimi — tam kapasite",
       "Ayda 200 kapak hakkı",

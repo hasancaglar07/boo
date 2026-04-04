@@ -23,23 +23,23 @@ const iconMap: Record<ToolIconKey, LucideIcon> = {
 };
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Ücretsiz Araçlar | Kitap Oluşturucu",
+  title: "Ücretsiz Kitap Araçları | Kitap Oluşturucu",
   description:
-    "Kitap fikrini doğrulamak, outline çıkarmak, KDP nişini test etmek ve başlıklarını sıkılaştırmak için ücretsiz araçları kullan.",
+    "Fikrini puanla, taslak çıkar, KDP nişini test et. Yapay zeka destekli ücretsiz araçlarla kitabını yayına hazırla.",
   path: "/tools",
   keywords: [
     "ücretsiz kitap araçları",
-    "book idea validator",
-    "book outline starter",
-    "kdp niche score",
-    "kitap başlığı aracı",
+    "kitap fikri test et",
+    "kitap taslak oluşturucu",
+    "KDP niş analizi",
+    "kitap başlık kontrolü",
   ],
 });
 
 const pillars = [
-  "Idea -> outline -> title -> preview zinciri",
-  "Skor açık, tam rapor email ile",
-  "Her tool doğrudan start funnel'a bağlanır",
+  "Fikrini puanla, taslağını çıkar",
+  "Anında skor, detaylı rapor e-postana gelsin",
+  "Her araçtan kitap önizlemesine doğrudan geç",
 ];
 
 export default function ToolsPage() {
@@ -48,12 +48,12 @@ export default function ToolsPage() {
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="mb-4">Free Tools</Badge>
+            <Badge className="mb-4">Ücretsiz Araçlar</Badge>
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              Kitap kararını hızlandıran <span className="text-primary">ücretsiz araçlar</span>
+              Kitabını hızlandıran <span className="text-primary">ücretsiz araçlar</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
-              Fikri puanla, outline çıkar, KDP nişini daralt, müşteri çeken açı bul ve başlığını sıkılaştır. Amaç yalnız okumak değil; seni daha hızlı şekilde preview ve gerçek kitap akışına taşımak.
+              Fikrini puanla, taslağını çıkar, başlığını test et. Her araç seni kitap önizlemesine bir adım yaklaştırır.
             </p>
             <div className="mx-auto mt-8 grid max-w-3xl gap-3 md:grid-cols-3">
               {pillars.map((item) => (
@@ -69,9 +69,9 @@ export default function ToolsPage() {
       <section className="border-b border-border/80 py-16">
         <div className="shell">
           <SectionHeading
-            badge="Tool Library"
-            title="Tek tek faydalı, birlikte daha güçlü."
-            description="Her araç aynı funnel mantığıyla çalışır: hızlı skor, net öneri, tam rapor ve preview akışına geçiş."
+            badge="Araç Kütüphanesi"
+            title="Tek tek güçlü, birlikte bütünsel."
+            description="Her araç aynı mantıkla çalışır: hızlı skor, net öneri, detaylı rapor ve önizleme akışına geçiş."
           />
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -105,13 +105,13 @@ export default function ToolsPage() {
       </section>
 
       <MarketingCtaSection
-        title="Araçta vakit kaybetme, kitabı başlat."
-        description="Tool'larla yönü netleştir, sonra aynı konu özetini preview akışına taşı. En iyi kullanım biçimi bu: karar burada, üretim wizard içinde."
+        title="Aracı kurcalama, kitabını başlat."
+        description="Araçlarla yönü netleştir, sonra önizleme akışına geç. Karar burada, üretim sihirbazda."
         items={[
-          "Fikirden outline'a hızlı geçiş",
-          "KDP ve lead magnet açılarını erkenden test et",
-          "Tam rapor e-posta ile açılır",
-          "Preview -> tam kitap -> EPUB/PDF zinciri",
+          "Fikirden taslağa tek tıkla geç",
+          "KDP ve müşteri açılarını erkenden sına",
+          "Detaylı rapor e-postana gelsin",
+          "Önizleme → tam kitap → EPUB/PDF zinciri",
         ]}
       />
     </MarketingPage>

@@ -126,7 +126,7 @@ export default function AdminAuditPage() {
           className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[color:var(--admin-border)] px-4 text-sm font-semibold text-[color:var(--admin-text)] transition hover:border-[color:var(--admin-primary)]"
         >
           <Download className="size-4" />
-          CSV export
+          CSV dışa aktar
         </button>
       </div>
 

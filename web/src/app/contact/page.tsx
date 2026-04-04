@@ -41,7 +41,7 @@ export default function ContactPage() {
         <div className="mb-8 grid gap-4 md:grid-cols-3">
           {[
             { title: "Genel yanıt süresi", text: "Çoğu mesajı aynı iş günü içinde yanıtlamayı hedefliyoruz." },
-            { title: "En hızlı çözüm için", text: "Kitap slug’ı, preview linki veya ekran görüntüsü paylaş." },
+            { title: "En hızlı çözüm için", text: "Kitap slug’ı, önizleme linki veya ekran görüntüsü paylaş." },
             { title: "Konu seçimi önemli", text: "Faturalama, erişim ve teknik destek için doğru konu başlığı seçimi süreci hızlandırır." },
           ].map(({ title, text }) => (
             <Card key={title}>

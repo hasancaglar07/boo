@@ -21,7 +21,7 @@ const secondaryNav = [
   { href: "/use-cases", label: "Kullanım Alanları" },
 ];
 
-export function MobileNav() {
+export function MobileNav({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -90,15 +90,15 @@ export function MobileNav() {
             </div>
 
             <div className="mt-4 flex flex-col gap-2 border-t border-border/60 pt-4">
-              <Link href="/login" onClick={() => setOpen(false)}>
+              <Link href={isAuthenticated ? "/app/library" : "/login"} onClick={() => setOpen(false)}>
                 <Button variant="outline" className="w-full text-[13.5px] font-medium tracking-[-0.01em]">
-                  Giriş Yap
+                  {isAuthenticated ? "Kitaplarım" : "Giriş Yap"}
                 </Button>
               </Link>
-              <Link href="/start/topic" onClick={() => setOpen(false)}>
+              <Link href={isAuthenticated ? "/app/new/topic" : "/start/topic"} onClick={() => setOpen(false)}>
                 <Button className="site-cta-btn w-full gap-1.5 text-[13.5px] font-semibold tracking-[-0.01em]">
                   <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                  Ücretsiz Önizleme
+                  {isAuthenticated ? "Yeni Kitap" : "Ücretsiz Önizleme"}
                 </Button>
               </Link>
             </div>

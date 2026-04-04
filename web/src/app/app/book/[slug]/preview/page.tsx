@@ -12,7 +12,7 @@ export async function generateMetadata({
   const { slug } = await params;
   return buildPageMetadata({
     title: `${slug} Preview | Book Generator`,
-    description: "Kitabın kapağını, outline'ını ve ilk %20 önizlemesini görüntüle.",
+    description: "Kitabın kapağını, taslağını ve ilk %20 önizlemesini görüntüle.",
     path: `/app/book/${slug}/preview`,
     noIndex: true,
   });

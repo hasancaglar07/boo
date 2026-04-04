@@ -2,16 +2,16 @@ import { KDP_GUARANTEE_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 const pricingNotes = [
   {
-    title: "$4 ile düşük riskli giriş",
-    text: "Tek Kitap planı, abonelik açmadan tam kitabın kilidini açmak isteyen kullanıcı için net ve sade giriş noktası sunuyor.",
+    title: "$4 ile düşük riskli kitap açma",
+    text: "Tek Kitap paketi, abonelik açmadan tam kitabın kilidini açmak isteyenler için net ve sade bir giriş noktası. EPUB ve PDF dahil.",
   },
   {
-    title: "Preview önce gelir",
-    text: "Fiyat tartışması ödeme sayfasında değil, kullanıcı preview'i gördükten sonra anlam kazanır. Bu, paywall direncini düşürür.",
+    title: "Önizleme önce, ödeme sonra",
+    text: "Fiyat tartışması ödeme sayfasında değil, kullanıcı önizlemeyi gördükten sonra anlam kazanır. Ödeme duvarı direnci düşer.",
   },
   {
-    title: "Garanti ve maliyet net",
-    text: `${KDP_GUARANTEE_CLAIM} ve ${NO_API_COST_CLAIM.toLowerCase()} pricing ile upgrade yüzeylerinde net kaldığında satın alma riski daha anlaşılır hale gelir.`,
+    title: "Garanti ve maliyet şeffaf",
+    text: `${KDP_GUARANTEE_CLAIM} ve ${NO_API_COST_CLAIM.toLowerCase()} ile fiyatlandırma açık ve anlaşılır. Gizli ücret yok.`,
   },
 ] as const;
 
@@ -20,7 +20,7 @@ export function HomePricingTestimonials() {
     <section className="border-b border-border/80 py-10">
       <div className="shell">
         <p className="mb-6 text-center text-sm font-medium text-muted-foreground">
-          Plan seçmeden önce net olması gereken üç şey:
+          Fiyatlandırmayı öğrenmeden önce bilmen gereken üç şey:
         </p>
         <div className="grid gap-4 md:grid-cols-3">
           {pricingNotes.map((item) => (

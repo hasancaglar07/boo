@@ -255,6 +255,7 @@ type ApiOptions = RequestInit & {
 
 export const BACKEND_PUBLIC_ORIGIN =
   process.env.NEXT_PUBLIC_DASHBOARD_ORIGIN || "http://127.0.0.1:8765";
+const API_TIMEOUT_MS = 20_000;
 
 export class BackendUnavailableError extends Error {
   readonly code = "BACKEND_UNAVAILABLE";
@@ -272,6 +273,16 @@ export function isBackendUnavailableError(error: unknown) {
   );
 }
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function api<T>(path: string, options: ApiOptions = {}) {
   const headers = new Headers(options.headers || {});
   let body = options.body;
@@ -282,7 +293,7 @@ async function api<T>(path: string, options: ApiOptions = {}) {
 
   let response: Response;
   try {
-    response = await fetch(`/api/backend${path}`, {
+    response = await fetchWithTimeout(`/api/backend${path}`, {
       ...options,
       headers,
       body,

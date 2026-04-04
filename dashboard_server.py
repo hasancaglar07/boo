@@ -111,6 +111,14 @@ def slugify(value: str) -> str:
     return normalized or "kitap"
 
 
+def clamp_cover_variant_target_count(value: Any, default: int = 1) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = int(default)
+    return max(1, min(3, parsed))
+
+
 def chapter_number(path: Path) -> int:
     match = re.search(r"chapter_(\d+)", path.name)
     return int(match.group(1)) if match else 0
@@ -381,6 +389,8 @@ def build_book_preview(book: dict[str, Any], ratio: float = 0.2) -> dict[str, An
         cover_lab_state = "ready"
     elif generation.get("cover_state") in {"queued", "running"} or generation.get("cover_ready"):
         cover_lab_state = "running"
+    target_slots = clamp_cover_variant_target_count(book.get("cover_variant_target_count"), default=1)
+    target_slots = max(target_slots, len(cover_variants))
 
     total_words = sum(max(1, count_words(chapter.get("content", ""))) for chapter in chapters) if chapters else 0
     target_words = max(220, int(total_words * ratio)) if total_words else 0
@@ -478,9 +488,9 @@ def build_book_preview(book: dict[str, Any], ratio: float = 0.2) -> dict[str, An
             "selectedVariantId": selected_variant_id,
             "recommendedVariantId": recommended_variant_id,
             "generationState": cover_lab_state,
-            "slots": 3,
+            "slots": target_slots,
             "readyCount": len(cover_variants),
-            "queuedSlots": max(0, 3 - len(cover_variants)),
+            "queuedSlots": max(0, target_slots - len(cover_variants)),
         },
     }
 
@@ -560,6 +570,7 @@ def read_metadata(book_dir: Path) -> dict[str, Any]:
         "back_cover_image": "",
         "cover_template": "",
         "cover_variant_count": 0,
+        "cover_variant_target_count": 1,
         "cover_generation_provider": "",
         "cover_composed": False,
         "cover_variants": [],
@@ -1411,6 +1422,7 @@ def read_book(book_dir: Path) -> dict[str, Any]:
         "back_cover_image": metadata.get("back_cover_image", ""),
         "cover_template": metadata.get("cover_template", ""),
         "cover_variant_count": metadata.get("cover_variant_count", 0),
+        "cover_variant_target_count": clamp_cover_variant_target_count(metadata.get("cover_variant_target_count", 1), default=1),
         "cover_generation_provider": metadata.get("cover_generation_provider", ""),
         "cover_composed": bool(metadata.get("cover_composed", False)),
         "cover_variants": normalize_cover_variants(metadata.get("cover_variants")),
@@ -1483,6 +1495,7 @@ def read_book_summary(book_dir: Path) -> dict[str, Any]:
         "back_cover_image": metadata.get("back_cover_image", ""),
         "cover_template": metadata.get("cover_template", ""),
         "cover_variant_count": metadata.get("cover_variant_count", 0),
+        "cover_variant_target_count": clamp_cover_variant_target_count(metadata.get("cover_variant_target_count", 1), default=1),
         "cover_generation_provider": metadata.get("cover_generation_provider", ""),
         "cover_composed": bool(metadata.get("cover_composed", False)),
         "selected_cover_variant": metadata.get("selected_cover_variant", ""),
@@ -1571,6 +1584,7 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
     back_cover_image = str(payload.get("back_cover_image", "")).strip()
     cover_template = str(payload.get("cover_template", "")).strip()
     cover_variant_count = int(payload.get("cover_variant_count", 0) or 0)
+    cover_variant_target_count = clamp_cover_variant_target_count(payload.get("cover_variant_target_count", 1), default=1)
     cover_generation_provider = str(payload.get("cover_generation_provider", "")).strip()
     cover_composed = bool(payload.get("cover_composed", False))
     cover_variants = normalize_cover_variants(payload.get("cover_variants"))
@@ -1630,6 +1644,7 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
             "back_cover_image": back_cover_image,
             "cover_template": cover_template,
             "cover_variant_count": cover_variant_count,
+            "cover_variant_target_count": cover_variant_target_count,
             "cover_generation_provider": cover_generation_provider,
             "cover_composed": cover_composed,
             "cover_variants": cover_variants,
@@ -1779,6 +1794,10 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     back_cover_image = str(payload.get("back_cover_image") or metadata.get("back_cover_image") or "").strip()
     cover_template = str(payload.get("cover_template") or metadata.get("cover_template") or "").strip()
     cover_variant_count = int(payload.get("cover_variant_count") or metadata.get("cover_variant_count") or 0)
+    cover_variant_target_count = clamp_cover_variant_target_count(
+        payload.get("cover_variant_target_count") or metadata.get("cover_variant_target_count") or 1,
+        default=1,
+    )
     cover_generation_provider = str(payload.get("cover_generation_provider") or metadata.get("cover_generation_provider") or "").strip()
     cover_composed = bool(payload.get("cover_composed", metadata.get("cover_composed", False)))
     cover_variants = normalize_cover_variants(payload.get("cover_variants") or metadata.get("cover_variants"))
@@ -1817,6 +1836,7 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             "back_cover_image": back_cover_image,
             "cover_template": cover_template,
             "cover_variant_count": cover_variant_count,
+            "cover_variant_target_count": cover_variant_target_count,
             "cover_generation_provider": cover_generation_provider,
             "cover_composed": cover_composed,
             "cover_variants": cover_variants,
@@ -2194,11 +2214,18 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         topic = str(payload.get("topic") or payload.get("niche") or "").strip()
         if not topic:
             raise ValueError("Topic is required.")
+        language = normalize_book_language(payload.get("language")) or detect_book_language(
+            payload.get("title"),
+            payload.get("subtitle"),
+            topic,
+            payload.get("audience"),
+        ) or "English"
         result = run_dashboard_action(
             "topic-suggest",
             topic,
             str(payload.get("audience") or "general readers"),
             str(payload.get("category") or "non-fiction"),
+            language,
         )
         response = workflow_result(action, result, None, preflight)
         if result.returncode == 0:
@@ -2284,12 +2311,16 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         )
     elif action == "cover_variants_generate":
         settings = read_settings()
+        variant_count = clamp_cover_variant_target_count(payload.get("variant_count", 1), default=1)
+        save_metadata(book_dir, {"cover_variant_target_count": variant_count})
         command = [
             "python3",
             str(ROOT_DIR / "scripts" / "generate_book_cover_variants.py"),
             str(book_dir),
             "--service",
             str(payload.get("service") or settings["cover_service"] or "auto"),
+            "--variant-count",
+            str(variant_count),
         ]
         if bool(payload.get("force", False)):
             command.append("--force")
@@ -2397,6 +2428,7 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
                 "selected_cover_variant": metadata.get("selected_cover_variant", ""),
                 "recommended_cover_variant": metadata.get("recommended_cover_variant", ""),
                 "cover_variant_count": metadata.get("cover_variant_count", 0),
+                "cover_variant_target_count": metadata.get("cover_variant_target_count", 1),
             }
     return response
 

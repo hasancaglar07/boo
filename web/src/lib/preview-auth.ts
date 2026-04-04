@@ -79,6 +79,27 @@ const ACCOUNT_KEY = "book-product-account";
 const PLAN_KEY = "book-product-plan";
 const VIEWER_KEY = "book-product-viewer";
 const WIZARD_PREFIX = "book-dashboard-wizard:";
+const AUTH_STATE_TIMEOUT_MS = 6_000;
+const AUTH_STATE_CACHE_TTL_MS = 3_000;
+
+type AuthJsSessionPayload = {
+  user?: {
+    id?: string;
+    email?: string;
+    name?: string;
+    goal?: string;
+    emailVerified?: string | null;
+    role?: UserRole;
+  };
+} | null;
+
+let authStateInFlight: Promise<PreviewAuthStatePayload | null> | null = null;
+let authStateCache:
+  | {
+      payload: PreviewAuthStatePayload;
+      timestamp: number;
+    }
+  | null = null;
 
 function safeParse<T>(value: string | null, fallback: T): T {
   if (!value) return fallback;
@@ -214,41 +235,145 @@ export function removeWizardState(slug: string) {
   localStorage.removeItem(wizardStorageKey(slug));
 }
 
-export async function syncPreviewAuthState() {
-  if (!canUseStorage()) return null;
-
+async function fetchAuthJsSession() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AUTH_STATE_TIMEOUT_MS);
   try {
-    const response = await fetch("/api/auth/state", {
+    const response = await fetch("/api/auth/session", {
       cache: "no-store",
       credentials: "include",
+      signal: controller.signal,
     });
-    if (!response.ok) {
-      return null;
-    }
-
-    const payload = (await response.json()) as PreviewAuthStatePayload;
-
-    const currentAccount = getAccount();
-    if (payload.authenticated || !hasCustomPreviewAccount(currentAccount)) {
-      setAccount(payload.account);
-    }
-    setPlan(payload.planId || "free");
-
-    if (payload.authenticated && payload.session) {
-      setSession({
-        ...payload.session,
-        emailVerified: payload.emailVerified,
-      });
-      if (payload.viewer) {
-        setViewer(payload.viewer);
-      }
-    } else {
-      clearSession();
-      clearViewer();
-    }
-
+    if (!response.ok) return null;
+    const payload = (await response.json()) as AuthJsSessionPayload;
     return payload;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
+}
+
+function applyAuthStatePayload(payload: PreviewAuthStatePayload) {
+  const currentAccount = getAccount();
+  if (payload.authenticated || !hasCustomPreviewAccount(currentAccount)) {
+    setAccount(payload.account);
+  }
+  setPlan(payload.planId || "free");
+
+  if (payload.authenticated && payload.session) {
+    setSession({
+      ...payload.session,
+      emailVerified: payload.emailVerified,
+    });
+    if (payload.viewer) {
+      setViewer(payload.viewer);
+    }
+  } else {
+    clearSession();
+    clearViewer();
+  }
+}
+
+function buildFallbackAuthStatePayload(payload: AuthJsSessionPayload): PreviewAuthStatePayload {
+  const authenticated = Boolean(payload?.user?.id && payload?.user?.email);
+  const currentAccount = getAccount();
+  const currentPlanId = getPlan();
+  const currentViewer = getViewer();
+  const fallbackUsage = currentViewer?.usage || DEFAULT_PREVIEW_USAGE;
+
+  if (!authenticated) {
+    return {
+      authenticated: false,
+      session: null,
+      account: hasCustomPreviewAccount(currentAccount)
+        ? currentAccount
+        : DEFAULT_PREVIEW_ACCOUNT,
+      planId: currentPlanId || "free",
+      emailVerified: false,
+      providers: undefined,
+      anonymousId: null,
+      viewer: null,
+      usage: fallbackUsage,
+    };
+  }
+
+  const email = String(payload?.user?.email || currentAccount.email || DEFAULT_PREVIEW_ACCOUNT.email);
+  const name = String(payload?.user?.name || currentAccount.name || "Book Creator");
+  const emailVerified = Boolean(payload?.user?.emailVerified);
+
+  return {
+    authenticated: true,
+    session: {
+      email,
+      loggedInAt: new Date().toISOString(),
+      userId: String(payload?.user?.id || ""),
+      emailVerified,
+    },
+    account: {
+      ...currentAccount,
+      name,
+      email,
+    },
+    planId: currentPlanId || "free",
+    emailVerified,
+    providers: undefined,
+    anonymousId: null,
+    viewer: currentViewer,
+    usage: fallbackUsage,
+  };
+}
+
+export async function syncPreviewAuthState() {
+  if (!canUseStorage()) return null;
+
+  const now = Date.now();
+  if (authStateCache && now - authStateCache.timestamp < AUTH_STATE_CACHE_TTL_MS) {
+    return authStateCache.payload;
+  }
+  if (authStateInFlight) {
+    return authStateInFlight;
+  }
+
+  authStateInFlight = (async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), AUTH_STATE_TIMEOUT_MS);
+      let response: Response | null = null;
+      try {
+        response = await fetch("/api/auth/state", {
+          cache: "no-store",
+          credentials: "include",
+          signal: controller.signal,
+        });
+      } catch {
+        response = null;
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      if (response?.ok) {
+        const payload = (await response.json()) as PreviewAuthStatePayload;
+        applyAuthStatePayload(payload);
+        authStateCache = { payload, timestamp: Date.now() };
+        return payload;
+      }
+
+      const authJsSession = await fetchAuthJsSession();
+      if (!authJsSession) {
+        return null;
+      }
+
+      const fallbackPayload = buildFallbackAuthStatePayload(authJsSession);
+      applyAuthStatePayload(fallbackPayload);
+      authStateCache = { payload: fallbackPayload, timestamp: Date.now() };
+      return fallbackPayload;
+    } catch {
+      return null;
+    } finally {
+      authStateInFlight = null;
+    }
+  })();
+
+  return authStateInFlight;
 }

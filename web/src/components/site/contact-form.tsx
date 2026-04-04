@@ -115,7 +115,7 @@ export function ContactForm() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>• Konu başlığı net olsun</li>
               <li>• Faturalama / erişim / teknik desteği doğru seçin</li>
-              <li>• Kitap slug’ını veya preview linkini ekleyin</li>
+              <li>• Kitap slug’ını veya önizleme linkini ekleyin</li>
               <li>• Gerekirse ekran görüntüsü paylaşın</li>
             </ul>
           </CardContent>

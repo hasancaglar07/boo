@@ -241,7 +241,7 @@ export function BillingScreen() {
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 space-y-3">
           <p className="text-sm text-muted-foreground">
-            İhtiyacına uygun planı seç. Premium ile tam kitap, PDF ve EPUB export açılır.
+            İhtiyacına uygun planı seç. Premium ile tam kitap, PDF ve EPUB dışa aktarma açılır.
           </p>
           {returnBook ? (
             <p className="text-sm text-primary">

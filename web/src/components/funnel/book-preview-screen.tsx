@@ -551,6 +551,7 @@ function CoverLabCard({
   onGenerate,
   selectingVariantId,
   generating,
+  targetCount,
 }: {
   slug: string;
   title: string;
@@ -563,10 +564,12 @@ function CoverLabCard({
   onGenerate: () => void;
   selectingVariantId: string;
   generating: boolean;
+  targetCount: number;
 }) {
   const variants = coverLab?.variants || [];
   const selectedVariantId = coverLab?.selectedVariantId || "";
   const showSkeletons = generating || coverLab?.generationState === "running";
+  const slotCount = Math.max(1, variants.length, coverLab?.slots || 1, showSkeletons ? targetCount : 1);
 
   return (
     <div className="space-y-4">
@@ -588,12 +591,12 @@ function CoverLabCard({
               disabled={generating}
             >
               {generating ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <Wand2 className="mr-2 size-3.5" />}
-              AI ile oluştur
+              AI ile yeniden üret
             </Button>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            {Array.from({ length: 3 }).map((_, index) => {
+            {Array.from({ length: slotCount }).map((_, index) => {
               const variant = variants[index];
               const active = Boolean(variant && variant.id === selectedVariantId);
               const readyImage = variant?.front_image
@@ -657,7 +660,7 @@ function CoverLabCard({
           </div>
 
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
-            Satın alma öncesinde cover concept’leri gezebilir ve favorini seçebilirsin. Seçimin export varsayılanı olur.
+            İlk üretimde 1 ön + 1 arka konsept gelir. Beğenmezsen AI ile yeniden üret'e basıp alternatif set alabilirsin.
           </p>
         </CardContent>
       </Card>
@@ -884,6 +887,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const [authenticated, setAuthenticated] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [coverGenerating, setCoverGenerating] = useState(false);
+  const [coverTargetCount, setCoverTargetCount] = useState(1);
   const [selectingVariantId, setSelectingVariantId] = useState("");
   const trackedRef = useRef(false);
   const bootstrapRequestedRef = useRef(false);
@@ -962,7 +966,14 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     bootstrapRequestedRef.current = false;
     previewReadyTrackedRef.current = false;
     coverLabRequestedRef.current = false;
+    setCoverTargetCount(1);
   }, [slug]);
+
+  useEffect(() => {
+    const slots = Number(preview?.coverLab?.slots || 0);
+    if (!slots) return;
+    setCoverTargetCount(Math.max(1, Math.min(3, slots)));
+  }, [preview?.coverLab?.slots]);
 
   useEffect(() => {
     void syncPreviewAuthState().then((payload) => {
@@ -1020,13 +1031,15 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     }
   }, [preview, slug]);
 
-  async function generateCoverLab(force = false) {
+  async function generateCoverLab(force = false, variantCount = 1) {
     setCoverGenerating(true);
+    setCoverTargetCount(Math.max(1, Math.min(3, variantCount)));
     try {
       await runWorkflow({
         action: "cover_variants_generate",
         slug,
         force,
+        variant_count: variantCount,
       });
       await hydrate();
     } catch (error) {
@@ -1041,7 +1054,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     if (!preview.book.cover_image) return;
     if ((preview.coverLab?.readyCount || 0) > 0) return;
     coverLabRequestedRef.current = true;
-    void generateCoverLab().finally(() => {
+    void generateCoverLab(false, 1).finally(() => {
       coverLabRequestedRef.current = false;
     });
   }, [preview, coverGenerating]);
@@ -1196,9 +1209,10 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
             coverBrief={coverBrief}
             coverLab={coverLab}
             onSelect={handleSelectVariant}
-            onGenerate={() => void generateCoverLab(true)}
+            onGenerate={() => void generateCoverLab(true, 3)}
             selectingVariantId={selectingVariantId}
             generating={coverGenerating}
+            targetCount={coverTargetCount}
           />
 
           {/* Back cover */}

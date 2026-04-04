@@ -77,6 +77,10 @@ function coverGenreLabel(genre?: string) {
 function coverPickerSummary(book: Book | null) {
   const branch = book?.cover_branch || "nonfiction";
   const genre = coverGenreLabel(book?.cover_genre);
+  const variantCount = Array.isArray(book?.cover_variants) ? book.cover_variants.length : 0;
+  if (variantCount <= 1) {
+    return "Sistem önce 1 ön + 1 arka kapak konsepti üretir. Beğenmezsen AI ile yeniden üret ile alternatif set alabilirsin.";
+  }
   if (book?.cover_text_strategy === "hybrid-ai-text") {
     return `Bu kitap hibrit kapak modunda çalışır. Sistem 2 AI text önerisi üretir: Signature tam başlık düzenini doğrudan modelden dener, Minimal daha sade bir tipografi dener, Exact ise her zaman bizim hatasız studio yerleşimimizdir.`;
   }
@@ -725,12 +729,13 @@ export function WorkspaceScreen({
                         onClick={() =>
                           triggerWorkflow({
                             action: "cover_variants_generate",
+                            variant_count: 1,
                             force: true,
                           }).catch((error) => addToast(error instanceof Error ? error.message : "Kapak üretimi başarısız.", "error"))
                         }
                       >
                         <Sparkles className="mr-2 size-4" />
-                        3 Kapak Varyantı Üret
+                        1 Kapak Konsepti Üret
                       </Button>
                     </div>
                   </div>
@@ -770,7 +775,7 @@ export function WorkspaceScreen({
                   </div>
                 ) : null}
                 <div className="rounded-2xl border border-border/80 bg-background/70 px-4 py-4 text-sm leading-7 text-muted-foreground">
-                  Bu görünüm preview ve upgrade ekranındaki satış hissini güçlendirir. Branding ve başlık burada doğrudan algılanır.
+                  Bu görünüm önizleme ve yükseltme ekranındaki satış hissini güçlendirir. Branding ve başlık burada doğrudan algılanır.
                 </div>
               </CardContent>
             </Card>
@@ -966,23 +971,23 @@ export function WorkspaceScreen({
                   <Button
                     variant="outline"
                     onClick={() =>
-                      triggerWorkflow({ action: "cover_variants_generate" }).catch((error) =>
+                      triggerWorkflow({ action: "cover_variants_generate", variant_count: 1 }).catch((error) =>
                         addToast(error instanceof Error ? error.message : "Kapak varyantları üretilemedi.", "error"),
                       )
                     }
                   >
                     <Layers className="mr-2 size-4" />
-                    Varyantları Yenile
+                    Tek Konsept Üret
                   </Button>
                   <Button
                     onClick={() =>
-                      triggerWorkflow({ action: "cover_variants_generate", force: true }).catch((error) =>
+                      triggerWorkflow({ action: "cover_variants_generate", force: true, variant_count: 3 }).catch((error) =>
                         addToast(error instanceof Error ? error.message : "Kapak varyantları yeniden üretilemedi.", "error"),
                       )
                     }
                   >
                     <Sparkles className="mr-2 size-4" />
-                    AI ile Baştan Üret
+                    AI ile Yeniden Üret
                   </Button>
                 </div>
               </div>
@@ -1004,8 +1009,8 @@ export function WorkspaceScreen({
                 <div className="rounded-[28px] border border-dashed border-border/70 bg-muted/20 p-6">
                   <div className="text-sm font-semibold text-foreground">Henüz cover picker hazır değil.</div>
                   <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
-                    Önce varyantları üret. Sistem her aile için ön kapak, arka kapak ve önerilen seçimi metadata
-                    içine yazacak.
+                    Önce tek konsepti üret. Sistem ön kapak + arka kapağı metadata içine yazar; beğenmezsen AI ile
+                    yeniden üret ile alternatif set alabilirsin.
                   </p>
                 </div>
               )}

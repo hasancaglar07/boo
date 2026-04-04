@@ -45,19 +45,11 @@ const pricingFaq = [
     "Evet. Arayüz Türkçe kalır, kitap içeriği İngilizce veya seçtiğin başka dilde üretilir. KDP'nin en büyük pazarı İngilizce; bunu avantaja çevirebilirsin.",
   ],
   [
-    "AI içeriği kaliteli çıkar mı?",
-    `Sistem taslak üretir, kaliteyi sen belirlersin. Bölüm editörüyle her bölümü düzenleyebilir veya yeniden üretebilirsin. Üstelik akış ${KDP_LIVE_BOOKS_CLAIM} yaklaşımıyla kurulur ve yayın hedefi KDP ise teslim paketi ${KDP_GUARANTEE_CLAIM} odağında ilerler.`,
-  ],
-  [
     "Planımı değiştirebilir miyim?",
     "Evet. İstediğin zaman yükselt, düşür veya iptal et. Faturalama alanından tek tıkla yönetilir, onay beklemez.",
   ],
   [
-    "30 gün garantisi nasıl işliyor?",
-    `Teslim paketi ${KDP_GUARANTEE_CLAIM} odağında hazırlanır. Ayrıca ilk 30 gün içinde memnun kalmazsan iade talebi açabilirsin. $4 Tek Kitap dahil kapsam detayları refund policy sayfasında yer alır.`,
-  ],
-  [
-    "Kullanılmayan kitap hakları devredyor mu?",
+    "Kullanılmayan kitap hakları devrediyor mu?",
     "Hayır, aylık haklar sonraki aya taşınmaz. Bu yüzden ihtiyacın olan planı seç — gereğinden büyük plan almana gerek yok.",
   ],
 ];
@@ -68,15 +60,15 @@ const whoForItems = [
     plan: "Tek Kitap — $4",
     title: "İlk kez deneyen",
     description:
-      "Uzmanlığın kitap olur mu diye merak ediyorsun. $4 ile gir, tüm süreci yaşa, kitabını çıkar. Beğenmezsen 30 gün içinde iade.",
-    bullets: ["Yazarlık deneyimi gerekmiyor", "5 dakikada taslak hazır", "Risk sıfır"],
+      "Bir kez öde, kitabın senin. $4 ile tüm süreci yaşa, beğenmezsen 30 gün içinde iade.",
+    bullets: ["Yazarlık deneyimi gerekmez", "5 dakikada taslak hazır", "Risk sıfır"],
   },
   {
     icon: Sparkles,
-    plan: "Temel — $19/ay",
+    plan: "Başlangıç — $19/ay",
     title: "Düzenli içerik üreten",
     description:
-      "Her ay yeni bilgi ürünü çıkarmak istiyorsun. 10 kitap/ay ile serini oluştur, KDP'de nişini genişlet.",
+      "Ayda 10 kitapla serini oluştur, KDP'de nişini genişlet. Kitap başına $1.90.",
     bullets: ["Ayda 10 kitap, 20 kapak", "EPUB + PDF her kitap için", "Kitap başına $1.90"],
   },
   {
@@ -84,15 +76,15 @@ const whoForItems = [
     plan: "Yazar — $39/ay",
     title: "KDP'de büyümek isteyen",
     description:
-      "Hangi konu satar? Hangi anahtar kelime boş? Araştırma merkezi ve pazar analizi ile karar ver, 30 kitapla hızlı üret.",
-    bullets: ["KDP anahtar kelime + pazar analizi", "30 kitap/ay, 60 kapak", "Ek export seçenekleri"],
+      "Araştırma merkezi ile hangi kitabın satacağını bil, 30 kitapla hızlı üret.",
+    bullets: ["KDP anahtar kelime + pazar analizi", "30 kitap/ay, 60 kapak", "Ek dışa aktarma seçenekleri"],
   },
   {
     icon: Layers,
     plan: "Stüdyo — $79/ay",
     title: "Yoğun üretim / ajans",
     description:
-      "Birden fazla nişte, yüksek hacimde üretiyorsun. API ve otomasyon akışını aç, özel ton profilleri oluştur; kullanıcı tarafında ek API faturası çıkmaz.",
+      "80 kitap/ay, API ve otomasyon akışı açık. Ek fatura yok.",
     bullets: ["80 kitap/ay, 200 kapak", "API ve otomasyon erişimi", NO_API_COST_CLAIM],
   },
 ];
@@ -154,66 +146,29 @@ export default function PricingPage() {
     <MarketingPage>
       <PricingPageHero />
 
-      <section className="shell pt-10 pb-0">
-        <div className="rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
-          <p className="mt-2 max-w-4xl text-sm leading-7 text-foreground">
-            Kitap Oluşturucu fiyatlandırması iki ihtiyaca göre ayrılır: ilk kitabı düşük riskle açmak için $4 tek seferlik erişim veya düzenli üretim için aylık planlar. Tek Kitap planı en düşük giriş noktasıdır; Başlangıç, Yazar ve Stüdyo ise yayın hacmi arttığında kitap başına maliyeti düşürür.
-          </p>
-        </div>
+      {/* Tek satırlık özet + Planlar — hemen hero altında */}
+      <section className="shell pt-6 pb-0">
+        <p className="text-center text-sm font-medium text-muted-foreground">
+          İlk kitabın $4, sonraki kitaplar ayda $19&apos;dan başlıyor — önizleme ücretsiz.
+        </p>
       </section>
 
-      {/* Güven şeridi */}
-      <section className="border-b border-border/80 bg-accent/30 py-5">
-        <div className="shell flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm">
-          {[
-            { icon: Check, text: KDP_LIVE_BOOKS_CLAIM },
-            { icon: ShieldCheck, text: KDP_GUARANTEE_CLAIM },
-            { icon: Check, text: NO_API_COST_CLAIM },
-            { icon: ShieldCheck, text: REFUND_GUARANTEE_CLAIM },
-            { icon: Check, text: "Kredi kartı gerekmez — önce dene" },
-            { icon: Check, text: "KDP yükleme gereksinimlerine uygun EPUB + PDF çıktısı" },
-          ].map(({ icon: Icon, text }) => (
-            <span key={text} className="flex items-center gap-1.5 text-muted-foreground">
-              <Icon className="size-3.5 text-primary" />
-              <span className="font-medium text-foreground">{text}</span>
-            </span>
-          ))}
-        </div>
-      </section>
-
-      {/* Garanti — fiyattan önce */}
-      <section className="shell pt-10 pb-0">
-        <div className="flex items-start gap-4 rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_8%,var(--card)),var(--card))] px-6 py-5 shadow-sm">
-          <ShieldCheck className="size-8 shrink-0 text-primary mt-0.5" />
-          <div>
-            <p className="font-semibold text-foreground">{KDP_GUARANTEE_CLAIM} + {REFUND_GUARANTEE_CLAIM}</p>
-            <p className="mt-1 text-sm leading-7 text-muted-foreground">
-              Önce önizlemeyi gör, sonra bu kitabı aç. KDP hedefliyorsan teslim paketi {KDP_GUARANTEE_CLAIM} odağında hazırlanır. Ayrıca {NO_API_COST_CLAIM.toLowerCase()} ve memnun kalmazsan ilk 30 gün içinde iade talebi açabilirsin. Kapsam detayları {" "}
-              <Link href="/refund-policy" className="text-primary/80 underline-offset-4 hover:underline">
-                İade koşullarını oku →
-              </Link>
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Planlar */}
+      {/* Planlar — hemen yukarıda */}
       <PricingCreativeSection
-        className="py-20"
+        className="py-12"
         tag="Planlar"
-        title="İlk kitap için en düşük riskli giriş, düzenli üretim için net planlar."
-        description="$4 ile ilk kitabını aç, ayda 10 kitapla ritim kur, 30 veya 80 kitapla yayın sistemine dönüştür. Her planın değeri ve sınırı net."
+        title="Bir kez öde veya aylık planla üret."
+        description="$4 ile ilk kitabını aç, ayda 10 kitapla ritim kur, 30 veya 80 kitapla yayın sistemine dönüştür."
       />
 
       {/* Rakip karşılaştırma */}
       <section className="border-y border-border/80 bg-muted/30 py-14">
         <div className="shell">
-          <h2 className="mb-2 text-center font-serif text-3xl font-semibold tracking-tight text-foreground">
-            Neden Kitap Oluşturucu?
+          <h2 className="mb-2 text-center font-serif text-2xl font-semibold tracking-tight text-foreground">
+            Aynı kitap, çok farklı fiyat.
           </h2>
-          <p className="mb-10 text-center text-sm text-muted-foreground">
-            Aynı çıktıyı başka yollarla almanın maliyeti ve süresi.
+          <p className="mb-8 text-center text-sm text-muted-foreground">
+            Başka yöntemlerle kitap çıkarmanın maliyeti.
           </p>
           <div className="mx-auto max-w-2xl divide-y divide-border/80 overflow-hidden rounded-[24px] border border-border/80 bg-card shadow-sm">
             {competitorComparison.map((row) => (
@@ -255,10 +210,10 @@ export default function PricingPage() {
       {/* Kim için? */}
       <section className="border-b border-border/80 py-16">
         <div className="shell">
-          <h2 className="mb-2 text-center font-serif text-3xl font-semibold tracking-tight text-foreground">
-            Hangi plan kimin için?
+          <h2 className="mb-2 text-center font-serif text-2xl font-semibold tracking-tight text-foreground">
+            Hangi plan sana uygun?
           </h2>
-          <p className="mb-10 text-center text-sm text-muted-foreground">
+          <p className="mb-8 text-center text-sm text-muted-foreground">
             Hedefine göre doğru başlangıç noktasını bul.
           </p>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -287,92 +242,26 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* KDP Kanıt Bölümü */}
-      <section className="border-b border-border/80 bg-[linear-gradient(180deg,rgba(233,230,220,0.3),transparent)] py-14">
+            {/* Comparison table */}
+      <section className="border-b border-border/80 py-14">
         <div className="shell">
-          <h2 className="mb-8 text-center text-base font-medium text-muted-foreground">
-            Süreç netliği — {KDP_LIVE_BOOKS_CLAIM}
-          </h2>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                icon: BookOpen,
-                stat: "Preview → kitap",
-                label: "Aynı akışta üretim",
-                sub: "Konu özeti, bölüm planı, kapak ve export aynı üretim omurgasında ilerler.",
-              },
-              {
-                icon: Check,
-                stat: "EPUB + PDF",
-                label: "Teslim paketi net",
-                sub: "Yayın hedefi KDP ise teslim paketi kontrol edilmesi kolay bir format setiyle hazırlanır.",
-              },
-              {
-                icon: Zap,
-                stat: "Plan içine dahil",
-                label: "Model maliyeti görünür",
-                sub: "Ek model faturası çıkmaz; kullanılan altyapı plan fiyatına dahildir.",
-              },
-            ].map((item) => (
-              <div key={item.stat} className="rounded-[24px] border border-border/80 bg-card/80 p-5 shadow-sm">
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-accent text-primary">
-                  <item.icon className="size-5" />
-                </div>
-                <p className="text-2xl font-bold text-foreground">{item.stat}</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">{item.label}</p>
-                <p className="mt-2 text-xs leading-6 text-muted-foreground">{item.sub}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Plan detay bilgileri */}
-      <section className="border-b border-border/80 py-12">
-        <div className="shell grid gap-4 md:grid-cols-3">
-          {[
-            {
-              title: "Aylık haklar",
-              text: "Kitap ve kapak hakları sonraki aya devretmez. Her ay temiz başlar — gereğinden büyük plan almanı gerektirmez.",
-            },
-            {
-              title: "İptal ve yükseltme",
-              text: "Plan iptali ve değişimi faturalama alanından tek tıkla. Onay beklenmez, ekstra ücret kesilmez.",
-            },
-            {
-              title: "Çıktı formatları",
-              text: "EPUB ve PDF her planda dahil. Ek export seçenekleri üst planlarda açılır. Teslim dosyaları yayın öncesi kontrol etmeyi kolaylaştıracak şekilde hazırlanır.",
-            },
-          ].map(({ title, text }) => (
-            <div key={title} className="rounded-[24px] border border-border/80 bg-card/80 px-5 py-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-              <p className="mt-2 text-sm leading-7 text-muted-foreground">{text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Comparison table */}
-      <section className="border-b border-border/80 py-16">
-        <div className="shell">
-          <h2 className="mb-2 text-center font-serif text-3xl font-semibold tracking-tight text-foreground">
+          <h2 className="mb-2 text-center font-serif text-2xl font-semibold tracking-tight text-foreground">
             Özellik karşılaştırması
           </h2>
-          <p className="mb-10 text-center text-sm text-muted-foreground">
+          <p className="mb-8 text-center text-sm text-muted-foreground">
             Hangi planda ne var, yan yana gör.
           </p>
           <PricingComparisonTable />
         </div>
       </section>
-
-      {/* FAQ */}
+{/* FAQ */}
       <section className="border-b border-border/80 bg-accent/20 py-16">
         <div className="shell">
           <div className="mx-auto max-w-3xl">
             <h2 className="mb-2 text-center font-serif text-3xl font-semibold tracking-tight text-foreground">
               Aklındaki sorular
             </h2>
-            <p className="mb-8 text-center text-sm text-muted-foreground">
+            <p className="mb-6 text-center text-sm text-muted-foreground">
               Plan seçmeden önce bilmen gerekenler.
             </p>
             <div className="grid gap-4 md:grid-cols-2">
@@ -402,40 +291,36 @@ export default function PricingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-16">
+      <section className="py-14">
         <div className="shell text-center">
-          <h2 className="font-serif text-4xl font-semibold tracking-tight text-foreground">
-            Önce kitabını gör —
-            <span className="text-primary"> sonra karar ver.</span>
+          <h2 className="font-serif text-3xl font-semibold tracking-tight text-foreground">
+            Önce kitabını gör —{" "}
+            <span className="text-primary">sonra $4 öde.</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-muted-foreground">
-            Outline ve kapak önizlemesi ücretsiz. Tam kitap + EPUB/PDF için $4 — bir kez öde, senindir.
-            Aylık planlarda uygun paketi seçip ödemeyi doğrudan başlatabilirsin.
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-muted-foreground">
+            Taslak ve kapak önizlemesi ücretsiz. Tam kitap + EPUB/PDF için $4 — bir kez öde, senindir.
           </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/billing?plan=creator&autostart=1"
+              href="/start/topic?plan=tek-kitap"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90"
             >
-              Hızlı Kayıt + Ödemeyi Aç
+              Ücretsiz Önizleme Başlat
               <ArrowRight className="size-4" />
             </Link>
             <Link
-              href="/how-it-works"
+              href="/billing?plan=starter&autostart=1"
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-7 py-3.5 text-sm font-semibold text-foreground transition hover:bg-accent"
             >
-              Nasıl çalışıyor?
+              Aylık Planla Başla
             </Link>
           </div>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground/70">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground/70">
             {[
               "Önizleme ücretsiz",
-              "$4 tek seferlik — abonelik yok",
+              "$4 tek seferlik",
               KDP_GUARANTEE_CLAIM,
               REFUND_GUARANTEE_CLAIM,
-              NO_API_COST_CLAIM,
-              "Kredi kartı gerekmez",
-              "Anında erişim",
             ].map((item) => (
               <span key={item} className="flex items-center gap-1.5">
                 <Check className="size-3 text-primary" />
@@ -443,16 +328,6 @@ export default function PricingPage() {
               </span>
             ))}
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Aylık plana hızlı geçiş için{" "}
-            <Link href="/billing?plan=starter&autostart=1" className="font-semibold text-foreground underline-offset-4 hover:underline">
-              ödemeyi direkt başlat →
-            </Link>
-            {" "}· Tek kitap için önce{" "}
-            <Link href="/start/topic?plan=tek-kitap" className="font-semibold text-foreground underline-offset-4 hover:underline">
-              önizleme oluştur
-            </Link>
-          </p>
         </div>
       </section>
       <script

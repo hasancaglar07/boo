@@ -4,11 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { useTheme } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileNav } from "@/components/site/mobile-nav";
 import { Button } from "@/components/ui/button";
+import { getSession, syncPreviewAuthState } from "@/lib/preview-auth";
 import { cn } from "@/lib/utils";
 
 /* ─── Nav structure ──────────────────────────────────────── */
@@ -29,6 +31,20 @@ export function SiteHeader() {
   const { resolvedTheme } = useTheme();
   const pathname = usePathname();
   const logoSrc = resolvedTheme === "dark" ? "/dark-logo.png" : "/logo.png";
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getSession()));
+
+  useEffect(() => {
+    let active = true;
+
+    void syncPreviewAuthState().then((payload) => {
+      if (!active) return;
+      setIsAuthenticated(Boolean(payload?.authenticated || getSession()));
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <header className="site-header sticky top-0 z-50">
@@ -86,27 +102,27 @@ export function SiteHeader() {
 
           <div className="mx-2 hidden h-4 w-px bg-border/80 lg:block" aria-hidden="true" />
 
-          <Link href="/login" className="hidden lg:block">
+          <Link href={isAuthenticated ? "/app/library" : "/login"} className="hidden lg:block">
             <Button
               variant="ghost"
               size="sm"
               className="h-9 px-3.5 text-[13px] font-medium tracking-[-0.01em]"
             >
-              Giriş Yap
+              {isAuthenticated ? "Kitaplarım" : "Giriş Yap"}
             </Button>
           </Link>
 
-          <Link href="/start/topic" className="hidden lg:block">
+          <Link href={isAuthenticated ? "/app/new/topic" : "/start/topic"} className="hidden lg:block">
             <Button
               size="sm"
               className="header-cta-btn h-9 gap-1.5 px-4 text-[13px] font-semibold tracking-[-0.02em]"
             >
               <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              Ücretsiz Preview
+              {isAuthenticated ? "Yeni Kitap" : "Ücretsiz Preview"}
             </Button>
           </Link>
 
-          <MobileNav />
+          <MobileNav isAuthenticated={isAuthenticated} />
         </div>
       </div>
     </header>

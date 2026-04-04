@@ -1,0 +1,220 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import { trackEvent, trackEventOnce } from "@/lib/analytics";
+import {
+  bookTypeLabel,
+  canOpenStep,
+  createDefaultFunnelDraft,
+  FUNNEL_STEPS,
+  inferFunnelLanguageFromText,
+  isTurkishLanguage,
+  languageLabel,
+  loadFunnelDraft,
+  localOutlineSuggestions,
+  localTitleSuggestions,
+  nextStep,
+  normalizeFunnelDraft,
+  normalizeFunnelLanguage,
+  previousStep,
+  saveFunnelDraft,
+  stepIndex,
+  type FunnelDraft,
+  type FunnelLanguage,
+  type FunnelOutlineItem,
+  type FunnelStep,
+} from "@/lib/funnel-draft";
+import { getAccount, getPlan, getSession, syncPreviewAuthState, getViewer } from "@/lib/preview-auth";
+
+export type AiLoadingState = "" | "title" | "outline" | "style" | "generate";
+
+function normalizeRouteBase(routeBase: string) {
+  const normalized = routeBase.trim().replace(/\/+$/, "");
+  return normalized || "/start";
+}
+
+function firstAllowedStep(draft: FunnelDraft, desired: FunnelStep) {
+  const targetIndex = stepIndex(desired);
+  for (let index = targetIndex; index >= 0; index -= 1) {
+    const candidate = FUNNEL_STEPS[index];
+    if (canOpenStep(draft, candidate)) return candidate;
+  }
+  return "topic";
+}
+
+export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellEnabled = false) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [draft, setDraft] = useState<FunnelDraft>(() => createDefaultFunnelDraft());
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState("");
+  const normalizedRouteBase = normalizeRouteBase(routeBase);
+
+  const topicPrefillRef = useRef(false);
+
+  function stepHref(target: FunnelStep) {
+    return `${normalizedRouteBase}/${target}`;
+  }
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const stored = normalizeFunnelDraft(loadFunnelDraft());
+    const allowedStep = firstAllowedStep(stored, step);
+    if (allowedStep !== step) {
+      router.replace(stepHref(allowedStep));
+      return;
+    }
+    const account = getAccount();
+    const nextDraft = {
+      ...stored,
+      currentStep: step,
+      authorName: stored.authorName || account.name || "",
+      imprint: stored.imprint || "Kitap Oluşturucu",
+    };
+    setDraft(nextDraft);
+    saveFunnelDraft(nextDraft);
+    setReady(true);
+  }, [router, step, normalizedRouteBase]);
+
+  // Save draft whenever it changes
+  useEffect(() => {
+    if (!ready) return;
+    saveFunnelDraft({ ...draft, currentStep: step });
+  }, [draft, ready, step]);
+
+  // Prefill topic from URL params
+  useEffect(() => {
+    if (!ready || step !== "topic" || topicPrefillRef.current) return;
+    topicPrefillRef.current = true;
+    const topic = (searchParams.get("topic") || "").trim();
+    const audience = (searchParams.get("audience") || "").trim();
+    const language = normalizeFunnelLanguage(searchParams.get("language") || undefined);
+    const bookType = searchParams.get("bookType");
+    if (!topic && !audience && !bookType && !searchParams.get("language")) return;
+    setDraft((current) => ({
+      ...current,
+      topic: current.topic.trim() || topic,
+      audience: current.audience.trim() || audience,
+      language: current.topic.trim() || current.audience.trim() ? current.language : language,
+      languageLocked:
+        current.languageLocked ||
+        Boolean(searchParams.get("language")) ||
+        (current.topic.trim() || current.audience.trim() ? current.languageLocked : false),
+      bookType:
+        current.topic.trim() || current.audience.trim()
+          ? current.bookType
+          : bookType === "rehber" || bookType === "is" || bookType === "egitim" || bookType === "cocuk" || bookType === "diger"
+            ? bookType
+            : current.bookType,
+      updatedAt: new Date().toISOString(),
+    }));
+  }, [ready, searchParams, step]);
+
+  // Auto-detect language from text inputs
+  useEffect(() => {
+    if (!ready || draft.languageLocked) return;
+    const inferredLanguage = inferFunnelLanguageFromText(
+      draft.title,
+      draft.subtitle,
+      draft.topic,
+      draft.audience,
+    );
+    if (!inferredLanguage || inferredLanguage === draft.language) return;
+    setDraft((current) => {
+      if (current.languageLocked || current.language === inferredLanguage) return current;
+      return {
+        ...current,
+        language: inferredLanguage,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }, [
+    draft.audience,
+    draft.language,
+    draft.languageLocked,
+    draft.subtitle,
+    draft.title,
+    draft.topic,
+    ready,
+  ]);
+
+  // Track wizard start
+  useEffect(() => {
+    if (step === "topic") {
+      const source = appShellEnabled ? "app_new_topic" : "start_topic";
+      trackEventOnce("wizard_started", { source }, { key: `wizard_started:${source}`, ttlMs: 15_000 });
+    }
+  }, [appShellEnabled, step]);
+
+  const summary = useMemo(
+    () => [
+      { label: "Konu", value: draft.topic || "Henüz seçilmedi" },
+      { label: "Başlık", value: draft.title || "Henüz seçilmedi" },
+      { label: "Yazar", value: draft.authorName || "Henüz girilmedi" },
+      { label: "Dil", value: languageLabel(draft.language) },
+      { label: "Uzunluk", value: draft.outline.length ? `${draft.outline.length} bölüm` : "Henüz oluşturulmadı" },
+    ],
+    [draft],
+  );
+
+  function updateDraft(changes: Partial<FunnelDraft>) {
+    setDraft((current) => ({ ...current, ...changes, updatedAt: new Date().toISOString() }));
+    setError("");
+  }
+
+  function updateOutline(index: number, changes: Partial<FunnelOutlineItem>) {
+    setDraft((current) => ({
+      ...current,
+      outline: current.outline.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, ...changes } : item,
+      ),
+      updatedAt: new Date().toISOString(),
+    }));
+    trackEvent("outline_manual_edited", { index });
+  }
+
+  function goBack() {
+    const prev = previousStep(step);
+    if (prev) router.push(stepHref(prev));
+  }
+
+  function goNext() {
+    if (step === "topic") {
+      if (!draft.topic.trim()) {
+        setError("Konu boş bırakılamaz.");
+        return;
+      }
+      trackEvent("wizard_topic_completed", { language: draft.language });
+    }
+
+    if (step === "title" && !draft.title.trim()) {
+      setError("Başlık gerekli.");
+      return;
+    }
+
+    if (step === "outline" && draft.outline.filter((item) => item.title.trim()).length < 3) {
+      setError("En az 3 bölüm gerekli.");
+      return;
+    }
+
+    const next = nextStep(step);
+    if (next) router.push(stepHref(next));
+  }
+
+  return {
+    draft,
+    ready,
+    error,
+    setError,
+    updateDraft,
+    updateOutline,
+    goBack,
+    goNext,
+    summary,
+    stepHref,
+    normalizedRouteBase,
+    router,
+  };
+}

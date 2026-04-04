@@ -1613,13 +1613,21 @@ def art_candidate_rank(score_payload: dict[str, Any]) -> tuple[float, float]:
     return (text_risk, -quality)
 
 
-def ensure_variant_art(entry: dict[str, Any], assets_dir: Path, api_key: str, service: str, force: bool) -> list[dict[str, Any]]:
+def ensure_variant_art(
+    entry: dict[str, Any],
+    assets_dir: Path,
+    api_key: str,
+    service: str,
+    force: bool,
+    *,
+    families: tuple[dict[str, Any], ...] | None = None,
+) -> list[dict[str, Any]]:
     entry = normalized_cover_entry(entry)
     generated: list[dict[str, Any]] = []
     legacy_ai_cover = assets_dir / "ai_front_cover.png"
     providers = normalize_service(service, entry)
-
-    for family in families_for_entry(entry):
+    target_families = families or families_for_entry(entry)
+    for family in target_families:
         variant_index = int(family["art_variant"])
         target = assets_dir / f"cover_art_v{variant_index}.png"
         provider_used = ""
@@ -1788,12 +1796,41 @@ def build_cover_variants(
     api_key: str,
     force: bool,
     *,
+    variant_count: int | None = None,
     selected_override: str | None = None,
 ) -> dict[str, Any]:
     entry = normalized_cover_entry(entry)
     assets_dir = book_dir / "assets"
     meta = read_dashboard_meta(book_dir)
-    variants = ensure_variant_art(entry, assets_dir, api_key, service, force)
+    desired_variant_count = VARIANT_COUNT
+    if variant_count is not None:
+        try:
+            desired_variant_count = int(variant_count)
+        except (TypeError, ValueError):
+            desired_variant_count = VARIANT_COUNT
+    desired_variant_count = max(1, min(VARIANT_COUNT, desired_variant_count))
+
+    variant_specs = variant_specs_for_entry(entry)[:desired_variant_count]
+    family_ids: set[str] = set()
+    families_to_generate: list[dict[str, Any]] = []
+    for spec in variant_specs:
+        family = dict(spec["family"])
+        family_id = str(family.get("id") or "")
+        if not family_id or family_id in family_ids:
+            continue
+        family_ids.add(family_id)
+        families_to_generate.append(family)
+    if not families_to_generate:
+        families_to_generate = [dict(family) for family in families_for_entry(entry)[:desired_variant_count]]
+
+    variants = ensure_variant_art(
+        entry,
+        assets_dir,
+        api_key,
+        service,
+        force,
+        families=tuple(families_to_generate),
+    )
 
     art_scores: list[dict[str, Any]] = []
     by_variant: dict[int, dict[str, Any]] = {}
@@ -1818,7 +1855,6 @@ def build_cover_variants(
     )
     fallback_art = art_scores[0]
 
-    variant_specs = variant_specs_for_entry(entry)
     cover_variants: list[dict[str, Any]] = []
     for spec in variant_specs:
         family = spec["family"]
@@ -1946,6 +1982,7 @@ def build_cover_variants(
             "back_cover_image": "assets/back_cover_final.png",
             "cover_template": selected_variant.get("template") or derive_cover_template_hint(entry),
             "cover_variant_count": len(cover_variants),
+            "cover_variant_target_count": desired_variant_count,
             "cover_generation_provider": selected_variant.get("provider") or service,
             "cover_composed": True,
             "cover_text_strategy": ai_text_strategy_for_entry(entry),

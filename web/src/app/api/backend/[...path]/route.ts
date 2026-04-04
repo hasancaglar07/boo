@@ -26,10 +26,18 @@ const BACKEND_ORIGIN =
   process.env.DASHBOARD_ORIGIN ||
   process.env.NEXT_PUBLIC_DASHBOARD_ORIGIN ||
   "http://127.0.0.1:8765";
+const BACKEND_FETCH_TIMEOUT_MS = 30_000;
 
 const IMAGE_FILE_PATTERN = /\.(png|jpe?g|webp|gif|svg|ico)$/i;
 
 export const runtime = "nodejs";
+
+class BackendUnavailableError extends Error {
+  constructor() {
+    super("BACKEND_UNAVAILABLE");
+    this.name = "BackendUnavailableError";
+  }
+}
 
 function jsonError(status: number, error: string, code?: string) {
   return NextResponse.json(
@@ -82,16 +90,25 @@ async function forwardToBackend(
   const url = new URL(upstreamPath, BACKEND_ORIGIN);
   url.search = request.nextUrl.search;
 
-  return fetch(url, {
-    method: request.method,
-    headers,
-    body:
-      request.method === "GET" || request.method === "HEAD" || !body || body.byteLength === 0
-        ? undefined
-        : body,
-    cache: "no-store",
-    redirect: "manual",
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), BACKEND_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, {
+      method: request.method,
+      headers,
+      body:
+        request.method === "GET" || request.method === "HEAD" || !body || body.byteLength === 0
+          ? undefined
+          : body,
+      cache: "no-store",
+      redirect: "manual",
+      signal: controller.signal,
+    });
+  } catch {
+    throw new BackendUnavailableError();
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function forwardResponse(
@@ -442,51 +459,63 @@ async function handleProxyRequest(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
-  const { path } = await params;
-  const upstreamPath = `/${(path || []).join("/")}`;
-  const body =
-    request.method === "GET" || request.method === "HEAD" ? null : await request.arrayBuffer();
-  const session = await auth();
-  const guest = await getGuestIdentityFromCookies();
-  const userId = session?.user?.id || null;
-  const guestIdentityId = guest?.id || null;
+  try {
+    const { path } = await params;
+    const upstreamPath = `/${(path || []).join("/")}`;
+    const body =
+      request.method === "GET" || request.method === "HEAD" ? null : await request.arrayBuffer();
+    const session = await auth();
+    const guest = await getGuestIdentityFromCookies();
+    const userId = session?.user?.id || null;
+    const guestIdentityId = guest?.id || null;
 
-  if (upstreamPath === "/api/health") {
-    return forwardResponse(request, upstreamPath, body);
-  }
-
-  if (upstreamPath === "/api/books" && request.method === "GET") {
-    return handleBooksIndex(request, body, userId, guestIdentityId);
-  }
-
-  if (upstreamPath === "/api/books" && request.method === "POST") {
-    return handleBookCreateOrUpdate(request, body, userId);
-  }
-
-  if (upstreamPath.startsWith("/api/books/")) {
-    return handleBookScopedRoute(request, upstreamPath, body, userId, guestIdentityId);
-  }
-
-  if (upstreamPath === "/api/workflows" && request.method === "POST") {
-    return handleWorkflowRoute(request, body, userId, guestIdentityId);
-  }
-
-  if (upstreamPath === "/api/settings") {
-    return handleSettingsRoute(request, body, userId);
-  }
-
-  if (upstreamPath === "/api/logs") {
-    if (!userId) {
-      return jsonError(401, "Log kayıtları için oturum gerekli.", "AUTH_REQUIRED");
+    if (upstreamPath === "/api/health") {
+      return forwardResponse(request, upstreamPath, body);
     }
-    return forwardResponse(request, upstreamPath, body);
-  }
 
-  if (upstreamPath.startsWith("/workspace/")) {
-    return handleWorkspaceRoute(request, upstreamPath, body, userId, guestIdentityId);
-  }
+    if (upstreamPath === "/api/books" && request.method === "GET") {
+      return handleBooksIndex(request, body, userId, guestIdentityId);
+    }
 
-  return jsonError(404, "Bilinmeyen backend route.");
+    if (upstreamPath === "/api/books" && request.method === "POST") {
+      return handleBookCreateOrUpdate(request, body, userId);
+    }
+
+    if (upstreamPath.startsWith("/api/books/")) {
+      return handleBookScopedRoute(request, upstreamPath, body, userId, guestIdentityId);
+    }
+
+    if (upstreamPath === "/api/workflows" && request.method === "POST") {
+      return handleWorkflowRoute(request, body, userId, guestIdentityId);
+    }
+
+    if (upstreamPath === "/api/settings") {
+      return handleSettingsRoute(request, body, userId);
+    }
+
+    if (upstreamPath === "/api/logs") {
+      if (!userId) {
+        return jsonError(401, "Log kayıtları için oturum gerekli.", "AUTH_REQUIRED");
+      }
+      return forwardResponse(request, upstreamPath, body);
+    }
+
+    if (upstreamPath.startsWith("/workspace/")) {
+      return handleWorkspaceRoute(request, upstreamPath, body, userId, guestIdentityId);
+    }
+
+    return jsonError(404, "Bilinmeyen backend route.");
+  } catch (error) {
+    if (error instanceof BackendUnavailableError) {
+      return jsonError(
+        503,
+        "Servis geçici olarak erişilemiyor. Lütfen birkaç saniye sonra tekrar dene.",
+        "BACKEND_UNAVAILABLE",
+      );
+    }
+    console.error("[api/backend] unexpected error", error);
+    return jsonError(500, "Beklenmeyen sunucu hatası.");
+  }
 }
 
 export async function GET(

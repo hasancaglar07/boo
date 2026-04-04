@@ -6,7 +6,7 @@ import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Stil | Book Generator",
-  description: "Dil, ton ve kapak yönünü uygulama içinde seçerek preview kalitesini belirle.",
+  description: "Dil, ton ve kapak yönünü uygulama içinde seçerek önizleme kalitesini belirle.",
   path: "/app/new/style",
   noIndex: true,
 });

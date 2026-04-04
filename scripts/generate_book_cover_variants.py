@@ -120,7 +120,7 @@ PALETTES = {
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate 3 adaptive cover variants for a book output.")
+    parser = argparse.ArgumentParser(description="Generate adaptive cover variants for a book output.")
     parser.add_argument("book_dir", help="Absolute or repo-relative path to the book output directory.")
     parser.add_argument(
         "--service",
@@ -129,6 +129,13 @@ def parse_args() -> argparse.Namespace:
         help="Cover generation service order.",
     )
     parser.add_argument("--force", action="store_true", help="Regenerate AI art and composed variants.")
+    parser.add_argument(
+        "--variant-count",
+        type=int,
+        default=3,
+        choices=(1, 2, 3),
+        help="How many front/back cover concepts to generate.",
+    )
     parser.add_argument("--selected", default="", help="Force a selected family id after generation.")
     return parser.parse_args()
 
@@ -275,6 +282,7 @@ def main() -> None:
         args.service,
         api_key,
         args.force,
+        variant_count=args.variant_count,
         selected_override=str(args.selected or "").strip() or None,
     )
 
@@ -283,6 +291,7 @@ def main() -> None:
         "selected_cover_variant": meta.get("selected_cover_variant"),
         "recommended_cover_variant": meta.get("recommended_cover_variant"),
         "cover_variant_count": meta.get("cover_variant_count"),
+        "cover_variant_target_count": meta.get("cover_variant_target_count"),
         "cover_lab_version": meta.get("cover_lab_version") or COVER_LAB_VERSION,
     }
     print(json.dumps(output, ensure_ascii=False, indent=2))

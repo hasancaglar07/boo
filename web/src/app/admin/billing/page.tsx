@@ -170,7 +170,7 @@ export default function AdminBillingPage() {
           href={`/api/admin/reports/revenue?${query}`}
           className="inline-flex h-11 items-center justify-center rounded-2xl border border-[color:var(--admin-border)] px-4 text-sm font-semibold text-[color:var(--admin-text)]"
         >
-          CSV export
+          CSV dışa aktar
         </Link>
       </div>
 

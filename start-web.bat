@@ -2,130 +2,89 @@
 setlocal EnableExtensions
 chcp 65001 >nul
 
+:: === Proje dizinini ayarla ===
 set "REPO_DIR=%~dp0"
 if "%REPO_DIR:~-1%"=="\" set "REPO_DIR=%REPO_DIR:~0,-1%"
+set "WEB_DIR=%REPO_DIR%\web"
 
-for /f "delims=" %%I in ('wsl wslpath "%REPO_DIR%" 2^>nul') do set "WSL_REPO=%%I"
-if not defined WSL_REPO (
-    echo WSL bulunamadi.
-    set "EC=1"
-    goto :finish
+:: === Ayarlar ===
+set "PORT=3000"
+
+echo.
+echo ============================================
+echo   BOOK Web - Localhost Baslatiliyor
+echo   http://localhost:%PORT%
+echo ============================================
+echo.
+
+:: 0) Once eski sunucuyu durdur
+echo [0] Eski sunucu durduruluyor...
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":%PORT% " ^| findstr "LISTENING"') do (
+    taskkill /PID %%a /F >nul 2>&1
+)
+ping -n 2 127.0.0.1 >nul
+
+:: 1) node_modules kontrolu
+echo [1/4] Bagimliliklar kontrol ediliyor...
+if not exist "%WEB_DIR%\node_modules" (
+    echo       node_modules bulunamadi, kuruluyor...
+    cd /d "%WEB_DIR%"
+    call pnpm install
+    if errorlevel 1 (
+        echo       HATA: pnpm install basarisiz!
+        pause
+        exit /b 1
+    )
 )
 
-set "MODE=%~1"
-if not defined MODE set "MODE=reset"
+:: 2) Standalone server.js kontrolu - yoksa temiz build
+echo [2/4] Build kontrolu...
+if not exist "%WEB_DIR%\.next\standalone\server.js" (
+    echo       Standalone build bulunamadi.
+    echo       Eski build temizleniyor ve yeniden build aliniyor...
+    if exist "%WEB_DIR%\.next" rmdir /s /q "%WEB_DIR%\.next"
+    cd /d "%WEB_DIR%"
+    call pnpm build
+    if errorlevel 1 (
+        echo       HATA: Build basarisiz!
+        pause
+        exit /b 1
+    )
+)
 
-if /I "%MODE%"=="help" goto :help
-if /I "%MODE%"=="-h" goto :help
-if /I "%MODE%"=="--help" goto :help
-if /I "%MODE%"=="serve" goto :serve
-if /I "%MODE%"=="foreground" goto :foreground
-if /I "%MODE%"=="start" goto :start_bg
-if /I "%MODE%"=="reset" goto :reset
-if /I "%MODE%"=="repair" goto :repair
-if /I "%MODE%"=="restart" goto :restart
-if /I "%MODE%"=="logs" goto :logs
-if /I "%MODE%"=="logs-live" goto :logs_live
-if /I "%MODE%"=="logs-clear" goto :logs_clear
-if /I "%MODE%"=="build" goto :build
-if /I "%MODE%"=="stop" goto :stop
-
-echo Bilinmeyen komut: %MODE%
-goto :help
-
-:serve
-if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://localhost:3000
-echo Web arayuz foreground modda baslatiliyor. Pencereyi kapatinca sunucu durur.
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh serve"
-set "EC=%ERRORLEVEL%"
-goto :finish
-
-:foreground
-if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://localhost:3000
-echo Web arayuz foreground modda baslatiliyor. Pencereyi kapatinca sunucu durur.
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh foreground"
-set "EC=%ERRORLEVEL%"
-goto :finish
-
-:reset
-echo Eski web ve dashboard surecleri kapatiliyor...
- if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://localhost:3000
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh reset"
-set "EC=%ERRORLEVEL%"
-goto :finish
-
-:start_bg
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh start"
-set "EC=%ERRORLEVEL%"
-if not "%EC%"=="0" goto :finish
-if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://localhost:3000
-goto :finish
-
-:repair
-echo Next.js bagimliliklari onariliyor...
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh repair"
-set "EC=%ERRORLEVEL%"
-if not "%EC%"=="0" goto :finish
-echo Onarim tamamlandi. Foreground modda aciliyor.
-if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://127.0.0.1:3000
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh serve"
-set "EC=%ERRORLEVEL%"
-goto :finish
-
-:restart
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh restart"
-set "EC=%ERRORLEVEL%"
-if not "%EC%"=="0" goto :finish
-if not "%BOOK_WEB_NO_BROWSER%"=="1" start "" http://127.0.0.1:3000
-goto :finish
-
-:logs
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh logs"
-set "EC=%ERRORLEVEL%"
-goto :finish
-
-:logs_live
-echo Canli log izleme basladi. Cikmak icin Ctrl+C.
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh logs-live"
-set "EC=%ERRORLEVEL%"
-goto :finish
-
-:logs_clear
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh logs-clear"
-set "EC=%ERRORLEVEL%"
-goto :finish
-
-:build
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh build"
-set "EC=%ERRORLEVEL%"
-goto :finish
-
-:stop
-wsl bash -lc "cd '%WSL_REPO%' && ./start-web.sh stop"
-set "EC=%ERRORLEVEL%"
-goto :finish
-
-:help
-echo Kullanim:
-echo   start-web.bat            ^(varsayilan: temiz baslatma^)
-echo   start-web.bat serve      ^(pencere acik kaldigi surece calisir^)
-echo   start-web.bat start      ^(arkaplanda calisir^)
-echo   start-web.bat reset      ^(eski surecleri kapatip temiz acar^)
-echo   start-web.bat stop
-echo   start-web.bat restart
-echo   start-web.bat repair     ^(bagimlilik onar + serve^)
-echo   start-web.bat build
-echo   start-web.bat logs
-echo   start-web.bat logs-live
-echo   start-web.bat logs-clear
-set "EC=0"
-goto :finish
-
-:finish
-if "%EC%"=="" set "EC=0"
-if not "%EC%"=="0" (
-    echo.
-    echo Komut hata ile bitti. Kod: %EC%
+:: 3) Standalone server.js hala yoksa hata ver
+if not exist "%WEB_DIR%\.next\standalone\server.js" (
+    echo       HATA: Build tamamlandi ama server.js olusturulamadi!
+    echo       next.config.ts dosyasinda "output: standalone" oldugundan emin olun.
     pause
+    exit /b 1
 )
-exit /b %EC%
+
+:: 4) Static dosyalari kopyala (standalone bunu otomatik yapmaz)
+echo [3/4] Static dosyalar hazirlaniyor...
+if not exist "%WEB_DIR%\.next\standalone\public" (
+    if exist "%WEB_DIR%\public" (
+        xcopy "%WEB_DIR%\public" "%WEB_DIR%\.next\standalone\public" /E /I /Q /Y >nul
+    )
+)
+if not exist "%WEB_DIR%\.next\standalone\.next\static" (
+    if exist "%WEB_DIR%\.next\static" (
+        xcopy "%WEB_DIR%\.next\static" "%WEB_DIR%\.next\standalone\.next\static" /E /I /Q /Y >nul
+    )
+)
+
+:: 5) Sunucuyu baslat + tarayici ac
+echo [4/4] Sunucu baslatiliyor...
+echo.
+echo   Adres: http://localhost:%PORT%
+echo   Durdurmak icin: Ctrl+C
+echo.
+
+start "" "http://localhost:%PORT%"
+
+cd /d "%WEB_DIR%\.next\standalone"
+set "PORT=%PORT%"
+set "HOSTNAME=localhost"
+node server.js
+
+pause

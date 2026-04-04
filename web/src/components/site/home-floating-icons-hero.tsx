@@ -49,7 +49,7 @@ export function HomeFloatingIconsHero() {
       ctaHref="/start/topic"
       secondaryCtaText="Örnek Çıktıları Gör"
       secondaryCtaHref="/examples"
-      trustNote={`Kredi kartı gerekmez · Önce preview gör · ${NO_API_COST_CLAIM} · ${KDP_GUARANTEE_CLAIM}`}
+      trustNote={`Kredi kartı gerekmez · Önce önizleme gör · ${NO_API_COST_CLAIM} · ${KDP_GUARANTEE_CLAIM}`}
       socialProof={{ count: NO_API_COST_CLAIM, rating: KDP_LIVE_BOOKS_CLAIM }}
       assets={heroCovers}
     />

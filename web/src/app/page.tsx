@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { PremiumBookHero } from "@/components/site/premium-book-hero";
 import { InteractiveBookShowcase } from "@/components/site/interactive-book-showcase";
-import { HomeLogoCloudSection } from "@/components/site/home-logo-cloud-section";
+
 import { HomeHowItWorksSection } from "@/components/site/home-how-it-works-section";
 import { HomeTestimonialsSection } from "@/components/site/home-testimonials-section";
 import { HomeWorkspaceShowcaseSection } from "@/components/site/home-workspace-showcase-section";
@@ -19,20 +19,28 @@ import { buildPageMetadata, buildOgImageUrl } from "@/lib/seo";
 import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Yapay Zeka Kitap Yazma Aracı: Fikirden EPUB’a Kitap Oluşturucu",
+  title: "Yapay Zeka ile Kitap Yaz | 15 Dakikada KDP Uyumlu EPUB Olustur",
   description:
-    "Kitap Oluşturucu ile konunu yaz, kitap taslağını çıkar, bölümleri oluştur ve EPUB ile PDF dosyanı al. İlk kitabını daha hızlı ve daha net hazırla.",
+    "Uzmanlığını yapay zeka ile yayına hazır kitaba dönüştür. Taslak, kapak ve EPUB/PDF çıktısı 5 soruda oluştur. Kredi kartı gerekmeden ücretsiz önizle.",
   path: "/",
   keywords: [
-    "ai kitap yazma",
-    "kitap oluşturma aracı",
-    "epub oluşturma",
-    "kdp kitap hazırlama",
-    "book generator",
+    "yapay zeka kitap yazma",
+    "ai ile kitap yaz",
+    "kitap olusturucu",
+    "kdp kitap hazirlama",
+    "epub olusturma",
+    "kitap yazma araci",
+    "pdf kitap olusturma",
+    "kindle kitap hazirlama",
+    "yapay zeka ile kitap",
+    "online kitap yazma",
+    "e kitap olusturucu",
+    "kitap taslak olusturma",
+    "self publishing araci",
   ],
   ogImage: buildOgImageUrl(
-    "Yapay Zeka Kitap Yazma Aracı",
-    "Kitap Oluşturucu ile konunu yaz, kitap taslağını çıkar, bölümleri oluştur ve EPUB ile PDF dosyanı al."
+    "Yapay Zeka ile Kitap Yaz",
+    "Uzmanlığını 15 dakikada yayına hazır kitaba dönüştür. Ücretsiz önizle."
   ),
 });
 
@@ -40,9 +48,6 @@ const HOME_SHOWCASE_SLUGS = [
   "authority-in-100-pages",
   "silent-offers",
   "prompt-systems-for-small-teams",
-  "parent-friendly-stem-at-home",
-  "focus-by-design",
-  "tu-metodo-hecho-libro",
 ] as const;
 
 export default async function HomePage() {
@@ -62,113 +67,60 @@ export default async function HomePage() {
 
   const starterFaq: Array<[string, string]> = [
     [
-      "AI ile yazılan içerik gerçekten kaliteli oluyor mu?",
-      `AI taslak oluşturur, kaliteyi sen belirlersin. Her bölümü düzenleyebilir, beğenmediğini yeniden üretebilirsin. ${KDP_LIVE_BOOKS_CLAIM} ve kitaplarımız ${KDP_GUARANTEE_CLAIM} ile hazırlanır.`,
+      "Yapay zeka ile yazılan kitap gerçekten kaliteli olur mu?",
+      `Yapay zeka taslak oluşturur, kaliteyi sen belirlersin. Her bölümü düzenleyebilir, beğenmediğini yeniden üretebilirsin. ${KDP_LIVE_BOOKS_CLAIM} kitabımız ${KDP_GUARANTEE_CLAIM} ile yayında.`,
     ],
     [
-      "Hiç kitap yazmadan çıktı alabilir miyim?",
-      "Evet. Araç yön ve kararı senden alır, metni o üretir. Sihirbaz 5 kısa soruyla başlar, boş sayfa görmezsin.",
+      "Yapay zeka ile kitap yazmak ne kadar sürer?",
+      "Konunu gir, 30-90 dakika içinde yayına hazır EPUB ve PDF al. Çoğu kitap tek oturumda tamamlanır.",
     ],
     [
-      "Baştan sona ne kadar sürer?",
-      "Konunu gir, bir oturumda ilk EPUB'a ulaş. Çoğu kitap 30–90 dakika içinde tamamlanır; bölüm sayısı arttıkça üretim süresi de uzar.",
-    ],
-    [
-      "Çıktıyı KDP'ye direkt yükleyebilir miyim?",
-      "Evet. EPUB ve PDF formatında alırsın; yükleme öncesi kendi kontrol listenle bir gözden geçirmen önerilir.",
-    ],
-    [
-      "İçerik bana mı ait?",
-      "Evet. Üretilen tüm içerik sana aittir. Platform hiçbir telif hakkı talep etmez. Konu, yön ve içerik kararları da sende olduğu için kitabın tamamen sana aittir.",
-    ],
-    [
-      "İngilizce kitap üretebilir miyim?",
-      "Evet. Arayüz Türkçe kalır, kitap içeriği İngilizce veya seçtiğin başka dilde üretilebilir.",
-    ],
-    [
-      "Taslağı beğenmezsem ne yaparım?",
-      "Taslak üzerinde değişiklik yap, bölümleri yeniden üret ya da direkt çalışma alanında düzenle — yeniden başlamak zorunda değilsin.",
+      "EPUB ve PDF çıktılarını KDP'ye doğrudan yükleyebilir miyim?",
+      "Evet. EPUB ve PDF formatında KDP uyumlu çıktı alırsın. Yükleme öncesi kendi kontrol listenle son bir gözden geçirme önerilir.",
     ],
   ];
 
   return (
     <MarketingPage>
       <PremiumBookHero />
-      <HomeLogoCloudSection />
 
       {/* MiddleBlock: "Bu ne?" sorusunu erkenden cevapla */}
       <section className="border-b border-border/80 py-18">
         <div className="shell">
           <h2 className="text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-            Konunu yaz. Kitabın önüne gelsin.
+            Yapay Zeka ile Kitap Yaz: Fikrinden EPUB ve PDF Kitap Hazırla
           </h2>
           <p className="mt-4 max-w-3xl text-base leading-8 text-muted-foreground">
-            Kitap Oluşturucu, tek bir fikirden çok dilli ve yayına hazır bilgi kitabı üretmeni sağlayan yapay zeka destekli kitap üretim sistemidir. Bölüm planı, bölüm yazımı, kapak ve EPUB ile PDF çıktısı aynı yönlendirmeli akışta birleşir; süreç farklı araçlar arasında dağılmaz.
+            Kitap Oluşturucu ile uzmanlığını yayına hazır kitaba dönüştür. Yapay zeka destekli taslak oluşturma, kapak tasarımı ve KDP uyumlu EPUB/PDF çıktısı tek akışta.
           </p>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-            Önce ücretsiz önizlemeyi görürsün. Kitabın gerçekten çıkmaya değer olup olmadığı birkaç adımda netleşir; ödeme kararını daha sonra verirsin.
+            Ücretsiz önizleme ile kitabını gör, beğenirsen tam erişim aç. Kredi kartı gerekmeden hemen başla.
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-[24px] border border-border/80 bg-card/80 px-5 py-5 shadow-sm">
-              <h3 className="text-base font-semibold text-foreground">Kimler için?</h3>
+              <h3 className="text-base font-semibold text-foreground">Eğitmenler, Danışmanlar ve İçerik Üreticileri İçin</h3>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                Uzmanlığını rehber kitaba çevirmek isteyen eğitmenler, danışmanlar ve ilk kitabını çıkarmak isteyen içerik üreticileri.
+                Uzmanlığını KDP kitaba çevirmek isteyenler için yapay zeka destekli kitap yazma platformu. E-kitap hazırlama artık tek akışta.
               </p>
               <Link href="/use-cases" className="mt-3 inline-block text-xs font-medium text-primary/80 underline-offset-4 hover:underline">
                 Tüm kullanım alanlarını gör →
               </Link>
             </div>
             <div className="rounded-[24px] border border-border/80 bg-card/80 px-5 py-5 shadow-sm">
-              <h3 className="text-base font-semibold text-foreground">Hangi sorunu çözer?</h3>
+              <h3 className="text-base font-semibold text-foreground">Boş Sayfa ve Dağınık Araç Sorunu Biter</h3>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                Boş sayfa korkusunu ve dağınık araç zincirini kaldırır. Hangi araçta ne var diye uğraşmak yerine tek akışta ilerler, kitabın tamamlanır.
+                Yapay zeka ile kitap yazarken taslak, içerik ve çıktı tek platformda. Farklı araçlara gerek kalmadan kitabını tamamla.
               </p>
               <Link href="/compare" className="mt-3 inline-block text-xs font-medium text-primary/80 underline-offset-4 hover:underline">
                 Alternatiflere göre farkımız →
               </Link>
             </div>
             <div className="rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-5 py-5 shadow-sm">
-              <h3 className="text-base font-semibold text-foreground">Elinde ne kalır?</h3>
+              <h3 className="text-base font-semibold text-foreground">KDP Uyumlu EPUB ve PDF Dosyaları</h3>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                Düzenlenebilir bölüm içerikleri, kitap bilgileri ve yayına hazır EPUB + PDF dosyaları. KDP mantığı ürünün içinde düşünülür.
+                Düzenlenebilir bölümler, profesyonel kapak ve yayına hazır EPUB + PDF çıktıları. Kindle ve KDP ile uyumlu.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-border/80 py-18">
-        <div className="shell">
-          <SectionHeading
-            badge="Preview nasıl çalışır?"
-            title="Önce preview görürsün, tam kitaba sonra geçersin."
-            description="Ücretsiz kısım karar vermek içindir; tam erişim ise düzenleme ve teslim dosyalarını açar. Kullanıcı neyi ücretsiz gördüğünü, neyi ödeme sonrası açtığını ilk bakışta anlar."
-          />
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="rounded-[28px] border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))]">
-              <CardContent className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary/80">Ücretsiz preview</p>
-                <h3 className="text-xl font-semibold tracking-tight text-foreground">Karar vermek için yeterli görünürlük</h3>
-                <ul className="space-y-2 text-sm leading-7 text-muted-foreground">
-                  <li>• Konu özeti ve kitap yönü</li>
-                  <li>• Bölüm planı ve ilk yapı</li>
-                  <li>• Kapak yönü / önizleme</li>
-                  <li>• İlk içerik örneğini görme</li>
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="rounded-[28px]">
-              <CardContent className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary/80">Tam erişim</p>
-                <h3 className="text-xl font-semibold tracking-tight text-foreground">Kitabı tamamlama ve dışa aktarma</h3>
-                <ul className="space-y-2 text-sm leading-7 text-muted-foreground">
-                  <li>• Tüm bölümleri açma ve düzenleme</li>
-                  <li>• Kapak ve kitap bilgilerini netleştirme</li>
-                  <li>• EPUB + PDF teslim dosyaları</li>
-                  <li>• Aynı kitap üzerinde çalışmaya devam etme</li>
-                </ul>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>
@@ -179,9 +131,9 @@ export default async function HomePage() {
       {/* Pricing: "pahalı mı?" sorusunu testimonials’tan önce cevapla */}
       <section className="border-b border-border/80 py-18">
         <PricingCreativeSection
-          tag="Planlar"
-          title="İlk kitabını $4 ile aç. Bekleme, bu hafta çıkar."
-          description="Tek kitap için $4 erişim: tam içerik, EPUB + PDF çıktısı ve tam düzenleme erişimi. Önce önizlemeyi gör, sonra bu kitabı açmaya değer olup olmadığına karar ver."
+          tag="Kitap Fiyatlandırması"
+          title="İlk Kitabını $4 ile Hazırla — KDP Uyumlu EPUB ve PDF Dahil"
+          description="$4 ile bir kitabın tam içeriğine eriş: yapay zeka destekli taslak, profesyonel kapak, EPUB ve PDF çıktıları. Ücretsiz önizleme ile karar ver, sonra tam erişim aç."
         />
       </section>
 
@@ -194,9 +146,9 @@ export default async function HomePage() {
       <section className="border-b border-border/80 py-18">
         <div className="shell">
           <SectionHeading
-            badge="SSS"
-            title="Sık sorulan sorular."
-            description="Ürün ne yapıyor, kimin için uygun ve ilk çıktını nasıl alıyorsun? Satın alma kararında en kritik soruları burada kısa tutuyoruz."
+            badge="Kitap Yazma Hakkında SSS"
+            title="Yapay Zeka ile Kitap Yazma Hakkında Sık Sorulan Sorular"
+            description="AI kitap oluşturucu nasıl çalışır, çıktı kalitesi nasıl ve KDP'ye uygun mu? Kitap yazma sürecindeki en kritik sorular."
             actionHref="/faq"
             actionLabel="Tüm sorular"
           />
@@ -217,15 +169,12 @@ export default async function HomePage() {
       </section>
 
       <MarketingCtaSection
-        title="Aklındaki kitabı bir yıl daha beklettirme."
-        description={`Konunu gir, bölüm planını gör, önizlemeyi aç — aynı akışta kapağın ve yayın dosyan hazır olur. ${NO_API_COST_CLAIM}, kredi kartı gerekmez ve teslim paketi ${KDP_GUARANTEE_CLAIM} odağında hazırlanır.`}
+        title="Yapay Zeka ile Kitap Yazmaya Bugün Başla"
+        description={`Konunu yaz, 15 dakikada ücretsiz önizlemeni oluştur. ${NO_API_COST_CLAIM}, kredi karti gerekmez.`}
         items={[
-          "5 soruluk hızlı sihirbaz",
-          "Otomatik bölüm planı + bölüm akışı",
-          "Önce önizleme, sonra tam kitap",
-          "Kapak + çıktı sistemi",
-          "EPUB önce, PDF sonra",
-          "Türkçe panel, İngilizce kitap desteği",
+          "Yapay zeka ile taslak, kapak ve içerik hazır",
+          "Ücretsiz önizleme, beğenirsen tam erişim",
+          "KDP uyumlu EPUB + PDF çıktı",
         ]}
       />
     </MarketingPage>

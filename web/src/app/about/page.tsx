@@ -114,7 +114,7 @@ const metrics = [
   },
   {
     icon: <Eye className="size-5 text-primary" />,
-    value: "Ücretsiz preview",
+    value: "Ücretsiz önizleme",
     label: "ödeme öncesi görünür",
   },
   {

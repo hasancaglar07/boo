@@ -182,7 +182,7 @@ export default function AdminBooksPage() {
         onSort={handleSort}
         bulkActions={[
           {
-            label: "CSV export",
+            label: "CSV dışa aktar",
             onClick: () => {
               window.location.assign(`/api/admin/reports/books?${query}`);
             },

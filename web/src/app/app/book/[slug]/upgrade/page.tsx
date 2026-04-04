@@ -12,7 +12,7 @@ export async function generateMetadata({
   const { slug } = await params;
   return buildPageMetadata({
     title: `${slug} Upgrade | Book Generator`,
-    description: "Tam kitabı, PDF ve EPUB export'u açmak için premium'a geç.",
+    description: "Tam kitabı, PDF ve EPUB dışa aktarmayı açmak için premium'a geç.",
     path: `/app/book/${slug}/upgrade`,
     noIndex: true,
   });

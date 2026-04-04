@@ -216,7 +216,7 @@ export const PricingPageHero = React.forwardRef<
     <section
       ref={ref}
       className={cn(
-        "relative flex min-h-[560px] w-full items-center justify-center overflow-hidden border-b border-border/80",
+        "relative flex w-full items-center justify-center overflow-hidden border-b border-border/80 py-10",
         className,
       )}
       {...props}
@@ -225,23 +225,11 @@ export const PricingPageHero = React.forwardRef<
       <div className="absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_8%,var(--background)),var(--background)_70%)]" />
       <div className="hero-glow" />
 
-      {/* Dekoratif kitaplar */}
-      <FloatingBookAccent
-        gradient="linear-gradient(135deg,#c96442,#8e4a30)"
-        className="left-[8%] top-[20%] h-32 w-22"
-        delay={0.3}
-      />
-      <FloatingBookAccent
-        gradient="linear-gradient(135deg,#312e81,#4338ca)"
-        className="right-[10%] top-[18%] h-28 w-20"
-        delay={0.5}
-      />
-
       <div className="relative z-10 px-4 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <Award className="h-3.5 w-3.5 text-primary" />
@@ -249,70 +237,65 @@ export const PricingPageHero = React.forwardRef<
         </motion.div>
 
         <motion.h1
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.7 }}
-          className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
+          transition={{ delay: 0.1, duration: 0.6 }}
+          className="mx-auto mt-5 max-w-3xl text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl"
         >
-          Ghostwriter yerine{" "}
-          <span className="text-primary">bu hafta kitabın elinde olsun.</span>
+          Bu hafta sonu kitabın hazır.{" "}
+          <span className="text-primary">$4 ile başla, EPUB&apos;ını indir.</span>
         </motion.h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.7 }}
-          className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="mx-auto mt-3 max-w-xl text-pretty text-sm leading-7 text-muted-foreground md:text-base"
         >
-          İlk kitap için $4 ile tam erişim aç. Düzenli üretim için aylık planlara geç. Önce preview&apos;ı gör, sonra karar ver.
+          Taslağını ücretsiz gör, tam kitap $4. Abonelik yok, 30 gün iade garantili.
         </motion.p>
 
         {/* Ghostwriter anchor karşılaştırması */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.42, duration: 0.6 }}
-          className="mx-auto mt-6 flex max-w-sm items-center justify-center gap-6 rounded-2xl border border-border/80 bg-card/80 px-6 py-3 backdrop-blur-sm text-sm"
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="mx-auto mt-4 inline-flex items-center justify-center gap-5 rounded-2xl border border-border/80 bg-card/80 px-5 py-2.5 backdrop-blur-sm text-sm"
         >
           <div className="text-center">
             <p className="font-semibold text-muted-foreground line-through">$500–$5,000</p>
-            <p className="text-xs text-muted-foreground/60">Ajans / hayalet yazar</p>
+            <p className="text-[11px] text-muted-foreground/60">Ajans / hayalet yazar</p>
           </div>
-          <div className="h-8 w-px bg-border" />
+          <div className="h-7 w-px bg-border" />
           <div className="text-center">
-            <p className="font-semibold text-primary">$4</p>
-            <p className="text-xs text-muted-foreground/60">Kitap Oluşturucu</p>
+            <p className="text-lg font-bold text-primary">$4</p>
+            <p className="text-[11px] text-muted-foreground/60">Kitap Oluşturucu</p>
           </div>
         </motion.div>
 
-        {/* Trust Badges */}
+        {/* Trust Badges — kompakt */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="mt-8 flex flex-wrap items-center justify-center gap-3"
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="mt-4 flex flex-wrap items-center justify-center gap-2"
         >
           {[
-            { icon: Shield, text: "30 Gün İade Garantisi" },
-            { icon: CheckCircle2, text: "Önce Önizleme Gör" },
-            { icon: Zap, text: "Tek Kitap için $4" },
-            { icon: BookOpen, text: "Kredi Kartı Gerekmez" },
-          ].map((badge, index) => (
-            <motion.div
+            { icon: Shield, text: "30 Gün İade" },
+            { icon: CheckCircle2, text: "Önce Önizle" },
+            { icon: Zap, text: "$4 Tek Seferlik" },
+            { icon: BookOpen, text: "KK Gerekmez" },
+          ].map((badge) => (
+            <span
               key={badge.text}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 + index * 0.07, duration: 0.4 }}
-              className="flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-2 text-sm text-muted-foreground backdrop-blur-sm"
+              className="flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm"
             >
-              <badge.icon className="h-4 w-4 text-primary" />
+              <badge.icon className="h-3 w-3 text-primary" />
               <span className="font-medium">{badge.text}</span>
-            </motion.div>
+            </span>
           ))}
         </motion.div>
       </div>
-
-      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 });

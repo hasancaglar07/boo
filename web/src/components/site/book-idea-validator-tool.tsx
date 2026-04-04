@@ -509,10 +509,10 @@ export function BookIdeaValidatorTool() {
                               <p className="text-sm font-semibold">Tam raporu aç</p>
                             </div>
                             <h3 className="mt-3 font-serif text-3xl font-semibold text-foreground">
-                              Başlık önerileri ve mini outline hazır.
+                              Başlık önerileri ve mini taslak hazır.
                             </h3>
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-                              Tam rapor; 5 title idea, 8 bölümlük outline ve daha net format önerisini açar.
+                              Tam rapor; 5 title idea, 8 bölümlük taslak ve daha net format önerisini açar.
                             </p>
                           </div>
                           <div className="text-sm text-muted-foreground">Email only</div>
@@ -566,7 +566,7 @@ export function BookIdeaValidatorTool() {
 
                         <Card className="border border-border/80 bg-background/70">
                           <CardContent className="p-6">
-                            <p className="text-sm font-semibold text-foreground">Mini outline</p>
+                            <p className="text-sm font-semibold text-foreground">Mini taslak</p>
                             <ol className="mt-4 space-y-3">
                               {result.miniOutline.map((item, index) => (
                                 <li key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
@@ -626,18 +626,18 @@ export function BookIdeaValidatorTool() {
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">Next Step</p>
                 <h2 className="mt-4 max-w-2xl font-serif text-3xl font-semibold tracking-tight md:text-4xl">
-                  Güçlü fikri şimdi preview, outline ve kapağa taşı.
+                  Güçlü fikri şimdi önizleme, taslak ve kapağa taşı.
                 </h2>
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-white/72">
                   Validator karar netliği verir. Asıl üretim için Book Generator wizard&apos;ına geçip aynı fikri tam
-                  outline, branded cover ve preview akışına sok.
+                  taslak, özelleştirilmiş kapak ve önizleme akışına sok.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="min-w-[220px] gap-2" onClick={() => trackEvent("tool_cta_clicked", { tool: "book_idea_validator", destination: "start_topic" })}>
                   <Link href={previewHref}>
-                    Ücretsiz Preview Başlat
+                    Ücretsiz Önizleme Başlat
                     <ArrowRight className="size-4" />
                   </Link>
                 </Button>

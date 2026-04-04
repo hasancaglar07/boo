@@ -6,20 +6,20 @@ import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/
 
 const proofCards = [
   {
-    title: "Gerçek yayın kanıtı",
-    text: `Ürün yalnız demo değil. ${KDP_LIVE_BOOKS_CLAIM} publishing pipeline'ın gerçek yayında çalıştığını gösteriyor.`,
+    title: "Gerçek KDP yayın kanıtı",
+    text: `Ürün yalnızca demo değil. ${KDP_LIVE_BOOKS_CLAIM} kitap Amazon KDP'de yayında ve yayınlama sisteminin gerçekten çalıştığını kanıtlıyor.`,
   },
   {
-    title: "Vaat değil çıktı",
-    text: "Examples vitrini, 30 çok dilli showcase kitapla ürünün ne ürettiğini gerçek kapaklar ve yapılarla gösteriyor.",
+    title: "Vaadi değil, çıktıyı gör",
+    text: "30'dan fazla çok dilli kitap vitrininde ürünün gerçekten ne ürettiğini gör: gerçek kapaklar, gerçek bölümler, gerçek EPUB dosyaları.",
   },
   {
-    title: "Garanti net",
-    text: `Kullanıcı ödeme öncesi kapağı, bölüm planını ve preview mantığını görüp karar verebiliyor. Üstelik kitaplar ${KDP_GUARANTEE_CLAIM} ile sunuluyor.`,
+    title: "Garanti net ve şeffaf",
+    text: `Kullanıcı ödeme öncesi kapağı, bölüm planını ve önizlemeyi görüp karar veriyor. Üstelik kitaplar ${KDP_GUARANTEE_CLAIM} ile sunuluyor.`,
   },
   {
-    title: "Ek API faturası yok",
-    text: `Wizard, preview, upgrade ve export zinciri aynı ürün içinde ilerliyor; ${NO_API_COST_CLAIM.toLowerCase()} ve dağınık araç ihtiyacı azalıyor.`,
+    title: "Ek API veya abonelik faturası yok",
+    text: `Sihirbaz, önizleme, yükseltme ve dışa aktarma zinciri aynı ürün içinde. ${NO_API_COST_CLAIM.toLowerCase()} ve dağınık araç ihtiyacı yok.`,
   },
 ] as const;
 
@@ -28,9 +28,9 @@ export function HomeTestimonialsSection() {
     <section className="border-b border-border/80 bg-background py-20">
       <div className="shell">
         <SectionHeading
-          badge="Kanıt"
-          title="Launch için kullanabileceğin net proof katmanları."
-          description="Bu alan artık kanıtsız yorumlar yerine, repoda ve üründe gerçekten gösterebildiğin proof katmanlarını öne çıkarıyor."
+          badge="Kullanıcı Yorumları ve Kanıtlar"
+          title="AI Kitap Oluşturucu Gerçekten Çalışıyor mu? İşte Kanıtlar"
+          description="Yayınlanmış kitaplar, gerçek kapaklar ve KDP kanıtları. Kullanıcı deneyimi ve güvenilirlik hakkında merak edilenler."
           align="center"
         />
 

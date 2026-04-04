@@ -6,7 +6,7 @@ import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Uretim Merkezi | Book Generator",
-  description: "Book Generator uretim merkezinde kitap surecini brief'ten export'a kadar yonet.",
+  description: "Book Generator uretim merkezinde kitap surecini brief'ten dışa aktarmaya kadar yonet.",
   path: "/app",
   noIndex: true,
 });

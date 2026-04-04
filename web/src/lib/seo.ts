@@ -76,13 +76,13 @@ function normalizeSiteUrl(raw?: string) {
 }
 
 export const siteConfig = {
-  name: "Book Generator",
-  alternateName: "Kitap Oluşturucu",
+  name: "Kitap Olusturucu",
+  alternateName: "Yapay Zeka ile Kitap Yazma Araci",
   description:
-    "Çok dilli AI publishing studio: tek bir fikirden branded, yayına hazır kitap, kapak ve EPUB/PDF çıktısı üretir.",
+    "Yapay zeka destekli kitap olusturma platformu. Fikrinizi 5 soruda yayina hazir kitaba, kapaga ve EPUB/PDF ciktisina donusturun.",
   siteUrl: normalizeSiteUrl(resolveRawSiteUrl()),
   locale: "tr_TR",
-  defaultTitle: "Book Generator",
+  defaultTitle: "Kitap Olusturucu - Yapay Zeka ile Kitap Yaz",
   defaultOgImage: "/logo-tight.png",
 };
 

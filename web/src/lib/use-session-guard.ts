@@ -12,25 +12,52 @@ export function useSessionGuard() {
 export function useSessionGuardWithRedirect(redirectBase = "/login") {
   const router = useRouter();
   const pathname = usePathname();
-  const [session, setSession] = useState<PreviewSession | null | undefined>(undefined);
+  const appRoute = Boolean(pathname?.startsWith("/app"));
+  const [session, setSession] = useState<PreviewSession | null>(() => getSession());
+  const [status, setStatus] = useState<"pending" | "authenticated" | "unauthenticated">(() => (
+    getSession() ? "authenticated" : "pending"
+  ));
 
   useEffect(() => {
     let active = true;
-    void syncPreviewAuthState().then(() => {
+
+    void syncPreviewAuthState().then((payload) => {
       if (!active) return;
-      setSession(getSession());
+      const nextSession = getSession();
+      setSession(nextSession);
+
+      if (payload) {
+        setStatus(payload.authenticated ? "authenticated" : "unauthenticated");
+        return;
+      }
+
+      if (nextSession) {
+        setStatus("authenticated");
+        return;
+      }
+
+      // /app routes are server-protected; if auth state sync fails, avoid false logout redirects.
+      setStatus(appRoute ? "authenticated" : "unauthenticated");
     });
+
     return () => {
       active = false;
     };
-  }, []);
+  }, [appRoute]);
 
   useEffect(() => {
-    if (session === null) {
-      const separator = redirectBase.includes("?") ? "&" : "?";
-      router.replace(`${redirectBase}${separator}next=${encodeURIComponent(pathname || "/app")}`);
-    }
-  }, [pathname, redirectBase, router, session]);
+    if (status !== "unauthenticated" || session !== null) return;
+    const separator = redirectBase.includes("?") ? "&" : "?";
+    router.replace(`${redirectBase}${separator}next=${encodeURIComponent(pathname || "/app")}`);
+  }, [pathname, redirectBase, router, session, status]);
 
-  return session !== undefined && Boolean(session);
+  if (status === "pending") {
+    return false;
+  }
+
+  if (status === "unauthenticated" && session === null) {
+    return false;
+  }
+
+  return true;
 }

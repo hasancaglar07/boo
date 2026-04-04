@@ -157,7 +157,7 @@ export function HomeScreen() {
     onboardingActions.push({
       icon: BookOpen,
       label: "İlk kitabı başlat",
-      description: "Beş kısa adım ile ilk preview'ı üret ve kütüphaneni aç.",
+      description: "Beş kısa adım ile ilk önizlemeyi üret ve kütüphaneni aç.",
       run: () => router.push(newBookHref),
     });
   }
@@ -172,8 +172,8 @@ export function HomeScreen() {
   if (latestBook) {
     onboardingActions.push({
       icon: FileText,
-      label: "Son preview'a dön",
-      description: `${latestBook.title} için preview ve upgrade akışına geri dön.`,
+      label: "Son önizlemeye dön",
+      description: `${latestBook.title} için önizleme ve yükseltme akışına geri dön.`,
       run: () => router.push(`/app/book/${encodeURIComponent(latestBook.slug)}/preview`),
     });
   }
@@ -216,7 +216,7 @@ export function HomeScreen() {
       actions={[
         { label: "Yeni kitap oluştur", description: "Uygulama içi yazım akışını aç", run: () => router.push(newBookHref) },
         {
-          label: "Son preview'ı aç",
+          label: "Son önizlemeyi aç",
           description: "En son kitabının önizlemesine dön",
           run: () => latestBook && router.push(`/app/book/${encodeURIComponent(latestBook.slug)}/preview`),
         },
@@ -240,8 +240,8 @@ export function HomeScreen() {
 
             <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
               {latestBook
-                ? `${latestBook.title} için preview, çalışma alanı ve export akışı seni bekliyor. Kaldığın yerden devam et veya yeni bir kitap başlat.`
-                : "İlk kitabını başlat, preview'ı aynı oturumda yönet ve kütüphaneni bu alandan büyüt."}
+                ? `${latestBook.title} için önizleme, çalışma alanı ve dışa aktarma akışı seni bekliyor. Kaldığın yerden devam et veya yeni bir kitap başlat.`
+                : "İlk kitabını başlat, önizlemeyi aynı oturumda yönet ve kütüphaneni bu alandan büyüt."}
             </p>
 
             {viewer?.usage?.canStartBook === false ? (
@@ -359,7 +359,7 @@ export function HomeScreen() {
                 {
                   icon: BookOpen,
                   label: "Yeni kitap başlat",
-                  description: "Kısa wizard ile yeni üretim akışını başlat.",
+                  description: "Kısa sihirbaz ile yeni üretim akışını başlat.",
                   run: () => router.push(newBookHref),
                 },
                 {
@@ -478,7 +478,7 @@ export function HomeScreen() {
                   İlk kitabın için alan hazır
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Hesabın açık. Şimdi ilk üretim akışını başlat, preview üret ve bu ekranı gerçek kütüphanene dönüştür.
+                  Hesabın açık. Şimdi ilk üretim akışını başlat, önizleme üret ve bu ekranı gerçek kütüphanene dönüştür.
                 </p>
                 <div className="mt-8 flex justify-center">
                   <Button size="lg" onClick={() => router.push(newBookHref)}>

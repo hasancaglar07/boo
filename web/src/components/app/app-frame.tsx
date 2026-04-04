@@ -260,7 +260,7 @@ function SidebarContent({
       ) : (
         <div className="flex min-h-0 flex-1 items-start">
           <div className="mt-5 rounded-[20px] border border-sidebar-border/55 bg-sidebar-accent/35 px-3 py-3 text-xs leading-6 text-sidebar-foreground/54">
-            Yeni kitap akışındasın. Adımlar bittiğinde preview ve çalışma alanı burada görünecek.
+            Yeni kitap akışındasın. Adımlar bittiğinde önizleme ve çalışma alanı burada görünecek.
           </div>
         </div>
       )}

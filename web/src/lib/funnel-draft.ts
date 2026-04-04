@@ -55,6 +55,7 @@ export type FunnelDraft = {
   bookType: FunnelBookType;
   audience: string;
   language: FunnelLanguage;
+  languageLocked: boolean;
   authorName: string;
   imprint: string;
   logoText: string;
@@ -149,6 +150,7 @@ export function createDefaultFunnelDraft(): FunnelDraft {
     bookType: "rehber",
     audience: "",
     language: "Turkish",
+    languageLocked: false,
     authorName: "",
     imprint: "Kitap Oluşturucu",
     logoText: "",
@@ -226,6 +228,7 @@ export function normalizeFunnelDraft(payload?: Partial<FunnelDraft> | null): Fun
     ...base,
     ...payload,
     language: normalizeFunnelLanguage(payload?.language),
+    languageLocked: Boolean(payload?.languageLocked),
     bookLength,
     outline: Array.isArray(payload?.outline)
       ? enrichOutlineItems(payload.outline, {
@@ -329,7 +332,7 @@ export function canOpenStep(draft: FunnelDraft, step: FunnelStep) {
 }
 
 export function localTitleSuggestions(draft: FunnelDraft) {
-  const subject = titleCase(draft.topic || "Kitap Fikri");
+  const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Kitap Fikri" : "Book Idea"));
   const audience = draft.audience?.trim() || (isTurkishLanguage(draft.language) ? "başlangıç okurları" : "first-time readers");
   if (isTurkishLanguage(draft.language)) {
     return [
@@ -365,7 +368,7 @@ export function localTitleSuggestions(draft: FunnelDraft) {
 }
 
 export function localOutlineSuggestions(draft: FunnelDraft) {
-  const subject = titleCase(draft.topic || "Konu");
+  const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Konu" : "Topic"));
   const language = draft.language;
   if (isTurkishLanguage(language)) {
     return enrichOutlineItems([
@@ -388,6 +391,66 @@ export function localOutlineSuggestions(draft: FunnelDraft) {
     { title: "Advanced Tactics", summary: "The higher-leverage moves that separate casual use from confident execution." },
     { title: "Next-Level Progress", summary: "A long-term roadmap for improving results beyond the basics." },
   ], draft);
+}
+
+function inferLatinLanguage(text: string): FunnelLanguage {
+  const normalized = ` ${text.toLowerCase()} `;
+
+  if (/[çğıöşü]/.test(normalized) || /\b(ve|için|rehber|rehberi|kitap|başlangıç|adım|okur)\b/u.test(normalized)) {
+    return "Turkish";
+  }
+  if (/[äöüß]/.test(normalized) || /\b(und|für|leitfaden|kapitel)\b/u.test(normalized)) {
+    return "German";
+  }
+  if (/[éèêëàâîïôùûçœ]/.test(normalized) || /\b(pour|avec|guide|chapitre)\b/u.test(normalized)) {
+    return "French";
+  }
+  if (/[ñ¿¡]/.test(normalized) || /\b(para|con|guía|capítulo)\b/u.test(normalized)) {
+    return "Spanish";
+  }
+  if (/[ãõ]/.test(normalized) || /\b(para|com|guia|capítulo)\b/u.test(normalized)) {
+    return "Portuguese";
+  }
+  if (/\b(per|con|guida|capitolo)\b/u.test(normalized)) {
+    return "Italian";
+  }
+  if (/\b(voor|met|gids|hoofdstuk)\b/u.test(normalized)) {
+    return "Dutch";
+  }
+  return "English";
+}
+
+export function inferFunnelLanguageFromText(...parts: Array<string | null | undefined>): FunnelLanguage | null {
+  const text = parts
+    .map((part) => String(part || "").trim())
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (text.length < 3) {
+    return null;
+  }
+
+  if (/[\u3040-\u30ff\u4e00-\u9faf]/u.test(text)) {
+    return "Japanese";
+  }
+  if (/[\u0600-\u06ff]/u.test(text)) {
+    return "Arabic";
+  }
+  if (/[\u0900-\u097f]/u.test(text)) {
+    return "Hindi";
+  }
+  if (/[\u0370-\u03ff]/u.test(text)) {
+    return "Greek";
+  }
+  if (/[\u0400-\u04ff]/u.test(text)) {
+    return /[іїєґІЇЄҐ]/u.test(text) ? "Ukrainian" : "Russian";
+  }
+  if (/[a-zA-Z]/.test(text)) {
+    return inferLatinLanguage(text);
+  }
+  return null;
 }
 
 type WordRange = { min: number; max: number };

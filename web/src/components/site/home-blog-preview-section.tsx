@@ -10,9 +10,9 @@ export function HomeBlogPreviewSection() {
     <section className="border-b border-border/80 py-18">
       <div className="shell">
         <SectionHeading
-          badge="Rehber"
-          title="Bilgi ürünü çıkarmadan önce oku."
-          description="İlk kitap kararında en çok sorulan sorulara kısa ve net cevaplar."
+          badge="Kitap Yazma Rehberi"
+          title="Yapay Zeka ile Kitap Yazma Rehberi: İlk Kitabını Çıkarmadan Önce Oku"
+          description="AI kitap oluşturucu ile ilk kitabını hazırlama sürecinde en çok sorulan sorulara kısa ve net cevaplar."
           actionHref="/blog"
           actionLabel="Tüm yazılar"
         />

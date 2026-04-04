@@ -60,3 +60,15 @@ runtime/
 *.swp
 *.swo
 *~
+  
+# Temp/Backup files  
+*.backup  
+*.old  
+*.phase1-backup  
+.tmp_*  
+hero-*.json  
+*-report.md  
+*-variants.md  
+implementation-checklist.md  
+quick-reference-guide.md 
+web/preview/ 
