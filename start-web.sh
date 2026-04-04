@@ -228,6 +228,13 @@ ensure_dependencies() {
   fi
 }
 
+verify_argon2_binding() {
+  (
+    cd "$WEB_DIR"
+    env PATH="$(node_path)" "$NODE_BIN" -e "require.resolve('@node-rs/argon2'); require('@node-rs/argon2');" >/dev/null 2>&1
+  )
+}
+
 repair_dependencies() {
   ensure_runtime
   echo "Bagimliliklar sifirlaniyor..."
@@ -477,6 +484,44 @@ serve_foreground() {
   serve_web_process_foreground
 }
 
+serve_dev_foreground() {
+  ensure_runtime
+  ensure_dashboard_running
+  prepare_next_locks
+
+  if port_in_use; then
+    local pid
+    pid="$(listener_pid_for_port)"
+    if is_repo_web_process "$pid"; then
+      echo "Port $PORT uzerindeki eski web sureci kapatiliyor (pid=$pid)..."
+      kill "$pid" >/dev/null 2>&1 || true
+      sleep 1
+    else
+      echo "Port $PORT kullanimda. Farkli bir surec kullaniyor olabilir."
+      echo "Once kullanan sureci durdurun ya da BOOK_WEB_PORT ile baska port deneyin."
+      exit 1
+    fi
+  fi
+
+  ensure_dependencies
+
+  if ! verify_argon2_binding; then
+    echo "Native binding uyumsuz gorundu. node_modules ve .next temizlenip tekrar kuruluyor..."
+    rm -rf "$WEB_DIR/node_modules" "$WEB_DIR/.next"
+    ensure_dependencies
+  fi
+
+  if ! verify_argon2_binding; then
+    echo "Argon2 native binding yuklenemedi."
+    exit 1
+  fi
+
+  echo "Web dev modu baslatiliyor: $HEALTH_URL"
+  echo "Durdurmak icin Ctrl+C"
+  cd "$WEB_DIR"
+  exec env CI=true PATH="$(node_path)" "$COREPACK_BIN" pnpm dev --hostname "$HOST" --port "$PORT"
+}
+
 logs_tail() {
   if [ ! -f "$LOG_FILE" ]; then
     echo "Log dosyasi bulunamadi: $LOG_FILE"
@@ -514,6 +559,9 @@ case "${1:-start}" in
   serve|foreground)
     serve_foreground
     ;;
+  dev)
+    serve_dev_foreground
+    ;;
   reset)
     reset_foreground
     ;;
@@ -540,7 +588,7 @@ case "${1:-start}" in
     start_server
     ;;
   *)
-    echo "Usage: $0 [start|ensure|serve|foreground|reset|build|repair|logs|logs-live|logs-clear|stop|restart]"
+    echo "Usage: $0 [start|ensure|serve|foreground|dev|reset|build|repair|logs|logs-live|logs-clear|stop|restart]"
     exit 1
     ;;
 esac

@@ -9,6 +9,8 @@ for /f "delims=" %%I in ('wsl wslpath "%REPO_DIR%" 2^>nul') do set "WSL_REPO=%%I
 if not defined WSL_REPO (
     echo WSL bulunamadi ya da yol cevrilemedi.
     echo Windows tarafinda Linux node_modules/native binding uyumsuzlugu oldugu icin web bu script ile WSL uzerinden acilir.
+    echo [cozum] PowerShell'de `wsl --status` ve `wsl -l -v` kontrol et.
+    pause
     exit /b 1
 )
 
@@ -53,15 +55,28 @@ exit /b 0
 :DEV
 call :PRINT_HEADER
 call :ENSURE_DASHBOARD
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+    echo Dashboard hazirlanamadi.
+    pause
+    exit /b 1
+)
 
 echo [mode] dev (hizli local test)
 echo [info] Durdurmak icin Ctrl+C
 echo.
 
 start "" "http://localhost:%PORT%"
-wsl bash -lc "cd '%WSL_REPO%/web' && PATH='%WSL_REPO%/.tools/node-current/bin:$PATH' && if [ ! -d node_modules ] || [ ! -f node_modules/next/dist/bin/next ]; then CI=true corepack pnpm install --frozen-lockfile --config.confirmModulesPurge=false; fi && CI=true corepack pnpm dev --hostname %HOST% --port %PORT%"
-exit /b %errorlevel%
+wsl bash -lc "cd '%WSL_REPO%' && BOOK_WEB_HOST=%HOST% BOOK_WEB_PORT=%PORT% ./start-web.sh dev"
+set "DEV_EXIT=%errorlevel%"
+if not "%DEV_EXIT%"=="0" (
+    echo.
+    echo [error] Web dev server baslatilamadi. Kod: %DEV_EXIT%
+    echo [info] Son web loglari:
+    wsl bash -lc "cd '%WSL_REPO%' && tail -n 80 .web-server.log 2>/dev/null || true"
+    echo.
+    pause
+)
+exit /b %DEV_EXIT%
 
 :PROD
 call :PRINT_HEADER
