@@ -649,7 +649,7 @@ export function AppFrame({
                     E-posta adresini doğrula
                   </div>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    Ödeme, PDF/EPUB export ve tam erişim akışları için hesabını doğrulaman gerekiyor. Bu adım yalnızca bir kez gerekir.
+                    Hesap güvenliği, giriş kurtarma ve bildirimlerin doğru çalışması için e-postanı doğrula. Bu adım yalnızca bir kez gerekir.
                   </p>
                   {verificationMessage ? (
                     <p className="mt-2 text-xs font-medium text-primary">{verificationMessage}</p>

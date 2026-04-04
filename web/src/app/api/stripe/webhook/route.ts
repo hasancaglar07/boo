@@ -1,10 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { recordCheckoutEntitlement } from "@/lib/auth/data";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
-import { type BookPlanId } from "@/lib/auth/constants";
 import { grantReferrerReward } from "@/lib/referral";
+import { fulfillStripeCheckoutSession } from "@/lib/stripe/checkout-fulfillment";
 
 export async function POST(request: NextRequest) {
   let stripe;
@@ -40,61 +39,59 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-
-    const userId = session.metadata?.userId;
-    const planId = session.metadata?.planId as BookPlanId | undefined;
-    const bookSlug = session.metadata?.bookSlug || null;
-
-    if (!userId || !planId) {
-      console.error("Webhook: metadata eksik", { userId, planId, sessionId: session.id });
-      return NextResponse.json({ ok: false, error: "Metadata eksik." }, { status: 400 });
+    const fulfillment = await fulfillStripeCheckoutSession(session);
+    if (!fulfillment.ok) {
+      console.error("Stripe checkout fulfillment failed:", {
+        sessionId: session.id,
+        code: fulfillment.code,
+        error: fulfillment.error,
+      });
+      return NextResponse.json({ ok: false, error: fulfillment.error }, { status: 400 });
     }
 
-    try {
-      await recordCheckoutEntitlement({ userId, planId, bookSlug });
-
+    if (fulfillment.fulfilled) {
       await prisma.auditLog.create({
         data: {
           action: "checkout.completed",
           entityType: "user",
-          entityId: userId,
-          actorUserId: userId,
+          entityId: fulfillment.userId,
+          actorUserId: fulfillment.userId,
           metadata: {
-            planId,
-            bookSlug: bookSlug || null,
-            stripeSessionId: session.id,
+            planId: fulfillment.planId,
+            bookSlug: fulfillment.bookSlug || null,
+            stripeSessionId: fulfillment.stripeSessionId,
             source: "stripe_webhook",
+            alreadyFulfilled: false,
           },
         },
       });
-
-      // Grant referral reward if this user was referred and reward not yet granted
-      try {
-        const conversion = await prisma.referralConversion.findUnique({
-          where: { newUserId: userId },
-          include: { referralCode: true },
-        });
-        if (conversion && !conversion.rewardGranted) {
-          await grantReferrerReward(prisma, conversion.id, conversion.referralCode.userId);
-          await prisma.auditLog.create({
-            data: {
-              action: "referral_reward_granted",
-              entityType: "user",
-              entityId: conversion.referralCode.userId,
-              actorUserId: userId,
-              metadata: { conversionId: conversion.id },
-            },
-          });
-        }
-      } catch (referralErr) {
-        console.error("Referral reward grant failed (non-critical):", referralErr);
-      }
-
-      console.log(`Stripe checkout tamamlandı: userId=${userId} planId=${planId} bookSlug=${bookSlug}`);
-    } catch (err) {
-      console.error("Entitlement kaydedilemedi:", err);
-      return NextResponse.json({ ok: false, error: "Entitlement hatası." }, { status: 500 });
     }
+
+    // Grant referral reward if this user was referred and reward not yet granted.
+    try {
+      const conversion = await prisma.referralConversion.findUnique({
+        where: { newUserId: fulfillment.userId },
+        include: { referralCode: true },
+      });
+      if (conversion && !conversion.rewardGranted) {
+        await grantReferrerReward(prisma, conversion.id, conversion.referralCode.userId);
+        await prisma.auditLog.create({
+          data: {
+            action: "referral_reward_granted",
+            entityType: "user",
+            entityId: conversion.referralCode.userId,
+            actorUserId: fulfillment.userId,
+            metadata: { conversionId: conversion.id },
+          },
+        });
+      }
+    } catch (referralErr) {
+      console.error("Referral reward grant failed (non-critical):", referralErr);
+    }
+
+    console.log(
+      `Stripe checkout işlendi: userId=${fulfillment.userId} planId=${fulfillment.planId} bookSlug=${fulfillment.bookSlug} alreadyFulfilled=${fulfillment.alreadyFulfilled}`,
+    );
   }
 
   return NextResponse.json({ ok: true });

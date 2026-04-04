@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { sanitizeNextPath } from "@/lib/auth/safe-next";
 import {
   canAccessBookPreview,
   canAccessFullBook,
@@ -12,7 +13,8 @@ import {
 export async function requireAuthenticatedUser(nextPath: string) {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+    const safeNextPath = sanitizeNextPath(nextPath, "/app/library");
+    redirect(`/login?next=${encodeURIComponent(safeNextPath)}`);
   }
   return session;
 }

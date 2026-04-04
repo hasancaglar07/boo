@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AppFrame } from "@/components/app/app-frame";
@@ -20,22 +20,42 @@ import {
 import { trackEvent } from "@/lib/analytics";
 import { isBackendUnavailableError, loadBooks, type Book } from "@/lib/dashboard-api";
 import { plans, premiumPlan } from "@/lib/marketing-data";
-import { getPlan, syncPreviewAuthState, type PreviewPlan } from "@/lib/preview-auth";
-import { cn } from "@/lib/utils";
+import { getPlan, syncPreviewAuthState, type PreviewPlan, type PreviewUsage } from "@/lib/preview-auth";
+import { cn, formatDate } from "@/lib/utils";
+
+type CheckoutNoticeTone = "info" | "success" | "warning";
+
+type CheckoutConfirmPayload = {
+  ok?: boolean;
+  fulfilled?: boolean;
+  alreadyFulfilled?: boolean;
+  planId?: string;
+  usage?: PreviewUsage | null;
+  error?: string;
+};
 
 export function BillingScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const [books, setBooks] = useState<Book[]>([]);
   const [planId, setPlanId] = useState<PreviewPlan>(() => getPlan());
+  const [usage, setUsage] = useState<PreviewUsage | null>(null);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [pendingPlanId, setPendingPlanId] = useState<PreviewPlan | null>(null);
   const [checkoutError, setCheckoutError] = useState("");
+  const [checkoutNotice, setCheckoutNotice] = useState("");
+  const [checkoutNoticeTone, setCheckoutNoticeTone] = useState<CheckoutNoticeTone>("info");
   const [submitting, setSubmitting] = useState(false);
-  const [verificationRequired, setVerificationRequired] = useState(false);
-  const [verificationMessage, setVerificationMessage] = useState("");
-  const [verificationSending, setVerificationSending] = useState(false);
+
   const returnBook = searchParams.get("book") || "";
+  const selectedPlanFromQuery = searchParams.get("plan");
+  const autoStartCheckout = searchParams.get("autostart") === "1";
+  const checkoutStatus = searchParams.get("checkout");
+  const checkoutSessionId = searchParams.get("session_id") || "";
+
+  const autoStartHandledRef = useRef(false);
+  const checkoutHandledRef = useRef("");
 
   const availablePlans = useMemo(
     () => (returnBook ? [premiumPlan, ...plans] : plans),
@@ -43,7 +63,7 @@ export function BillingScreen() {
   );
   const pendingPlan = availablePlans.find((plan) => plan.id === pendingPlanId);
 
-  async function refreshBooks() {
+  const refreshBooks = useCallback(async () => {
     try {
       const loaded = await loadBooks();
       setBooks(loaded);
@@ -55,28 +75,31 @@ export function BillingScreen() {
       }
       console.error(error);
     }
-  }
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void refreshBooks();
-    void syncPreviewAuthState().then((payload) => {
-      if (payload?.planId) {
-        setPlanId(payload.planId);
-      }
-    });
   }, []);
 
-  useEffect(() => {
-    trackEvent("billing_page_opened", { book_slug: returnBook || null });
-  }, [returnBook]);
+  const refreshAuthState = useCallback(async () => {
+    const payload = await syncPreviewAuthState();
+    if (payload?.planId) {
+      setPlanId(payload.planId);
+    }
+    if (payload?.usage) {
+      setUsage(payload.usage);
+    }
+    return payload;
+  }, []);
 
-  async function handleConfirmPlan() {
+  const clearCheckoutQueryParams = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("checkout");
+    params.delete("session_id");
+    const nextPath = `/app/settings/billing${params.size ? `?${params.toString()}` : ""}`;
+    router.replace(nextPath);
+  }, [router, searchParams]);
+
+  const handleConfirmPlan = useCallback(async () => {
     if (!pendingPlanId) return;
 
     setCheckoutError("");
-    setVerificationRequired(false);
-    setVerificationMessage("");
     setSubmitting(true);
 
     const response = await fetch("/api/stripe/checkout", {
@@ -93,51 +116,116 @@ export function BillingScreen() {
           ok?: boolean;
           url?: string;
           error?: string;
-          code?: string;
         } | null)
       : null;
 
     if (!response?.ok || !payload?.url) {
       setCheckoutError(payload?.error || "Ödeme başlatılamadı. Lütfen tekrar dene.");
-      if (payload?.code === "EMAIL_NOT_VERIFIED") {
-        setVerificationRequired(true);
-        trackEvent("checkout_blocked_unverified", {
-          source: "billing_screen",
-          plan: pendingPlanId,
-          book_slug: returnBook || null,
-        });
-      }
+      autoStartHandledRef.current = false;
       setSubmitting(false);
       return;
     }
 
     trackEvent("checkout_started", { plan: pendingPlanId, book_slug: returnBook || null });
-    window.location.href = payload.url;
-  }
+    window.location.assign(payload.url);
+  }, [pendingPlanId, returnBook]);
 
-  async function handleResendVerification() {
-    setVerificationSending(true);
-    setVerificationMessage("");
-    trackEvent("verification_resend_clicked", { source: "billing_screen", book_slug: returnBook || null });
+  useEffect(() => {
+    void refreshBooks();
+    void refreshAuthState();
+  }, [refreshAuthState, refreshBooks]);
 
-    const response = await fetch("/api/auth/verify-email/resend", {
-      method: "POST",
-      credentials: "include",
-    }).catch(() => null);
+  useEffect(() => {
+    trackEvent("billing_page_opened", { book_slug: returnBook || null });
+  }, [returnBook]);
 
-    const payload = response
-      ? ((await response.json().catch(() => null)) as { error?: string } | null)
-      : null;
+  useEffect(() => {
+    if (!selectedPlanFromQuery) return;
+    const matchingPlan = availablePlans.find((plan) => plan.id === selectedPlanFromQuery);
+    if (!matchingPlan) return;
 
-    if (!response?.ok) {
-      setVerificationMessage(payload?.error || "Doğrulama maili tekrar gönderilemedi.");
-      setVerificationSending(false);
+    setCheckoutError("");
+    setPendingPlanId(matchingPlan.id as PreviewPlan);
+  }, [availablePlans, selectedPlanFromQuery]);
+
+  useEffect(() => {
+    if (!autoStartCheckout || !pendingPlanId || submitting || autoStartHandledRef.current) return;
+    autoStartHandledRef.current = true;
+    void handleConfirmPlan();
+  }, [autoStartCheckout, handleConfirmPlan, pendingPlanId, submitting]);
+
+  useEffect(() => {
+    if (!checkoutStatus) return;
+    const queryKey = `${checkoutStatus}:${checkoutSessionId}`;
+    if (checkoutHandledRef.current === queryKey) return;
+    checkoutHandledRef.current = queryKey;
+
+    if (checkoutStatus === "cancelled") {
+      setCheckoutNotice("Ödeme iptal edildi.");
+      setCheckoutNoticeTone("warning");
+      setPendingPlanId(null);
+      setSubmitting(false);
+      autoStartHandledRef.current = false;
+      trackEvent("checkout_cancelled", { source: "billing_return" });
+      clearCheckoutQueryParams();
       return;
     }
 
-    setVerificationMessage("Doğrulama maili tekrar gönderildi.");
-    setVerificationSending(false);
-  }
+    if (checkoutStatus !== "success" || !checkoutSessionId) {
+      clearCheckoutQueryParams();
+      return;
+    }
+
+    setCheckoutNotice("Ödeme doğrulanıyor...");
+    setCheckoutNoticeTone("info");
+    setSubmitting(true);
+
+    void (async () => {
+      const response = await fetch("/api/stripe/checkout/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: checkoutSessionId }),
+      }).catch(() => null);
+
+      const payload = response
+        ? ((await response.json().catch(() => null)) as CheckoutConfirmPayload | null)
+        : null;
+
+      if (response?.ok && payload?.ok) {
+        if (payload.planId) {
+          setPlanId(payload.planId as PreviewPlan);
+        }
+        if (payload.usage) {
+          setUsage(payload.usage);
+        } else {
+          await refreshAuthState();
+        }
+
+        await refreshBooks();
+        setCheckoutNotice("Ödeme tamamlandı. Planın ve kullanım kotan güncellendi.");
+        setCheckoutNoticeTone("success");
+        trackEvent("checkout_completed", {
+          source: "billing_return",
+          already_fulfilled: Boolean(payload.alreadyFulfilled),
+          plan: payload.planId || null,
+        });
+      } else {
+        setCheckoutNotice(payload?.error || "Ödeme doğrulanamadı. Lütfen tekrar dene.");
+        setCheckoutNoticeTone("warning");
+      }
+
+      setPendingPlanId(null);
+      setSubmitting(false);
+      autoStartHandledRef.current = false;
+      clearCheckoutQueryParams();
+    })();
+  }, [
+    checkoutSessionId,
+    checkoutStatus,
+    clearCheckoutQueryParams,
+    refreshAuthState,
+    refreshBooks,
+  ]);
 
   if (backendUnavailable) {
     return (
@@ -150,14 +238,37 @@ export function BillingScreen() {
   return (
     <AppFrame current="billing" title="Planlar" books={books}>
       <div className="mx-auto max-w-4xl">
-        <div className="mb-8">
+        <div className="mb-8 space-y-3">
           <p className="text-sm text-muted-foreground">
             İhtiyacına uygun planı seç. Premium ile tam kitap, PDF ve EPUB export açılır.
           </p>
           {returnBook ? (
-            <p className="mt-2 text-sm text-primary">
+            <p className="text-sm text-primary">
               Bu ödeme tamamlanınca `{returnBook}` için tam erişim açılacak.
             </p>
+          ) : null}
+          {usage ? (
+            <div className="rounded-xl border border-border/70 bg-card/70 px-4 py-3 text-sm">
+              <div className="font-medium text-foreground">
+                Aktif plan: {availablePlans.find((item) => item.id === planId)?.name || planId}
+              </div>
+              <div className="mt-1 text-muted-foreground">
+                Kalan kitap hakkı: {usage.limit === null ? "Sınırsız" : `${usage.remainingBooks}/${usage.limit}`}
+                {usage.resetAt ? ` · Yenilenme: ${formatDate(usage.resetAt)}` : ""}
+              </div>
+            </div>
+          ) : null}
+          {checkoutNotice ? (
+            <div
+              className={cn(
+                "rounded-xl border px-4 py-3 text-sm",
+                checkoutNoticeTone === "success" && "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+                checkoutNoticeTone === "warning" && "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+                checkoutNoticeTone === "info" && "border-border/70 bg-card/70 text-muted-foreground",
+              )}
+            >
+              {checkoutNotice}
+            </div>
           ) : null}
         </div>
 
@@ -209,8 +320,6 @@ export function BillingScreen() {
                     onClick={() => {
                       if (isActive) return;
                       setCheckoutError("");
-                      setVerificationRequired(false);
-                      setVerificationMessage("");
                       setPendingPlanId(plan.id as PreviewPlan);
                     }}
                   >
@@ -229,8 +338,8 @@ export function BillingScreen() {
           if (!open) {
             setPendingPlanId(null);
             setCheckoutError("");
-            setVerificationRequired(false);
-            setVerificationMessage("");
+            setSubmitting(false);
+            autoStartHandledRef.current = false;
           }
         }}
       >
@@ -245,30 +354,8 @@ export function BillingScreen() {
           </DialogHeader>
 
           {checkoutError ? (
-            <div className="space-y-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
+            <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
               <p className="text-sm text-destructive">{checkoutError}</p>
-              {verificationRequired ? (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-                  <p className="text-sm font-semibold text-foreground">
-                    Satın alma öncesi e-postanı doğrula
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    Hesabın hazır. Checkout başlamadan önce doğrulama linkine tıklaman gerekiyor.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-3"
-                    onClick={() => void handleResendVerification()}
-                    disabled={verificationSending}
-                  >
-                    {verificationSending ? "Gönderiliyor..." : "Doğrulama mailini tekrar gönder"}
-                  </Button>
-                </div>
-              ) : null}
-              {verificationMessage ? (
-                <p className="text-sm text-muted-foreground">{verificationMessage}</p>
-              ) : null}
             </div>
           ) : null}
 
@@ -278,8 +365,8 @@ export function BillingScreen() {
               onClick={() => {
                 setPendingPlanId(null);
                 setCheckoutError("");
-                setVerificationRequired(false);
-                setVerificationMessage("");
+                setSubmitting(false);
+                autoStartHandledRef.current = false;
               }}
             >
               İptal

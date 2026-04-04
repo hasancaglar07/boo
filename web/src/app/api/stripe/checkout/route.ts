@@ -28,13 +28,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "Oturum gerekli." }, { status: 401 });
   }
 
-  if (!session.user.emailVerified) {
-    return NextResponse.json(
-      { ok: false, code: "EMAIL_NOT_VERIFIED", error: "Satın alma öncesi e-posta doğrulaması gerekli." },
-      { status: 403 },
-    );
-  }
-
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

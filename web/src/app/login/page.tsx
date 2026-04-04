@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -19,6 +20,8 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const verified = params.verified === "1";
+  const nextPath = typeof params.next === "string" ? params.next : "";
+  const signupHref = nextPath ? `/signup?next=${encodeURIComponent(nextPath)}` : "/signup";
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 py-10">
@@ -35,6 +38,12 @@ export default async function LoginPage({
         )}
         <div className="text-center text-sm leading-7 text-muted-foreground">
           Önizleme, kütüphane ve ödeme akışı aynı hesapta kalır. Giriş yap, kitabın kaldığı yerden devam etsin.
+        </div>
+        <div className="rounded-2xl border border-border/70 bg-card/60 px-4 py-3 text-center text-sm text-muted-foreground">
+          Hesabın yok mu?{" "}
+          <Link href={signupHref} className="font-semibold text-foreground hover:underline">
+            Hızlı kayıt ol
+          </Link>
         </div>
         <AuthForm mode="login" />
       </div>

@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import {
   BOOK_CREATION_LIMITS,
   PLAN_CURRENCY,
@@ -710,14 +711,14 @@ export async function recordCheckoutEntitlement(input: {
   userId: string;
   planId: BookPlanId;
   bookSlug?: string | null;
-}) {
-  if (input.planId === "free") {
-    throw new Error("Ücretsiz plan satın alma ile değiştirilemez.");
-  }
+}, dbClient: PrismaClient | Prisma.TransactionClient = prisma) {
+  async function runWithDb(db: Prisma.TransactionClient) {
+    if (input.planId === "free") {
+      throw new Error("Ücretsiz plan satın alma ile değiştirilemez.");
+    }
 
-  if (SUBSCRIPTION_PLANS.has(input.planId)) {
-    await prisma.$transaction(async (tx) => {
-      await tx.entitlement.updateMany({
+    if (SUBSCRIPTION_PLANS.has(input.planId)) {
+      await db.entitlement.updateMany({
         where: {
           userId: input.userId,
           kind: "subscription",
@@ -729,7 +730,7 @@ export async function recordCheckoutEntitlement(input: {
         },
       });
 
-      const entitlement = await tx.entitlement.create({
+      const entitlement = await db.entitlement.create({
         data: {
           userId: input.userId,
           planId: input.planId,
@@ -739,7 +740,7 @@ export async function recordCheckoutEntitlement(input: {
         },
       });
 
-      await tx.billingRecord.create({
+      const billingRecord = await db.billingRecord.create({
         data: {
           userId: input.userId,
           entitlementId: entitlement.id,
@@ -751,12 +752,14 @@ export async function recordCheckoutEntitlement(input: {
           description: `${input.planId} planı aktif edildi`,
         },
       });
-    });
-    return;
-  }
 
-  await prisma.$transaction(async (tx) => {
-    const entitlement = await tx.entitlement.create({
+      return {
+        entitlementId: entitlement.id,
+        billingRecordId: billingRecord.id,
+      };
+    }
+
+    const entitlement = await db.entitlement.create({
       data: {
         userId: input.userId,
         planId: "premium",
@@ -767,7 +770,7 @@ export async function recordCheckoutEntitlement(input: {
       },
     });
 
-    await tx.billingRecord.create({
+    const billingRecord = await db.billingRecord.create({
       data: {
         userId: input.userId,
         entitlementId: entitlement.id,
@@ -780,7 +783,22 @@ export async function recordCheckoutEntitlement(input: {
         bookSlug: input.bookSlug || null,
       },
     });
-  });
+
+    return {
+      entitlementId: entitlement.id,
+      billingRecordId: billingRecord.id,
+    };
+  }
+
+  if (input.planId === "free") {
+    throw new Error("Ücretsiz plan satın alma ile değiştirilemez.");
+  }
+
+  if ("$transaction" in dbClient) {
+    return dbClient.$transaction(async (tx) => runWithDb(tx));
+  }
+
+  return runWithDb(dbClient);
 }
 
 export async function findUserByEmail(email: string) {

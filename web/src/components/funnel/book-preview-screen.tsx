@@ -893,14 +893,23 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   // Stripe başarılı ödeme sonrası auth state güncelle
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
+      const checkoutSessionId = searchParams.get("session_id") || "";
       trackEvent("checkout_completed", { slug, source: "stripe_return" });
-      void syncPreviewAuthState().then((payload) => {
+      void (async () => {
+        if (checkoutSessionId) {
+          await fetch("/api/stripe/checkout/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId: checkoutSessionId }),
+          }).catch(() => null);
+        }
+        const payload = await syncPreviewAuthState();
         setAuthenticated(Boolean(payload?.authenticated));
-      });
-      const url = new URL(window.location.href);
-      url.searchParams.delete("checkout");
-      url.searchParams.delete("session_id");
-      router.replace(url.pathname + (url.search || ""));
+        const url = new URL(window.location.href);
+        url.searchParams.delete("checkout");
+        url.searchParams.delete("session_id");
+        router.replace(url.pathname + (url.search || ""));
+      })();
     }
   }, [searchParams, router, slug]);
 

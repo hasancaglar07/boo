@@ -12,6 +12,8 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY web/ ./
+COPY data ./data
+COPY book_outputs ./book_outputs
 
 RUN pnpm install --frozen-lockfile \
   && pnpm exec prisma generate \
@@ -34,6 +36,8 @@ WORKDIR /app
 COPY --from=web-builder /app/.next/standalone ./
 COPY --from=web-builder /app/.next/static ./.next/static
 COPY --from=web-builder /app/public ./public
+COPY --from=web-builder /app/data ./data
+COPY --from=web-builder /app/book_outputs ./book_outputs
 
 RUN mkdir -p /app/.next/cache \
   && touch /app/.env \

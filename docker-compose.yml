@@ -80,6 +80,9 @@ services:
       - "3000"
     volumes:
       - type: bind
+        source: ${BOOK_OUTPUTS_DIR:-./book_outputs}
+        target: /app/book_outputs
+      - type: bind
         source: ${BOOK_SQLITE_DIR:-./runtime/sqlite}
         target: /data
     healthcheck:

@@ -11,7 +11,21 @@ export const metadata: Metadata = buildPageMetadata({
   noIndex: true,
 });
 
-export default async function AppSettingsBillingPage() {
-  await requireAuthenticatedUser("/app/settings/billing");
+export default async function AppSettingsBillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const resolved = await searchParams;
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(resolved)) {
+    if (typeof value === "string" && value) {
+      params.set(key, value);
+    }
+  }
+
+  const nextPath = `/app/settings/billing${params.size ? `?${params.toString()}` : ""}`;
+  await requireAuthenticatedUser(nextPath);
   return <BillingScreen />;
 }

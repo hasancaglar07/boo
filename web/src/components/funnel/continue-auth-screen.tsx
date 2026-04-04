@@ -18,6 +18,7 @@ import {
   syncPreviewAuthState,
   type PreviewAuthProviders,
 } from "@/lib/preview-auth";
+import { sanitizeNextPath } from "@/lib/auth/safe-next";
 
 const DEFAULT_GOAL = "İlk kitabımı hızlıca ön izlemek istiyorum.";
 
@@ -25,7 +26,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const existingAccount = useMemo(() => getAccount(), []);
-  const next = searchParams.get("next") || "/app/library";
+  const next = sanitizeNextPath(searchParams.get("next"), "/app/library");
   const slug = searchParams.get("slug") || "";
 
   const [name, setName] = useState(existingAccount.name !== "Kitap Sahibi" ? existingAccount.name : "");

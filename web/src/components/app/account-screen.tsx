@@ -336,7 +336,7 @@ export function AccountScreen() {
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-foreground">E-posta doğrulaması gerekli</div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Ödeme, PDF/EPUB export ve tam erişim akışları için hesabını doğrula. Bu adım yalnızca bir kez gerekir.
+                      Hesap güvenliği, giriş kurtarma ve bildirimler için e-postanı doğrula. Bu adım yalnızca bir kez gerekir.
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button

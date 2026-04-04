@@ -18,6 +18,7 @@ import {
   syncPreviewAuthState,
   type PreviewAuthProviders,
 } from "@/lib/preview-auth";
+import { sanitizeNextPath } from "@/lib/auth/safe-next";
 
 const DEFAULT_GOAL = "İlk kitabımı hızlı ve düzenli biçimde hazırlamak istiyorum.";
 
@@ -67,7 +68,8 @@ export function AuthForm({
   const router = useRouter();
   const searchParams = useSearchParams();
   const storedAccount = useMemo(() => getAccount(), []);
-  const next = nextProp || searchParams.get("next") || (mode === "login" ? "/app/library" : "/start/topic");
+  const fallbackNext = mode === "login" ? "/app/library" : "/start/topic";
+  const next = sanitizeNextPath(nextProp || searchParams.get("next"), fallbackNext);
   const verified = searchParams.get("verified");
   const checkEmail = searchParams.get("checkEmail");
 

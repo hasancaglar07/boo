@@ -22,7 +22,6 @@ LICENSE
 multi_provider_logs/
 
 # Outputs
-book_outputs/
 runtime/
 quality_reports/
 v1/

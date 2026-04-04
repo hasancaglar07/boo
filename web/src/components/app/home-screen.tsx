@@ -165,7 +165,7 @@ export function HomeScreen() {
     onboardingActions.push({
       icon: ShieldAlert,
       label: "Email doğrula",
-      description: "Ödeme ve PDF / EPUB export akışını açmak için hesabını doğrula.",
+      description: "Hesap güvenliği ve bildirimler için e-posta doğrulamanı tamamla.",
       run: () => router.push("/app/settings/profile"),
     });
   }
