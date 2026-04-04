@@ -13,9 +13,9 @@ WORKDIR /app
 
 COPY web/ ./
 COPY data ./data
-COPY book_outputs ./book_outputs
 
-RUN pnpm install --frozen-lockfile \
+RUN mkdir -p /app/book_outputs \
+  && pnpm install --frozen-lockfile \
   && pnpm exec prisma generate \
   && pnpm build
 
@@ -37,9 +37,8 @@ COPY --from=web-builder /app/.next/standalone ./
 COPY --from=web-builder /app/.next/static ./.next/static
 COPY --from=web-builder /app/public ./public
 COPY --from=web-builder /app/data ./data
-COPY --from=web-builder /app/book_outputs ./book_outputs
 
-RUN mkdir -p /app/.next/cache \
+RUN mkdir -p /app/.next/cache /app/book_outputs \
   && touch /app/.env \
   && chown -R node:node /app
 
