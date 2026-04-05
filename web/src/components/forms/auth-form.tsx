@@ -2,29 +2,34 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, Loader2, Mail, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trackEvent } from "@/lib/analytics";
-import { isBillingAutostartNextPath } from "@/lib/auth/checkout-intent";
+import { sanitizeNextPath } from "@/lib/auth/safe-next";
 import {
   getAccount,
   getSession,
   setAccount,
   syncPreviewAuthState,
-  type PreviewAuthProviders,
 } from "@/lib/preview-auth";
-import { sanitizeNextPath } from "@/lib/auth/safe-next";
 
 const DEFAULT_GOAL = "İlk kitabımı hızlı ve düzenli biçimde hazırlamak istiyorum.";
 
 type AuthFormMode = "login" | "register";
 type AuthFormMethod = "google" | "magic" | "credentials";
+type FeedbackState =
+  | {
+      variant: "success" | "error";
+      title: string;
+      description: string;
+    }
+  | null;
 
 type AuthFormProps = {
   mode: AuthFormMode;
@@ -55,13 +60,41 @@ async function completeClientAuth(account?: {
   await syncPreviewAuthState();
 }
 
+function normalizeAuthError(error: string) {
+  const value = error.toLowerCase();
+
+  if (
+    value.includes("credentials") ||
+    value.includes("signin") ||
+    value.includes("invalid") ||
+    value.includes("wrong")
+  ) {
+    return {
+      title: "Bilgiler hatalı",
+      description: "E-posta veya şifre eşleşmiyor.",
+    };
+  }
+
+  if (value.includes("verify") || value.includes("doğrul")) {
+    return {
+      title: "Doğrulama gerekli",
+      description: "E-posta adresini doğrulaman gerekiyor.",
+    };
+  }
+
+  return {
+    title: "Giriş başarısız",
+    description: error,
+  };
+}
+
 export function AuthForm({
   mode,
   variant = "page",
   next: nextProp,
   source = "auth_form",
   showHeader = true,
-  redirectIfAuthenticated = variant === "page",
+  redirectIfAuthenticated = true,
   onSuccess,
   onBusyChange,
   onMethodSelected,
@@ -71,7 +104,6 @@ export function AuthForm({
   const storedAccount = useMemo(() => getAccount(), []);
   const fallbackNext = mode === "login" ? "/app/library" : "/start/topic";
   const next = sanitizeNextPath(nextProp || searchParams.get("next"), fallbackNext);
-  const isCheckoutIntent = isBillingAutostartNextPath(next);
   const verified = searchParams.get("verified");
   const checkEmail = searchParams.get("checkEmail");
 
@@ -79,18 +111,11 @@ export function AuthForm({
     mode === "register" && storedAccount.name !== "Kitap Sahibi" ? storedAccount.name : "",
   );
   const [email, setEmail] = useState(storedAccount.email !== "ornek@mail.com" ? storedAccount.email : "");
-  const goal =
-    storedAccount.goal && storedAccount.goal !== DEFAULT_GOAL ? storedAccount.goal : "";
+  const goal = storedAccount.goal && storedAccount.goal !== DEFAULT_GOAL ? storedAccount.goal : "";
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [busyMethod, setBusyMethod] = useState<AuthFormMethod | null>(null);
-  const [providers, setProviders] = useState<PreviewAuthProviders>({
-    google: false,
-    magicLink: true,
-    credentials: true,
-  });
 
   useEffect(() => {
     onBusyChange?.(busyMethod !== null);
@@ -98,11 +123,26 @@ export function AuthForm({
 
   useEffect(() => {
     if (checkEmail === "1") {
-      setMessage("Giriş linki e-postana gönderildi. Gelen kutunu kontrol et.");
+      setFeedback({
+        variant: "success",
+        title: "Bağlantı gönderildi",
+        description: "E-postanı kontrol et.",
+      });
+      toast.success("Bağlantı gönderildi");
     } else if (verified === "1") {
-      setMessage("E-posta doğrulandı. Şimdi giriş yapabilirsin.");
+      setFeedback({
+        variant: "success",
+        title: "Doğrulandı",
+        description: "Hesabın hazır.",
+      });
+      toast.success("Doğrulandı");
     } else if (verified === "0") {
-      setError("Doğrulama bağlantısı geçersiz veya süresi dolmuş.");
+      setFeedback({
+        variant: "error",
+        title: "Bağlantı geçersiz",
+        description: "Süresi dolmuş olabilir.",
+      });
+      toast.error("Bağlantı geçersiz");
     }
   }, [checkEmail, verified]);
 
@@ -111,9 +151,6 @@ export function AuthForm({
 
     void syncPreviewAuthState().then((payload) => {
       if (!active) return;
-      if (payload?.providers) {
-        setProviders(payload.providers);
-      }
       if (redirectIfAuthenticated && (payload?.authenticated || getSession())) {
         router.replace(next);
       }
@@ -124,57 +161,16 @@ export function AuthForm({
     };
   }, [next, redirectIfAuthenticated, router]);
 
-  const title = mode === "login"
-    ? isCheckoutIntent
-      ? "Giriş Yap ve Ödemeye Geç"
-      : "Kitabına kaldığın yerden devam et"
-    : isCheckoutIntent
-      ? "Hızlı Kayıtla Ödemeye Geç"
-      : "Ön izlemeyi kaydet ve devam et";
-  const description =
-    mode === "login"
-      ? isCheckoutIntent
-        ? "Hesabına giriş yaptıktan sonra ödeme penceresi otomatik açılır."
-        : "Google, e-posta bağlantısı veya şifrenle giriş yap. Ön izleme, kütüphane ve ödeme akışı aynı hesapta kalır."
-      : isCheckoutIntent
-        ? "Hesabını oluşturduğun anda ödeme penceresi otomatik açılır. Akış kesilmez."
-        : "Google, e-posta bağlantısı veya şifreli hesap seçeneklerinden biriyle başla. Bu adım ödeme istemez; yalnızca ön izlemenin kaybolmamasını engeller.";
-
   const emailTrimmed = email.trim().toLowerCase();
   const nameTrimmed = name.trim();
   const goalTrimmed = goal.trim();
   const passwordTrimmed = password.trim();
-  const credentialsDisabled =
-    !emailTrimmed ||
-    !passwordTrimmed ||
-    (mode === "register" && !nameTrimmed);
-
-  const credentialsLabel =
-    mode === "login" ? "E-posta ve şifre ile giriş yap" : "E-posta ve şifre ile hesap oluştur";
-  const submitLabel =
-    mode === "login"
-      ? isCheckoutIntent
-        ? "Giriş Yap ve Ödemeye Geç"
-        : source === "generate_gate"
-          ? "Giriş Yap ve Ön İzlemeye Devam Et"
-          : "Giriş Yap ve Devam Et"
-      : isCheckoutIntent
-        ? "Hesabımı Oluştur ve Ödemeye Geç"
-        : source === "generate_gate"
-          ? "Hesabımı Oluştur ve Ön İzlemeyi Başlat"
-          : "Hesabımı Oluştur ve Ön İzlemeyi Kaydet";
-
-  function emitGenerateGateEvent(event: "generate_auth_gate_method_selected" | "generate_auth_gate_failed", properties: Record<string, string>) {
-    if (source !== "generate_gate") return;
-    trackEvent(event, properties);
-  }
+  const credentialsDisabled = !emailTrimmed || !passwordTrimmed || (mode === "register" && !nameTrimmed);
 
   async function handleGoogle() {
-    setError("");
-    setMessage("");
+    setFeedback(null);
     setBusyMethod("google");
     onMethodSelected?.({ method: "google", mode });
-    emitGenerateGateEvent("generate_auth_gate_method_selected", { method: "google", mode });
     if (mode === "register") {
       setAccount({
         name: nameTrimmed || storedAccount.name || "Kitap Sahibi",
@@ -192,18 +188,18 @@ export function AuthForm({
 
   async function handleMagicLink() {
     if (!emailTrimmed) {
-      const nextError = "E-posta bağlantısı için bir e-posta adresi gerekli.";
-      setError(nextError);
-      trackEvent("auth_form_failed", { mode, method: "magic", reason: "missing_email", source });
-      emitGenerateGateEvent("generate_auth_gate_failed", { method: "magic", mode, reason: "missing_email" });
+      setFeedback({
+        variant: "error",
+        title: "E-posta gerekli",
+        description: "Lütfen e-posta adresini gir.",
+      });
+      toast.error("E-posta gerekli");
       return;
     }
 
-    setError("");
-    setMessage("");
+    setFeedback(null);
     setBusyMethod("magic");
     onMethodSelected?.({ method: "magic", mode });
-    emitGenerateGateEvent("generate_auth_gate_method_selected", { method: "magic", mode });
 
     const result = await signIn("email", {
       email: emailTrimmed,
@@ -212,9 +208,12 @@ export function AuthForm({
     }).catch(() => null);
 
     if (result?.error) {
-      setError("E-posta bağlantısı gönderilemedi. Lütfen tekrar dene.");
-      trackEvent("auth_form_failed", { mode, method: "magic", reason: "send_failed", source });
-      emitGenerateGateEvent("generate_auth_gate_failed", { method: "magic", mode, reason: "send_failed" });
+      setFeedback({
+        variant: "error",
+        title: "Gönderilemedi",
+        description: "Tekrar dene.",
+      });
+      toast.error("Gönderilemedi");
       setBusyMethod(null);
       return;
     }
@@ -232,51 +231,49 @@ export function AuthForm({
       trackEvent("login_magic_link_clicked", { source });
     }
 
-    trackEvent("magic_link_sent", { mode, source });
-    setMessage("E-posta bağlantısı gönderildi. Gelen kutunu kontrol et.");
+    setFeedback({
+      variant: "success",
+      title: "Bağlantı gönderildi",
+      description: "E-postandaki linke tıkla.",
+    });
+    toast.success("Bağlantı gönderildi");
     setBusyMethod(null);
   }
 
   async function handleCredentialsSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
-    setMessage("");
+    setFeedback(null);
 
     if (!emailTrimmed) {
-      setError("E-posta adresi gerekli.");
-      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "missing_email", source });
-      emitGenerateGateEvent("generate_auth_gate_failed", {
-        method: "credentials",
-        mode,
-        reason: "missing_email",
+      setFeedback({
+        variant: "error",
+        title: "E-posta gerekli",
+        description: "Lütfen e-posta adresini gir.",
       });
+      toast.error("E-posta gerekli");
       return;
     }
     if (!passwordTrimmed) {
-      setError("Şifre gerekli.");
-      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "missing_password", source });
-      emitGenerateGateEvent("generate_auth_gate_failed", {
-        method: "credentials",
-        mode,
-        reason: "missing_password",
+      setFeedback({
+        variant: "error",
+        title: "Şifre gerekli",
+        description: "Lütfen şifreni gir.",
       });
+      toast.error("Şifre gerekli");
       return;
     }
     if (mode === "register" && !nameTrimmed) {
-      setError("Ad alanı gerekli.");
-      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "missing_name", source });
-      emitGenerateGateEvent("generate_auth_gate_failed", {
-        method: "credentials",
-        mode,
-        reason: "missing_name",
+      setFeedback({
+        variant: "error",
+        title: "Ad gerekli",
+        description: "Lütfen adını gir.",
       });
+      toast.error("Ad gerekli");
       return;
     }
 
     setBusyMethod("credentials");
-    trackEvent("auth_form_submitted", { mode, method: "credentials", source });
     onMethodSelected?.({ method: "credentials", mode });
-    emitGenerateGateEvent("generate_auth_gate_method_selected", { method: "credentials", mode });
 
     try {
       if (mode === "register") {
@@ -298,20 +295,16 @@ export function AuthForm({
         } | null;
 
         if (!registerResponse.ok) {
-          setError(registerPayload?.error || "Kayıt oluşturulamadı.");
-          trackEvent("auth_form_failed", { mode, method: "credentials", reason: "register_failed", source });
-          emitGenerateGateEvent("generate_auth_gate_failed", {
-            method: "credentials",
-            mode,
-            reason: "register_failed",
+          setFeedback({
+            variant: "error",
+            title: "Kayıt başarısız",
+            description: registerPayload?.error || "Tekrar dene.",
           });
+          toast.error("Kayıt başarısız");
+          setBusyMethod(null);
           return;
         }
 
-        trackEvent("register_completion", {
-          email_domain: emailTrimmed.split("@")[1] || "unknown",
-          source,
-        });
         trackEvent("signup_completed", {
           method: "credentials",
           source,
@@ -326,13 +319,13 @@ export function AuthForm({
       });
 
       if (result?.error) {
-        setError(result.error);
-        trackEvent("auth_form_failed", { mode, method: "credentials", reason: "login_failed", source });
-        emitGenerateGateEvent("generate_auth_gate_failed", {
-          method: "credentials",
-          mode,
-          reason: "login_failed",
+        const normalized = normalizeAuthError(result.error);
+        setFeedback({
+          variant: "error",
+          ...normalized,
         });
+        toast.error(normalized.title);
+        setBusyMethod(null);
         return;
       }
 
@@ -346,10 +339,6 @@ export function AuthForm({
 
       await completeClientAuth(account);
 
-      if (source === "generate_gate") {
-        trackEvent("generate_auth_gate_completed", { method: "credentials", mode });
-      }
-
       if (onSuccess) {
         await onSuccess({ method: "credentials", mode });
         return;
@@ -357,188 +346,163 @@ export function AuthForm({
 
       window.location.assign(next);
     } catch {
-      setError("Kimlik doğrulama tamamlanamadı. Lütfen tekrar dene.");
-      trackEvent("auth_form_failed", { mode, method: "credentials", reason: "unknown", source });
-      emitGenerateGateEvent("generate_auth_gate_failed", {
-        method: "credentials",
-        mode,
-        reason: "unknown",
+      setFeedback({
+        variant: "error",
+        title: "Bir hata oluştu",
+        description: "Tekrar dene.",
       });
+      toast.error("Bir hata oluştu");
     } finally {
       setBusyMethod(null);
     }
   }
 
-  const content = (
-    <>
-      {showHeader ? (
-        <div className={variant === "page" ? "mb-8" : "mb-6"}>
-          <div className="text-sm font-medium text-muted-foreground">
-            {mode === "login" ? "Giriş Yap" : "Ön İzlemeyi Kaydet"}
-          </div>
-          <h1 className={variant === "page" ? "mt-3 text-3xl font-semibold text-foreground" : "mt-3 text-2xl font-semibold text-foreground"}>
-            {title}
-          </h1>
-          <p className="mt-3 text-sm leading-7 text-muted-foreground">{description}</p>
+  return (
+    <div className="space-y-5">
+      {/* Feedback Message */}
+      {feedback ? (
+        <div className={`rounded-lg px-4 py-3 text-sm ${
+          feedback.variant === "success" 
+            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" 
+            : "bg-red-500/10 text-red-700 dark:text-red-400"
+        }`}>
+          <p className="font-medium">{feedback.title}</p>
+          {feedback.description && (
+            <p className="mt-1 text-xs opacity-80">{feedback.description}</p>
+          )}
         </div>
       ) : null}
 
-      <div className="space-y-5">
-        <div>
-          <Label htmlFor="auth-email-primary">
-            E-posta <span aria-hidden="true" className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="auth-email-primary"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="ornek@mail.com"
-            required
-            autoComplete="email"
-          />
-        </div>
-
-        <div className="space-y-3">
-          {providers.google ? (
-            <Button
-              type="button"
-              size="lg"
-              className="w-full"
-              disabled={busyMethod !== null}
-              onClick={() => void handleGoogle()}
-            >
-              {busyMethod === "google" ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : (
-                <Sparkles className="mr-2 size-4" />
-              )}
-              Google ile devam et
-            </Button>
+      {/* Social Auth - Google First (Higher Conversion) */}
+      <div className="space-y-3">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          disabled={busyMethod !== null}
+          onClick={() => void handleGoogle()}
+        >
+          {busyMethod === "google" ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : null}
+          Google ile {mode === "login" ? "giriş yap" : "kayıt ol"}
+        </Button>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className="w-full"
-            disabled={busyMethod !== null}
-            onClick={() => void handleMagicLink()}
-          >
-            {busyMethod === "magic" ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Mail className="mr-2 size-4" />
-            )}
-            E-posta bağlantısı gönder
-          </Button>
-
-          <p className="text-xs leading-6 text-muted-foreground">
-            Şifre kullanmadan ilerlemek istersen e-postana tek kullanımlık bağlantı göndeririz. Ön izleme aynı hesapta kalır.
-          </p>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/40" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">veya</span>
+          </div>
         </div>
       </div>
 
-      <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-        <div className="h-px flex-1 bg-border" />
-        <span>{credentialsLabel}</span>
-        <div className="h-px flex-1 bg-border" />
-      </div>
-
-      <form className="space-y-5" onSubmit={(event) => void handleCredentialsSubmit(event)}>
-        {mode === "register" ? (
-          <div>
-            <Label htmlFor="name">
-              Ad <span aria-hidden="true" className="text-destructive">*</span>
-            </Label>
+      {/* Email & Password Form */}
+      <form onSubmit={(event) => void handleCredentialsSubmit(event)} className="space-y-4">
+        {/* Name Field - Only for Register */}
+        {mode === "register" && (
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm font-medium">Ad Soyad</Label>
             <Input
               id="name"
               value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Ad Soyad"
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Adın"
               required
               autoComplete="name"
+              className="h-11"
             />
           </div>
-        ) : null}
+        )}
 
-        <div>
-          <Label htmlFor="password">
-            Şifre <span aria-hidden="true" className="text-destructive">*</span>
-          </Label>
+        {/* Email Field */}
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-sm font-medium">E-posta</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="ornek@mail.com"
+            required
+            autoComplete="email"
+            className="h-11"
+          />
+        </div>
+
+        {/* Password Field */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password" className="text-sm font-medium">Şifre</Label>
+            {mode === "login" && (
+              <Link 
+                href="/reset-password" 
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Unuttum?
+              </Link>
+            )}
+          </div>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder={mode === "register" ? "En az 8 karakter" : "Şifren"}
               required
               autoComplete={mode === "login" ? "current-password" : "new-password"}
-              className="pr-14"
+              className="h-11 pr-10"
             />
             <button
               type="button"
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
-              onClick={() => setShowPassword((current) => !current)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+              onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
             >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {mode === "register" ? (
-            <p className="mt-2 text-xs leading-6 text-muted-foreground">
-              En az 8 karakter kullan. İstersen şifre yerine üstteki e-posta bağlantısı seçeneğini de kullanabilirsin; ikisi de aynı sonucu verir.
-            </p>
-          ) : null}
         </div>
 
-        {mode === "login" ? (
-          <div className="text-right">
-            <Link href="/reset-password" className="text-sm text-primary hover:underline">
-              Şifremi unuttum
-            </Link>
-          </div>
-        ) : null}
-
-        {message ? (
-          <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">
-            {message}
-          </p>
-        ) : null}
-
-        {error ? (
-          <p role="alert" aria-live="polite" className="text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-
+        {/* Submit Button */}
         <Button
-          className="w-full"
-          size="lg"
           type="submit"
+          className="w-full h-11"
           disabled={credentialsDisabled || busyMethod !== null}
         >
           {busyMethod === "credentials" ? (
             <>
-              <Loader2 className="mr-2 size-4 animate-spin" />
-              İşleniyor
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              İşleniyor...
             </>
+          ) : mode === "login" ? (
+            "Giriş Yap"
           ) : (
-            submitLabel
+            "Kayıt Ol"
           )}
         </Button>
       </form>
-    </>
-  );
 
-  if (variant === "modal") {
-    return <div className="space-y-1">{content}</div>;
-  }
-
-  return (
-    <Card className="w-full max-w-lg">
-      <CardContent className="p-8">{content}</CardContent>
-    </Card>
+      {/* Magic Link - Subtle Alternative */}
+      <div className="pt-2">
+        <button
+          type="button"
+          className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          disabled={busyMethod !== null || !emailTrimmed}
+          onClick={() => void handleMagicLink()}
+        >
+          {busyMethod === "magic" ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Gönderiliyor...
+            </span>
+          ) : (
+            "Şifre girmek istemiyorum • E-posta bağlantısı gönder"
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
