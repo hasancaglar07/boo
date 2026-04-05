@@ -1,10 +1,11 @@
-import { ArrowRight, Check, List, MessageSquare, Palette, Play, Sparkles, Type } from "lucide-react";
+"use client";
+
+import { ArrowLeft, ArrowRight, BookOpen, Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FUNNEL_STEPS, type FunnelStep } from "@/lib/funnel-draft";
-import { getSeededSiteBooks, siteExamplePublicCoverUrl } from "@/lib/site-real-books";
 import { cn } from "@/lib/utils";
 
 const STEP_LABELS: Record<FunnelStep, string> = {
@@ -13,22 +14,6 @@ const STEP_LABELS: Record<FunnelStep, string> = {
   outline: "Bölümler",
   style: "Stil",
   generate: "Oluştur",
-};
-
-const STEP_DESCRIPTIONS: Record<FunnelStep, string> = {
-  topic: "Fikrini netleştir",
-  title: "İsmi konumlandır",
-  outline: "Omurgayı kur",
-  style: "Marka ve tonu seç",
-  generate: "Ön izlemeyi başlat",
-};
-
-const STEP_ICONS: Record<FunnelStep, React.ComponentType<{ className?: string }>> = {
-  topic: MessageSquare,
-  title: Type,
-  outline: List,
-  style: Palette,
-  generate: Play,
 };
 
 export function FunnelShell({
@@ -50,26 +35,26 @@ export function FunnelShell({
 }) {
   const activeIndex = step ? FUNNEL_STEPS.indexOf(step) : -1;
   const embedded = mode === "embedded";
-  const containerClass = embedded ? "mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8" : "shell";
-  const sceneBooks = getSeededSiteBooks(`${step || "preview"}:${title}`, 3);
-  const completionRatio = step ? ((activeIndex + 1) / FUNNEL_STEPS.length) * 100 : 0;
-  const currentStepLabel = step ? STEP_LABELS[step] : eyebrow || "Kitap Oluşturucu";
-  const currentStepDescription = step ? STEP_DESCRIPTIONS[step] : "Akış";
+  const isLastStep = activeIndex === FUNNEL_STEPS.length - 1;
+  const showBottomBar = step && !isLastStep;
 
   return (
-    <div className={cn("text-foreground", embedded ? "w-full" : "min-h-dvh bg-background")}>
-      {!embedded ? (
-        <header className="sticky top-0 z-40 border-b border-border/60 bg-background/92 backdrop-blur-xl">
-          <div className="shell flex items-center justify-between py-3.5">
-            <Link href="/" className="group flex items-center transition-opacity hover:opacity-90">
-              <span className="relative block h-12 w-[220px] overflow-hidden sm:h-14 sm:w-[280px]">
+    <div className="text-foreground min-h-dvh bg-background">
+
+      {/* ─── HEADER ─── */}
+      <header className="sticky top-0 z-40 bg-gradient-to-b from-background to-background/95 backdrop-blur-md">
+        {/* Top row: logo/brand */}
+        <div className="flex h-12 items-center px-4 sm:h-13 sm:px-6">
+          {!embedded ? (
+            <Link href="/" className="shrink-0 transition-all duration-300 hover:opacity-80">
+              <span className="relative block h-6 w-[100px] overflow-hidden sm:h-7 sm:w-[120px]">
                 <Image
                   src="/logo.png"
                   alt="Kitap Oluşturucu"
                   className="h-full w-full object-contain object-left dark:hidden"
                   fill
                   priority
-                  sizes="(min-width: 640px) 280px, 220px"
+                  sizes="120px"
                 />
                 <Image
                   src="/dark-logo.png"
@@ -77,258 +62,182 @@ export function FunnelShell({
                   className="hidden h-full w-full object-contain object-left dark:block"
                   fill
                   priority
-                  sizes="(min-width: 640px) 280px, 220px"
+                  sizes="120px"
                 />
               </span>
             </Link>
-            <div className="flex items-center gap-2.5">
-              {step ? (
-                <div className="hidden rounded-full border border-border/70 bg-card/70 px-3 py-1 text-xs font-medium text-muted-foreground sm:flex sm:items-center sm:gap-2">
-                  <span className="inline-flex size-1.5 rounded-full bg-primary" />
-                  Adım {activeIndex + 1}/{FUNNEL_STEPS.length}
-                </div>
-              ) : null}
-              <ThemeToggle />
+          ) : (
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              <BookOpen className="size-4" />
+              <span>Yeni Kitap</span>
             </div>
-          </div>
-        </header>
-      ) : null}
+          )}
 
-      {step ? (
-        <div className="border-b border-border/50 bg-[linear-gradient(180deg,rgba(var(--background),0.96),rgba(var(--card),0.82))]">
-          <div className={cn(containerClass, "py-4 sm:py-5")}>
-            <div className="rounded-[24px] border border-border/70 bg-card/55 px-4 py-4 shadow-sm sm:px-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    İlerleme
-                  </div>
-                  <div className="mt-1 text-sm font-medium text-foreground">
-                    {currentStepLabel} <span className="text-muted-foreground">• {currentStepDescription}</span>
-                  </div>
-                </div>
-                <div className="rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1 text-xs font-semibold text-primary">
-                  %{Math.round(completionRatio)} tamamlandı
-                </div>
-              </div>
+          <div className="flex-1" />
 
-              <div className="mb-4 h-2 overflow-hidden rounded-full bg-border/50">
-                <div
-                  className="h-full rounded-full bg-[linear-gradient(90deg,rgba(var(--primary),0.45),rgba(var(--primary),1))] transition-all duration-500 ease-out"
-                  style={{ width: `${completionRatio}%` }}
-                />
-              </div>
+          {!embedded && <ThemeToggle />}
+        </div>
 
-              <ol className="grid gap-2 sm:grid-cols-5">
-                {FUNNEL_STEPS.map((item, index) => {
-                  const done = index < activeIndex;
-                  const active = index === activeIndex;
-                  const upcoming = index > activeIndex;
-                  const Icon = STEP_ICONS[item];
+        {/* Bottom row: connected stepper */}
+        {step ? (
+          <div className="border-t border-border/30 px-4 pb-2.5 pt-2 sm:px-6">
+            <div className="mx-auto flex max-w-[480px] items-start justify-center">
+              {FUNNEL_STEPS.map((item, index) => {
+                const done = index < activeIndex;
+                const active = index === activeIndex;
+                const isLast = index === FUNNEL_STEPS.length - 1;
 
-                  return (
-                    <li key={item}>
-                      <div
+                return (
+                  <div key={item} className="flex items-start">
+                    <div className="flex flex-col items-center gap-[2px]">
+                      <span
                         className={cn(
-                          "group flex items-center gap-3 rounded-[18px] border px-3 py-3 transition-all duration-200",
+                          "flex items-center justify-center rounded-full text-[11px] sm:text-xs font-bold leading-none transition-all duration-300 size-8 sm:size-9",
                           active
-                            ? "border-primary/30 bg-primary/[0.08] shadow-[0_8px_24px_rgba(var(--primary),0.10)]"
+                            ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
                             : done
-                              ? "border-foreground/10 bg-foreground/[0.03]"
-                              : "border-border/70 bg-background/65",
+                              ? "bg-primary text-primary-foreground"
+                              : "border-[1.5px] border-border/80 text-muted-foreground/60 bg-transparent",
                         )}
                       >
-                        <div
-                          className={cn(
-                            "relative flex size-9 shrink-0 items-center justify-center rounded-full border transition-all duration-200",
-                            active
-                              ? "border-primary/25 bg-primary text-primary-foreground"
-                              : done
-                                ? "border-foreground/15 bg-foreground text-background"
-                                : "border-border bg-card text-muted-foreground",
-                          )}
-                        >
-                          {done ? <Check className="size-4" aria-hidden="true" /> : <Icon className="size-4" aria-hidden="true" />}
-                          {active ? <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping" /> : null}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div
-                            className={cn(
-                              "truncate text-sm font-semibold",
-                              active ? "text-foreground" : done ? "text-foreground/80" : "text-muted-foreground",
-                            )}
-                          >
-                            {STEP_LABELS[item]}
-                          </div>
-                          <div className="truncate text-xs text-muted-foreground">{STEP_DESCRIPTIONS[item]}</div>
-                        </div>
-
-                        {active ? <ArrowRight className="size-4 text-primary" aria-hidden="true" /> : null}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <div className={cn(containerClass, embedded ? "py-4 md:py-6" : "py-8 md:py-12")}>
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-10">
-          <div>
-            <div className="rounded-[28px] border border-border/70 bg-[linear-gradient(180deg,rgba(var(--card),0.82),rgba(var(--background),0.92))] p-6 shadow-sm sm:p-7 lg:p-8">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/[0.05] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-                    <Sparkles className="size-3.5" />
-                    {step ? `Adım ${activeIndex + 1} / ${FUNNEL_STEPS.length}` : eyebrow || "Kitap Oluşturucu"}
-                  </div>
-                  <h1 className="max-w-3xl font-serif text-3xl font-bold leading-tight tracking-tight text-foreground md:text-4xl lg:text-[2.7rem]">
-                    {title}
-                  </h1>
-                  <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground sm:text-[15px]">
-                    {description}
-                  </p>
-                </div>
-              </div>
-
-              {summary && summary.length > 0 ? (
-                <details className="mt-5 overflow-hidden rounded-[22px] border border-border/70 bg-background/60 lg:hidden">
-                  <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-foreground select-none">
-                    <span>Kitap özeti</span>
-                    <svg className="size-4 text-muted-foreground transition-transform [[open]>&]:rotate-180" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </summary>
-                  <div className="grid grid-cols-2 gap-3 px-4 pb-4 pt-1">
-                    {summary.map((item) => (
-                      <div key={item.label} className="rounded-[16px] border border-border/60 bg-card/70 px-3 py-3">
-                        <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                          {item.label}
-                        </div>
-                        <div className="mt-1 text-xs font-medium leading-5 text-foreground">
-                          {item.value || <span className="font-normal text-muted-foreground/40">—</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              ) : null}
-            </div>
-
-            <div className="mt-6 rounded-[28px] border border-border/70 bg-card/60 p-5 shadow-sm sm:p-6 lg:p-7">
-              {children}
-            </div>
-          </div>
-
-          <aside className="hidden xl:block xl:space-y-4 xl:sticky xl:top-24 xl:h-fit">
-            <div className="overflow-hidden rounded-[26px] border border-border/70 bg-[linear-gradient(180deg,rgba(var(--card),0.9),rgba(var(--background),0.96))] p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Canlı görünüm
-                  </div>
-                  <div className="mt-1 text-sm font-semibold text-foreground">Kitabın şekilleniyor</div>
-                </div>
-                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
-                  aktif
-                </div>
-              </div>
-
-              <div className="relative overflow-hidden rounded-[22px] border border-border/60 bg-[radial-gradient(circle_at_top,rgba(var(--primary),0.14),transparent_38%),linear-gradient(180deg,rgba(30,24,20,0.98),rgba(74,54,42,0.94))] p-5 text-white">
-                <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "linear-gradient(transparent 95%, rgba(255,255,255,0.18) 96%)", backgroundSize: "100% 22px" }} />
-                <div className="relative flex items-start gap-4">
-                  <div className="relative h-[118px] w-[96px] shrink-0" style={{ perspective: "1000px" }}>
-                    {sceneBooks.map((book, index) => (
-                      <div
-                        key={book.slug}
-                        className="absolute top-1/2 left-1/2 overflow-hidden rounded-[12px] border border-white/10 bg-stone-950 shadow-2xl"
-                        style={{
-                          height: index === 1 ? "92px" : "84px",
-                          width: index === 1 ? "64px" : "60px",
-                          transformStyle: "preserve-3d",
-                          transform:
-                            index === 0
-                              ? "translate3d(-56px,-46px,0) rotateY(22deg) rotateX(3deg) rotateZ(-10deg)"
-                              : index === 1
-                                ? "translate3d(-18px,-40px,18px) rotateY(-8deg) rotateX(5deg) rotateZ(1deg)"
-                                : "translate3d(18px,-31px,-4px) rotateY(-28deg) rotateX(3deg) rotateZ(10deg)",
-                        }}
+                        {done ? (
+                          <Check className="size-3.5 stroke-[3]" />
+                        ) : (
+                          index + 1
+                        )}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-center leading-none transition-colors duration-300 text-[10px] sm:text-xs font-medium max-w-[48px] truncate sm:max-w-none",
+                          active
+                            ? "text-primary font-semibold"
+                            : done
+                              ? "text-primary/50"
+                              : "text-muted-foreground/40",
+                        )}
                       >
-                        <Image
-                          src={siteExamplePublicCoverUrl(book.slug)}
-                          alt={`${book.title} kapağı`}
-                          fill
-                          unoptimized
-                          className="object-cover"
-                        />
-                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/16 via-transparent to-black/20" />
-                        <div className="pointer-events-none absolute left-0 top-0 h-full w-2 bg-black/26 shadow-inner" />
-                        <div className="pointer-events-none absolute inset-0 ring-1 ring-white/10" />
-                      </div>
-                    ))}
-                    <div className="absolute inset-x-2 bottom-1 h-4 rounded-full bg-black/20 blur-md" />
-                  </div>
+                        {STEP_LABELS[item]}
+                      </span>
+                    </div>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">Ön izleme</div>
-                    {summary && summary.length > 0 ? (
-                      <div className="mt-2 space-y-2.5">
-                        {summary.slice(0, 3).map((item) => (
-                          <div key={item.label}>
-                            <div className="text-[10px] uppercase tracking-[0.12em] text-white/45">{item.label}</div>
-                            <div className="text-sm font-semibold leading-snug text-white/92">
-                              {item.value || <span className="font-normal text-white/35">—</span>}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="mt-2 text-sm italic text-white/45">Henüz başlanmadı</div>
+                    {!isLast && (
+                      <div
+                        className={cn(
+                          "h-[2px] w-4 sm:w-6 mx-[2px] mt-[14px] sm:mt-[16px] transition-all duration-500 rounded-full",
+                          done
+                            ? "bg-primary"
+                            : active
+                              ? "bg-primary/40"
+                              : "bg-border/60",
+                        )}
+                        aria-hidden="true"
+                      />
                     )}
                   </div>
-                </div>
-              </div>
-
-              {summary && summary.length > 3 ? (
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  {summary.slice(3).map((item) => (
-                    <div key={item.label} className="rounded-[18px] border border-border/60 bg-background/60 px-3.5 py-3">
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                        {item.label}
-                      </div>
-                      <div className="mt-1 text-xs font-medium leading-5 text-foreground">
-                        {item.value || <span className="font-normal text-muted-foreground/40">—</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
+                );
+              })}
             </div>
+          </div>
+        ) : null}
+      </header>
 
-            <div className="rounded-[24px] border border-primary/15 bg-primary/[0.05] p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <div className="size-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
-                <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/65">
-                  Ücretsiz ön izleme
-                </div>
-              </div>
-              <div className="text-sm leading-6 text-muted-foreground">
-                Önce kapağı, bölüm planını ve okunabilir ön izlemeyi görürsün. <span className="font-medium text-foreground/80">Tam kitap, PDF ve EPUB</span> daha sonra açılır.
-              </div>
-            </div>
-
-            <div className="rounded-[24px] border border-border/70 bg-card/65 p-4">
-              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Yayın yolu</div>
-              <div className="mt-2 text-sm leading-6 text-muted-foreground">
-                Bu akış hızlı karar vermek için tasarlandı: konunu gir, kitabın vitrini oluşsun, sonra üretime güvenle geç.
-              </div>
-            </div>
-          </aside>
+      {/* ─── MAIN CONTENT ─── */}
+      <div
+        className={cn(
+          "mx-auto w-full max-w-[640px] px-4 sm:px-6",
+          showBottomBar ? "pb-32 pt-6 sm:pt-10" : "pb-8 pt-6 sm:pb-12 sm:pt-10",
+        )}
+      >
+        <div className="mb-5">
+          <h1 className="text-xl sm:text-2xl font-bold leading-snug tracking-tight text-foreground transition-all duration-300">
+            {title}
+          </h1>
+          <p className="mt-1.5 text-base sm:text-lg leading-relaxed text-muted-foreground/70 transition-all duration-300">
+            {description}
+          </p>
         </div>
+
+        {summary && summary.length > 0 ? (
+          <details className="mb-5 overflow-hidden rounded-xl border border-border/50 bg-muted/30 transition-all duration-300">
+            <summary className="flex cursor-pointer items-center justify-between px-4 py-2.5 text-sm font-semibold text-foreground select-none transition-all duration-300 hover:bg-muted/50">
+              <span>📖 Kitap Özeti</span>
+              <svg className="size-4 text-muted-foreground transition-transform duration-300 [[open]>&]:rotate-180" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </summary>
+            <div className="grid grid-cols-2 gap-2 px-4 pb-4 pt-1.5">
+              {summary.map((item) => (
+                <div key={item.label} className="rounded-lg border border-border/40 bg-background/80 px-3 py-2 transition-all duration-300">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+                    {item.label}
+                  </div>
+                  <div className="mt-0.5 text-xs font-medium leading-5 text-foreground truncate">
+                    {item.value || <span className="font-normal text-muted-foreground/40">—</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
+        ) : null}
+
+        <div>{children}</div>
       </div>
+
+      {/* ─── BOTTOM NAVIGATION BAR ─── */}
+      {showBottomBar ? (
+        <div className={cn(
+          "fixed bottom-0 z-50 bg-background/98 backdrop-blur-xl border-t border-border/40",
+          embedded ? "inset-x-0 lg:left-[288px]" : "inset-x-0"
+        )}>
+          <div className="mx-auto max-w-[640px] px-4 sm:px-6">
+            <div className="flex items-center gap-3 h-[72px] sm:h-[76px]">
+
+              {/* Geri */}
+              <button
+                type="button"
+                disabled={activeIndex === 0}
+                onClick={() => window.history.back()}
+                className={cn(
+                  "flex h-14 w-14 shrink-0 items-center justify-center rounded-full border transition-all duration-300 active:scale-[0.92] sm:h-16 sm:w-16",
+                  activeIndex === 0
+                    ? "cursor-not-allowed border-border/20 bg-muted/30 text-muted-foreground/25"
+                    : "border-border/50 bg-card text-foreground hover:bg-accent active:bg-accent/80",
+                )}
+              >
+                <ArrowLeft className="size-5" strokeWidth={2.5} />
+              </button>
+
+              {/* Progress dots */}
+              <div className="flex flex-1 items-center justify-center gap-1.5">
+                {FUNNEL_STEPS.map((_, i) => (
+                  <span
+                    key={i}
+                    className={cn(
+                      "rounded-full transition-all duration-300 h-2.5",
+                      i === activeIndex
+                        ? "w-8 bg-primary"
+                        : i < activeIndex
+                          ? "w-2.5 bg-primary/40"
+                          : "w-2.5 bg-border/50",
+                    )}
+                  />
+                ))}
+              </div>
+
+              {/* İleri */}
+              <button
+                type="submit"
+                form="wizard-form"
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.92] sm:h-16 sm:w-16"
+              >
+                <ArrowRight className="size-5" strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+          {/* iOS safe area */}
+          <div className="h-[env(safe-area-inset-bottom)]" />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -194,7 +194,7 @@ export function GuidedWizardScreen({
 
   const outlineWordEstimate = useMemo(
     () => outlineWordRange(draft.outline.length ? draft.outline : localOutlineSuggestions(draft), draft.bookLength),
-    [draft],
+    [draft.outline, draft.bookLength, draft.language, draft.topic],
   );
 
   function generateResumePath() {
@@ -486,7 +486,7 @@ export function GuidedWizardScreen({
     await runGenerateAfterAuth();
   }
 
-  const stepKey = `${step}:${draft.updatedAt}:${draft.outline.length}:${draft.title}:${draft.topic}`;
+  const stepKey = `${step}:${draft.outline.length}`;
 
   function renderAnimatedStep(children: ReactNode) {
     return (
@@ -514,7 +514,7 @@ export function GuidedWizardScreen({
     if (!appShellEnabled) return shell;
 
     return (
-      <AppFrame current="new" title="Yeni Kitap" books={[]} showBookShelf={false}>
+      <AppFrame current="new" title="Yeni Kitap" books={[]} showBookShelf={false} hideHeader>
         {shell}
       </AppFrame>
     );
@@ -523,7 +523,7 @@ export function GuidedWizardScreen({
   if (step === "topic") {
     return wrapInShell({
       title: "Kitabın konusu ne?",
-      description: "1/5. Bir fikir yazman yeterli. Bu adım bittiğinde başlık önerileri ve kitap yönü görünür hale gelir.",
+      description: "1/5. Önce kitap dilini seç, sonra konuyu yaz. Bu seçim tüm AI önerilerini aynı dilde üretir.",
       children: <TopicStep draft={draft} onUpdate={updateDraft} onNext={goNext} error={error} onError={setError} />,
     });
   }

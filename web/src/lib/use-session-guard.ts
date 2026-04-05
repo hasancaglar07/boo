@@ -13,17 +13,16 @@ export function useSessionGuardWithRedirect(redirectBase = "/login") {
   const router = useRouter();
   const pathname = usePathname();
   const appRoute = Boolean(pathname?.startsWith("/app"));
-  const [session, setSession] = useState<PreviewSession | null>(() => getSession());
-  const [status, setStatus] = useState<"pending" | "authenticated" | "unauthenticated">(() => (
-    getSession() ? "authenticated" : "pending"
-  ));
+  const [session, setSession] = useState<PreviewSession | null>(null);
+  const [status, setStatus] = useState<"pending" | "authenticated" | "unauthenticated">("pending");
 
   useEffect(() => {
     let active = true;
+    const cachedSession = getSession();
 
     void syncPreviewAuthState().then((payload) => {
       if (!active) return;
-      const nextSession = getSession();
+      const nextSession = getSession() || cachedSession;
       setSession(nextSession);
 
       if (payload) {

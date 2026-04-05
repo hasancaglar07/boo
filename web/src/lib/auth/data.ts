@@ -59,6 +59,46 @@ export type PreviewCommercePayload = {
   recoveryEmailEnabled: boolean;
 };
 
+const AUTO_VERIFIED_AUTH_PROVIDERS = ["google", "email"] as const;
+
+async function hasAutoVerifiedProvider(userId: string) {
+  const account = await prisma.account.findFirst({
+    where: {
+      userId,
+      provider: {
+        in: [...AUTO_VERIFIED_AUTH_PROVIDERS],
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+  return Boolean(account);
+}
+
+async function resolveEffectiveEmailVerified(userId: string, currentValue: Date | null) {
+  if (currentValue) {
+    return true;
+  }
+
+  const trustedProvider = await hasAutoVerifiedProvider(userId);
+  if (!trustedProvider) {
+    return false;
+  }
+
+  const verifiedAt = new Date();
+  await prisma.user.updateMany({
+    where: {
+      id: userId,
+      emailVerified: null,
+    },
+    data: {
+      emailVerified: verifiedAt,
+    },
+  });
+  return true;
+}
+
 export async function resolveGuestIdentityByToken(token?: string | null) {
   if (!token) return null;
   const guest = await prisma.guestIdentity.findUnique({
@@ -188,6 +228,20 @@ export async function canAccessBookPreview(viewer: Viewer, slug: string) {
   return false;
 }
 
+const PLAN_ALIASES: Record<string, BookPlanId> = {
+  studio: "pro",
+};
+
+const NORMALIZED_PLAN_IDS: BookPlanId[] = ["free", "starter", "creator", "pro", "premium"];
+
+function normalizePlanId(value: string | null | undefined): BookPlanId | null {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) return null;
+  if (PLAN_ALIASES[raw]) return PLAN_ALIASES[raw];
+  if (NORMALIZED_PLAN_IDS.includes(raw as BookPlanId)) return raw as BookPlanId;
+  return null;
+}
+
 export async function getEffectivePlanId(userId?: string | null): Promise<BookPlanId> {
   if (!userId) return "free";
   const entitlements = await prisma.entitlement.findMany({
@@ -199,7 +253,9 @@ export async function getEffectivePlanId(userId?: string | null): Promise<BookPl
     orderBy: { createdAt: "desc" },
   });
 
-  const ids = entitlements.map((item) => item.planId as BookPlanId);
+  const ids = entitlements
+    .map((item) => normalizePlanId(item.planId))
+    .filter((item): item is BookPlanId => Boolean(item));
   if (ids.includes("pro")) return "pro";
   if (ids.includes("creator")) return "creator";
   if (ids.includes("starter")) return "starter";
@@ -222,11 +278,17 @@ export async function canAccessFullBook(userId: string | null, slug: string) {
     },
   });
 
-  const hasSubscription = entitlements.some((item) => SUBSCRIPTION_PLANS.has(item.planId));
+  const hasSubscription = entitlements.some((item) => {
+    const planId = normalizePlanId(item.planId);
+    return Boolean(planId && SUBSCRIPTION_PLANS.has(planId));
+  });
   if (hasSubscription) return true;
 
   return entitlements.some(
-    (item) => item.kind === "one_time_book_unlock" && item.planId === "premium" && item.bookSlug === slug,
+    (item) =>
+      item.kind === "one_time_book_unlock" &&
+      normalizePlanId(item.planId) === "premium" &&
+      item.bookSlug === slug,
   );
 }
 
@@ -638,15 +700,16 @@ export async function getAuthStateForUser(userId: string | null, email?: string 
     };
   }
 
-  const [planId, usage] = await Promise.all([
+  const [planId, usage, effectiveEmailVerified] = await Promise.all([
     getEffectivePlanId(user.id),
     getBookStartAllowance(user.id),
+    resolveEffectiveEmailVerified(user.id, user.emailVerified),
   ]);
 
   return {
     authenticated: true,
     planId,
-    emailVerified: Boolean(user.emailVerified),
+    emailVerified: effectiveEmailVerified,
     role: user.role,
     usage,
     account: {

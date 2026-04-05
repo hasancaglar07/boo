@@ -14,9 +14,58 @@ export async function POST() {
     return NextResponse.json({ ok: false, error: "Oturum gerekli." }, { status: 401 });
   }
 
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      id: true,
+      email: true,
+      emailVerified: true,
+    },
+  });
+  if (!dbUser?.email) {
+    return NextResponse.json({ ok: false, error: "Kullanıcı bulunamadı." }, { status: 404 });
+  }
+
+  if (dbUser.emailVerified) {
+    return NextResponse.json({
+      ok: true,
+      skipped: true,
+      message: "E-posta zaten doğrulanmış.",
+    });
+  }
+
+  const trustedProvider = await prisma.account.findFirst({
+    where: {
+      userId: dbUser.id,
+      provider: {
+        in: ["google", "email"],
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+  if (trustedProvider) {
+    const verifiedAt = new Date();
+    await prisma.user.updateMany({
+      where: {
+        id: dbUser.id,
+        emailVerified: null,
+      },
+      data: {
+        emailVerified: verifiedAt,
+      },
+    });
+    return NextResponse.json({
+      ok: true,
+      skipped: true,
+      message: "Bu giriş yöntemi için ek e-posta doğrulaması gerekmiyor.",
+    });
+  }
+
   const rateLimit = await consumeRateLimit({
     scope: "verify-email-resend",
-    key: session.user.email,
+    key: dbUser.email,
     ...EMAIL_ACTION_RATE_LIMIT,
   });
   if (!rateLimit.allowed) {
@@ -31,7 +80,7 @@ export async function POST() {
       expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TTL_SECONDS * 1000),
     },
   });
-  await sendEmailVerificationEmail(session.user.email, rawToken);
+  await sendEmailVerificationEmail(dbUser.email, rawToken);
   await audit({
     action: "email-verification.sent",
     entityType: "user",

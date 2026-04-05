@@ -41,6 +41,7 @@ type AppFrameProps = {
   currentBookSlug?: string;
   books?: Book[];
   showBookShelf?: boolean;
+  hideHeader?: boolean;
   actions?: PaletteAction[];
   primaryAction?: {
     label: string;
@@ -377,6 +378,7 @@ export function AppFrame({
   currentBookSlug,
   books = [],
   showBookShelf = true,
+  hideHeader = false,
   actions = [],
   primaryAction,
   viewer,
@@ -437,7 +439,7 @@ export function AppFrame({
     }).catch(() => null);
 
     const payload = response
-      ? ((await response.json().catch(() => null)) as { error?: string } | null)
+      ? ((await response.json().catch(() => null)) as { error?: string; message?: string } | null)
       : null;
 
     if (!response?.ok) {
@@ -446,7 +448,7 @@ export function AppFrame({
       return;
     }
 
-    setVerificationMessage("Doğrulama maili tekrar gönderildi.");
+    setVerificationMessage(payload?.message || "Doğrulama maili tekrar gönderildi.");
     setVerificationSending(false);
     await refreshViewer();
   }
@@ -513,7 +515,7 @@ export function AppFrame({
       </aside>
 
       <div className="app-content min-h-dvh bg-background text-foreground">
-        <header className="sticky top-0 z-30 flex min-h-16 items-center gap-3 border-b border-border/50 bg-background/95 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+        {!hideHeader && <header className="sticky top-0 z-30 flex min-h-16 items-center gap-3 border-b border-border/50 bg-background/95 px-4 backdrop-blur-md sm:px-6 lg:px-8">
           <div className="min-w-0 flex flex-1 items-center gap-3">
             <button
               type="button"
@@ -638,9 +640,9 @@ export function AppFrame({
               </div>
             ) : null}
           </div>
-        </header>
+        </header>}
 
-        {currentViewer && !currentViewer.emailVerified ? (
+        {!hideHeader && currentViewer && !currentViewer.emailVerified ? (
           <div className="px-6 pt-4 md:px-10">
             <div className="rounded-[24px] border border-amber-500/20 bg-[linear-gradient(135deg,rgba(255,248,235,0.96),rgba(247,239,227,0.98))] px-5 py-4 shadow-[0_8px_30px_rgba(188,104,67,0.08)] dark:bg-[linear-gradient(135deg,rgba(34,25,20,0.96),rgba(24,18,15,0.98))]">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -680,11 +682,11 @@ export function AppFrame({
 
         <main
           className={cn(
-            "px-6 py-8 md:px-10 md:py-10",
-            layout === "book" && "xl:px-14",
+            hideHeader ? "" : "px-6 py-8 md:px-10 md:py-10",
+            !hideHeader && layout === "book" && "xl:px-14",
           )}
         >
-          {subtitle ? (
+          {!hideHeader && subtitle ? (
             <p className="mb-8 text-sm leading-6 text-muted-foreground">{subtitle}</p>
           ) : null}
           {children}

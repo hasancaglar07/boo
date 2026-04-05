@@ -116,9 +116,25 @@ export const { handlers, auth, signIn, signOut } = nextAuth({
   },
   providers,
   callbacks: {
-    async signIn({ user }: { user: any }) {
+    async signIn({ user, account }: { user: any; account: any }) {
       if (user?.id) {
         await ensureBootstrapAdmin(user.id, user.email || null);
+
+        const provider = String(account?.provider || "").toLowerCase();
+        const providerAutoVerified = provider === "google" || provider === "email";
+        if (providerAutoVerified) {
+          const verifiedAt = new Date();
+          await prisma.user.updateMany({
+            where: {
+              id: user.id,
+              emailVerified: null,
+            },
+            data: {
+              emailVerified: verifiedAt,
+            },
+          });
+          user.emailVerified = user.emailVerified || verifiedAt;
+        }
       }
       return true;
     },

@@ -6,8 +6,6 @@ import { InteractiveBookShowcase } from "@/components/site/interactive-book-show
 
 import { HomeHowItWorksSection } from "@/components/site/home-how-it-works-section";
 import { HomeTestimonialsSection } from "@/components/site/home-testimonials-section";
-import { HomeWorkspaceShowcaseSection } from "@/components/site/home-workspace-showcase-section";
-import { HomePricingTestimonials } from "@/components/site/home-pricing-testimonials";
 import { HomeBlogPreviewSection } from "@/components/site/home-blog-preview-section";
 import { MarketingCtaSection } from "@/components/site/marketing-cta-section";
 import { MarketingPage } from "@/components/site/marketing-page";
@@ -19,24 +17,24 @@ import { buildPageMetadata, buildOgImageUrl } from "@/lib/seo";
 import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Yapay Zeka ile Kitap Yaz | 15 Dakikada KDP Uyumlu EPUB Olustur",
+  title: "Yapay Zeka ile Kitap Yaz | 15 Dakikada KDP Uyumlu EPUB Oluştur",
   description:
     "Uzmanlığını yapay zeka ile yayına hazır kitaba dönüştür. Taslak, kapak ve EPUB/PDF çıktısı 5 soruda oluştur. Kredi kartı gerekmeden ücretsiz önizle.",
   path: "/",
   keywords: [
     "yapay zeka kitap yazma",
     "ai ile kitap yaz",
-    "kitap olusturucu",
-    "kdp kitap hazirlama",
-    "epub olusturma",
-    "kitap yazma araci",
-    "pdf kitap olusturma",
-    "kindle kitap hazirlama",
+    "kitap oluşturucu",
+    "kdp kitap hazırlama",
+    "epub oluşturma",
+    "kitap yazma aracı",
+    "pdf kitap oluşturma",
+    "kindle kitap hazırlama",
     "yapay zeka ile kitap",
     "online kitap yazma",
-    "e kitap olusturucu",
-    "kitap taslak olusturma",
-    "self publishing araci",
+    "e kitap oluşturucu",
+    "kitap taslak oluşturma",
+    "self publishing aracı",
   ],
   ogImage: buildOgImageUrl(
     "Yapay Zeka ile Kitap Yaz",
@@ -128,7 +126,7 @@ export default async function HomePage() {
       <HomeHowItWorksSection />
       <InteractiveBookShowcase books={fallbackShowcaseBooks} />
 
-      {/* Pricing: "pahalı mı?" sorusunu testimonials’tan önce cevapla */}
+      {/* Pricing: "pahalı mı?" sorusunu testimonials'tan önce cevapla */}
       <section className="border-b border-border/80 py-18">
         <PricingCreativeSection
           tag="Kitap Fiyatlandırması"
@@ -138,9 +136,6 @@ export default async function HomePage() {
       </section>
 
       <HomeTestimonialsSection />
-      <HomeWorkspaceShowcaseSection />
-      <HomePricingTestimonials />
-
       <HomeBlogPreviewSection />
 
       <section className="border-b border-border/80 py-18">

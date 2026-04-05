@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# Codefast-first multi-provider AI system for book generation.
-# Falls back across Codefast endpoints by daily-limit order, then to Ollama.
+# GLM-5.1 API system for book generation.
 
 # ============================================================================
 # CONFIGURATION
@@ -18,10 +17,6 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 RESET='\033[0m'
 
-OLLAMA_BASE_URL="${OLLAMA_BASE_URL:-${OLLAMA_HOST:-http://localhost:11434}}"
-OLLAMA_BASE_URL="$(normalize_base_url "$OLLAMA_BASE_URL")"
-OLLAMA_DISABLED="${OLLAMA_DISABLED:-0}"
-OLLAMA_PREFERRED_MODEL="${OLLAMA_PREFERRED_MODEL:-}"
 CODEFAST_REASONING_EFFORT="${CODEFAST_REASONING_EFFORT:-high}"
 CODEFAST_CURL_MAX_TIME="${CODEFAST_CURL_MAX_TIME:-180}"
 
@@ -59,39 +54,19 @@ sanitize_max_tokens() {
 }
 
 has_any_smart_provider() {
-    if codefast_has_api_key; then
-        return 0
-    fi
-
-    ollama_is_available
-}
-
-ollama_is_available() {
-    if [ "$OLLAMA_DISABLED" = "1" ]; then
-        return 1
-    fi
-
-    curl -sS --max-time 2 "$(normalize_base_url "$OLLAMA_BASE_URL")/api/tags" >/dev/null 2>&1
+    codefast_has_api_key
 }
 
 setup_multi_provider_system() {
     mkdir -p "$CODEFAST_LOG_DIR"
 
-    echo "🔧 Initializing Codefast multi-provider system..."
+    echo "🔧 Initializing GLM-5.1 API system..."
     if codefast_has_api_key; then
         echo "✅ Shared Codefast API key detected"
         echo "   Text order: $(codefast_text_provider_order general)"
         echo "   Cover order: $(codefast_cover_provider_order)"
     else
         echo "⚠️  Shared Codefast API key not found"
-    fi
-
-    if [ "$OLLAMA_DISABLED" = "1" ]; then
-        echo "⚠️  Ollama disabled by configuration"
-    elif ollama_is_available; then
-        echo "✅ Ollama fallback enabled (${OLLAMA_BASE_URL})"
-    else
-        echo "⚠️  Ollama fallback configured but not reachable (${OLLAMA_BASE_URL})"
     fi
 
     return 0
@@ -164,134 +139,6 @@ run_json_request() {
 # PROVIDER CALLERS
 # ============================================================================
 
-call_codefast_responses_provider() {
-    local provider_id="$1"
-    local model="$2"
-    local prompt="$3"
-    local system_prompt="$4"
-    local _temperature="$5"
-    local max_tokens="$6"
-    local api_key
-    local payload
-    local url
-    local result
-    local curl_status
-    local http_code
-    local response
-    local text
-
-    api_key="$(resolve_codefast_api_key 2>/dev/null || true)"
-    [ -n "$api_key" ] || return 1
-
-    url="$(normalize_base_url "$(codefast_text_provider_base_url "$provider_id")")/responses"
-    payload="$(jq -nc \
-        --arg model "$model" \
-        --arg instructions "$system_prompt" \
-        --arg input "$prompt" \
-        --arg effort "$CODEFAST_REASONING_EFFORT" \
-        --argjson max_output_tokens "$max_tokens" \
-        '{
-            model: $model,
-            instructions: $instructions,
-            input: $input,
-            max_output_tokens: $max_output_tokens,
-            reasoning: { effort: $effort }
-        }')"
-
-    result="$(run_json_request "POST" "$url" "$payload" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $api_key" \
-        -H "x-api-key: $api_key")"
-    curl_status="$(printf '%s\n' "$result" | sed -n '1p')"
-    http_code="$(printf '%s\n' "$result" | sed -n '2p')"
-    response="$(printf '%s\n' "$result" | sed -n '3,$p')"
-
-    if [ "$curl_status" -ne 0 ]; then
-        echo "❌ $(codefast_provider_label "$provider_id") request failed at transport level" >&2
-        return 1
-    fi
-
-    codefast_increment_provider_usage "$provider_id"
-    text="$(extract_response_text "$response" | sanitize_provider_text)"
-
-    if [[ "$http_code" =~ ^2 ]] && [ -n "$text" ]; then
-        printf '%s\n' "$text"
-        return 0
-    fi
-
-    if mark_limit_if_needed "$provider_id" "$http_code" "$response"; then
-        echo "⚠️ $(codefast_provider_label "$provider_id") daily limit or rate limit hit" >&2
-    else
-        echo "❌ $(codefast_provider_label "$provider_id") error: $(extract_error_message "$response")" >&2
-    fi
-    return 1
-}
-
-call_codefast_openai_chat_provider() {
-    local provider_id="$1"
-    local model="$2"
-    local prompt="$3"
-    local system_prompt="$4"
-    local temperature="$5"
-    local max_tokens="$6"
-    local api_key
-    local payload
-    local url
-    local result
-    local curl_status
-    local http_code
-    local response
-    local text
-
-    api_key="$(resolve_codefast_api_key 2>/dev/null || true)"
-    [ -n "$api_key" ] || return 1
-
-    url="$(normalize_base_url "$(codefast_text_provider_base_url "$provider_id")")/chat/completions"
-    payload="$(jq -nc \
-        --arg model "$model" \
-        --arg system "$system_prompt" \
-        --arg prompt "$prompt" \
-        --argjson temperature "$temperature" \
-        --argjson max_tokens "$max_tokens" \
-        '{
-            model: $model,
-            messages: [
-                { role: "system", content: $system },
-                { role: "user", content: $prompt }
-            ],
-            temperature: $temperature,
-            max_tokens: $max_tokens
-        }')"
-
-    result="$(run_json_request "POST" "$url" "$payload" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $api_key" \
-        -H "x-api-key: $api_key")"
-    curl_status="$(printf '%s\n' "$result" | sed -n '1p')"
-    http_code="$(printf '%s\n' "$result" | sed -n '2p')"
-    response="$(printf '%s\n' "$result" | sed -n '3,$p')"
-
-    if [ "$curl_status" -ne 0 ]; then
-        echo "❌ $(codefast_provider_label "$provider_id") request failed at transport level" >&2
-        return 1
-    fi
-
-    codefast_increment_provider_usage "$provider_id"
-    text="$(extract_response_text "$response" | sanitize_provider_text)"
-
-    if [[ "$http_code" =~ ^2 ]] && [ -n "$text" ]; then
-        printf '%s\n' "$text"
-        return 0
-    fi
-
-    if mark_limit_if_needed "$provider_id" "$http_code" "$response"; then
-        echo "⚠️ $(codefast_provider_label "$provider_id") daily limit or rate limit hit" >&2
-    else
-        echo "❌ $(codefast_provider_label "$provider_id") error: $(extract_error_message "$response")" >&2
-    fi
-    return 1
-}
-
 call_codefast_anthropic_provider() {
     local provider_id="$1"
     local model="$2"
@@ -357,63 +204,6 @@ call_codefast_anthropic_provider() {
     return 1
 }
 
-call_ollama_api() {
-    local prompt="$1"
-    local system_prompt="$2"
-    local _task_type="$3"
-    local temperature="$4"
-    local max_tokens="$5"
-    local _max_retries="$6"
-    local model_name="${7:-${OLLAMA_PREFERRED_MODEL:-llama3.2:1b}}"
-    local url
-    local payload
-    local result
-    local curl_status
-    local http_code
-    local response
-    local text
-
-    if [ "$OLLAMA_DISABLED" = "1" ]; then
-        return 1
-    fi
-
-    url="$(normalize_base_url "$OLLAMA_BASE_URL")/api/generate"
-    payload="$(jq -nc \
-        --arg model "$model_name" \
-        --arg prompt "System: $system_prompt\n\nUser: $prompt\n\nAssistant:" \
-        --argjson temperature "$temperature" \
-        --argjson max_tokens "$max_tokens" \
-        '{
-            model: $model,
-            prompt: $prompt,
-            stream: false,
-            options: {
-                temperature: $temperature,
-                num_predict: $max_tokens,
-                num_ctx: 8192
-            }
-        }')"
-
-    result="$(run_json_request "POST" "$url" "$payload" -H "Content-Type: application/json")"
-    curl_status="$(printf '%s\n' "$result" | sed -n '1p')"
-    http_code="$(printf '%s\n' "$result" | sed -n '2p')"
-    response="$(printf '%s\n' "$result" | sed -n '3,$p')"
-
-    if [ "$curl_status" -ne 0 ]; then
-        echo "❌ Ollama transport error" >&2
-        return 1
-    fi
-
-    text="$(printf '%s' "$response" | jq -r '.response // ""' 2>/dev/null)"
-    if [[ "$http_code" =~ ^2 ]] && [ -n "$text" ]; then
-        printf '%s\n' "$text"
-        return 0
-    fi
-
-    echo "❌ Ollama error: $(extract_error_message "$response")" >&2
-    return 1
-}
-
 call_text_provider() {
     local provider_id="$1"
     local model="$2"
@@ -424,17 +214,8 @@ call_text_provider() {
     local max_retries="$7"
 
     case "$(codefast_text_provider_protocol "$provider_id")" in
-        responses)
-            call_codefast_responses_provider "$provider_id" "$model" "$prompt" "$system_prompt" "$temperature" "$max_tokens"
-            ;;
-        openai-chat)
-            call_codefast_openai_chat_provider "$provider_id" "$model" "$prompt" "$system_prompt" "$temperature" "$max_tokens"
-            ;;
         anthropic)
             call_codefast_anthropic_provider "$provider_id" "$model" "$prompt" "$system_prompt" "$temperature" "$max_tokens"
-            ;;
-        ollama)
-            call_ollama_api "$prompt" "$system_prompt" "" "$temperature" "$max_tokens" "$max_retries" "$model"
             ;;
         *)
             return 1
@@ -442,29 +223,10 @@ call_text_provider() {
     esac
 }
 
+
+# ============================================================================
 build_provider_sequence() {
-    local task_type="$1"
-    local forced_model="${2:-}"
-    local forced_provider=""
-    local base_order=""
-    local ordered=""
-    local provider=""
-
-    forced_provider="$(codefast_forced_provider_for_model "$forced_model")"
-    base_order="$(codefast_text_provider_order "$task_type")"
-
-    if [ -n "$forced_provider" ]; then
-        ordered="$forced_provider"
-    fi
-
-    for provider in $base_order; do
-        if [ "$provider" = "$forced_provider" ]; then
-            continue
-        fi
-        ordered="${ordered:+$ordered }$provider"
-    done
-
-    printf '%s\n' "$ordered"
+    printf '%s\n' "glm-main"
 }
 
 # ============================================================================
@@ -477,62 +239,32 @@ smart_api_call() {
     local task_type="${3:-general}"
     local temperature
     local max_tokens
-    local max_retries
-    local requested_model="${7:-}"
-    local provider_sequence
-    local attempt=1
-    local provider_id
     local model_name
     local result
-    local forced_provider
 
     temperature="$(sanitize_temperature "${4:-0.7}")"
     max_tokens="$(sanitize_max_tokens "${5:-4096}")"
-    max_retries="${6:-3}"
 
-    if ! [[ "$max_retries" =~ ^[0-9]+$ ]] || [ "$max_retries" -le 0 ]; then
-        max_retries=3
+    if ! codefast_has_api_key; then
+        echo "No CODEFAST_API_KEY configured" >&2
+        return 1
     fi
 
-    provider_sequence="$(build_provider_sequence "$task_type" "$requested_model")"
-    forced_provider="$(codefast_forced_provider_for_model "$requested_model")"
+    if codefast_provider_is_exhausted "glm-main"; then
+        echo "Skipping GLM-5.1 - daily limit reached" >&2
+        return 1
+    fi
 
-    while [ "$attempt" -le "$max_retries" ]; do
-        for provider_id in $provider_sequence; do
-            if [ "$provider_id" != "ollama-local" ] && ! codefast_has_api_key; then
-                continue
-            fi
-
-            if codefast_provider_is_exhausted "$provider_id"; then
-                echo "⏭️ Skipping $(codefast_provider_label "$provider_id") due to daily limit state" >&2
-                continue
-            fi
-
-            if [ -n "$requested_model" ] && [ "$provider_id" = "$forced_provider" ]; then
-                model_name="$requested_model"
-            else
-                model_name="$(codefast_text_provider_model "$provider_id" "$task_type")"
-            fi
-
-            echo "🔄 Trying $(codefast_provider_label "$provider_id") with model ${model_name}" >&2
-            if result="$(call_text_provider "$provider_id" "$model_name" "$prompt" "$system_prompt" "$temperature" "$max_tokens" "$max_retries" 2> >(cat >&2))"; then
-                printf '%s\n' "$result"
-                return 0
-            fi
-            sleep 1
-        done
-
-        attempt=$((attempt + 1))
-        if [ "$attempt" -le "$max_retries" ]; then
-            sleep 2
-        fi
-    done
-
-    echo "❌ All configured providers failed after ${max_retries} attempt(s)" >&2
+    model_name="$(codefast_text_provider_model "glm-main" "$task_type")"
+    echo "Using GLM-5.1 (model: ${model_name})" >&2
+    if result="$(call_text_provider "glm-main" "$model_name" "$prompt" "$system_prompt" "$temperature" "$max_tokens" 1 2> >(cat >&2))"; then
+        printf '%s\n' "$result"
+        return 0
+    fi
+    echo "GLM-5.1 request failed" >&2
     return 1
 }
 
-# ============================================================================
 # BOOK GENERATION FUNCTIONS
 # ============================================================================
 
@@ -650,7 +382,7 @@ review_chapter_quality() {
 ${content}"
 
     local result
-    result="$(smart_api_call "$user_prompt" "$system_prompt" "quality_check" 0.4 4096 2 "${OLLAMA_PREFERRED_MODEL:-}")" || return 1
+    result="$(smart_api_call "\$user_prompt" "\$system_prompt" "quality_check" 0.4 4096 2 "")" || return 1
     printf '%s\n' "$result" > "$chapter_file"
 }
 
@@ -723,7 +455,6 @@ Rewrite the chapter now:"
 # ============================================================================
 
 show_provider_status() {
-    local provider_id
     local label
     local used
     local limit
@@ -733,35 +464,21 @@ show_provider_status() {
     echo -e "\n${CYAN}📊 Provider Status${RESET}"
     echo "────────────────────────────────────────"
 
-    for provider_id in $(codefast_text_provider_ids); do
-        label="$(codefast_provider_label "$provider_id")"
-        used="$(codefast_provider_usage_count "$provider_id")"
-        limit="$(codefast_provider_daily_limit "$provider_id")"
-        remaining="$(codefast_provider_remaining "$provider_id")"
-        reason="$(codefast_provider_exhausted_reason "$provider_id")"
+    # glm-main
+    label="$(codefast_provider_label "glm-main")"
+    used="$(codefast_provider_usage_count "glm-main")"
+    limit="$(codefast_provider_daily_limit "glm-main")"
+    remaining="$(codefast_provider_remaining "glm-main")"
+    reason="$(codefast_provider_exhausted_reason "glm-main")"
 
-        if [ "$provider_id" = "ollama-local" ]; then
-            if [ "$OLLAMA_DISABLED" = "1" ]; then
-                echo -e "${YELLOW}⚠️${RESET} ${label} - disabled"
-            elif ollama_is_available; then
-                echo -e "${GREEN}✅${RESET} ${label} - ${OLLAMA_BASE_URL}"
-            else
-                echo -e "${RED}❌${RESET} ${label} - unreachable at ${OLLAMA_BASE_URL}"
-            fi
-            continue
-        fi
+    if ! codefast_has_api_key; then
+        echo -e "${RED}❌${RESET} ${label} - missing API key"
+    elif codefast_provider_is_exhausted "glm-main"; then
+        echo -e "${YELLOW}⏳${RESET} ${label} - exhausted (${used}/${limit}) ${reason}"
+    else
+        echo -e "${GREEN}✅${RESET} ${label} - used ${used}/${limit}, remaining ${remaining}"
+    fi
 
-        if ! codefast_has_api_key; then
-            echo -e "${RED}❌${RESET} ${label} - missing Codefast key"
-            continue
-        fi
-
-        if codefast_provider_is_exhausted "$provider_id"; then
-            echo -e "${YELLOW}⏳${RESET} ${label} - exhausted (${used}/${limit}) ${reason}"
-        else
-            echo -e "${GREEN}✅${RESET} ${label} - used ${used}/${limit}, remaining ${remaining}"
-        fi
-    done
 
     echo "────────────────────────────────────────"
 }
@@ -769,56 +486,38 @@ show_provider_status() {
 test_all_providers() {
     local test_prompt="Write a brief hello message."
     local test_system="You are a helpful assistant."
-    local provider_id
     local model_name
 
     echo "🧪 Testing configured providers..."
-    for provider_id in $(codefast_text_provider_ids); do
-        if [ "$provider_id" = "ollama-local" ]; then
-            continue
-        fi
-        if ! codefast_has_api_key; then
-            echo "Skipping ${provider_id}: no Codefast key"
-            break
-        fi
-        if codefast_provider_is_exhausted "$provider_id"; then
-            echo "Skipping ${provider_id}: marked as exhausted for today"
-            continue
-        fi
-        model_name="$(codefast_text_provider_model "$provider_id" "general")"
-        printf 'Testing %s (%s): ' "$provider_id" "$model_name"
-        if call_text_provider "$provider_id" "$model_name" "$test_prompt" "$test_system" "0.2" "64" "1" >/dev/null 2>&1; then
-            echo -e "${GREEN}OK${RESET}"
-        else
-            echo -e "${RED}FAILED${RESET}"
-        fi
-    done
 
-    if [ "$OLLAMA_DISABLED" = "1" ]; then
-        echo -e "${YELLOW}Skipping Ollama: disabled${RESET}"
-    elif ! ollama_is_available; then
-        echo -e "${YELLOW}Skipping Ollama: endpoint unreachable${RESET}"
+    # glm-main
+    if ! codefast_has_api_key; then
+        echo "Skipping glm-main: no API key"
+    elif codefast_provider_is_exhausted "glm-main"; then
+        echo "Skipping glm-main: marked as exhausted for today"
     else
-        printf 'Testing ollama-local (%s): ' "${OLLAMA_PREFERRED_MODEL:-llama3.2:1b}"
-        if call_ollama_api "$test_prompt" "$test_system" "general" "0.2" "64" "1" "${OLLAMA_PREFERRED_MODEL:-llama3.2:1b}" >/dev/null 2>&1; then
+        model_name="$(codefast_text_provider_model "glm-main" "general")"
+        printf 'Testing glm-main (%s): ' "$model_name"
+        if call_text_provider "glm-main" "$model_name" "$test_prompt" "$test_system" "0.2" "64" "1" >/dev/null 2>&1; then
             echo -e "${GREEN}OK${RESET}"
         else
             echo -e "${RED}FAILED${RESET}"
         fi
     fi
+
 }
 
 estimate_book_cost() {
     local num_chapters="${1:-12}"
     local words_per_chapter="${2:-2200}"
 
-    echo "📘 Codefast book generation estimate"
+    echo "📘 GLM-5.1 Book Generation Estimate"
     echo "   Chapters: $num_chapters"
     echo "   Words per chapter: $words_per_chapter"
     echo "   Total words: $((num_chapters * words_per_chapter))"
     echo ""
     echo "   Primary usage comes from daily request quotas, not token-priced billing."
-    echo "   Active text fallback chain: $(codefast_text_provider_order general)"
+    echo "   Active: GLM-5.1"
 }
 
 # ============================================================================
@@ -840,7 +539,7 @@ main() {
             estimate_book_cost "${2:-12}" "${3:-2200}"
             ;;
         *)
-            echo "Codefast Multi-Provider AI System"
+            echo "GLM-5.1 AI System"
             echo ""
             echo "Usage:"
             echo "  $0 test"

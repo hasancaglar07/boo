@@ -98,8 +98,8 @@ export function AdminShell({
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const jobs = useAdminResource<{ summary: { pending: number; failed: number } }>("/api/admin/jobs", { intervalMs: 30000 });
-  const moderation = useAdminResource<{ totalItems: number }>("/api/admin/moderation/queue?status=pending&pageSize=1", { intervalMs: 60000 });
+  const jobs = useAdminResource<{ summary: { pending: number; failed: number } }>("/api/admin/jobs?summary=1", { intervalMs: 30000 });
+  const moderation = useAdminResource<{ totalItems: number }>("/api/admin/moderation/queue?summary=1&status=pending&pageSize=1", { intervalMs: 60000 });
 
   function getNavBadge(href: string): number | null {
     if (href === "/admin/jobs") {

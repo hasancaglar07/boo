@@ -6,11 +6,10 @@ import { Check, Loader2 } from "lucide-react";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackEventOnce } from "@/lib/analytics";
 import {
   createFallbackBookPayload,
   isBackendUnavailableError,
@@ -71,23 +70,6 @@ const questions = [
   },
 ] as const;
 
-const TYPE_LABELS: Record<string, string> = {
-  rehber: "Rehber",
-  is: "İş kitabı",
-  egitim: "Eğitim",
-  cocuk: "Çocuk kitabı",
-  diger: "Diğer",
-};
-const DEPTH_LABELS: Record<string, string> = {
-  hizli: "Kısa ve hızlı",
-  dengeli: "Dengeli",
-  detayli: "Daha detaylı",
-};
-const LANG_LABELS: Record<string, string> = {
-  English: "English",
-  Turkish: "Türkçe",
-};
-
 export function WizardScreen() {
   const ready = useSessionGuard();
   const router = useRouter();
@@ -129,7 +111,7 @@ export function WizardScreen() {
 
   useEffect(() => {
     if (!ready) return;
-    trackEvent("wizard_started", { source: "app_new" });
+    trackEventOnce("wizard_started", { source: "app_new" }, { key: "wizard_started:app_new", ttlMs: 15_000 });
   }, [ready]);
 
   const step = questions[index];
@@ -196,7 +178,7 @@ export function WizardScreen() {
       removeWizardState("draft");
       trackEvent("wizard_completed", { slug: book.slug, provider_ready: providerLooksReady(settings) });
       router.push(`/app/book/${encodeURIComponent(book.slug)}?tab=book`);
-    } catch (error) {
+    } catch {
       const book = await saveBook(payload);
       removeWizardState("draft");
       trackEvent("wizard_completed", { slug: book.slug, provider_ready: false, fallback: true });

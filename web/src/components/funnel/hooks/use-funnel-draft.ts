@@ -1,20 +1,17 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { trackEvent, trackEventOnce } from "@/lib/analytics";
 import {
-  bookTypeLabel,
   canOpenStep,
   createDefaultFunnelDraft,
   FUNNEL_STEPS,
   inferFunnelLanguageFromText,
-  isTurkishLanguage,
   languageLabel,
   loadFunnelDraft,
-  localOutlineSuggestions,
-  localTitleSuggestions,
   nextStep,
   normalizeFunnelDraft,
   normalizeFunnelLanguage,
@@ -22,11 +19,10 @@ import {
   saveFunnelDraft,
   stepIndex,
   type FunnelDraft,
-  type FunnelLanguage,
   type FunnelOutlineItem,
   type FunnelStep,
 } from "@/lib/funnel-draft";
-import { getAccount, getPlan, getSession, syncPreviewAuthState, getViewer } from "@/lib/preview-auth";
+import { getAccount } from "@/lib/preview-auth";
 
 export type AiLoadingState = "" | "title" | "outline" | "style" | "generate";
 
@@ -90,26 +86,28 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
     topicPrefillRef.current = true;
     const topic = (searchParams.get("topic") || "").trim();
     const audience = (searchParams.get("audience") || "").trim();
-    const language = normalizeFunnelLanguage(searchParams.get("language") || undefined);
+    const languageParam = searchParams.get("language");
+    const hasLanguageQuery = Boolean(languageParam);
+    const language = normalizeFunnelLanguage(languageParam || undefined);
     const bookType = searchParams.get("bookType");
     if (!topic && !audience && !bookType && !searchParams.get("language")) return;
-    setDraft((current) => ({
-      ...current,
-      topic: current.topic.trim() || topic,
-      audience: current.audience.trim() || audience,
-      language: current.topic.trim() || current.audience.trim() ? current.language : language,
-      languageLocked:
-        current.languageLocked ||
-        Boolean(searchParams.get("language")) ||
-        (current.topic.trim() || current.audience.trim() ? current.languageLocked : false),
-      bookType:
-        current.topic.trim() || current.audience.trim()
-          ? current.bookType
-          : bookType === "rehber" || bookType === "is" || bookType === "egitim" || bookType === "cocuk" || bookType === "diger"
-            ? bookType
-            : current.bookType,
-      updatedAt: new Date().toISOString(),
-    }));
+    setDraft((current) => {
+      const hasContent = Boolean(current.topic.trim() || current.audience.trim());
+      return {
+        ...current,
+        topic: current.topic.trim() || topic,
+        audience: current.audience.trim() || audience,
+        language: hasLanguageQuery ? language : current.language,
+        languageLocked: hasLanguageQuery ? true : current.languageLocked,
+        bookType:
+          hasContent
+            ? current.bookType
+            : bookType === "rehber" || bookType === "is" || bookType === "egitim" || bookType === "cocuk" || bookType === "diger"
+              ? bookType
+              : current.bookType,
+        updatedAt: new Date().toISOString(),
+      };
+    });
   }, [ready, searchParams, step]);
 
   // Auto-detect language from text inputs
@@ -156,11 +154,26 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
       { label: "Dil", value: languageLabel(draft.language) },
       { label: "Uzunluk", value: draft.outline.length ? `${draft.outline.length} bölüm` : "Henüz oluşturulmadı" },
     ],
-    [draft],
+    [draft.topic, draft.title, draft.authorName, draft.language, draft.outline.length],
   );
 
   function updateDraft(changes: Partial<FunnelDraft>) {
-    setDraft((current) => ({ ...current, ...changes, updatedAt: new Date().toISOString() }));
+    setDraft((current) => {
+      const hasLanguageChange =
+        typeof changes.language === "string" && changes.language !== current.language;
+      const nextLanguageLocked =
+        typeof changes.languageLocked === "boolean"
+          ? changes.languageLocked
+          : hasLanguageChange
+            ? true
+            : current.languageLocked;
+      return {
+        ...current,
+        ...changes,
+        languageLocked: nextLanguageLocked,
+        updatedAt: new Date().toISOString(),
+      };
+    });
     setError("");
   }
 
@@ -182,6 +195,10 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
 
   function goNext() {
     if (step === "topic") {
+      if (!draft.languageLocked) {
+        setError("Önce kitap dilini seç.");
+        return;
+      }
       if (!draft.topic.trim()) {
         setError("Konu boş bırakılamaz.");
         return;

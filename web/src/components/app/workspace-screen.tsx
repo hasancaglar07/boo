@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { BarChart3, BookOpen, Check, FileText, FlaskConical, ImagePlus, Layers, Loader2, Sparkles, Upload, X } from "lucide-react";
+import { BarChart3, BookOpen, Check, Download, FileText, FlaskConical, ImagePlus, Layers, Loader2, Sparkles, Upload, X } from "lucide-react";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
@@ -24,22 +24,23 @@ import {
   isBackendUnavailableError,
   loadBook,
   loadBooks,
-  loadSettings,
+
   preflightBook,
   responseSummary,
   runWorkflow,
   saveBook,
-  saveSettings,
+
   selectBookCoverVariant,
   uploadBookAsset,
+  type Artifact,
   type Book,
   type CoverVariant,
-  type Settings,
+
 } from "@/lib/dashboard-api";
 import { useSessionGuard } from "@/lib/use-session-guard";
 import { cn } from "@/lib/utils";
 
-const tabOptions = ["home", "book", "writing", "research", "publish", "settings"] as const;
+const tabOptions = ["home", "book", "writing", "research", "publish"] as const;
 type WorkspaceTab = (typeof tabOptions)[number];
 
 const TAB_LABELS: Record<WorkspaceTab, string> = {
@@ -48,7 +49,6 @@ const TAB_LABELS: Record<WorkspaceTab, string> = {
   writing: "İçerik",
   research: "Araştırma",
   publish: "Yayın",
-  settings: "Ayarlar",
 };
 
 function normalizeTab(tab?: string): WorkspaceTab {
@@ -118,6 +118,44 @@ function coverValidationSummary(variant: CoverVariant) {
     return "AI text denemesi yapıldı ama doğrulama tamamlanmadı.";
   }
   return "Bu varyantta başlık ve yazar her zaman studio compositor ile tam yerleştirilir.";
+}
+
+function countWords(text?: string) {
+  return String(text || "").split(/\s+/).filter(Boolean).length;
+}
+
+function formatCompactWordCount(count: number) {
+  if (count >= 10_000) return `${Math.round(count / 1_000)}k`;
+  if (count >= 1_000) return `${(count / 1_000).toFixed(1)}k`;
+  return String(count);
+}
+
+function latestExportArtifact(files: Artifact[], format: "epub" | "pdf") {
+  const extension = `.${format}`;
+  return (
+    [...files]
+      .filter((file) => {
+        const name = String(file.name || "").toLowerCase();
+        const relativePath = String(file.relative_path || "").toLowerCase();
+        return name.endsWith(extension) || relativePath.endsWith(extension);
+      })
+      .sort(
+        (left, right) =>
+          new Date(left.modified || 0).getTime() - new Date(right.modified || 0).getTime(),
+      )
+      .at(-1) || null
+  );
+}
+
+function downloadArtifact(file: Artifact) {
+  const link = document.createElement("a");
+  link.href = buildAssetUrl(file.url);
+  link.download = file.name || "";
+  link.target = "_blank";
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 // ─── Toast ───────────────────────────────────────────────────────────────────
@@ -288,7 +326,6 @@ export function WorkspaceScreen({
   const [books, setBooks] = useState<Book[]>([]);
   const [book, setBook] = useState<Book | null>(null);
   const [draft, setDraft] = useState<Book | null>(null);
-  const [settings, setSettings] = useState<Settings | null>(null);
   const [researchTopic, setResearchTopic] = useState("");
   const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -319,16 +356,14 @@ export function WorkspaceScreen({
 
   async function hydrateWorkspace() {
     try {
-      const [bookList, loadedBook, loadedSettings] = await Promise.all([
+      const [bookList, loadedBook] = await Promise.all([
         loadBooks(),
         loadBook(slug),
-        loadSettings(),
       ]);
       setBooks(bookList);
       setBook(loadedBook);
       setDraft(loadedBook);
       setResearchTopic(loadedBook.title);
-      setSettings(loadedSettings);
       setBackendUnavailable(false);
       setIsDirty(false);
     } catch (error) {
@@ -383,15 +418,13 @@ export function WorkspaceScreen({
   }
 
   async function refresh() {
-    const [bookList, loadedBook, loadedSettings] = await Promise.all([
+    const [bookList, loadedBook] = await Promise.all([
       loadBooks(),
       loadBook(slug),
-      loadSettings(),
     ]);
     setBooks(bookList);
     setBook(loadedBook);
     setDraft(loadedBook);
-    setSettings(loadedSettings);
     setBackendUnavailable(false);
     setIsDirty(false);
   }
@@ -480,7 +513,7 @@ export function WorkspaceScreen({
     );
   }
 
-  if (!draft || !book || !settings) return null;
+  if (!draft || !book) return null;
   const currentDraft = draft;
   const coverVariants = currentDraft.cover_variants || [];
   const selectedCoverVariantId =
@@ -495,7 +528,6 @@ export function WorkspaceScreen({
     { label: "İçerik", description: "Outline ve bölüm yazımı", run: () => setActiveTab("writing") },
     { label: "Araştırma", description: "KDP ve anahtar kelime araçları", run: () => setActiveTab("research") },
     { label: "Yayın", description: "EPUB ve PDF teslimi", run: () => setActiveTab("publish") },
-    { label: "Ayarlar", description: "API anahtarları", run: () => setActiveTab("settings") },
     { label: "Kaydet", description: "Kitabı kaydet", run: () => saveCurrentBook() },
   ];
 
@@ -504,7 +536,12 @@ export function WorkspaceScreen({
     try {
       const response = await runWorkflow({ slug, ...payload });
       await refresh();
-      updateToast(toastId, responseSummary(response).short, "success");
+      const summary = responseSummary(response);
+      if (response.ok === false) {
+        updateToast(toastId, summary.short, "error");
+        return;
+      }
+      updateToast(toastId, summary.short, "success");
       if (payload.action === "outline_generate") trackEvent("outline_generated", { slug });
       if (payload.action === "chapter_generate") trackEvent("first_chapter_generated", { slug });
     } catch (error) {
@@ -550,7 +587,19 @@ export function WorkspaceScreen({
         fast: currentDraft.fast,
       });
       await refresh();
-      updateToast(toastId, responseSummary(response).short, "success");
+      const summary = responseSummary(response);
+      if (response.ok === false) {
+        updateToast(toastId, summary.short, "error");
+        return;
+      }
+      updateToast(toastId, summary.short, "success");
+      const responseBook = response.book as { resources?: { exports?: Artifact[] } } | undefined;
+      const exportedArtifact =
+        latestExportArtifact(summary.produced, format) ||
+        latestExportArtifact(responseBook?.resources?.exports || [], format);
+      if (exportedArtifact) {
+        downloadArtifact(exportedArtifact);
+      }
       if (format === "pdf") trackEvent("pdf_export_completed", { slug });
       if (format === "epub") trackEvent("epub_export_completed", { slug });
       if (!hadExportBefore) trackEvent("first_export_success", { slug, format });
@@ -893,7 +942,7 @@ export function WorkspaceScreen({
                   <span className="font-medium">B{i + 1}</span>
                   {ch.content && (
                     <span className="ml-1.5 text-xs opacity-70">
-                      {ch.content.split(/\s+/).filter(Boolean).length}k
+                      {formatCompactWordCount(countWords(ch.content))}
                     </span>
                   )}
                 </button>
@@ -957,7 +1006,25 @@ export function WorkspaceScreen({
         </TabsContent>
 
         {/* ── PUBLISH ── */}
-        <TabsContent value="publish" className="mt-6 space-y-6">
+        <TabsContent value="publish" className="mt-6 space-y-8">
+          {/* ── Publish Hero ── */}
+          <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/8 via-primary/4 to-transparent p-6 md:p-8">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                    <Upload className="size-4 text-primary" />
+                  </span>
+                  <h3 className="text-xl font-bold text-foreground">Yayın ve Dışa Aktar</h3>
+                </div>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
+                  Kitabını profesyonel formatta dışa aktar. Önce EPUB ile içeriği kontrol et, ardından PDF ile baskıya hazır dosya al.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Cover Variants ── */}
           <Card>
             <CardContent className="space-y-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -1006,7 +1073,7 @@ export function WorkspaceScreen({
                   ))}
                 </div>
               ) : (
-                <div className="rounded-[28px] border border-dashed border-border/70 bg-muted/20 p-6">
+                <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-6">
                   <div className="text-sm font-semibold text-foreground">Henüz cover picker hazır değil.</div>
                   <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
                     Önce tek konsepti üret. Sistem ön kapak + arka kapağı metadata içine yazar; beğenmezsen AI ile
@@ -1017,81 +1084,124 @@ export function WorkspaceScreen({
             </CardContent>
           </Card>
 
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant="outline"
-              onClick={async () => {
-                const toastId = addToast("Ön kontrol yapılıyor...", "loading");
-                try {
-                  const response = await preflightBook(slug, { action: "build", format: "epub" });
-                  updateToast(toastId, response.ok ? "EPUB için hazır." : String(response.reason || "Hazır değil."), response.ok ? "success" : "error");
-                } catch (error) {
-                  updateToast(toastId, error instanceof Error ? error.message : "Ön kontrol başarısız.", "error");
-                }
-              }}
-            >
-              Ön kontrol
-            </Button>
-            <Button onClick={() => triggerBuild("epub").catch((error) => addToast(error instanceof Error ? error.message : "EPUB başarısız.", "error"))}>
-              <Upload className="mr-2 size-4" />
-              EPUB al
-            </Button>
-            <Button variant="ghost" onClick={() => triggerBuild("pdf").catch((error) => addToast(error instanceof Error ? error.message : "PDF başarısız.", "error"))}>PDF al</Button>
-          </div>
-          <div className="grid gap-4">
-            {(book.resources?.exports || []).slice(-12).reverse().map((file) => (
-              <Card key={file.relative_path}>
-                <CardContent className="flex items-center justify-between gap-4">
-                  <div>
-                    <div className="text-sm font-medium text-foreground">{file.name}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">{file.relative_path}</div>
-                  </div>
-                  <a href={buildAssetUrl(file.url)} target="_blank" rel="noreferrer">
-                    <Button variant="ghost" size="sm">Aç</Button>
-                  </a>
-                </CardContent>
-              </Card>
-            ))}
-            {!book.resources?.exports?.length ? (
-              <Card><CardContent><div className="text-sm text-muted-foreground">Henüz çıktı yok.</div></CardContent></Card>
-            ) : null}
-          </div>
-          <ReferralBanner />
-        </TabsContent>
+          {/* ── Export Actions ── */}
+          <Card className="border-primary/15">
+            <CardContent className="space-y-5 p-6">
+              <div className="text-sm font-medium text-foreground">Dosya Oluştur</div>
+              <p className="text-sm leading-7 text-muted-foreground">
+                Kitabını seçtiğin formatta dışa aktar. Dosya otomatik olarak indirilir.
+              </p>
 
-        {/* ── SETTINGS ── */}
-        <TabsContent value="settings" className="mt-6 space-y-6">
-          <Card>
-            <CardContent className="space-y-4">
-              <div className="text-sm font-medium text-foreground">API Anahtarları</div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div><Label>GEMINI_API_KEY</Label><Input type="password" value={settings.GEMINI_API_KEY || ""} onChange={(e) => setSettings({ ...settings, GEMINI_API_KEY: e.target.value })} /></div>
-                <div><Label>OPENAI_API_KEY</Label><Input type="password" value={settings.OPENAI_API_KEY || ""} onChange={(e) => setSettings({ ...settings, OPENAI_API_KEY: e.target.value })} /></div>
-                <div><Label>GROQ_API_KEY</Label><Input type="password" value={settings.GROQ_API_KEY || ""} onChange={(e) => setSettings({ ...settings, GROQ_API_KEY: e.target.value })} /></div>
-                <div><Label>Ollama model</Label><Input value={settings.ollama_model || ""} onChange={(e) => setSettings({ ...settings, ollama_model: e.target.value })} /></div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* EPUB Button */}
+                <button
+                  type="button"
+                  className="group flex items-center gap-4 rounded-2xl border border-border/70 bg-background p-5 text-left transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10"
+                  onClick={() => triggerBuild("epub").catch((error) => addToast(error instanceof Error ? error.message : "EPUB başarısız.", "error"))}
+                >
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 transition-colors group-hover:bg-emerald-500/20">
+                    <BookOpen className="size-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-bold text-foreground">EPUB Oluştur</div>
+                    <div className="mt-1 text-xs text-muted-foreground">E-kitap formatı • Tüm okuyucularla uyumlu • İçerik kontrolü için ideal</div>
+                  </div>
+                </button>
+
+                {/* PDF Button */}
+                <button
+                  type="button"
+                  className="group flex items-center gap-4 rounded-2xl border border-border/70 bg-background p-5 text-left transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10"
+                  onClick={() => triggerBuild("pdf").catch((error) => addToast(error instanceof Error ? error.message : "PDF başarısız.", "error"))}
+                >
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 transition-colors group-hover:bg-blue-500/20">
+                    <FileText className="size-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-bold text-foreground">PDF Oluştur</div>
+                    <div className="mt-1 text-xs text-muted-foreground">Baskıya hazır • KDP uyumlu • Profesyonel format</div>
+                  </div>
+                </button>
               </div>
-              <div className="text-sm font-medium text-foreground">Varsayılanlar</div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div><Label>Yazar</Label><Input value={settings.default_author || ""} onChange={(e) => setSettings({ ...settings, default_author: e.target.value })} /></div>
-                <div><Label>Yayınevi</Label><Input value={settings.default_publisher || ""} onChange={(e) => setSettings({ ...settings, default_publisher: e.target.value })} /></div>
+
+              {/* Preflight - secondary action */}
+              <div className="flex items-center gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    const toastId = addToast("Ön kontrol yapılıyor...", "loading");
+                    try {
+                      const response = await preflightBook(slug, { action: "build", format: "epub" });
+                      updateToast(toastId, response.ok ? "EPUB için hazır." : String(response.reason || "Hazır değil."), response.ok ? "success" : "error");
+                    } catch (error) {
+                      updateToast(toastId, error instanceof Error ? error.message : "Ön kontrol başarısız.", "error");
+                    }
+                  }}
+                >
+                  <FlaskConical className="mr-2 size-3.5" />
+                  Dosya Ön Kontrolü
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Export almadan önce kitabın hazır olduğunu doğrula
+                </span>
               </div>
-              <Button
-                onClick={async () => {
-                  const toastId = addToast("Ayarlar kaydediliyor...", "loading");
-                  try {
-                    const saved = await saveSettings(settings);
-                    setSettings(saved);
-                    updateToast(toastId, "Ayarlar kaydedildi.", "success");
-                  } catch (error) {
-                    updateToast(toastId, error instanceof Error ? error.message : "Ayarlar kaydedilemedi.", "error");
-                  }
-                }}
-              >
-                Ayarları kaydet
-              </Button>
             </CardContent>
           </Card>
+
+          {/* ── Export History ── */}
+          <div>
+            <div className="mb-3 text-sm font-medium text-foreground">Önceki Çıktılar</div>
+            <div className="grid gap-3">
+              {(book.resources?.exports || []).slice(-12).reverse().map((file) => {
+                const name = String(file.name || "").toLowerCase();
+                const isPdf = name.endsWith(".pdf");
+                const isEpub = name.endsWith(".epub");
+                return (
+                  <div
+                    key={file.relative_path}
+                    className="group flex items-center gap-4 rounded-xl border border-border/50 bg-card p-4 transition hover:border-border hover:shadow-sm"
+                  >
+                    <div className={cn(
+                      "flex size-10 shrink-0 items-center justify-center rounded-lg",
+                      isPdf && "bg-blue-500/10",
+                      isEpub && "bg-emerald-500/10",
+                      !isPdf && !isEpub && "bg-muted",
+                    )}>
+                      {isPdf ? (
+                        <FileText className="size-4 text-blue-600 dark:text-blue-400" />
+                      ) : isEpub ? (
+                        <BookOpen className="size-4 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <FileText className="size-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-foreground">{file.name}</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">{file.relative_path}</div>
+                    </div>
+                    <a href={buildAssetUrl(file.url)} target="_blank" rel="noreferrer">
+                      <Button variant="outline" size="sm" className="opacity-60 group-hover:opacity-100 transition-opacity">
+                        <Download className="mr-1.5 size-3.5" />
+                        İndir
+                      </Button>
+                    </a>
+                  </div>
+                );
+              })}
+              {!book.resources?.exports?.length ? (
+                <div className="rounded-xl border border-dashed border-border/50 bg-muted/20 p-8 text-center">
+                  <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted">
+                    <Upload className="size-5 text-muted-foreground" />
+                  </div>
+                  <div className="mt-3 text-sm font-medium text-muted-foreground">Henüz çıktı yok</div>
+                  <p className="mt-1 text-xs text-muted-foreground">Yukarıdaki EPUB veya PDF butonuna tıklayarak ilk dosyanı oluştur</p>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </TabsContent>
+
       </Tabs>
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />

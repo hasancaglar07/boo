@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, Crown } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -8,6 +8,7 @@ import { FormEvent, useState } from "react";
 import { ActivityFeed } from "@/components/admin/activity-feed";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { adminFetch, useAdminResource } from "@/lib/admin/client";
+import { PLAN_LABELS } from "@/lib/auth/constants";
 import { formatAdminCurrency, formatAdminDateTime } from "@/lib/admin/format";
 
 type UserDetailResponse = {
@@ -107,6 +108,33 @@ export default function AdminUserDetailPage() {
     setBusy("");
   }
 
+  const [planReason, setPlanReason] = useState("");
+  const [planSuccess, setPlanSuccess] = useState("");
+
+  async function handlePlanChange(planId: string) {
+    if (planId === data?.item.currentPlan) return;
+    const label = PLAN_LABELS[planId] || planId;
+    const confirmed = window.confirm(
+      `Bu kullanıcının planını "${PLAN_LABELS[data?.item.currentPlan || 'free']}" → "${label}" olarak değiştirmek istediğinize emin misiniz?`
+    );
+    if (!confirmed) return;
+    setBusy("plan");
+    setPlanSuccess("");
+    try {
+      await adminFetch(`/api/admin/users/${userId}/plan`, {
+        method: "PATCH",
+        body: JSON.stringify({ planId, reason: planReason.trim() || undefined }),
+      });
+      setPlanSuccess(`Plan başarıyla "${label}" olarak değiştirildi.`);
+      setPlanReason("");
+      await reload();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Plan değiştirilemedi.");
+    } finally {
+      setBusy("");
+    }
+  }
+
   if (loading && !data) {
     return <div className="admin-panel rounded-[24px] px-6 py-10">Yükleniyor…</div>;
   }
@@ -184,6 +212,54 @@ export default function AdminUserDetailPage() {
                   {busy === "verify" ? "Gönderiliyor..." : "E-posta doğrulamasını tekrar gönder"}
                 </button>
               ) : null}
+              <div className="rounded-2xl border border-[color:var(--admin-border)] p-4">
+                <div className="flex items-center gap-2">
+                  <Crown className="size-4 text-amber-500" />
+                  <div className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">Plan değiştir</div>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-sm">
+                  <span className="rounded-lg bg-[color:var(--admin-border)] px-2.5 py-1 font-medium text-[color:var(--admin-text)]">
+                    {PLAN_LABELS[data.item.currentPlan] || data.item.currentPlan}
+                  </span>
+                  <ArrowRight className="size-4 admin-muted" />
+                  <span className="font-medium admin-muted">hedef plan seç ↓</span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(["free", "starter", "creator", "pro", "premium"] as const).map((planId) => {
+                    const isActive = planId === data.item.currentPlan;
+                    return (
+                      <button
+                        key={planId}
+                        type="button"
+                        onClick={() => void handlePlanChange(planId)}
+                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
+                          isActive
+                            ? "border-[color:var(--admin-primary)] bg-[color:var(--admin-primary)]/10 text-[color:var(--admin-primary)]"
+                            : "border-[color:var(--admin-border)] text-[color:var(--admin-text)] hover:border-[color:var(--admin-primary)] hover:bg-[color:var(--admin-primary)]/5"
+                        }`}
+                        disabled={busy === "plan" || isActive}
+                      >
+                        {PLAN_LABELS[planId]}
+                      </button>
+                    );
+                  })}
+                </div>
+                <input
+                  type="text"
+                  value={planReason}
+                  onChange={(e) => setPlanReason(e.target.value)}
+                  placeholder="Sebep (opsiyonel)"
+                  className="mt-3 w-full rounded-xl border border-[color:var(--admin-border)] bg-white/60 px-3 py-2 text-sm outline-none placeholder:text-gray-400 dark:bg-white/5"
+                />
+                {planSuccess && (
+                  <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                    <CheckCircle2 className="size-3.5" /> {planSuccess}
+                  </div>
+                )}
+                {busy === "plan" && (
+                  <div className="mt-2 text-xs admin-muted">Plan değiştiriliyor…</div>
+                )}
+              </div>
               {data.permissions.canChangeRole ? (
                 <div className="rounded-2xl border border-[color:var(--admin-border)] p-4">
                   <div className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">Role change</div>

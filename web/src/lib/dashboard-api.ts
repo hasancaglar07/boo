@@ -73,6 +73,9 @@ export type BookChapterPlan = {
 
 export type BookStatus = {
   chapter_count: number;
+  chapter_target_count?: number;
+  chapter_ready_count?: number;
+  chapters_complete?: boolean;
   asset_count: number;
   extra_count: number;
   research_count: number;
@@ -91,6 +94,20 @@ export type BookStatus = {
   started_at?: string;
   updated_at?: string;
   completed_at?: string;
+  full_generation?: {
+    active?: boolean;
+    stage?: string;
+    message?: string;
+    error?: string;
+    progress?: number;
+    ready_count?: number;
+    target_count?: number;
+    failed_count?: number;
+    complete?: boolean;
+    started_at?: string;
+    updated_at?: string;
+    completed_at?: string;
+  };
 };
 
 export type Book = {
@@ -231,19 +248,8 @@ export type BookPreview = {
 
 export type Settings = {
   CODEFAST_API_KEY: string;
-  GEMINI_API_KEY: string;
-  OPENAI_API_KEY: string;
-  GROQ_API_KEY: string;
   has_CODEFAST_API_KEY?: boolean;
-  has_GEMINI_API_KEY?: boolean;
-  has_OPENAI_API_KEY?: boolean;
-  has_GROQ_API_KEY?: boolean;
   has_cover_password?: boolean;
-  default_author: string;
-  default_publisher: string;
-  ollama_enabled: boolean;
-  ollama_base_url: string;
-  ollama_model: string;
   cover_service: string;
   cover_username: string;
   cover_password: string;
@@ -256,6 +262,19 @@ type ApiOptions = RequestInit & {
 export const BACKEND_PUBLIC_ORIGIN =
   process.env.NEXT_PUBLIC_DASHBOARD_ORIGIN || "http://127.0.0.1:8765";
 const API_TIMEOUT_MS = 20_000;
+const API_BOOKS_TIMEOUT_MS = 25_000;
+const API_BOOK_PREVIEW_TIMEOUT_MS = 65_000;
+const API_BOOKS_BACKOFF_MS = 5_000;
+const API_SETTINGS_BACKOFF_MS = 5_000;
+const API_BOOKS_CACHE_TTL_MS = 2_000;
+const API_SETTINGS_CACHE_TTL_MS = 5_000;
+
+let booksUnavailableUntil = 0;
+let settingsUnavailableUntil = 0;
+let booksInFlight: Promise<Book[]> | null = null;
+let settingsInFlight: Promise<Settings> | null = null;
+let booksCache: { value: Book[]; expiresAt: number } | null = null;
+let settingsCache: { value: Settings; expiresAt: number } | null = null;
 
 export class BackendUnavailableError extends Error {
   readonly code = "BACKEND_UNAVAILABLE";
@@ -273,9 +292,66 @@ export function isBackendUnavailableError(error: unknown) {
   );
 }
 
-async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit) {
+export class ApiRequestError extends Error {
+  readonly status: number;
+  readonly code?: string;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
+export function isApiRequestError(error: unknown): error is ApiRequestError {
+  return error instanceof ApiRequestError;
+}
+
+function readBooksCache() {
+  if (!booksCache) return null;
+  if (Date.now() >= booksCache.expiresAt) {
+    booksCache = null;
+    return null;
+  }
+  return booksCache.value;
+}
+
+function writeBooksCache(value: Book[]) {
+  booksCache = { value, expiresAt: Date.now() + API_BOOKS_CACHE_TTL_MS };
+}
+
+function clearBooksCache() {
+  booksCache = null;
+}
+
+function readSettingsCache() {
+  if (!settingsCache) return null;
+  if (Date.now() >= settingsCache.expiresAt) {
+    settingsCache = null;
+    return null;
+  }
+  return settingsCache.value;
+}
+
+function writeSettingsCache(value: Settings) {
+  settingsCache = { value, expiresAt: Date.now() + API_SETTINGS_CACHE_TTL_MS };
+}
+
+function timeoutForPath(path: string) {
+  const normalized = path.split("?")[0] || path;
+  if (normalized === "/api/books") {
+    return API_BOOKS_TIMEOUT_MS;
+  }
+  if (/^\/api\/books\/[^/]+\/preview(?:-bootstrap)?$/.test(normalized)) {
+    return API_BOOK_PREVIEW_TIMEOUT_MS;
+  }
+  return API_TIMEOUT_MS;
+}
+
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, timeoutMs: number) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(input, { ...init, signal: controller.signal });
   } finally {
@@ -293,12 +369,13 @@ async function api<T>(path: string, options: ApiOptions = {}) {
 
   let response: Response;
   try {
+    const timeoutMs = timeoutForPath(path);
     response = await fetchWithTimeout(`/api/backend${path}`, {
       ...options,
       headers,
       body,
       cache: "no-store",
-    });
+    }, timeoutMs);
   } catch {
     throw new BackendUnavailableError();
   }
@@ -309,9 +386,11 @@ async function api<T>(path: string, options: ApiOptions = {}) {
     : await response.text();
 
   if (!response.ok) {
+    const payloadCode =
+      typeof payload === "string" ? undefined : (payload?.code as string | undefined);
     if (
       response.status === 503 ||
-      (typeof payload !== "string" && payload?.code === "BACKEND_UNAVAILABLE")
+      payloadCode === "BACKEND_UNAVAILABLE"
     ) {
       const message =
         typeof payload === "string"
@@ -324,15 +403,51 @@ async function api<T>(path: string, options: ApiOptions = {}) {
       typeof payload === "string"
         ? payload
         : (payload?.error as string) || (payload?.output as string) || "İstek başarısız.";
-    throw new Error(message);
+    throw new ApiRequestError(message, response.status, payloadCode);
   }
 
   return payload as T;
 }
 
 export async function loadBooks() {
-  const payload = await api<{ books: Book[] }>("/api/books");
-  return payload.books || [];
+  const cachedBooks = readBooksCache();
+  if (cachedBooks) {
+    return cachedBooks;
+  }
+
+  if (Date.now() < booksUnavailableUntil) {
+    throw new BackendUnavailableError();
+  }
+
+  if (booksInFlight) {
+    return booksInFlight;
+  }
+
+  booksInFlight = (async () => {
+    try {
+      const payload = await api<{ books: Book[] }>("/api/books");
+      const nextBooks = payload.books || [];
+      booksUnavailableUntil = 0;
+      writeBooksCache(nextBooks);
+      return nextBooks;
+    } catch (error) {
+      if (isApiRequestError(error)) {
+        if (error.status >= 500) {
+          booksUnavailableUntil = Date.now() + API_BOOKS_BACKOFF_MS;
+          throw new BackendUnavailableError(error.message);
+        }
+        return [];
+      }
+      if (isBackendUnavailableError(error)) {
+        booksUnavailableUntil = Date.now() + API_BOOKS_BACKOFF_MS;
+      }
+      throw error;
+    } finally {
+      booksInFlight = null;
+    }
+  })();
+
+  return booksInFlight;
 }
 
 export async function loadBook(slug: string) {
@@ -344,17 +459,21 @@ export async function loadBookPreview(slug: string) {
 }
 
 export async function saveBook(payload: Partial<Book>) {
-  return api<Book>("/api/books", { method: "POST", json: payload });
+  const nextBook = await api<Book>("/api/books", { method: "POST", json: payload });
+  clearBooksCache();
+  return nextBook;
 }
 
 export async function startBookPreviewPipeline(slug: string) {
-  return api<{ ok: boolean; started: boolean; book: Book; generation: BookStatus }>(
+  const result = await api<{ ok: boolean; started: boolean; book: Book; generation: BookStatus }>(
     `/api/books/${encodeURIComponent(slug)}/preview-bootstrap`,
     {
       method: "POST",
       json: {},
     },
   );
+  clearBooksCache();
+  return result;
 }
 
 export async function selectBookCoverVariant(slug: string, variantId: string) {
@@ -370,6 +489,7 @@ export async function selectBookCoverVariant(slug: string, variantId: string) {
   if (!response.ok || !payload?.book) {
     throw new Error(payload?.error || "Kapak seçimi kaydedilemedi.");
   }
+  clearBooksCache();
   return {
     ok: true,
     book: payload.book,
@@ -378,29 +498,71 @@ export async function selectBookCoverVariant(slug: string, variantId: string) {
 }
 
 export async function loadSettings() {
-  return api<Settings>("/api/settings");
+  const cachedSettings = readSettingsCache();
+  if (cachedSettings) {
+    return cachedSettings;
+  }
+
+  if (Date.now() < settingsUnavailableUntil) {
+    throw new BackendUnavailableError();
+  }
+
+  if (settingsInFlight) {
+    return settingsInFlight;
+  }
+
+  settingsInFlight = (async () => {
+    try {
+      const payload = await api<Settings>("/api/settings");
+      settingsUnavailableUntil = 0;
+      writeSettingsCache(payload);
+      return payload;
+    } catch (error) {
+      if (isApiRequestError(error) && error.status >= 500) {
+        settingsUnavailableUntil = Date.now() + API_SETTINGS_BACKOFF_MS;
+        throw new BackendUnavailableError(error.message);
+      }
+      if (isBackendUnavailableError(error)) {
+        settingsUnavailableUntil = Date.now() + API_SETTINGS_BACKOFF_MS;
+      }
+      throw error;
+    } finally {
+      settingsInFlight = null;
+    }
+  })();
+
+  return settingsInFlight;
 }
 
 export async function saveSettings(payload: Partial<Settings>) {
-  return api<Settings>("/api/settings", { method: "POST", json: payload });
+  const nextSettings = await api<Settings>("/api/settings", { method: "POST", json: payload });
+  settingsUnavailableUntil = 0;
+  writeSettingsCache(nextSettings);
+  return nextSettings;
 }
 
 export async function runWorkflow(payload: Record<string, unknown>) {
-  return api<Record<string, unknown>>("/api/workflows", { method: "POST", json: payload });
+  const result = await api<Record<string, unknown>>("/api/workflows", { method: "POST", json: payload });
+  clearBooksCache();
+  return result;
 }
 
 export async function buildBook(slug: string, payload: Record<string, unknown>) {
-  return api<Record<string, unknown>>(`/api/books/${encodeURIComponent(slug)}/build`, {
+  const result = await api<Record<string, unknown>>(`/api/books/${encodeURIComponent(slug)}/build`, {
     method: "POST",
     json: payload,
   });
+  clearBooksCache();
+  return result;
 }
 
 export async function preflightBook(slug: string, payload: Record<string, unknown>) {
-  return api<Record<string, unknown>>(`/api/books/${encodeURIComponent(slug)}/preflight`, {
+  const result = await api<Record<string, unknown>>(`/api/books/${encodeURIComponent(slug)}/preflight`, {
     method: "POST",
     json: payload,
   });
+  clearBooksCache();
+  return result;
 }
 
 export async function readBookFile(slug: string, relativePath: string) {
@@ -410,10 +572,12 @@ export async function readBookFile(slug: string, relativePath: string) {
 }
 
 export async function saveBookFile(slug: string, relativePath: string, content: string) {
-  return api<Record<string, unknown>>(`/api/books/${encodeURIComponent(slug)}/file`, {
+  const result = await api<Record<string, unknown>>(`/api/books/${encodeURIComponent(slug)}/file`, {
     method: "POST",
     json: { relative_path: relativePath, content },
   });
+  clearBooksCache();
+  return result;
 }
 
 function fileToBase64(file: File) {
@@ -439,7 +603,7 @@ export async function uploadBookAsset(
   kind: "cover_image" | "back_cover_image" | "asset" = "asset",
 ) {
   const content_base64 = await fileToBase64(file);
-  return api<{ saved_asset: string; book: Book }>(`/api/books/${encodeURIComponent(slug)}/asset`, {
+  const result = await api<{ saved_asset: string; book: Book }>(`/api/books/${encodeURIComponent(slug)}/asset`, {
     method: "POST",
     json: {
       kind,
@@ -447,19 +611,14 @@ export async function uploadBookAsset(
       content_base64,
     },
   });
+  clearBooksCache();
+  return result;
 }
 
 export function providerLooksReady(settings: Partial<Settings>) {
   return Boolean(
     settings.has_CODEFAST_API_KEY ||
-      settings.has_GEMINI_API_KEY ||
-      settings.has_OPENAI_API_KEY ||
-      settings.has_GROQ_API_KEY ||
-      settings.CODEFAST_API_KEY ||
-      settings.GEMINI_API_KEY ||
-      settings.OPENAI_API_KEY ||
-      settings.GROQ_API_KEY ||
-      settings.ollama_enabled,
+      settings.CODEFAST_API_KEY,
   );
 }
 

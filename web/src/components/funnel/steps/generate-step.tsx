@@ -57,7 +57,7 @@ export function GenerateStep({
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
+    <div className="space-y-4">
       <GenerateAuthGateDialog
         open={authGateOpen}
         onOpenChange={onAuthGateOpenChange}
@@ -66,93 +66,76 @@ export function GenerateStep({
         onAuthenticated={onAuthenticated}
       />
 
-      {/* Summary card */}
-      <div className="rounded-[24px] border border-border/80 bg-background/72 p-5 sm:p-6">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+      {/* Summary card — compact */}
+      <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/60">
           Son kontrol
         </div>
 
-        <div className="mt-3">
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[30px]">
-            {draft.title}
-          </h2>
-          {draft.subtitle ? (
-            <p className="mt-2 text-sm leading-7 text-muted-foreground">
-              {draft.subtitle}
-            </p>
-          ) : null}
-        </div>
+        <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          {draft.title}
+        </h2>
+        {draft.subtitle ? (
+          <p className="mt-1 text-sm leading-6 text-muted-foreground/70">
+            {draft.subtitle}
+          </p>
+        ) : null}
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <span className="rounded-full border border-border/80 bg-card px-3 py-1.5 text-sm text-foreground">
+        {/* Inline pills */}
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <span className="rounded-full border border-border/60 bg-card/80 px-2.5 py-1 text-xs text-muted-foreground">
             {languageLabel(draft.language)}
           </span>
-          <span className="rounded-full border border-border/80 bg-card px-3 py-1.5 text-sm text-foreground">
+          <span className="rounded-full border border-border/60 bg-card/80 px-2.5 py-1 text-xs text-muted-foreground">
             {draft.outline.length} bölüm
           </span>
-          <span className="rounded-full border border-border/80 bg-card px-3 py-1.5 text-sm text-foreground">
+          <span className="rounded-full border border-border/60 bg-card/80 px-2.5 py-1 text-xs text-muted-foreground">
             {draft.imprint || draft.logoText || "Kitap Oluşturucu"}
           </span>
         </div>
+      </div>
 
-        {/* Timeline check items */}
-        <div className="mt-5 space-y-3 border-t border-border/70 pt-5">
-          <div className="flex items-start gap-3">
-            <div className="mt-1 rounded-full bg-primary/10 p-1 text-primary">
-              <Check className="size-3.5" />
-            </div>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Ön izleme üretimi hemen başlar. Kapak, başlık vitrini ve ilk okunabilir bölüm arka planda hazırlanır.
-            </p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="mt-1 rounded-full bg-primary/10 p-1 text-primary">
-              <Check className="size-3.5" />
-            </div>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Kitap hesabına kaydolur. Hazır olduğunda kütüphanende aynı yerden devam edersin.
-            </p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="mt-1 rounded-full bg-primary/10 p-1 text-primary">
-              <Check className="size-3.5" />
-            </div>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Tam kitap, PDF ve EPUB daha sonra açılır. Bu adım yalnızca ön izleme üretimini başlatır; ödeme istemez.
-            </p>
-          </div>
-        </div>
+      {/* Condensed check items */}
+      <div className="flex items-start gap-2.5 rounded-xl border border-primary/10 bg-primary/[0.03] px-3.5 py-3">
+        <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+        <p className="text-[13px] leading-5 text-muted-foreground/70">
+          Ön izleme hemen başlar · Kitap hesabına kaydolur · Tam kitap (PDF/EPUB) daha sonra açılır · Ödeme istemez
+        </p>
       </div>
 
       {error ? (
-        <div role="alert" className="rounded-[16px] border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+        <div role="alert" className="rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       ) : null}
 
-      {/* Actions */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button variant="ghost" size="lg" onClick={onBack}>
-          Geri
-        </Button>
-        <Button size="lg" onClick={onStartGenerate}>
+      {/* Actions — dominant primary CTA */}
+      <div className="space-y-2">
+        <Button
+          size="lg"
+          onClick={onStartGenerate}
+          className="w-full text-base font-semibold h-12 rounded-xl"
+        >
           {appShell ? "Ön İzlemeyi Oluştur" : "Hesabını Oluştur ve Ön İzlemeyi Başlat"}
         </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={() => {
-            clearFunnelDraft();
-            router.push(stepHref("topic"));
-          }}
-        >
-          Baştan Kur
-        </Button>
+        <div className="flex justify-center">
+          <button
+            type="button"
+            className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+            onClick={() => {
+              clearFunnelDraft();
+              router.push(stepHref("topic"));
+            }}
+          >
+            Baştan başla
+          </button>
+        </div>
       </div>
-      <p className="text-xs text-muted-foreground/70">
+
+      <p className="text-xs text-muted-foreground/50 text-center">
         {appShell
-          ? "Aynı hesapta devam et · Önce ön izlemeyi gör · Tam kitabı sonra aç"
-          : "Bu adım ödeme istemez · Kitap hesabına yazılır · Hazır olunca kütüphanende görünür"}
+          ? "Önce ön izlemeyi gör · Tam kitabı sonra aç"
+          : "Ödeme istemez · Kitap hesabına yazılır · Hazır olunca kütüphanende görünür"}
       </p>
     </div>
   );

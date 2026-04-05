@@ -16,11 +16,48 @@ export async function POST(
   const userId = (await params).id;
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true },
+    select: { id: true, email: true, emailVerified: true },
   });
 
   if (!user?.email) {
     return Response.json({ ok: false, error: "Kullanıcı bulunamadı." }, { status: 404 });
+  }
+
+  if (user.emailVerified) {
+    return mutationResponse({
+      sent: false,
+      skipped: true,
+      message: "Kullanıcının e-postası zaten doğrulanmış.",
+    });
+  }
+
+  const trustedProvider = await prisma.account.findFirst({
+    where: {
+      userId: user.id,
+      provider: {
+        in: ["google", "email"],
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+  if (trustedProvider) {
+    const verifiedAt = new Date();
+    await prisma.user.updateMany({
+      where: {
+        id: user.id,
+        emailVerified: null,
+      },
+      data: {
+        emailVerified: verifiedAt,
+      },
+    });
+    return mutationResponse({
+      sent: false,
+      skipped: true,
+      message: "Bu kullanıcı için ek e-posta doğrulaması gerekmiyor.",
+    });
   }
 
   const rateLimit = await consumeRateLimit({

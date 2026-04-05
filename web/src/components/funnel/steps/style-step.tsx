@@ -1,10 +1,8 @@
-"use client";
+﻿"use client";
 
 import { ImagePlus, Sparkles, Wand2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
-import { ChoiceGrid } from "@/components/funnel/shared/choice-grid";
-import { LiveBookCard } from "@/components/funnel/shared/live-book-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,57 +26,14 @@ import { cn } from "@/lib/utils";
 const TONES: FunnelTone[] = ["clear", "professional", "warm", "inspiring"];
 const DEPTHS: FunnelDepth[] = ["hizli", "dengeli", "detayli"];
 const COVER_DIRECTIONS: FunnelCoverDirection[] = ["editorial", "tech", "minimal", "energetic"];
-const TABS = ["identity", "cover", "advanced"] as const;
 
-type StyleTab = (typeof TABS)[number];
+type StyleTab = "identity" | "cover" | "advanced";
 
-const TONE_DESCRIPTIONS: Record<FunnelTone, string> = {
-  clear: "Hızlı taranır, doğrudan ve net.",
-  professional: "Güven veren, düzenli ve uzman hissi taşıyan anlatım.",
-  warm: "Daha yakın, akıcı ve dostane ton.",
-  inspiring: "Enerji veren, motive eden ve vizyon odaklı dil.",
-};
-
-const DEPTH_DESCRIPTIONS: Record<FunnelDepth, string> = {
-  hizli: "Kısa sürede okunan, öz ve yüksek tempolu kurgu.",
-  dengeli: "Çoğu kitap için en güvenli denge; netlik ve kapsam birlikte.",
-  detayli: "Daha çok örnek, daha çok bağlam ve daha güçlü derinlik.",
-};
-
-const COVER_DESCRIPTIONS: Record<FunnelCoverDirection, string> = {
-  editorial: "Yayıncılık hissi veren raf kalitesi, daha ciddi bir yüz.",
-  tech: "Teknoloji, oyun ve AI başlıkları için daha keskin görünüm.",
-  minimal: "Daha sakin, temiz ve premium sade yön.",
-  energetic: "Daha canlı, parlak ve hareketli görsel ritim.",
-};
-
-const TAB_LABELS: Record<StyleTab, { title: string; description: string }> = {
-  identity: {
-    title: "Yazar ve marka",
-    description: "Yazar adı, yayınevi, logo metni ve kısa biyografi alanlarını düzenle.",
-  },
-  cover: {
-    title: "Kapak ve logo",
-    description: "Kapakta görünen kısa vurgu ve yayın evi logosunu seç.",
-  },
-  advanced: {
-    title: "Ton ve ileri ayarlar",
-    description: "Anlatım tonu, derinlik ve genel kapak yönünü burada netleştir.",
-  },
-};
-
-function publisherFamilyLabel(family: "heritage" | "masthead" | "studio" | "letterpress") {
-  switch (family) {
-    case "heritage":
-      return "Heritage";
-    case "masthead":
-      return "Masthead";
-    case "studio":
-      return "Studio";
-    case "letterpress":
-      return "Letterpress";
-  }
-}
+const TAB_CONFIG: Array<{ key: StyleTab; label: string }> = [
+  { key: "identity", label: "Kimlik" },
+  { key: "cover", label: "Kapak" },
+  { key: "advanced", label: "Ayarlar" },
+];
 
 function getProfilePublisherBrand() {
   const account = getAccount();
@@ -104,6 +59,42 @@ function readImageAsDataUrl(file: File) {
     };
     reader.readAsDataURL(file);
   });
+}
+
+/* ── Premium pill selector for tone / depth / cover direction ── */
+function PillSelector<T extends string>({
+  options,
+  selected,
+  labelFor,
+  onSelect,
+}: {
+  options: T[];
+  selected: T;
+  labelFor: (value: T) => string;
+  onSelect: (value: T) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((value) => {
+        const active = selected === value;
+        return (
+          <button
+            key={value}
+            type="button"
+            onClick={() => onSelect(value)}
+            className={cn(
+              "h-12 px-5 py-2.5 text-sm sm:text-base font-semibold rounded-2xl border transition-all duration-150",
+              active
+                ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                : "border-border/70 bg-card text-foreground/80 hover:border-primary/25 hover:bg-accent/60",
+            )}
+          >
+            {labelFor(value)}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export function StyleStep({
@@ -141,8 +132,8 @@ export function StyleStep({
       onError("Yalnızca görsel dosyası yükleyebilirsin.");
       return;
     }
-    if (file.size > 4 * 1024 * 1024) {
-      onError("Logo dosyası 4 MB'den küçük olmalı.");
+    if (file.size > 2 * 1024 * 1024) {
+      onError("Logo dosyası 2 MB'den küçük olmalı.");
       return;
     }
     try {
@@ -154,127 +145,138 @@ export function StyleStep({
   }
 
   return (
-    <div className="space-y-8">
-      {!appShell ? <LiveBookCard draft={draft} /> : null}
+    <form id="wizard-form" onSubmit={(e) => { e.preventDefault(); onNext(); }} className="space-y-7">
 
-      <div className="rounded-[24px] border border-border/80 bg-background/72 px-6 py-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="text-[15px] font-semibold text-foreground">AI stil paketi</div>
-            <div className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Seçtiğin dile göre yazar adı, yayınevi adı, logo metni, kapak vurgu metni ve kısa biyografiyi otomatik üret.
-            </div>
-          </div>
-          <Button size="sm" variant="outline" onClick={onStyleAi} isLoading={aiLoading === "style"}>
-            <Sparkles className="mr-1.5 size-3.5" />
-            AI ile oluştur
-          </Button>
-        </div>
+      {/* ── Horizontal scrollable pill tab navigation ── */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {TAB_CONFIG.map((tab) => {
+          const active = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                "h-12 rounded-2xl px-5 py-2 text-sm sm:text-base font-semibold shrink-0 transition-all",
+                active
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card border border-border/60 text-foreground hover:border-primary/30",
+              )}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="language" className="text-sm font-semibold text-foreground">
-          Kitap dili
-        </label>
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <select
-            id="language"
-            value={draft.language}
-            onChange={(event) => onUpdate({ language: event.target.value as FunnelLanguage })}
-            className="flex h-14 w-full rounded-[20px] border border-input bg-card px-5 text-[15px] text-foreground shadow-[0_1px_0_rgba(255,255,255,0.35)_inset] outline-none transition focus:border-ring/50 focus:ring-2 focus:ring-ring/20"
-          >
-            {SUPPORTED_LANGUAGES.map((language) => (
-              <option key={language.value} value={language.value}>
-                {language.label}
-              </option>
-            ))}
-          </select>
-          <div className="rounded-[20px] border border-border/80 bg-background/72 px-4 py-4 text-sm leading-7 text-muted-foreground">
-            <span className="font-semibold text-foreground">{languageLabel(draft.language)}:</span> {languageDescription(draft.language)}
-          </div>
-        </div>
-      </div>
+      {/* ── AI style button (always visible above tabs) ── */}
+      <Button
+        type="button"
+        variant="outline"
+        className="h-14 w-full rounded-2xl text-base font-bold gap-2 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20"
+        onClick={onStyleAi}
+        disabled={aiLoading === "style"}
+      >
+        <Sparkles className="size-4" />
+        {aiLoading === "style" ? "AI oluşturuyor…" : "AI ile oluştur"}
+      </Button>
 
-      <div className="rounded-[24px] border border-border/70 bg-card/60 p-3 sm:p-4">
-        <div className="grid gap-2 sm:grid-cols-3">
-          {TABS.map((tab) => {
-            const active = activeTab === tab;
-            return (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
-                className={cn(
-                  "rounded-[18px] border px-4 py-3 text-left transition-all duration-200",
-                  active
-                    ? "border-primary/25 bg-primary/[0.08] shadow-sm"
-                    : "border-border/60 bg-background/70 hover:border-primary/15 hover:bg-background",
-                )}
-              >
-                <div className={cn("text-sm font-semibold", active ? "text-foreground" : "text-foreground/80")}>{TAB_LABELS[tab].title}</div>
-                <div className="mt-1 text-xs leading-5 text-muted-foreground">{TAB_LABELS[tab].description}</div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
+      {/* ── Tab: Identity ── */}
       {activeTab === "identity" ? (
-        <div className="space-y-6">
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="space-y-2">
-              <label htmlFor="author-name" className="text-sm font-semibold text-foreground">
-                Yazar adı
-              </label>
-              <Input
-                id="author-name"
-                value={draft.authorName}
-                onChange={(event) => onUpdate({ authorName: event.target.value })}
-                placeholder="örnek: İhsan Yılmaz"
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="imprint" className="text-sm font-semibold text-foreground">
-                Yayınevi adı
-              </label>
-              <Input
-                id="imprint"
-                value={draft.imprint}
-                onChange={(event) => onUpdate({ imprint: event.target.value })}
-                placeholder="örnek: Kuzey Işık Yayınları"
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="logo-text" className="text-sm font-semibold text-foreground">
-                Logo metni
-              </label>
-              <Input
-                id="logo-text"
-                value={draft.logoText}
-                onChange={(event) => onUpdate({ logoText: event.target.value })}
-                placeholder="örnek: İY Atölye"
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="logo-url" className="text-sm font-semibold text-foreground">
-                İstersen logo bağlantısı da ekleyebilirsin
-              </label>
-              <Input
-                id="logo-url"
-                value={draft.logoUrl.startsWith("data:image/") ? "" : draft.logoUrl}
-                onChange={(event) => onUpdate({ logoUrl: event.target.value })}
-                placeholder="örnek: https://site.com/logo.png"
-                className="h-11"
-              />
-            </div>
+        <div className="space-y-7">
+          {/* Author name */}
+          <div className="space-y-2">
+            <label htmlFor="author-name" className="text-base sm:text-lg font-bold">
+              Yazar adı
+            </label>
+            <Input
+              id="author-name"
+              value={draft.authorName}
+              onChange={(event) => onUpdate({ authorName: event.target.value })}
+              placeholder="örnek: İhsan Yılmaz"
+              className="h-14 text-base rounded-2xl px-5"
+            />
           </div>
 
+          {/* Publisher name */}
           <div className="space-y-2">
-            <label htmlFor="author-bio" className="text-sm font-semibold text-foreground">
-              Kısa yazar biyografisi
+            <label htmlFor="imprint" className="text-base sm:text-lg font-bold">
+              Yayınevi adı
+            </label>
+            <Input
+              id="imprint"
+              value={draft.imprint}
+              onChange={(event) => onUpdate({ imprint: event.target.value })}
+              placeholder="örnek: Kuzey Işık Yayınları"
+              className="h-14 text-base rounded-2xl px-5"
+            />
+          </div>
+
+          {/* Logo text */}
+          <div className="space-y-2">
+            <label htmlFor="logo-text" className="text-base sm:text-lg font-bold">
+              Logo metni
+            </label>
+            <Input
+              id="logo-text"
+              value={draft.logoText}
+              onChange={(event) => onUpdate({ logoText: event.target.value })}
+              placeholder="örnek: İY Atölye"
+              className="h-14 text-base rounded-2xl px-5"
+            />
+          </div>
+
+          {/* Logo upload */}
+          <div className="space-y-2">
+            <div className="text-base sm:text-lg font-bold">Logo yükle</div>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void handleLogoUpload(file);
+                event.currentTarget.value = "";
+              }}
+            />
+            {draft.logoUrl && draft.logoUrl.startsWith("data:image/") ? (
+              <div className="relative rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex size-16 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-white p-2">
+                    <img src={draft.logoUrl} alt="Yüklenen logo" className="max-h-12 max-w-full object-contain" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold text-foreground">Logo yüklendi ✓</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">Değiştirmek için tıkla</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onUpdate({ logoUrl: "" })}
+                    className="shrink-0 size-8 rounded-full bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => logoInputRef.current?.click()}
+                className="w-full rounded-2xl border-2 border-dashed border-border/60 bg-card/60 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200 p-6 flex flex-col items-center gap-2 cursor-pointer group"
+              >
+                <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                  <ImagePlus className="size-5 text-primary" />
+                </div>
+                <div className="text-sm font-semibold text-foreground">Logo yüklemek için tıkla</div>
+                <div className="text-xs text-muted-foreground">PNG, JPG, WebP veya SVG · Maks 2 MB</div>
+              </button>
+            )}
+          </div>
+          {/* Author bio */}
+          <div className="space-y-2">
+            <label htmlFor="author-bio" className="text-base sm:text-lg font-bold">
+              Kısa biyografi
             </label>
             <Textarea
               id="author-bio"
@@ -282,74 +284,88 @@ export function StyleStep({
               value={draft.authorBio}
               onChange={(event) => onUpdate({ authorBio: event.target.value })}
               placeholder="örnek: Oyun rehberleri ve yapay zeka destekli yayıncılık üzerine çalışan bağımsız yazar."
-              className="resize-none leading-7"
+              className="min-h-[140px] text-base rounded-2xl px-5 py-4 resize-none leading-7"
             />
+          </div>
+
+          {/* Language selector */}
+          <div className="space-y-2">
+            <label htmlFor="language" className="text-base sm:text-lg font-bold">
+              Dil
+            </label>
+            <select
+              id="language"
+              value={draft.language}
+              onChange={(event) => onUpdate({ language: event.target.value as FunnelLanguage, languageLocked: true })}
+              className="h-14 text-base rounded-2xl px-5 w-full bg-card text-foreground outline-none"
+            >
+              {SUPPORTED_LANGUAGES.map((language) => (
+                <option key={language.value} value={language.value}>
+                  {language.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-sm px-4 py-2.5">
+              <span className="font-medium text-foreground/70">{languageLabel(draft.language)}</span> — {languageDescription(draft.language)}
+            </p>
           </div>
         </div>
       ) : null}
 
+      {/* ── Tab: Cover ── */}
       {activeTab === "cover" ? (
-        <div className="space-y-6">
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="space-y-4 rounded-[24px] border border-border/80 bg-background/72 p-5">
-              <div className="space-y-2">
-                <label htmlFor="cover-brief" className="text-sm font-semibold text-foreground">
-                  Kapakta öne çıkan vurgu
-                </label>
-                <Input
-                  id="cover-brief"
-                  value={draft.coverBrief}
-                  onChange={(event) => onUpdate({ coverBrief: event.target.value })}
-                  placeholder="örnek: Güçlen • Kur • İlerle"
-                  className="h-11"
-                />
-              </div>
+        <div className="space-y-7">
+          {/* Cover brief */}
+          <div className="space-y-2">
+            <label htmlFor="cover-brief" className="text-base sm:text-lg font-bold">
+              Kapak vurgusu
+            </label>
+            <Input
+              id="cover-brief"
+              value={draft.coverBrief}
+              onChange={(event) => onUpdate({ coverBrief: event.target.value })}
+              placeholder="örnek: Güçlen • Kur • İlerle"
+              className="h-14 text-base rounded-2xl px-5"
+            />
+          </div>
 
-              <div className="flex flex-wrap gap-2 pt-1">
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) void handleLogoUpload(file);
-                    event.currentTarget.value = "";
-                  }}
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    const preset = pickRandomPublisherLogo();
-                    onUpdate({ imprint: preset.imprint, logoText: preset.mark, logoUrl: preset.url });
-                  }}
-                >
-                  <Wand2 className="mr-1.5 size-3.5" />
-                  Rastgele logo
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => logoInputRef.current?.click()}>
-                  <ImagePlus className="mr-1.5 size-3.5" />
-                  Logo yükle
-                </Button>
-                {profileBrand ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      onUpdate({
-                        imprint: profileBrand.imprint,
-                        logoText: profileBrand.logoText,
-                        logoUrl: profileBrand.logoUrl || draft.logoUrl,
-                      })
-                    }
-                  >
-                    Profil logosu
-                  </Button>
-                ) : null}
-              </div>
+          {/* Logo actions */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-12 rounded-2xl text-sm font-semibold px-5"
+              onClick={() => {
+                const preset = pickRandomPublisherLogo();
+                onUpdate({ imprint: preset.imprint, logoText: preset.mark, logoUrl: preset.url });
+              }}
+            >
+              <Wand2 className="mr-1.5 size-4" />
+              Rastgele logo
+            </Button>
+            {profileBrand ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-12 rounded-2xl text-sm font-semibold px-5"
+                onClick={() =>
+                  onUpdate({
+                    imprint: profileBrand.imprint,
+                    logoText: profileBrand.logoText,
+                    logoUrl: profileBrand.logoUrl || draft.logoUrl,
+                  })
+                }
+              >
+                Profil logosu
+              </Button>
+            ) : null}
+          </div>
 
-              <div className="grid max-h-[340px] gap-3 overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
+          {/* Logo preset grid */}
+          <div className="space-y-3">
+            <div className="text-base sm:text-lg font-bold">Logo kütüphanesi</div>
+            <div className="max-h-[320px] overflow-y-auto overscroll-contain rounded-2xl border border-border/50 bg-background/40 p-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {PUBLISHER_LOGO_PRESETS.map((preset) => {
                   const selected = draft.logoUrl === preset.url;
                   return (
@@ -357,115 +373,89 @@ export function StyleStep({
                       key={preset.id}
                       type="button"
                       className={cn(
-                        "rounded-[20px] border p-4 text-left transition",
+                        "flex h-18 flex-col items-center justify-center rounded-2xl border p-2 transition-all duration-100",
                         selected
-                          ? "border-primary/40 bg-primary/8 ring-1 ring-primary/20"
-                          : "border-border/80 bg-card hover:border-primary/20 hover:bg-accent",
+                          ? "border-primary bg-primary/8 ring-2 ring-primary"
+                          : "border-border/50 bg-card/60 hover:border-primary/15 hover:bg-accent/50",
                       )}
                       onClick={() => onUpdate({ imprint: preset.imprint, logoText: preset.mark, logoUrl: preset.url })}
                     >
-                      <div className="flex min-h-[88px] items-center rounded-[18px] border border-border/60 bg-background/85 px-4 py-4">
-                        <img src={preset.url} alt={preset.imprint} className="h-14 w-auto max-w-full object-contain" />
-                      </div>
-                      <div className="mt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                        {publisherFamilyLabel(preset.family)}
-                      </div>
-                      <div className="mt-1 text-sm font-medium leading-6 text-foreground">{preset.imprint}</div>
+                      <img src={preset.url} alt={preset.imprint} className="max-h-8 max-w-full object-contain" />
                     </button>
                   );
                 })}
               </div>
             </div>
-
-            <div className="space-y-4">
-              <div className="rounded-[24px] border border-border/80 bg-card/65 p-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Seçili logo</div>
-                <div className="mt-3 rounded-[20px] border border-border/70 bg-background/80 p-4">
-                  {draft.logoUrl ? (
-                    <div className="flex min-h-[88px] items-center justify-center rounded-[16px] border border-border/60 bg-card px-4 py-4">
-                      <img src={draft.logoUrl} alt={draft.imprint || draft.logoText || "Logo"} className="h-16 w-auto max-w-full object-contain" />
-                    </div>
-                  ) : (
-                    <div className="rounded-[16px] border border-dashed border-border/70 px-4 py-8 text-center text-sm text-muted-foreground">
-                      Henüz bir logo seçmedin.
-                    </div>
-                  )}
-
-                  <div className="mt-4 space-y-2">
-                    <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Yayınevi</div>
-                      <div className="mt-1 text-sm font-semibold text-foreground">{draft.imprint || "Henüz seçilmedi"}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Logo metni</div>
-                      <div className="mt-1 text-sm font-semibold text-foreground">{draft.logoText || "Henüz girilmedi"}</div>
-                    </div>
-                    {selectedLogoPreset ? (
-                      <div>
-                        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Aile</div>
-                        <div className="mt-1 text-sm font-semibold text-foreground">{publisherFamilyLabel(selectedLogoPreset.family)}</div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       ) : null}
 
+      {/* ── Tab: Advanced ── */}
       {activeTab === "advanced" ? (
-        <div className="space-y-6">
+        <div className="space-y-7">
+          {/* Tone */}
           <div className="space-y-3">
-            <div className="text-sm font-semibold text-foreground">Ton</div>
-            <ChoiceGrid
-              values={TONES}
+            <div className="text-base sm:text-lg font-bold">Ton</div>
+            <PillSelector
+              options={TONES}
               selected={draft.tone}
               labelFor={(value) => toneLabel(value, draft.language)}
-              descriptionFor={(value) => TONE_DESCRIPTIONS[value]}
               onSelect={(value) => onUpdate({ tone: value })}
             />
           </div>
 
+          {/* Depth */}
           <div className="space-y-3">
-            <div className="text-sm font-semibold text-foreground">Derinlik</div>
-            <ChoiceGrid
-              values={DEPTHS}
+            <div className="text-base sm:text-lg font-bold">Derinlik</div>
+            <PillSelector
+              options={DEPTHS}
               selected={draft.depth}
               labelFor={(value) => depthLabel(value, draft.language)}
-              descriptionFor={(value) => DEPTH_DESCRIPTIONS[value]}
               onSelect={(value) => onUpdate({ depth: value })}
             />
           </div>
 
+          {/* Cover direction */}
           <div className="space-y-3">
-            <div className="text-sm font-semibold text-foreground">Kapak yönü</div>
-            <ChoiceGrid
-              values={COVER_DIRECTIONS}
+            <div className="text-base sm:text-lg font-bold">Kapak yönü</div>
+            <PillSelector
+              options={COVER_DIRECTIONS}
               selected={draft.coverDirection}
               labelFor={(value) => coverDirectionLabel(value, draft.language)}
-              descriptionFor={(value) => COVER_DESCRIPTIONS[value]}
               onSelect={(value) => onUpdate({ coverDirection: value })}
-              columns="md:grid-cols-2"
             />
+          </div>
+
+          {/* Language selector (also in advanced for discoverability) */}
+          <div className="space-y-2">
+            <label htmlFor="language-advanced" className="text-base sm:text-lg font-bold">
+              Dil
+            </label>
+            <select
+              id="language-advanced"
+              value={draft.language}
+              onChange={(event) => onUpdate({ language: event.target.value as FunnelLanguage, languageLocked: true })}
+              className="h-14 text-base rounded-2xl px-5 w-full bg-card text-foreground outline-none"
+            >
+              {SUPPORTED_LANGUAGES.map((language) => (
+                <option key={language.value} value={language.value}>
+                  {language.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-sm px-4 py-2.5">
+              <span className="font-medium text-foreground/70">{languageLabel(draft.language)}</span> — {languageDescription(draft.language)}
+            </p>
           </div>
         </div>
       ) : null}
 
+      {/* ── Error ── */}
       {error ? (
-        <div role="alert" className="rounded-[16px] border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+        <div role="alert" className="rounded-xl px-4 py-3 bg-destructive/5 text-sm text-destructive">
           {error}
         </div>
       ) : null}
-
-      <div className="flex flex-wrap items-center gap-3 pt-1">
-        <Button variant="ghost" size="lg" onClick={onBack}>
-          Geri
-        </Button>
-        <Button size="lg" onClick={onNext}>
-          Ön İzlemeyi Hazırla
-        </Button>
-      </div>
-    </div>
+    </form>
   );
 }

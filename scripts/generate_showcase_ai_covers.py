@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse
@@ -35,8 +35,7 @@ LEGACY_KEY_NAMES = ("CODEFAST_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "GRO
 VERTEX_API_KEY_NAMES = ("GOOGLE_API_KEY", "VERTEX_API_KEY", "GOOGLE_GENAI_API_KEY")
 VERTEX_PROJECT_NAMES = ("GOOGLE_CLOUD_PROJECT", "GOOGLE_PROJECT_ID", "VERTEX_PROJECT_ID")
 VERTEX_LOCATION_NAMES = ("GOOGLE_CLOUD_LOCATION", "VERTEX_LOCATION")
-GROK_IMAGE_URL = "https://grokapi.codefast.app/v1/images/generations"
-GROK_HISTORY_URL = "https://grokapi.codefast.app/v1/history?page=1&per_page=10"
+# Grok removed â€“ no longer available
 NANO_IMAGE_URL = "https://geminiapi.codefast.app/v1/image"
 NANO_STATUS_URL = "https://geminiapi.codefast.app/v1/image/status"
 VERTEX_IMAGEN_URL_TEMPLATE = "https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/publishers/google/models/{model}:predict?key={api_key}"
@@ -96,7 +95,6 @@ SERVICE_CHOICES = (
     "vertex-imagen-ultra",
     "vertex-gemini-flash-image",
     "vertex-imagen-fast",
-    "grok-imagine",
     "nano-banana-pro",
     "nano-banana-2",
 )
@@ -108,8 +106,6 @@ AI_TEXT_AUTHOR_MAX = 24
 AI_TEXT_TITLE_MIN_SCORE = 0.8
 AI_TEXT_SUBTITLE_MIN_SCORE = 0.72
 AI_TEXT_AUTHOR_MIN_SCORE = 0.68
-AI_TEXT_OCR_MODEL = "gemini-2.5-flash-lite"
-AI_TEXT_OCR_TIMEOUT = 120
 AI_TEXT_MAX_ATTEMPTS = 3
 VARIANT_COUNT = 3
 POLL_ATTEMPTS = 24
@@ -119,8 +115,8 @@ try:
     MAX_ART_ATTEMPTS_PER_VARIANT = max(1, int(os.environ.get("SHOWCASE_MAX_ART_ATTEMPTS", "8")))
 except ValueError:
     MAX_ART_ATTEMPTS_PER_VARIANT = 8
-TEXT_RISK_REJECT_THRESHOLD = 24.0
-TEXT_RISK_REUSE_THRESHOLD = 18.0
+TEXT_RISK_REJECT_THRESHOLD = 0.0  # OCR disabled â€“ no rejection
+TEXT_RISK_REUSE_THRESHOLD = 0.0   # OCR disabled â€“ no rejection
 GENRE_MATRIX: dict[str, dict[str, Any]] = {
     "business-marketing": {
         "branch": "nonfiction",
@@ -457,7 +453,7 @@ def explicit_string(entry: dict[str, Any], *keys: str) -> str:
 
 
 def haystack_has(haystack: str, keyword: str) -> bool:
-    if " " in keyword or any(char in keyword for char in "çğıöşüÇĞİÖŞÜ-"):
+    if " " in keyword or any(char in keyword for char in "Ã§ÄŸÄ±Ã¶ÅŸÃ¼Ã‡ÄÄ°Ã–ÅÃœ-"):
         return keyword.lower() in haystack
     return re.search(rf"(?<!\w){re.escape(keyword.lower())}(?!\w)", haystack, flags=re.IGNORECASE) is not None
 
@@ -478,7 +474,7 @@ def infer_cover_branch(entry: dict[str, Any]) -> str:
     if book_type == "cocuk":
         return "children"
     category_or_type = f"{explicit_string(entry, 'category')} {explicit_string(entry, 'type')}".lower()
-    if any(marker in category_or_type for marker in ("children", "çocuk", "cocuk")):
+    if any(marker in category_or_type for marker in ("children", "Ã§ocuk", "cocuk")):
         return "children"
     child_markers = ("storybook", "picture book", "bedtime", "masal", "resimli hikaye", "illustrated tale", "fairy tale")
     if any(marker in haystack for marker in child_markers):
@@ -504,7 +500,7 @@ def infer_cover_genre(entry: dict[str, Any], branch: str | None = None) -> str:
         return "ai-systems"
     if "education" in category:
         return "education"
-    if "personal" in category or "kişisel" in category:
+    if "personal" in category or "kiÅŸisel" in category:
         return "personal-development"
     haystack = cover_haystack(entry)
     if any(
@@ -512,7 +508,7 @@ def infer_cover_genre(entry: dict[str, Any], branch: str | None = None) -> str:
     ):
         return "ai-systems"
     if any(
-        haystack_has(haystack, marker) for marker in ("training", "teach", "teacher", "stem", "course", "workbook", "öğret", "egitim", "ensenar", "formateur")
+        haystack_has(haystack, marker) for marker in ("training", "teach", "teacher", "stem", "course", "workbook", "Ã¶ÄŸret", "egitim", "ensenar", "formateur")
     ):
         return "education"
     if any(
@@ -538,7 +534,7 @@ def infer_cover_subtopic(entry: dict[str, Any], genre: str | None = None, branch
     if branch == "children":
         if any(marker in haystack for marker in ("bedtime", "sleep", "night", "uyku", "moon", "dream")):
             return "bedtime"
-        if any(marker in haystack for marker in ("learn", "learning", "stem", "activity", "count", "alphabet", "parent", "school", "öğren")):
+        if any(marker in haystack for marker in ("learn", "learning", "stem", "activity", "count", "alphabet", "parent", "school", "Ã¶ÄŸren")):
             return "learning"
         return "storyworld"
 
@@ -552,9 +548,9 @@ def infer_cover_subtopic(entry: dict[str, Any], genre: str | None = None, branch
         return "growth"
 
     if genre == "expertise-authority":
-        if any(marker in haystack for marker in ("method", "framework", "sistem", "metodo", "méthode", "metodo")):
+        if any(marker in haystack for marker in ("method", "framework", "sistem", "metodo", "mÃ©thode", "metodo")):
             return "method"
-        if any(marker in haystack for marker in ("mentor", "guide", "coach", "trainer", "formateur", "eğitmen")):
+        if any(marker in haystack for marker in ("mentor", "guide", "coach", "trainer", "formateur", "eÄŸitmen")):
             return "mentor"
         return "authority"
 
@@ -563,7 +559,7 @@ def infer_cover_subtopic(entry: dict[str, Any], genre: str | None = None, branch
             return "team-systems"
         if any(marker in haystack for marker in ("productivity", "focus", "deep work", "odak")):
             return "productivity"
-        if any(marker in haystack for marker in ("small business", "negocios pequenos", "küçük", "business")):
+        if any(marker in haystack for marker in ("small business", "negocios pequenos", "kÃ¼Ã§Ã¼k", "business")):
             return "small-business"
         return "systems"
 
@@ -753,7 +749,7 @@ def normalize_service(service: str, entry: dict[str, Any] | None = None) -> list
         genre = infer_cover_genre(normalized, branch)
         if branch == "children" or genre == "education":
             providers.append("vertex-gemini-flash-image")
-    providers.extend(["grok-imagine", "nano-banana-pro", "nano-banana-2"])
+    providers.extend(["nano-banana-pro", "nano-banana-2"])
     return providers
 
 
@@ -820,7 +816,7 @@ def ai_signature_subtitle(entry: dict[str, Any]) -> str:
     if len(subtitle) <= AI_TEXT_HYBRID_SUBTITLE_MAX:
         return subtitle
 
-    candidates = [part.strip(" -,:;.") for part in re.split(r"[;:.!?]|(?:\s[-–—]\s)|,\s", subtitle) if part.strip()]
+    candidates = [part.strip(" -,:;.") for part in re.split(r"[;:.!?]|(?:\s[-â€“â€”]\s)|,\s", subtitle) if part.strip()]
     strong_candidates = [candidate for candidate in candidates if len(candidate) >= 18 and len(candidate.split()) >= 3]
     for candidate in strong_candidates:
         if len(candidate) <= AI_TEXT_HYBRID_SUBTITLE_MAX:
@@ -833,7 +829,7 @@ def ai_signature_subtitle(entry: dict[str, Any]) -> str:
 
     summary = str(entry.get("summary") or "").strip()
     if summary:
-        summary_candidates = [part.strip(" -,:;.") for part in re.split(r"[;:.!?]|(?:\s[-–—]\s)|,\s", summary) if part.strip()]
+        summary_candidates = [part.strip(" -,:;.") for part in re.split(r"[;:.!?]|(?:\s[-â€“â€”]\s)|,\s", summary) if part.strip()]
         for candidate in summary_candidates:
             if candidate and len(candidate) >= 18 and len(candidate.split()) >= 3 and len(candidate) <= AI_TEXT_HYBRID_SUBTITLE_MAX:
                 return candidate
@@ -863,7 +859,7 @@ def has_disallowed_text_prefix(fields: dict[str, str]) -> bool:
         value = str(fields.get(key) or "").strip()
         if not value:
             continue
-        if value[0] in {"#", "@", "*", "•"}:
+        if value[0] in {"#", "@", "*", "â€¢"}:
             return True
         lowered = value.casefold()
         if lowered.startswith(("author:", "author ", "title:", "title ", "subtitle:", "subtitle ")):
@@ -917,7 +913,7 @@ def ai_text_providers_for_entry(service: str, entry: dict[str, Any]) -> list[str
     allowed = [
         provider
         for provider in ordered
-        if provider in {"vertex-imagen-standard", "vertex-imagen-ultra", "grok-imagine", "nano-banana-pro", "nano-banana-2"}
+        if provider in {"vertex-imagen-standard", "vertex-imagen-ultra", "nano-banana-pro", "nano-banana-2"}
     ]
     return allowed or ordered
 
@@ -1099,50 +1095,8 @@ def extract_text_candidate(payload: dict[str, Any]) -> str:
 
 
 def ocr_cover_fields(image_path: Path) -> dict[str, str]:
-    config = resolve_vertex_config()
-    if not config or not image_path.exists():
-        return {"title": "", "subtitle": "", "author": "", "all_text": ""}
-    encoded = base64.b64encode(image_path.read_bytes()).decode("ascii")
-    response = requests.post(
-        VERTEX_GEMINI_TEXT_URL_TEMPLATE.format(model=AI_TEXT_OCR_MODEL, api_key=config["api_key"]),
-        headers={"Content-Type": "application/json; charset=utf-8"},
-        json={
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [
-                        {
-                            "text": (
-                                "Read all visible text on this book cover image. "
-                                "Return strict JSON with keys title, subtitle, author, and all_text. "
-                                "If a field is missing or unreadable, use an empty string."
-                            )
-                        },
-                        {"inlineData": {"mimeType": "image/png", "data": encoded}},
-                    ],
-                }
-            ],
-            "generationConfig": {
-                "temperature": 0,
-                "responseMimeType": "application/json",
-            },
-        },
-        timeout=AI_TEXT_OCR_TIMEOUT,
-    )
-    payload = safe_json_response(response)
-    raw_text = extract_text_candidate(payload)
-    if not raw_text:
-        return {"title": "", "subtitle": "", "author": "", "all_text": ""}
-    try:
-        parsed = json.loads(raw_text)
-    except json.JSONDecodeError:
-        return {"title": "", "subtitle": "", "author": "", "all_text": raw_text}
-    return {
-        "title": str(parsed.get("title") or "").strip(),
-        "subtitle": str(parsed.get("subtitle") or "").strip(),
-        "author": str(parsed.get("author") or "").strip(),
-        "all_text": str(parsed.get("all_text") or "").strip(),
-    }
+    # OCR disabled â€“ user handles quality via regenerate / manual upload
+    return {"title": "", "subtitle": "", "author": "", "all_text": ""}
 
 
 def validate_ai_cover_text(entry: dict[str, Any], image_path: Path, mode: str) -> dict[str, Any]:
@@ -1218,36 +1172,7 @@ def generate_ai_finished_cover(
     return best
 
 
-def generate_with_grok(prompt: str, output_path: Path, api_key: str) -> bool:
-    response = requests.post(
-        GROK_IMAGE_URL,
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"prompt": prompt, "aspect_ratio": "2:3", "n": 1},
-        timeout=180,
-    )
-    payload = safe_json_response(response)
-    if response.ok and save_image_from_payload(payload, output_path):
-        return True
-
-    if not response.ok:
-        return False
-
-    for _ in range(POLL_ATTEMPTS):
-        history = requests.get(
-            GROK_HISTORY_URL,
-            headers={"Authorization": f"Bearer {api_key}"},
-            timeout=180,
-        )
-        history_payload = safe_json_response(history)
-        items = history_payload.get("items") or []
-        for item in items:
-            if item.get("type", "image") != "image":
-                continue
-            if item.get("prompt") == prompt and isinstance(item.get("url"), str):
-                return download_image(item["url"], output_path)
-        time.sleep(POLL_INTERVAL_SECONDS)
-
-    return False
+# generate_with_grok removed â€“ Grok no longer available
 
 
 def generate_with_nano(prompt: str, output_path: Path, api_key: str, model: str) -> bool:
@@ -1322,14 +1247,12 @@ def build_prompt(entry: dict[str, Any]) -> str:
         }.get(subtopic, "storybook warmth, rounded illustrated forms, playful depth, and calm family-safe composition")
         return (
             f"Create premium portrait children's book background artwork for a {category} cover. Art direction: {topic}. "
-            "This is background art only, not a finished cover. All typography will be added later by layout software, so the image must stay completely typography-free. "
-            f"Use {motif}. Make it feel like a real high-quality children's picture book cover sold in bookstores, with generous title-safe space, rounded shapes, warm emotional safety, and illustration-ready composition. "
-            "Absolutely do not render any letters, words, numbers, initials, monograms, captions, logos, symbols, watermarks, signage, classroom posters, alphabet fragments, faux text, typographic echoes, or glyph-like marks anywhere in the image. "
-            "Avoid hard-edged corporate geometry, harsh monoliths, dark executive slabs, brass-rail authority frames, and severe adult nonfiction energy. "
-            "If any shape looks even remotely like text, treat that as a failure and remove it. "
-            "Background artwork only. Typography-free. Letterform-free. Text-free. OCR-clean. No words. No letters. No numbers. No symbols. No logos. No watermarks."
+            f"Use {motif}. Make it feel like a real high-quality children's picture book cover sold in bookstores. "
+            "Leave generous empty space at top and bottom for title and author text. "
+            "Rich colors, warm emotional safety, and illustration-ready composition. "
+            "Avoid hard-edged corporate geometry, harsh monoliths, or severe adult nonfiction energy. "
+            "Background artwork only - do not include any text, letters, words, or numbers."
         )
-
     if genre == "expertise-authority":
         motif = "architectural folio planes, seal-like structure, premium shadow depth, and refined authority geometry"
     elif genre == "ai-systems":
@@ -1350,30 +1273,23 @@ def build_prompt(entry: dict[str, Any]) -> str:
 
     return (
         f"Create premium portrait editorial background artwork for a {category} nonfiction cover. Art direction: {topic}. "
-        "This is background art only, not a finished cover. All typography will be added later by layout software, so the image must stay completely typography-free. "
         f"Use {motif}. {frame_note} "
-        "Make it feel like a real high-end nonfiction bestseller cover sold in bookstores, with bold typography-safe negative space, tactile print texture, and coherent composition from edge to edge. "
-        "Absolutely do not render any letters, words, numbers, initials, monograms, headlines, captions, logos, symbols, watermarks, engraved text, embossed text, faux text, typographic echoes, glyph-like shapes, rune-like marks, poster headlines, signage, title fragments, or any abstract forms that resemble readable characters anywhere in the image. "
-        "Do not write the book title. Do not write any fake title. Do not place giant faded word-shapes in the background. Do not create ghost typography, billboard lettering, cover-copy silhouettes, or decorative marks that could be mistaken for text. "
-        "If any shape looks even remotely like text, treat that as a failure and remove it. "
-        "Background artwork only. Typography-free. Letterform-free. Text-free. OCR-clean. No words. No letters. No numbers. No symbols. No logos. No watermarks."
+        "Make it feel like a real high-end nonfiction bestseller cover sold in bookstores. "
+        "Leave generous empty space at top and bottom for title and author text. "
+        "Cinematic composition, tactile print texture, and coherent layout from edge to edge. "
+        "Background artwork only - do not include any text, letters, words, numbers, or logos."
     )
-
-
-def variant_prompt_suffix(family: dict[str, Any], entry: dict[str, Any], attempt_index: int = 1) -> str:
-    branch = infer_cover_branch(entry)
-    genre_label = GENRE_MATRIX[infer_cover_genre(entry, branch)]["label"]
     suffix = (
         f"Favor the {family['label']} cover family for the {genre_label} genre: {family['artDirection']}. "
-        "Keep the background OCR-clean and entirely typography-free."
+        "Leave generous empty space for typography overlay."
     )
     if branch == "children":
         suffix += " Keep the emotional tone child-safe, warm, rounded, and inviting. No harsh corporate edges."
     retry = ""
     if attempt_index > 1:
         retry = (
-            " Retry rule: the previous attempt likely contained text-like artifacts. "
-            "Remove all poster-like letters, ghosted title fragments, signage, headline silhouettes, typographic scaffolding, engraved plates, alphanumeric forms, and glyph-shaped geometry. "
+            " Retry: try a different composition with richer colors and more atmospheric depth."
+            "Use abstract geometry, illustration, gradients, light, and shadow."
             "Use only abstract geometry, illustration, architecture, gradients, paper forms, light, and shadow."
         )
     return f"{suffix} {retry}".strip()
@@ -1600,17 +1516,15 @@ def generate_variant(prompt: str, output_path: Path, api_key: str, provider: str
     legacy_key = resolve_legacy_api_key() or api_key
     if not legacy_key:
         return False
-    if provider == "grok-imagine":
-        return generate_with_grok(prompt, output_path, legacy_key)
     if provider in NANO_MODELS:
         return generate_with_nano(prompt, output_path, legacy_key, NANO_MODELS[provider])
     return False
 
 
 def art_candidate_rank(score_payload: dict[str, Any]) -> tuple[float, float]:
-    text_risk = float(score_payload.get("textRisk") or 0.0)
     quality = float(score_payload.get("score") or 0.0)
-    return (text_risk, -quality)
+    return (0.0, -quality)
+
 
 
 def ensure_variant_art(
@@ -1635,12 +1549,8 @@ def ensure_variant_art(
         backup_target: Path | None = None
 
         if not force and target.exists():
-            existing_score = score_variant(target)
-            if float(existing_score.get("textRisk") or 0.0) <= TEXT_RISK_REUSE_THRESHOLD:
-                reused = True
+            reused = True
         elif not force and variant_index == 1 and legacy_ai_cover.exists():
-            legacy_score = score_variant(legacy_ai_cover)
-            if float(legacy_score.get("textRisk") or 0.0) <= TEXT_RISK_REUSE_THRESHOLD:
                 shutil.copyfile(legacy_ai_cover, target)
                 reused = True
 
@@ -1660,17 +1570,11 @@ def ensure_variant_art(
                         temp_image = Path(temp_dir) / "variant.png"
                         if not generate_variant(prompt, temp_image, api_key, provider):
                             continue
-                        score_payload = score_variant(temp_image)
-                        rank = art_candidate_rank(score_payload)
-                        if best_rank is None or rank < best_rank:
-                            shutil.copyfile(temp_image, target)
-                            best_provider = provider
-                            best_rank = rank
-                        if float(score_payload.get("textRisk") or 0.0) <= TEXT_RISK_REJECT_THRESHOLD:
-                            shutil.copyfile(temp_image, target)
-                            provider_used = provider
-                            accepted = True
-                            break
+                        # Accept first successful generation â€“ user can regenerate if not satisfied
+                        shutil.copyfile(temp_image, target)
+                        provider_used = provider
+                        accepted = True
+                        break
                 if accepted:
                     break
 
@@ -1743,9 +1647,9 @@ def family_fit_bonus(entry: dict[str, Any], family_id: str) -> float:
 
 
 def art_quality_score(art: dict[str, Any]) -> float:
-    details = art.get("details") or {}
-    text_risk = float(details.get("textRisk") or 0.0)
     base_score = float(art.get("score") or 0.0)
+    return round(base_score, 2)
+
     penalty = min(text_risk * 1.6, 54.0)
     return round(base_score - penalty, 2)
 
@@ -1847,14 +1751,9 @@ def build_cover_variants(
         by_variant[int(variant["variant"])] = scored
 
     art_scores.sort(
-        key=lambda item: (
-            float((item.get("details") or {}).get("textRisk") or 0.0) <= TEXT_RISK_REJECT_THRESHOLD,
-            art_quality_score(item),
-        ),
+        key=lambda item: art_quality_score(item),
         reverse=True,
     )
-    fallback_art = art_scores[0]
-
     cover_variants: list[dict[str, Any]] = []
     for spec in variant_specs:
         family = spec["family"]

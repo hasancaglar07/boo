@@ -1242,3 +1242,203 @@ html.theme-transitioning *::after {
     }
   }
 }
+/* Auth page background - subtle gradient */
+.bg-auth-subtle {
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--background)) 0%,
+    hsl(var(--muted) / 0.3) 100%
+  );
+}
+
+/* ── Billing Page Animations ───────────────────────────────── */
+@keyframes billing-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 20px color-mix(in srgb, var(--primary) 12%, transparent),
+      0 0 60px color-mix(in srgb, var(--primary) 6%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 30px color-mix(in srgb, var(--primary) 20%, transparent),
+      0 0 80px color-mix(in srgb, var(--primary) 10%, transparent);
+  }
+}
+
+@keyframes billing-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes billing-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes billing-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes billing-count-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes billing-badge-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.05);
+  }
+}
+
+@keyframes billing-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes billing-urgency-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.billing-animate-in {
+  animation: billing-fade-in-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.billing-animate-in-1 { animation-delay: 0.05s; }
+.billing-animate-in-2 { animation-delay: 0.15s; }
+.billing-animate-in-3 { animation-delay: 0.25s; }
+.billing-animate-in-4 { animation-delay: 0.35s; }
+.billing-animate-in-5 { animation-delay: 0.50s; }
+
+.billing-card-glow {
+  animation: billing-glow 3s ease-in-out infinite;
+}
+
+.billing-card-popular {
+  position: relative;
+}
+
+.billing-card-popular::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 29px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary) 60%, transparent),
+    color-mix(in srgb, var(--primary) 20%, transparent),
+    color-mix(in srgb, var(--primary) 60%, transparent)
+  );
+  z-index: -1;
+  animation: billing-glow 3s ease-in-out infinite;
+}
+
+.billing-shimmer-text {
+  background: linear-gradient(
+    90deg,
+    var(--foreground) 0%,
+    color-mix(in srgb, var(--primary) 50%, var(--foreground)) 25%,
+    var(--foreground) 50%,
+    color-mix(in srgb, var(--primary) 50%, var(--foreground)) 75%,
+    var(--foreground) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: billing-shimmer 4s linear infinite;
+}
+
+.billing-urgency-dot {
+  position: relative;
+}
+
+.billing-urgency-dot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  margin-left: -4px;
+  border-radius: 999px;
+  background: #ef4444;
+  animation: billing-pulse-ring 1.5s ease-out infinite;
+}
+
+.billing-float {
+  animation: billing-float 4s ease-in-out infinite;
+}
+
+.billing-badge-bounce {
+  animation: billing-badge-bounce 2s ease-in-out infinite;
+}
+
+.billing-comparison-row:nth-child(even) {
+  background: color-mix(in srgb, var(--muted) 40%, transparent);
+}
+
+.billing-comparison-row:hover {
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+
+.billing-toggle-active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+/* Hide scrollbar utility for horizontal pill navs */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .billing-animate-in,
+  .billing-card-glow,
+  .billing-shimmer-text,
+  .billing-float,
+  .billing-badge-bounce,
+  .billing-card-popular::before {
+    animation: none !important;
+  }
+}

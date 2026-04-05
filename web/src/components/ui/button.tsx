@@ -20,10 +20,10 @@ const buttonVariants = cva(
           "border border-input bg-background/88 text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground hover:-translate-y-0.5 active:translate-y-0",
       },
       size: {
-        default: "h-11 px-4",
-        sm: "h-9 px-3 text-xs",
-        lg: "h-14 px-6 text-[15px]",
-        icon: "h-11 w-11",
+        default: "min-h-[44px] px-4",
+        sm: "min-h-[36px] px-3 text-xs",
+        lg: "min-h-[52px] px-6 text-[15px]",
+        icon: "min-h-[44px] w-11",
       },
     },
     defaultVariants: {

@@ -82,12 +82,23 @@ export function useAdminResource<T>(
     }
 
     const timer = window.setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return;
+      }
       void run();
     }, options.intervalMs);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void run();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     return () => {
       active = false;
       window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [options?.allowErrorPayload, options?.intervalMs, path]);
 

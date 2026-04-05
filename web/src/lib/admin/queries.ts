@@ -3,7 +3,8 @@ import type {
   BillingRecordStatus,
   Entitlement,
   FeatureFlag,
-  User,
+  ModerationStatus,
+  Prisma,
   UserRole,
 } from "@prisma/client";
 
@@ -25,6 +26,86 @@ const FUNNEL_STAGES = [
   "checkout_started",
   "checkout_completed",
 ] as const;
+const CACHE_TTL = {
+  backendBooksMs: 5_000,
+  adminOverviewMs: 10_000,
+  revenueMetricsMs: 20_000,
+  userMetricsMs: 20_000,
+  bookMetricsMs: 20_000,
+  funnelAnalyticsMs: 20_000,
+  authAnalyticsMs: 20_000,
+  cohortMs: 60_000,
+  churnMs: 60_000,
+  jobsMs: 5_000,
+} as const;
+
+type QueryCacheEntry<T> = {
+  expiresAt: number;
+  value?: T;
+  promise?: Promise<T>;
+};
+
+declare global {
+  var __adminQueryCache:
+    | Map<string, QueryCacheEntry<unknown>>
+    | undefined;
+}
+
+const queryCache =
+  globalThis.__adminQueryCache ||
+  new Map<string, QueryCacheEntry<unknown>>();
+
+if (!globalThis.__adminQueryCache) {
+  globalThis.__adminQueryCache = queryCache;
+}
+
+async function withTtlCache<T>(
+  key: string,
+  ttlMs: number,
+  loader: () => Promise<T>,
+): Promise<T> {
+  const now = Date.now();
+  const cached = queryCache.get(key) as QueryCacheEntry<T> | undefined;
+  if (cached?.value !== undefined && cached.expiresAt > now) {
+    return cached.value;
+  }
+  if (cached?.promise) {
+    return cached.promise;
+  }
+
+  const promise = loader()
+    .then((value) => {
+      queryCache.set(key, {
+        value,
+        expiresAt: Date.now() + ttlMs,
+      } as QueryCacheEntry<unknown>);
+      return value;
+    })
+    .catch((error) => {
+      const fallback = queryCache.get(key) as QueryCacheEntry<T> | undefined;
+      if (fallback?.value !== undefined) {
+        return fallback.value;
+      }
+      throw error;
+    })
+    .finally(() => {
+      const current = queryCache.get(key) as QueryCacheEntry<T> | undefined;
+      if (current?.promise) {
+        queryCache.set(key, {
+          value: current.value,
+          expiresAt: current.expiresAt || 0,
+        } as QueryCacheEntry<unknown>);
+      }
+    });
+
+  queryCache.set(key, {
+    value: cached?.value,
+    expiresAt: cached?.expiresAt || 0,
+    promise,
+  } as QueryCacheEntry<unknown>);
+
+  return promise;
+}
 
 type DateRangeInput = {
   from?: string;
@@ -45,6 +126,15 @@ function parseDate(value?: string | null) {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function buildCreatedAtRangeFilter(range?: DateRangeInput) {
+  const createdAt: { gte?: Date; lte?: Date } = {};
+  const from = parseDate(range?.from || null);
+  const to = parseDate(range?.to || null);
+  if (from) createdAt.gte = from;
+  if (to) createdAt.lte = new Date(to.getTime() + DAY_MS);
+  return Object.keys(createdAt).length > 0 ? createdAt : undefined;
 }
 
 function withinRange(value: Date | string | null | undefined, range?: DateRangeInput) {
@@ -158,11 +248,16 @@ async function fetchBackendJson<T>(path: string) {
 }
 
 export async function fetchBackendBooks() {
-  const payload = await fetchBackendJson<{ books?: Book[] }>("/api/books");
-  return payload?.books || [];
+  return withTtlCache("backend-books", CACHE_TTL.backendBooksMs, async () => {
+    const payload = await fetchBackendJson<{ books?: Book[] }>("/api/books");
+    return payload?.books || [];
+  });
 }
 
 export async function fetchBackendBook(slug: string) {
+  const books = await fetchBackendBooks();
+  const fromCache = books.find((item) => item.slug === slug);
+  if (fromCache) return fromCache;
   return fetchBackendJson<Book>(`/api/books/${encodeURIComponent(slug)}`);
 }
 
@@ -180,327 +275,422 @@ export function adminBookAssetUrl(slug: string, relativePath?: string | null) {
 }
 
 export async function getAdminOverviewData() {
-  const [users, books, entitlements, paidBillingRecords, recentAuditLogs, analyticsEvents] = await Promise.all([
-    prisma.user.findMany({
-      include: {
-        entitlements: true,
-      },
-    }),
-    prisma.bookRecord.findMany(),
-    prisma.entitlement.findMany(),
-    prisma.billingRecord.findMany({
-      where: { status: "paid" },
-    }),
-    prisma.auditLog.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: {
-        actorUser: true,
-      },
-    }),
-    prisma.analyticsEvent.findMany({
-      where: {
-        eventName: {
-          in: [...FUNNEL_STAGES],
-        },
-        createdAt: {
-          gte: new Date(Date.now() - 90 * DAY_MS),
-        },
-      },
-      orderBy: { createdAt: "asc" },
-    }),
-  ]);
+  return withTtlCache("admin-overview", CACHE_TTL.adminOverviewMs, async () => {
+    const [users, entitlements, paidBillingRecords, recentAuditLogs, analyticsEvents, totalBooks, funnels] =
+      await Promise.all([
+        prisma.user.findMany({
+          select: {
+            id: true,
+            createdAt: true,
+            entitlements: {
+              select: {
+                planId: true,
+                status: true,
+                endsAt: true,
+              },
+            },
+          },
+        }),
+        prisma.entitlement.findMany({
+          select: {
+            userId: true,
+            planId: true,
+            kind: true,
+            status: true,
+            endsAt: true,
+          },
+        }),
+        prisma.billingRecord.findMany({
+          where: { status: "paid" },
+          select: { createdAt: true, amount: true },
+        }),
+        prisma.auditLog.findMany({
+          orderBy: { createdAt: "desc" },
+          take: 10,
+          select: {
+            id: true,
+            action: true,
+            entityType: true,
+            entityId: true,
+            metadata: true,
+            createdAt: true,
+            actorUser: {
+              select: {
+                email: true,
+                name: true,
+              },
+            },
+          },
+        }),
+        prisma.analyticsEvent.findMany({
+          where: {
+            eventName: {
+              in: [...FUNNEL_STAGES],
+            },
+            createdAt: {
+              gte: new Date(Date.now() - 90 * DAY_MS),
+            },
+          },
+          orderBy: { createdAt: "asc" },
+          select: {
+            eventName: true,
+            createdAt: true,
+          },
+        }),
+        prisma.bookRecord.count(),
+        getFunnelAnalytics({ from: "", to: "" }),
+      ]);
 
-  const activeSubscriptions = entitlements.filter(
-    (item) =>
-      item.kind === "subscription" &&
-      (item.status === "active" || item.status === "trialing") &&
-      (!item.endsAt || item.endsAt > new Date()),
-  );
+    const activeSubscriptions = entitlements.filter(
+      (item) =>
+        item.kind === "subscription" &&
+        (item.status === "active" || item.status === "trialing") &&
+        (!item.endsAt || item.endsAt > new Date()),
+    );
 
-  const paidUserIds = new Set(
-    entitlements
-      .filter((item) => item.status === "active" || item.status === "trialing")
-      .map((item) => item.userId),
-  );
-  const mrr = sum(activeSubscriptions.map((item) => PLAN_PRICES_CENTS[item.planId] || 0));
-  const arr = mrr * 12;
+    const paidUserIds = new Set(
+      entitlements
+        .filter((item) => item.status === "active" || item.status === "trialing")
+        .map((item) => item.userId),
+    );
+    const mrr = sum(activeSubscriptions.map((item) => PLAN_PRICES_CENTS[item.planId] || 0));
+    const arr = mrr * 12;
 
-  const revenueByDay = new Map<string, number>();
-  for (const record of paidBillingRecords) {
-    const key = dateKey(record.createdAt);
-    revenueByDay.set(key, (revenueByDay.get(key) || 0) + record.amount);
-  }
-
-  const userGrowthByDay = new Map<string, number>();
-  for (const user of users) {
-    const key = dateKey(user.createdAt);
-    userGrowthByDay.set(key, (userGrowthByDay.get(key) || 0) + 1);
-  }
-
-  const signupByWeek = new Map<string, number>();
-  const paidByWeek = new Map<string, number>();
-  for (const event of analyticsEvents) {
-    const weekKey = monthKey(event.createdAt) + `-w${Math.ceil(event.createdAt.getUTCDate() / 7)}`;
-    if (event.eventName === "signup_completed") {
-      signupByWeek.set(weekKey, (signupByWeek.get(weekKey) || 0) + 1);
+    const revenueByDay = new Map<string, number>();
+    for (const record of paidBillingRecords) {
+      const key = dateKey(record.createdAt);
+      revenueByDay.set(key, (revenueByDay.get(key) || 0) + record.amount);
     }
-    if (event.eventName === "checkout_completed") {
-      paidByWeek.set(weekKey, (paidByWeek.get(weekKey) || 0) + 1);
+
+    const userGrowthByDay = new Map<string, number>();
+    for (const user of users) {
+      const key = dateKey(user.createdAt);
+      userGrowthByDay.set(key, (userGrowthByDay.get(key) || 0) + 1);
     }
-  }
 
-  const recentWeeks = Array.from(new Set([...signupByWeek.keys(), ...paidByWeek.keys()]))
-    .sort()
-    .slice(-8);
+    const signupByWeek = new Map<string, number>();
+    const paidByWeek = new Map<string, number>();
+    for (const event of analyticsEvents) {
+      const weekKey = monthKey(event.createdAt) + `-w${Math.ceil(event.createdAt.getUTCDate() / 7)}`;
+      if (event.eventName === "signup_completed") {
+        signupByWeek.set(weekKey, (signupByWeek.get(weekKey) || 0) + 1);
+      }
+      if (event.eventName === "checkout_completed") {
+        paidByWeek.set(weekKey, (paidByWeek.get(weekKey) || 0) + 1);
+      }
+    }
 
-  const funnels = await getFunnelAnalytics({ from: "", to: "" });
-  const landingStage = funnels.stages.find((stage) => stage.name === "start_page_viewed");
-  const paidStage = funnels.stages.find((stage) => stage.name === "checkout_completed");
+    const recentWeeks = Array.from(new Set([...signupByWeek.keys(), ...paidByWeek.keys()]))
+      .sort()
+      .slice(-8);
 
-  const planDistributionMap = new Map<string, number>();
-  for (const user of users) {
-    const plan = derivePlan(user.entitlements);
-    planDistributionMap.set(plan, (planDistributionMap.get(plan) || 0) + 1);
-  }
+    const landingStage = funnels.stages.find((stage) => stage.name === "start_page_viewed");
+    const paidStage = funnels.stages.find((stage) => stage.name === "checkout_completed");
 
-  return {
-    cards: {
-      totalUsers: users.length,
-      freeUsers: Math.max(0, users.length - paidUserIds.size),
-      paidUsers: paidUserIds.size,
-      activeSubscriptions: activeSubscriptions.length,
-      totalBooks: books.length,
-      mrr,
-      arr,
-      funnelConversionRate:
-        landingStage && paidStage && landingStage.count > 0
-          ? Number(((paidStage.count / landingStage.count) * 100).toFixed(1))
-          : 0,
-    },
-    revenueTrend: toLineSeries(30, revenueByDay),
-    userGrowth: toLineSeries(30, userGrowthByDay),
-    conversionSeries: recentWeeks.map((label) => ({
-      label,
-      signups: signupByWeek.get(label) || 0,
-      paid: paidByWeek.get(label) || 0,
-    })),
-    planDistribution: Array.from(planDistributionMap.entries()).map(([label, value]) => ({
-      label: PLAN_LABELS[label] || label,
-      value,
-    })),
-    recentActivity: recentAuditLogs.map((item) => ({
-      id: item.id,
-      action: item.action,
-      entityType: item.entityType,
-      entityId: item.entityId,
-      actor: item.actorUser?.email || item.actorUser?.name || "Sistem",
-      createdAt: item.createdAt.toISOString(),
-      metadata: (item.metadata || null) as Record<string, unknown> | null,
-    })),
-  };
+    const planDistributionMap = new Map<string, number>();
+    for (const user of users) {
+      const plan = derivePlan(user.entitlements as Entitlement[]);
+      planDistributionMap.set(plan, (planDistributionMap.get(plan) || 0) + 1);
+    }
+
+    return {
+      cards: {
+        totalUsers: users.length,
+        freeUsers: Math.max(0, users.length - paidUserIds.size),
+        paidUsers: paidUserIds.size,
+        activeSubscriptions: activeSubscriptions.length,
+        totalBooks,
+        mrr,
+        arr,
+        funnelConversionRate:
+          landingStage && paidStage && landingStage.count > 0
+            ? Number(((paidStage.count / landingStage.count) * 100).toFixed(1))
+            : 0,
+      },
+      revenueTrend: toLineSeries(30, revenueByDay),
+      userGrowth: toLineSeries(30, userGrowthByDay),
+      conversionSeries: recentWeeks.map((label) => ({
+        label,
+        signups: signupByWeek.get(label) || 0,
+        paid: paidByWeek.get(label) || 0,
+      })),
+      planDistribution: Array.from(planDistributionMap.entries()).map(([label, value]) => ({
+        label: PLAN_LABELS[label] || label,
+        value,
+      })),
+      recentActivity: recentAuditLogs.map((item) => ({
+        id: item.id,
+        action: item.action,
+        entityType: item.entityType,
+        entityId: item.entityId,
+        actor: item.actorUser?.email || item.actorUser?.name || "Sistem",
+        createdAt: item.createdAt.toISOString(),
+        metadata: (item.metadata || null) as Record<string, unknown> | null,
+      })),
+    };
+  });
 }
 
 export async function getRevenueMetrics() {
-  const [records, entitlements] = await Promise.all([
-    prisma.billingRecord.findMany({
-      where: { status: "paid" },
-      orderBy: { createdAt: "asc" },
-    }),
-    prisma.entitlement.findMany(),
-  ]);
+  return withTtlCache("metrics-revenue", CACHE_TTL.revenueMetricsMs, async () => {
+    const [records, entitlements] = await Promise.all([
+      prisma.billingRecord.findMany({
+        where: { status: "paid" },
+        orderBy: { createdAt: "asc" },
+        select: {
+          createdAt: true,
+          amount: true,
+          planId: true,
+        },
+      }),
+      prisma.entitlement.findMany({
+        select: {
+          planId: true,
+          kind: true,
+          status: true,
+          endsAt: true,
+        },
+      }),
+    ]);
 
-  const monthly: Map<string, number> = new Map();
-  const byPlan = new Map<string, number>();
+    const monthly: Map<string, number> = new Map();
+    const byPlan = new Map<string, number>();
 
-  for (const record of records) {
-    const key = monthKey(record.createdAt);
-    monthly.set(key, (monthly.get(key) || 0) + record.amount);
-    byPlan.set(record.planId, (byPlan.get(record.planId) || 0) + record.amount);
-  }
+    for (const record of records) {
+      const key = monthKey(record.createdAt);
+      monthly.set(key, (monthly.get(key) || 0) + record.amount);
+      byPlan.set(record.planId, (byPlan.get(record.planId) || 0) + record.amount);
+    }
 
-  const activeSubscriptions = entitlements.filter(
-    (item) =>
-      item.kind === "subscription" &&
-      (item.status === "active" || item.status === "trialing") &&
-      (!item.endsAt || item.endsAt > new Date()),
-  );
-  const mrr = sum(activeSubscriptions.map((item) => PLAN_PRICES_CENTS[item.planId] || 0));
+    const activeSubscriptions = entitlements.filter(
+      (item) =>
+        item.kind === "subscription" &&
+        (item.status === "active" || item.status === "trialing") &&
+        (!item.endsAt || item.endsAt > new Date()),
+    );
+    const mrr = sum(activeSubscriptions.map((item) => PLAN_PRICES_CENTS[item.planId] || 0));
 
-  return {
-    mrr,
-    arr: mrr * 12,
-    totalRevenue: sum(records.map((record) => record.amount)),
-    revenueByPlan: Array.from(byPlan.entries()).map(([planId, amount]) => ({
-      planId,
-      label: PLAN_LABELS[planId] || planId,
-      amount,
-    })),
-    revenueTrend: Array.from(monthly.entries()).map(([label, amount]) => ({ label, amount })),
-  };
+    return {
+      mrr,
+      arr: mrr * 12,
+      totalRevenue: sum(records.map((record) => record.amount)),
+      revenueByPlan: Array.from(byPlan.entries()).map(([planId, amount]) => ({
+        planId,
+        label: PLAN_LABELS[planId] || planId,
+        amount,
+      })),
+      revenueTrend: Array.from(monthly.entries()).map(([label, amount]) => ({ label, amount })),
+    };
+  });
 }
 
 export async function getUserMetrics() {
-  const [users, events, billingRecords] = await Promise.all([
-    prisma.user.findMany({
-      include: { entitlements: true },
-    }),
-    prisma.analyticsEvent.findMany({
-      where: {
-        createdAt: {
-          gte: new Date(Date.now() - 90 * DAY_MS),
+  return withTtlCache("metrics-users", CACHE_TTL.userMetricsMs, async () => {
+    const [users, events, billingRecords] = await Promise.all([
+      prisma.user.findMany({
+        select: {
+          id: true,
+          createdAt: true,
+          entitlements: {
+            select: {
+              planId: true,
+              status: true,
+              endsAt: true,
+            },
+          },
         },
-      },
-    }),
-    prisma.billingRecord.findMany({
-      where: { status: "paid" },
-    }),
-  ]);
+      }),
+      prisma.analyticsEvent.findMany({
+        where: {
+          createdAt: {
+            gte: new Date(Date.now() - 90 * DAY_MS),
+          },
+        },
+        select: {
+          userId: true,
+          createdAt: true,
+        },
+      }),
+      prisma.billingRecord.findMany({
+        where: { status: "paid" },
+        select: { amount: true },
+      }),
+    ]);
 
-  const todayKey = dateKey(new Date());
-  const monthAgo = new Date(Date.now() - 30 * DAY_MS);
-  const dauUsers = new Set(
-    events.filter((event) => dateKey(event.createdAt) === todayKey).map((event) => event.userId).filter(Boolean),
-  );
-  const mauUsers = new Set(
-    events.filter((event) => event.createdAt >= monthAgo).map((event) => event.userId).filter(Boolean),
-  );
+    const todayKey = dateKey(new Date());
+    const monthAgo = new Date(Date.now() - 30 * DAY_MS);
+    const dauUsers = new Set(
+      events
+        .filter((event) => dateKey(event.createdAt) === todayKey)
+        .map((event) => event.userId)
+        .filter(Boolean),
+    );
+    const mauUsers = new Set(
+      events
+        .filter((event) => event.createdAt >= monthAgo)
+        .map((event) => event.userId)
+        .filter(Boolean),
+    );
 
-  return {
-    dau: dauUsers.size,
-    mau: mauUsers.size,
-    totalUsers: users.length,
-    newUsers30d: users.filter((user) => user.createdAt >= monthAgo).length,
-    arpu: users.length ? Math.round(sum(billingRecords.map((record) => record.amount)) / users.length) : 0,
-    paidUsers: users.filter((user) => derivePlan(user.entitlements) !== "free").length,
-  };
+    return {
+      dau: dauUsers.size,
+      mau: mauUsers.size,
+      totalUsers: users.length,
+      newUsers30d: users.filter((user) => user.createdAt >= monthAgo).length,
+      arpu: users.length ? Math.round(sum(billingRecords.map((record) => record.amount)) / users.length) : 0,
+      paidUsers: users.filter((user) => derivePlan(user.entitlements as Entitlement[]) !== "free").length,
+    };
+  });
 }
 
 export async function getBookMetrics() {
-  const [bookRecords, backendBooks] = await Promise.all([
-    prisma.bookRecord.findMany(),
-    fetchBackendBooks(),
-  ]);
+  return withTtlCache("metrics-books", CACHE_TTL.bookMetricsMs, async () => {
+    const [bookCount, backendBooks] = await Promise.all([
+      prisma.bookRecord.count(),
+      fetchBackendBooks(),
+    ]);
 
-  const statusDistribution = new Map<string, number>();
-  let chapters = 0;
-  let words = 0;
+    const statusDistribution = new Map<string, number>();
+    let chapters = 0;
+    let words = 0;
 
-  for (const book of backendBooks) {
-    const status =
-      Number(book.status?.export_count || 0) > 0
-        ? "EXPORTED"
-        : book.status?.product_ready
-          ? "PREVIEW_READY"
-          : book.status?.active
-            ? "GENERATING"
-            : "DRAFT";
-    statusDistribution.set(status, (statusDistribution.get(status) || 0) + 1);
-    chapters += Number(book.status?.chapter_count || book.chapters?.length || 0);
-    words += sum(
-      (book.chapters || []).map((chapter) =>
-        String(chapter.content || "")
-          .trim()
-          .split(/\s+/)
-          .filter(Boolean).length,
-      ),
-    );
-  }
+    for (const book of backendBooks) {
+      const status =
+        Number(book.status?.export_count || 0) > 0
+          ? "EXPORTED"
+          : book.status?.product_ready
+            ? "PREVIEW_READY"
+            : book.status?.active
+              ? "GENERATING"
+              : "DRAFT";
+      statusDistribution.set(status, (statusDistribution.get(status) || 0) + 1);
+      chapters += Number(book.status?.chapter_count || book.chapters?.length || 0);
+      words += sum(
+        (book.chapters || []).map((chapter) =>
+          String(chapter.content || "")
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean).length,
+        ),
+      );
+    }
 
-  return {
-    totalBooks: Math.max(bookRecords.length, backendBooks.length),
-    avgChapters: backendBooks.length ? Number((chapters / backendBooks.length).toFixed(1)) : 0,
-    avgWordCount: backendBooks.length ? Math.round(words / backendBooks.length) : 0,
-    byStatus: Array.from(statusDistribution.entries()).map(([status, count]) => ({ status, count })),
-  };
+    return {
+      totalBooks: Math.max(bookCount, backendBooks.length),
+      avgChapters: backendBooks.length ? Number((chapters / backendBooks.length).toFixed(1)) : 0,
+      avgWordCount: backendBooks.length ? Math.round(words / backendBooks.length) : 0,
+      byStatus: Array.from(statusDistribution.entries()).map(([status, count]) => ({ status, count })),
+    };
+  });
 }
 
 export async function getFunnelAnalytics(range: DateRangeInput) {
-  const events = await prisma.analyticsEvent.findMany({
-    where: {
-      eventName: { in: [...FUNNEL_STAGES] },
-      createdAt: {
-        ...(range.from ? { gte: new Date(range.from) } : {}),
-        ...(range.to ? { lte: new Date(new Date(range.to).getTime() + DAY_MS) } : {}),
+  const cacheKey = `analytics-funnel:${range.from || ""}:${range.to || ""}`;
+  return withTtlCache(cacheKey, CACHE_TTL.funnelAnalyticsMs, async () => {
+    const events = await prisma.analyticsEvent.findMany({
+      where: {
+        eventName: { in: [...FUNNEL_STAGES] },
+        createdAt: {
+          ...(range.from ? { gte: new Date(range.from) } : {}),
+          ...(range.to ? { lte: new Date(new Date(range.to).getTime() + DAY_MS) } : {}),
+        },
       },
-    },
-    orderBy: { createdAt: "asc" },
-  });
+      orderBy: { createdAt: "asc" },
+      select: {
+        id: true,
+        userId: true,
+        guestIdentityId: true,
+        sessionId: true,
+        eventName: true,
+        createdAt: true,
+        properties: true,
+      },
+    });
 
-  const flowMap = new Map<string, Map<string, Date>>();
-  for (const event of events) {
-    const properties = (event.properties || {}) as Record<string, unknown>;
-    const flowId =
-      String(properties.flow_id || event.userId || event.guestIdentityId || event.sessionId || event.id);
-    const flow = flowMap.get(flowId) || new Map<string, Date>();
-    if (!flow.has(event.eventName)) {
-      flow.set(event.eventName, event.createdAt);
+    const flowMap = new Map<string, Map<string, Date>>();
+    for (const event of events) {
+      const properties = (event.properties || {}) as Record<string, unknown>;
+      const flowId =
+        String(properties.flow_id || event.userId || event.guestIdentityId || event.sessionId || event.id);
+      const flow = flowMap.get(flowId) || new Map<string, Date>();
+      if (!flow.has(event.eventName)) {
+        flow.set(event.eventName, event.createdAt);
+      }
+      flowMap.set(flowId, flow);
     }
-    flowMap.set(flowId, flow);
-  }
 
-  const stages = FUNNEL_STAGES.map((stageName, index) => {
-    const count = Array.from(flowMap.values()).filter((flow) => flow.has(stageName)).length;
-    const previousStage = index > 0 ? FUNNEL_STAGES[index - 1] : null;
-    const previousCount = previousStage
-      ? Array.from(flowMap.values()).filter((flow) => flow.has(previousStage)).length
-      : count;
+    const stages = FUNNEL_STAGES.map((stageName, index) => {
+      const count = Array.from(flowMap.values()).filter((flow) => flow.has(stageName)).length;
+      const previousStage = index > 0 ? FUNNEL_STAGES[index - 1] : null;
+      const previousCount = previousStage
+        ? Array.from(flowMap.values()).filter((flow) => flow.has(previousStage)).length
+        : count;
 
-    const nextStage = FUNNEL_STAGES[index + 1] || null;
-    const durations = nextStage
-      ? Array.from(flowMap.values())
-          .filter((flow) => flow.has(stageName) && flow.has(nextStage))
-          .map((flow) => {
-            const current = flow.get(stageName);
-            const next = flow.get(nextStage);
-            if (!current || !next) return 0;
-            return Math.round((next.getTime() - current.getTime()) / (1000 * 60));
-          })
-          .filter((value) => value >= 0)
-      : [];
+      const nextStage = FUNNEL_STAGES[index + 1] || null;
+      const durations = nextStage
+        ? Array.from(flowMap.values())
+            .filter((flow) => flow.has(stageName) && flow.has(nextStage))
+            .map((flow) => {
+              const current = flow.get(stageName);
+              const next = flow.get(nextStage);
+              if (!current || !next) return 0;
+              return Math.round((next.getTime() - current.getTime()) / (1000 * 60));
+            })
+            .filter((value) => value >= 0)
+        : [];
 
-    return {
-      name: stageName,
-      count,
-      conversionRate: previousCount > 0 ? Number(((count / previousCount) * 100).toFixed(1)) : 0,
-      dropOffRate:
-        previousStage && previousCount > 0
-          ? Number((((previousCount - count) / previousCount) * 100).toFixed(1))
-          : 0,
-      avgTimeToNext: durations.length ? Math.round(sum(durations) / durations.length) : 0,
-    };
+      return {
+        name: stageName,
+        count,
+        conversionRate: previousCount > 0 ? Number(((count / previousCount) * 100).toFixed(1)) : 0,
+        dropOffRate:
+          previousStage && previousCount > 0
+            ? Number((((previousCount - count) / previousCount) * 100).toFixed(1))
+            : 0,
+        avgTimeToNext: durations.length ? Math.round(sum(durations) / durations.length) : 0,
+      };
+    });
+
+    return { stages };
   });
-
-  return { stages };
 }
 
 export async function getAuthAnalytics(range: DateRangeInput) {
-  const events = await prisma.analyticsEvent.findMany({
-    where: {
-      eventName: {
-        in: [
-          "signup_google_clicked",
-          "login_google_clicked",
-          "signup_magic_link_clicked",
-          "login_magic_link_clicked",
-          "continue_auth_password_clicked",
-          "auth_bridge_skipped",
-          "auth_form_submitted",
-          "auth_form_failed",
-          "magic_link_sent",
-          "verification_resend_clicked",
-          "checkout_blocked_unverified",
-          "signup_completed",
-        ],
+  const cacheKey = `analytics-auth:${range.from || ""}:${range.to || ""}`;
+  const events = await withTtlCache(cacheKey, CACHE_TTL.authAnalyticsMs, async () =>
+    prisma.analyticsEvent.findMany({
+      where: {
+        eventName: {
+          in: [
+            "signup_google_clicked",
+            "login_google_clicked",
+            "signup_magic_link_clicked",
+            "login_magic_link_clicked",
+            "continue_auth_password_clicked",
+            "auth_bridge_skipped",
+            "auth_form_submitted",
+            "auth_form_failed",
+            "magic_link_sent",
+            "verification_resend_clicked",
+            "checkout_blocked_unverified",
+            "signup_completed",
+          ],
+        },
+        createdAt: {
+          ...(range.from ? { gte: new Date(range.from) } : {}),
+          ...(range.to ? { lte: new Date(new Date(range.to).getTime() + DAY_MS) } : {}),
+        },
       },
-      createdAt: {
-        ...(range.from ? { gte: new Date(range.from) } : {}),
-        ...(range.to ? { lte: new Date(new Date(range.to).getTime() + DAY_MS) } : {}),
+      orderBy: { createdAt: "desc" },
+      take: 1000,
+      select: {
+        id: true,
+        eventName: true,
+        createdAt: true,
+        properties: true,
       },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 1000,
-  });
+    }),
+  );
 
   const countByEvent = new Map<string, number>();
   const methodMap = new Map<string, number>();
@@ -577,99 +767,121 @@ export async function getAuthAnalytics(range: DateRangeInput) {
 }
 
 export async function getCohortAnalysis(months = 6) {
-  const start = new Date();
-  start.setUTCMonth(start.getUTCMonth() - months + 1, 1);
-  start.setUTCHours(0, 0, 0, 0);
+  const cacheKey = `analytics-cohort:${months}`;
+  return withTtlCache(cacheKey, CACHE_TTL.cohortMs, async () => {
+    const start = new Date();
+    start.setUTCMonth(start.getUTCMonth() - months + 1, 1);
+    start.setUTCHours(0, 0, 0, 0);
 
-  const [users, events, billingRecords] = await Promise.all([
-    prisma.user.findMany({
-      where: {
-        createdAt: { gte: start },
-      },
-    }),
-    prisma.analyticsEvent.findMany({
-      where: {
-        userId: { not: null },
-        createdAt: { gte: start },
-      },
-    }),
-    prisma.billingRecord.findMany({
-      where: {
-        userId: { not: null },
-        createdAt: { gte: start },
-        status: "paid",
-      },
-    }),
-  ]);
+    const [users, events, billingRecords] = await Promise.all([
+      prisma.user.findMany({
+        where: {
+          createdAt: { gte: start },
+        },
+        select: {
+          id: true,
+          createdAt: true,
+        },
+      }),
+      prisma.analyticsEvent.findMany({
+        where: {
+          userId: { not: null },
+          createdAt: { gte: start },
+        },
+        select: {
+          userId: true,
+          createdAt: true,
+        },
+      }),
+      prisma.billingRecord.findMany({
+        where: {
+          userId: { not: null },
+          createdAt: { gte: start },
+          status: "paid",
+        },
+        select: {
+          userId: true,
+          amount: true,
+          createdAt: true,
+        },
+      }),
+    ]);
 
-  const grouped = new Map<string, User[]>();
-  for (const user of users) {
-    const key = monthKey(user.createdAt);
-    grouped.set(key, [...(grouped.get(key) || []), user]);
-  }
+    const grouped = new Map<string, Array<{ id: string; createdAt: Date }>>();
+    for (const user of users) {
+      const key = monthKey(user.createdAt);
+      grouped.set(key, [...(grouped.get(key) || []), user]);
+    }
 
-  return Array.from(grouped.entries())
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([cohort, cohortUsers]) => {
-      const size = cohortUsers.length;
-      const userIds = new Set(cohortUsers.map((user) => user.id));
-      const retention = Array.from({ length: 3 }, (_, offset) => {
-        const month = new Date(`${cohort}-01T00:00:00.000Z`);
-        month.setUTCMonth(month.getUTCMonth() + offset);
-        const key = monthKey(month);
-        const activeUsers = new Set(
-          events
-            .filter((event) => event.userId && userIds.has(event.userId) && monthKey(event.createdAt) === key)
-            .map((event) => event.userId),
-        );
-        return size ? Number(((activeUsers.size / size) * 100).toFixed(1)) : 0;
+    return Array.from(grouped.entries())
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([cohort, cohortUsers]) => {
+        const size = cohortUsers.length;
+        const userIds = new Set(cohortUsers.map((user) => user.id));
+        const retention = Array.from({ length: 3 }, (_, offset) => {
+          const month = new Date(`${cohort}-01T00:00:00.000Z`);
+          month.setUTCMonth(month.getUTCMonth() + offset);
+          const key = monthKey(month);
+          const activeUsers = new Set(
+            events
+              .filter((event) => event.userId && userIds.has(event.userId) && monthKey(event.createdAt) === key)
+              .map((event) => event.userId),
+          );
+          return size ? Number(((activeUsers.size / size) * 100).toFixed(1)) : 0;
+        });
+
+        const revenue = Array.from({ length: 3 }, (_, offset) => {
+          const month = new Date(`${cohort}-01T00:00:00.000Z`);
+          month.setUTCMonth(month.getUTCMonth() + offset);
+          const key = monthKey(month);
+          return sum(
+            billingRecords
+              .filter((record) => record.userId && userIds.has(record.userId) && monthKey(record.createdAt) === key)
+              .map((record) => record.amount),
+          );
+        });
+
+        return { cohort, size, retention, revenue };
       });
-
-      const revenue = Array.from({ length: 3 }, (_, offset) => {
-        const month = new Date(`${cohort}-01T00:00:00.000Z`);
-        month.setUTCMonth(month.getUTCMonth() + offset);
-        const key = monthKey(month);
-        return sum(
-          billingRecords
-            .filter((record) => record.userId && userIds.has(record.userId) && monthKey(record.createdAt) === key)
-            .map((record) => record.amount),
-        );
-      });
-
-      return { cohort, size, retention, revenue };
-    });
+  });
 }
 
 export async function getChurnAnalytics() {
-  const entitlements = await prisma.entitlement.findMany({
-    where: {
-      kind: "subscription",
-      createdAt: {
-        gte: new Date(Date.now() - 180 * DAY_MS),
+  return withTtlCache("analytics-churn", CACHE_TTL.churnMs, async () => {
+    const entitlements = await prisma.entitlement.findMany({
+      where: {
+        kind: "subscription",
+        createdAt: {
+          gte: new Date(Date.now() - 180 * DAY_MS),
+        },
       },
-    },
-  });
+      select: {
+        createdAt: true,
+        status: true,
+      },
+    });
 
-  const months = new Map<string, { active: number; churned: number }>();
-  for (const item of entitlements) {
-    const key = monthKey(item.createdAt);
-    const current = months.get(key) || { active: 0, churned: 0 };
-    current.active += 1;
-    if (item.status === "canceled" || item.status === "refunded" || item.status === "replaced") {
-      current.churned += 1;
+    const months = new Map<string, { active: number; churned: number }>();
+    for (const item of entitlements) {
+      const key = monthKey(item.createdAt);
+      const current = months.get(key) || { active: 0, churned: 0 };
+      current.active += 1;
+      if (item.status === "canceled" || item.status === "refunded" || item.status === "replaced") {
+        current.churned += 1;
+      }
+      months.set(key, current);
     }
-    months.set(key, current);
-  }
 
-  return {
-    byMonth: Array.from(months.entries()).map(([month, metrics]) => ({
-      month,
-      active: metrics.active,
-      churned: metrics.churned,
-      churnRate: metrics.active ? Number(((metrics.churned / metrics.active) * 100).toFixed(1)) : 0,
-    })),
-    reasons: [],
-  };
+    return {
+      byMonth: Array.from(months.entries()).map(([month, metrics]) => ({
+        month,
+        active: metrics.active,
+        churned: metrics.churned,
+        churnRate: metrics.active ? Number(((metrics.churned / metrics.active) * 100).toFixed(1)) : 0,
+      })),
+      reasons: [],
+    };
+  });
 }
 
 export async function listAdminUsers(input: {
@@ -684,18 +896,38 @@ export async function listAdminUsers(input: {
   from?: string;
   to?: string;
 }) {
-  const users = await prisma.user.findMany({
-    include: {
-      entitlements: true,
-      ownedBooks: true,
-      billingRecords: true,
-    },
-  });
+  const createdAtRange = buildCreatedAtRangeFilter(input);
+  const where: Prisma.UserWhereInput = {};
 
-  let items = users.map((user) => {
-    const plan = derivePlan(user.entitlements);
-    const status = deriveUserStatus(user.entitlements);
-    const revenue = billingTotal(user.billingRecords);
+  if (input.role && input.role !== "all") {
+    where.role = input.role as UserRole;
+  }
+  if (createdAtRange) {
+    where.createdAt = createdAtRange;
+  }
+  if (input.q) {
+    where.OR = [
+      { id: { contains: input.q } },
+      { email: { contains: input.q } },
+      { name: { contains: input.q } },
+    ];
+  }
+
+  const mapUser = (user: {
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+    role: UserRole;
+    createdAt: Date;
+    emailVerified: Date | null;
+    entitlements: Array<{ planId: string; status: Entitlement["status"]; endsAt: Date | null }>;
+    _count: { ownedBooks: number };
+    billingRecords: Array<{ amount: number; status: BillingRecordStatus }>;
+  }) => {
+    const plan = derivePlan(user.entitlements as Entitlement[]);
+    const status = deriveUserStatus(user.entitlements as Entitlement[]);
+    const revenue = billingTotal(user.billingRecords as BillingRecord[]);
     return {
       id: user.id,
       name: user.name || "İsimsiz kullanıcı",
@@ -705,19 +937,116 @@ export async function listAdminUsers(input: {
       plan,
       planLabel: PLAN_LABELS[plan] || plan,
       status,
-      books: user.ownedBooks.length,
+      books: user._count.ownedBooks,
       revenue,
       createdAt: user.createdAt.toISOString(),
       emailVerified: Boolean(user.emailVerified),
     };
+  };
+
+  const canUseDbPagination =
+    (input.plan === "all" || !input.plan) &&
+    (input.status === "all" || !input.status) &&
+    (input.sort === "createdAt" || input.sort === "books");
+
+  if (canUseDbPagination) {
+    const orderBy: Prisma.UserOrderByWithRelationInput =
+      input.sort === "books"
+        ? { ownedBooks: { _count: input.order } }
+        : { createdAt: input.order };
+
+    const [count, users] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          role: true,
+          createdAt: true,
+          emailVerified: true,
+          entitlements: {
+            select: {
+              planId: true,
+              status: true,
+              endsAt: true,
+            },
+          },
+          _count: {
+            select: {
+              ownedBooks: true,
+            },
+          },
+          billingRecords: {
+            select: {
+              amount: true,
+              status: true,
+            },
+          },
+        },
+        orderBy,
+        skip: (input.page - 1) * input.pageSize,
+        take: input.pageSize,
+      }),
+    ]);
+
+    return {
+      items: users.map(mapUser),
+      page: input.page,
+      pageSize: input.pageSize,
+      totalItems: count,
+      totalPages: Math.max(1, Math.ceil(count / input.pageSize)),
+      appliedFilters: {
+        q: input.q || null,
+        plan: input.plan || null,
+        status: input.status || null,
+        role: input.role || null,
+        from: input.from || null,
+        to: input.to || null,
+        sort: input.sort,
+        order: input.order,
+      },
+    };
+  }
+
+  const users = await prisma.user.findMany({
+    where,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      role: true,
+      createdAt: true,
+      emailVerified: true,
+      entitlements: {
+        select: {
+          planId: true,
+          status: true,
+          endsAt: true,
+        },
+      },
+      _count: {
+        select: {
+          ownedBooks: true,
+        },
+      },
+      billingRecords: {
+        select: {
+          amount: true,
+          status: true,
+        },
+      },
+    },
   });
 
+  let items = users.map(mapUser);
+
   items = items.filter((item) => {
-    if (!matchesQuery(input.q, item.name, item.email, item.id)) return false;
     if (input.plan && input.plan !== "all" && item.plan !== input.plan) return false;
     if (input.status && input.status !== "all" && item.status !== input.status) return false;
-    if (input.role && input.role !== "all" && item.role !== input.role) return false;
-    if (!withinRange(item.createdAt, input)) return false;
     return true;
   });
 
@@ -863,22 +1192,37 @@ export async function listAdminBooks(input: {
   from?: string;
   to?: string;
 }) {
-  const [bookRecords, premiumEntitlements, users, backendBooks] = await Promise.all([
-    prisma.bookRecord.findMany(),
+  const [bookRecords, premiumEntitlements, backendBooks] = await Promise.all([
+    prisma.bookRecord.findMany({
+      select: {
+        slug: true,
+        ownerUserId: true,
+        createdAt: true,
+      },
+    }),
     prisma.entitlement.findMany({
       where: {
         planId: "premium",
         status: "active",
         bookSlug: { not: null },
       },
-    }),
-    prisma.user.findMany({
-      select: { id: true, email: true, name: true },
+      select: { bookSlug: true },
     }),
     fetchBackendBooks(),
   ]);
 
+  const ownerIds = Array.from(
+    new Set(bookRecords.map((item) => item.ownerUserId).filter((id): id is string => Boolean(id))),
+  );
+  const users = ownerIds.length
+    ? await prisma.user.findMany({
+        where: { id: { in: ownerIds } },
+        select: { id: true, email: true, name: true },
+      })
+    : [];
+
   const userMap = new Map(users.map((user) => [user.id, user]));
+  const recordMap = new Map(bookRecords.map((record) => [record.slug, record]));
   const backendMap = new Map(backendBooks.map((book) => [book.slug, book]));
   const premiumSlugs = new Set(premiumEntitlements.map((item) => item.bookSlug).filter(Boolean));
   const slugSet = new Set([
@@ -887,7 +1231,7 @@ export async function listAdminBooks(input: {
   ]);
 
   let items = Array.from(slugSet).map((slug) => {
-    const record = bookRecords.find((item) => item.slug === slug) || null;
+    const record = recordMap.get(slug) || null;
     const book = backendMap.get(slug) || null;
     const owner = record?.ownerUserId ? userMap.get(record.ownerUserId) : null;
     const premiumUnlocked = premiumSlugs.has(slug);
@@ -967,19 +1311,22 @@ export async function getAdminBookDetail(slug: string) {
 
   if (!record && !book) return null;
 
-  const owner = record?.ownerUserId
-    ? await prisma.user.findUnique({
-        where: { id: record.ownerUserId },
-        select: { id: true, email: true, name: true },
-      })
-    : null;
-  const unlocked = await prisma.entitlement.findFirst({
-    where: {
-      planId: "premium",
-      bookSlug: slug,
-      status: "active",
-    },
-  });
+  const [owner, unlocked] = await Promise.all([
+    record?.ownerUserId
+      ? prisma.user.findUnique({
+          where: { id: record.ownerUserId },
+          select: { id: true, email: true, name: true },
+        })
+      : Promise.resolve(null),
+    prisma.entitlement.findFirst({
+      where: {
+        planId: "premium",
+        bookSlug: slug,
+        status: "active",
+      },
+      select: { id: true },
+    }),
+  ]);
 
   return {
     item: {
@@ -1047,16 +1394,38 @@ export async function listAdminSubscriptions(input: {
   from?: string;
   to?: string;
 }) {
-  const subscriptions = await prisma.entitlement.findMany({
-    where: { kind: "subscription" },
-    include: {
-      user: {
-        select: { id: true, email: true, name: true },
-      },
-    },
-  });
+  const startedAtRange = buildCreatedAtRangeFilter({ from: input.from, to: input.to });
+  const where: Prisma.EntitlementWhereInput = {
+    kind: "subscription",
+  };
 
-  let items = subscriptions.map((item) => ({
+  if (input.plan && input.plan !== "all") {
+    where.planId = input.plan;
+  }
+  if (input.status && input.status !== "all") {
+    where.status = input.status.toLowerCase() as Entitlement["status"];
+  }
+  if (startedAtRange) {
+    where.startsAt = startedAtRange;
+  }
+  if (input.q) {
+    where.OR = [
+      { id: { contains: input.q } },
+      { user: { email: { contains: input.q } } },
+      { user: { name: { contains: input.q } } },
+    ];
+  }
+
+  const mapSubscriptionRow = (
+    item: {
+      id: string;
+      planId: string;
+      status: Entitlement["status"];
+      startsAt: Date;
+      endsAt: Date | null;
+      user: { id: string; email: string; name: string | null };
+    },
+  ) => ({
     id: item.id,
     userId: item.user.id,
     userName: item.user.name || "İsimsiz kullanıcı",
@@ -1070,30 +1439,59 @@ export async function listAdminSubscriptions(input: {
         ? new Date(item.startsAt.getTime() + 30 * DAY_MS).toISOString()
         : item.endsAt?.toISOString() || null,
     startedAt: item.startsAt.toISOString(),
-  }));
-
-  items = items.filter((item) => {
-    if (!matchesQuery(input.q, item.userEmail, item.userName, item.id)) return false;
-    if (input.plan && input.plan !== "all" && item.planId !== input.plan) return false;
-    if (input.status && input.status !== "all" && item.status !== input.status) return false;
-    if (!withinRange(item.startedAt, input)) return false;
-    return true;
   });
 
-  items.sort((left, right) => {
-    const direction = input.order === "asc" ? 1 : -1;
-    if (input.sort === "status") return left.status.localeCompare(right.status) * direction;
-    if (input.sort === "amount") return (left.amount - right.amount) * direction;
-    return (new Date(left.startedAt).getTime() - new Date(right.startedAt).getTime()) * direction;
-  });
+  let items: Array<ReturnType<typeof mapSubscriptionRow>> = [];
+  let totalItems = 0;
 
-  const page = paginate(items, input.page, input.pageSize);
+  if (input.sort === "amount") {
+    const subscriptions = await prisma.entitlement.findMany({
+      where,
+      include: {
+        user: {
+          select: { id: true, email: true, name: true },
+        },
+      },
+    });
+    items = subscriptions
+      .map(mapSubscriptionRow)
+      .sort((left, right) =>
+        input.order === "asc"
+          ? left.amount - right.amount
+          : right.amount - left.amount,
+      );
+    totalItems = items.length;
+    items = paginate(items, input.page, input.pageSize).items;
+  } else {
+    const orderBy: Prisma.EntitlementOrderByWithRelationInput =
+      input.sort === "status"
+        ? { status: input.order }
+        : { startsAt: input.order };
+    const [count, subscriptions] = await Promise.all([
+      prisma.entitlement.count({ where }),
+      prisma.entitlement.findMany({
+        where,
+        include: {
+          user: {
+            select: { id: true, email: true, name: true },
+          },
+        },
+        orderBy,
+        skip: (input.page - 1) * input.pageSize,
+        take: input.pageSize,
+      }),
+    ]);
+    totalItems = count;
+    items = subscriptions.map(mapSubscriptionRow);
+  }
+
+  const totalPages = Math.max(1, Math.ceil(totalItems / input.pageSize));
   return {
-    items: page.items,
+    items,
     page: input.page,
     pageSize: input.pageSize,
-    totalItems: page.totalItems,
-    totalPages: page.totalPages,
+    totalItems,
+    totalPages,
     appliedFilters: {
       q: input.q || null,
       plan: input.plan || null,
@@ -1116,15 +1514,46 @@ export async function listAdminBillingRecords(input: {
   from?: string;
   to?: string;
 }) {
-  const records = await prisma.billingRecord.findMany({
-    include: {
-      user: {
-        select: { id: true, email: true, name: true },
-      },
-    },
-  });
+  const createdAtRange = buildCreatedAtRangeFilter(input);
+  const where: Prisma.BillingRecordWhereInput = {};
+  if (input.status && input.status !== "all") {
+    where.status = input.status as BillingRecordStatus;
+  }
+  if (createdAtRange) {
+    where.createdAt = createdAtRange;
+  }
+  if (input.q) {
+    where.OR = [
+      { id: { contains: input.q } },
+      { bookSlug: { contains: input.q } },
+      { user: { email: { contains: input.q } } },
+      { user: { name: { contains: input.q } } },
+    ];
+  }
 
-  let items = records.map((item) => ({
+  let orderBy: Prisma.BillingRecordOrderByWithRelationInput = { createdAt: input.order };
+  if (input.sort === "amount") {
+    orderBy = { amount: input.order };
+  } else if (input.sort === "status") {
+    orderBy = { status: input.order };
+  }
+
+  const [count, records] = await Promise.all([
+    prisma.billingRecord.count({ where }),
+    prisma.billingRecord.findMany({
+      where,
+      include: {
+        user: {
+          select: { id: true, email: true, name: true },
+        },
+      },
+      orderBy,
+      skip: (input.page - 1) * input.pageSize,
+      take: input.pageSize,
+    }),
+  ]);
+
+  const items = records.map((item) => ({
     id: item.id,
     invoiceId: item.id,
     userId: item.userId,
@@ -1139,27 +1568,13 @@ export async function listAdminBillingRecords(input: {
     bookSlug: item.bookSlug,
   }));
 
-  items = items.filter((item) => {
-    if (!matchesQuery(input.q, item.invoiceId, item.userEmail, item.userName, item.bookSlug)) return false;
-    if (input.status && input.status !== "all" && item.status !== input.status) return false;
-    if (!withinRange(item.createdAt, input)) return false;
-    return true;
-  });
-
-  items.sort((left, right) => {
-    const direction = input.order === "asc" ? 1 : -1;
-    if (input.sort === "amount") return (left.amount - right.amount) * direction;
-    if (input.sort === "status") return left.status.localeCompare(right.status) * direction;
-    return (new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()) * direction;
-  });
-
-  const page = paginate(items, input.page, input.pageSize);
+  const totalPages = Math.max(1, Math.ceil(count / input.pageSize));
   return {
-    items: page.items,
+    items,
     page: input.page,
     pageSize: input.pageSize,
-    totalItems: page.totalItems,
-    totalPages: page.totalPages,
+    totalItems: count,
+    totalPages,
     appliedFilters: {
       q: input.q || null,
       status: input.status || null,
@@ -1193,40 +1608,57 @@ export async function listAdminAuditLogs(input: {
   from?: string;
   to?: string;
 }) {
-  const logs = await prisma.auditLog.findMany({
-    include: {
-      actorUser: {
-        select: { id: true, email: true, name: true },
+  const createdAtRange = buildCreatedAtRangeFilter(input);
+  const where: Prisma.AuditLogWhereInput = {};
+  if (input.action && input.action !== "all") {
+    where.action = input.action;
+  }
+  if (createdAtRange) {
+    where.createdAt = createdAtRange;
+  }
+  if (input.q) {
+    where.OR = [
+      { action: { contains: input.q } },
+      { entityType: { contains: input.q } },
+      { entityId: { contains: input.q } },
+      { actorUser: { email: { contains: input.q } } },
+      { actorUser: { name: { contains: input.q } } },
+    ];
+  }
+
+  const [count, logs] = await Promise.all([
+    prisma.auditLog.count({ where }),
+    prisma.auditLog.findMany({
+      where,
+      include: {
+        actorUser: {
+          select: { id: true, email: true, name: true },
+        },
       },
-    },
-    orderBy: { createdAt: input.order },
-  });
+      orderBy: { createdAt: input.order },
+      skip: (input.page - 1) * input.pageSize,
+      take: input.pageSize,
+    }),
+  ]);
 
-  const items = logs
-    .filter((item) => {
-      if (!matchesQuery(input.q, item.action, item.entityType, item.entityId, item.actorUser?.email, item.actorUser?.name)) return false;
-      if (input.action && input.action !== "all" && item.action !== input.action) return false;
-      if (!withinRange(item.createdAt, input)) return false;
-      return true;
-    })
-    .map((item) => ({
-      id: item.id,
-      timestamp: item.createdAt.toISOString(),
-      user: item.actorUser?.email || item.actorUser?.name || "Sistem",
-      action: item.action,
-      details: item.metadata,
-      ipAddress: item.ipHash || "—",
-      entityType: item.entityType,
-      entityId: item.entityId,
-    }));
+  const items = logs.map((item) => ({
+    id: item.id,
+    timestamp: item.createdAt.toISOString(),
+    user: item.actorUser?.email || item.actorUser?.name || "Sistem",
+    action: item.action,
+    details: item.metadata,
+    ipAddress: item.ipHash || "—",
+    entityType: item.entityType,
+    entityId: item.entityId,
+  }));
 
-  const page = paginate(items, input.page, input.pageSize);
+  const totalPages = Math.max(1, Math.ceil(count / input.pageSize));
   return {
-    items: page.items,
+    items,
     page: input.page,
     pageSize: input.pageSize,
-    totalItems: page.totalItems,
-    totalPages: page.totalPages,
+    totalItems: count,
+    totalPages,
     appliedFilters: {
       q: input.q || null,
       action: input.action || null,
@@ -1245,20 +1677,80 @@ export async function listAdminModerationQueue(input: {
   sort: string;
   order: "asc" | "desc";
   status?: string;
+  summaryOnly?: boolean;
 }) {
-  const reviews = await prisma.moderationReview.findMany({
-    orderBy: { createdAt: input.order },
-  });
-  const books = await fetchBackendBooks();
-  const bookMap = new Map(books.map((book) => [book.slug, book]));
+  const where: Prisma.ModerationReviewWhereInput = {};
+  if (input.status && input.status !== "all") {
+    where.status = input.status as ModerationStatus;
+  }
 
-  const items = reviews
-    .filter((item) => {
-      if (!matchesQuery(input.q, item.bookSlug, bookMap.get(item.bookSlug)?.title)) return false;
-      if (input.status && input.status !== "all" && item.status !== input.status) return false;
-      return true;
-    })
-    .map((item) => ({
+  if (input.summaryOnly) {
+    const totalItems = await prisma.moderationReview.count({ where });
+    const totalPages = Math.max(1, Math.ceil(totalItems / input.pageSize));
+    return {
+      items: [],
+      page: input.page,
+      pageSize: input.pageSize,
+      totalItems,
+      totalPages,
+      appliedFilters: {
+        q: input.q || null,
+        status: input.status || null,
+        sort: input.sort,
+        order: input.order,
+      },
+    };
+  }
+
+  let items: Array<{
+    id: string;
+    bookSlug: string;
+    bookTitle: string;
+    status: string;
+    qualityScore: number | null;
+    plagiarismScore: number | null;
+    createdAt: string;
+  }> = [];
+  let totalItems = 0;
+
+  if (input.q) {
+    const [reviews, books] = await Promise.all([
+      prisma.moderationReview.findMany({
+        where,
+        orderBy: { createdAt: input.order },
+      }),
+      fetchBackendBooks(),
+    ]);
+    const bookMap = new Map(books.map((book) => [book.slug, book]));
+    const filtered = reviews
+      .filter((item) =>
+        matchesQuery(input.q, item.bookSlug, bookMap.get(item.bookSlug)?.title),
+      )
+      .map((item) => ({
+        id: item.id,
+        bookSlug: item.bookSlug,
+        bookTitle: bookMap.get(item.bookSlug)?.title || item.bookSlug,
+        status: item.status,
+        qualityScore: item.qualityScore,
+        plagiarismScore: item.plagiarismScore,
+        createdAt: item.createdAt.toISOString(),
+      }));
+    totalItems = filtered.length;
+    items = paginate(filtered, input.page, input.pageSize).items;
+  } else {
+    const [count, reviews, books] = await Promise.all([
+      prisma.moderationReview.count({ where }),
+      prisma.moderationReview.findMany({
+        where,
+        orderBy: { createdAt: input.order },
+        skip: (input.page - 1) * input.pageSize,
+        take: input.pageSize,
+      }),
+      fetchBackendBooks(),
+    ]);
+    totalItems = count;
+    const bookMap = new Map(books.map((book) => [book.slug, book]));
+    items = reviews.map((item) => ({
       id: item.id,
       bookSlug: item.bookSlug,
       bookTitle: bookMap.get(item.bookSlug)?.title || item.bookSlug,
@@ -1267,14 +1759,15 @@ export async function listAdminModerationQueue(input: {
       plagiarismScore: item.plagiarismScore,
       createdAt: item.createdAt.toISOString(),
     }));
+  }
 
-  const page = paginate(items, input.page, input.pageSize);
+  const totalPages = Math.max(1, Math.ceil(totalItems / input.pageSize));
   return {
-    items: page.items,
+    items,
     page: input.page,
     pageSize: input.pageSize,
-    totalItems: page.totalItems,
-    totalPages: page.totalPages,
+    totalItems,
+    totalPages,
     appliedFilters: {
       q: input.q || null,
       status: input.status || null,
@@ -1284,42 +1777,50 @@ export async function listAdminModerationQueue(input: {
   };
 }
 
-export async function listAdminJobs() {
-  const books = await fetchBackendBooks();
-  const items = books
-    .filter((book) => {
-      const status = book.status || {};
-      return Boolean(status.active || status.error || status.started_at || status.updated_at);
-    })
-    .map((book) => {
-      const status = book.status || {};
-      let lifecycle = "completed";
-      if (status.error) lifecycle = "failed";
-      else if (status.active) lifecycle = "processing";
-      else if (!status.product_ready) lifecycle = "pending";
+export async function listAdminJobs(options?: { summaryOnly?: boolean }) {
+  const cacheKey = options?.summaryOnly ? "admin-jobs:summary" : "admin-jobs:full";
+  return withTtlCache(cacheKey, CACHE_TTL.jobsMs, async () => {
+    const books = await fetchBackendBooks();
+    const items = books
+      .filter((book) => {
+        const status = book.status || {};
+        return Boolean(status.active || status.error || status.started_at || status.updated_at);
+      })
+      .map((book) => {
+        const status = book.status || {};
+        let lifecycle = "completed";
+        if (status.error) lifecycle = "failed";
+        else if (status.active) lifecycle = "processing";
+        else if (!status.product_ready) lifecycle = "pending";
 
-      return {
-        id: book.slug,
-        type: status.cover_ready || status.first_chapter_ready ? "preview_pipeline" : "book_generation",
-        bookSlug: book.slug,
-        title: book.title,
-        status: lifecycle,
-        progress: Number(status.progress || 0),
-        startedAt: status.started_at || status.updated_at || new Date().toISOString(),
-        message: status.message || status.error || "Hazır",
-      };
-    })
-    .sort((left, right) => new Date(right.startedAt).getTime() - new Date(left.startedAt).getTime());
+        return {
+          id: book.slug,
+          type: status.cover_ready || status.first_chapter_ready ? "preview_pipeline" : "book_generation",
+          bookSlug: book.slug,
+          title: book.title,
+          status: lifecycle,
+          progress: Number(status.progress || 0),
+          startedAt: status.started_at || status.updated_at || new Date().toISOString(),
+          message: status.message || status.error || "Hazır",
+        };
+      });
 
-  return {
-    items,
-    summary: {
+    const summary = {
       active: items.filter((item) => item.status === "processing").length,
       pending: items.filter((item) => item.status === "pending").length,
       failed: items.filter((item) => item.status === "failed").length,
       queueDepth: items.filter((item) => item.status !== "completed").length,
-    },
-  };
+    };
+
+    if (options?.summaryOnly) {
+      return { items: [], summary };
+    }
+
+    return {
+      items: items.sort((left, right) => new Date(right.startedAt).getTime() - new Date(left.startedAt).getTime()),
+      summary,
+    };
+  });
 }
 
 export async function getAdminSettingsPayload() {
@@ -1399,4 +1900,83 @@ export async function unlockBookPremium(slug: string, actorUserId: string) {
   });
 
   return { entitlement, billingRecord };
+}
+
+export async function changeUserPlan(
+  userId: string,
+  newPlanId: string,
+  actorUserId: string,
+  reason?: string,
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { entitlements: true },
+  });
+  if (!user) {
+    throw new Error("Kullanıcı bulunamadı.");
+  }
+
+  // Derive current plan before changes
+  const oldPlan = derivePlan(user.entitlements);
+
+  // If already on this plan, nothing to do
+  if (oldPlan === newPlanId) {
+    return { oldPlan, newPlan: newPlanId, entitlement: null, billingRecord: null };
+  }
+
+  // Cancel existing active entitlements
+  const activeEntitlements = user.entitlements.filter(
+    (item) =>
+      item.status === "active" ||
+      item.status === "trialing",
+  );
+
+  if (activeEntitlements.length > 0) {
+    await prisma.entitlement.updateMany({
+      where: {
+        id: { in: activeEntitlements.map((e) => e.id) },
+      },
+      data: {
+        status: "replaced",
+        endsAt: new Date(),
+      },
+    });
+  }
+
+  // If upgrading to a paid plan, create a new active entitlement
+  let entitlement = null;
+  let billingRecord = null;
+
+  if (newPlanId !== "free") {
+    entitlement = await prisma.entitlement.create({
+      data: {
+        userId,
+        planId: newPlanId,
+        kind: "subscription",
+        status: "active",
+        provider: "admin_manual",
+      },
+    });
+
+    billingRecord = await prisma.billingRecord.create({
+      data: {
+        userId,
+        entitlementId: entitlement.id,
+        planId: newPlanId,
+        kind: "manual_adjustment",
+        status: "paid",
+        amount: 0,
+        currency: PLAN_CURRENCY,
+        description: `Admin tarafından plan değiştirildi: ${PLAN_LABELS[oldPlan] || oldPlan} → ${PLAN_LABELS[newPlanId] || newPlanId}${reason ? ` | Sebep: ${reason}` : ""}`,
+        metadata: {
+          actorUserId,
+          oldPlan,
+          newPlan: newPlanId,
+          reason: reason || null,
+        } as never,
+      },
+    });
+  }
+
+  return { oldPlan, newPlan: newPlanId, entitlement, billingRecord };
 }

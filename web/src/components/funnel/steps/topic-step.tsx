@@ -1,11 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { trackEvent } from "@/lib/analytics";
 import {
   bookTypeLabel,
+  languageDescription,
+  languageLabel,
+  isTurkishLanguage,
+  SUPPORTED_LANGUAGES,
   type FunnelBookType,
   type FunnelDraft,
   type FunnelLanguage,
@@ -27,7 +29,6 @@ export function TopicStep({
   onUpdate,
   onNext,
   error,
-  onError,
 }: {
   draft: FunnelDraft;
   onUpdate: (changes: Partial<FunnelDraft>) => void;
@@ -35,89 +36,127 @@ export function TopicStep({
   error: string;
   onError: (msg: string) => void;
 }) {
-  return (
-    <div className="space-y-8">
-      {/* Context hint — replaces the 3 info cards */}
-      <div className="rounded-[20px] border border-primary/15 bg-primary/[0.04] px-5 py-4">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 size-2 shrink-0 rounded-full bg-primary" />
-          <div className="text-sm leading-7 text-muted-foreground">
-            Konuyu net yazdığında başlık önerileri ve bölüm planı otomatik gelir.
-            Hemen ardından kitabın gerçekten çıkmaya değer olup olmadığını ön izlemeyle göreceksin.
-          </div>
-        </div>
-      </div>
+  const topicPlaceholder = isTurkishLanguage(draft.language)
+    ? "Kitabının konusunu yaz... Örn: Yapay zeka ile içerik üretimi, Dijital pazarlama rehberi..."
+    : "Write your book topic... e.g. AI-assisted content creation, practical digital marketing playbook...";
+  const audiencePlaceholder = isTurkishLanguage(draft.language)
+    ? "örnek: yeni başlayan oyuncular ve ebeveynler"
+    : "example: first-time founders and content creators";
 
-      {/* Topic textarea — primary focus */}
-      <div className="space-y-2">
-        <label htmlFor="topic" className="text-sm font-semibold text-foreground">
-          Kitabın konusu ne?
+  return (
+    <form id="wizard-form" onSubmit={(e) => { e.preventDefault(); onNext(); }} className="space-y-8">
+      {/* ─── Language selector — FIRST REQUIRED STEP ─── */}
+      <div className="space-y-2.5">
+        <label htmlFor="language" className="text-base sm:text-lg font-bold text-foreground">
+          Kitap dili
         </label>
-        <Textarea
-          id="topic"
-          value={draft.topic}
-          onChange={(event) => onUpdate({ topic: event.target.value })}
-          placeholder={"örnek: danışmanların uzmanlığını lead magnet ve authority book'a dönüştürme rehberi"}
-          rows={4}
-          autoFocus
-          className="resize-none text-base leading-7 placeholder:text-muted-foreground/60 min-h-[120px]"
-        />
-        <p className="text-xs text-muted-foreground/70">
-          Sorun, hedef okur ve vaat ne kadar netse çıkan outline o kadar iyi olur.
+        <select
+          id="language"
+          value={draft.language}
+          onChange={(event) =>
+            onUpdate({
+              language: event.target.value as FunnelLanguage,
+              languageLocked: true,
+            })}
+          className="h-14 w-full rounded-2xl px-4 text-base bg-card text-foreground outline-none border-2 border-border/70 shadow-sm focus-visible:border-primary/40 focus-visible:shadow-md"
+        >
+          {SUPPORTED_LANGUAGES.map((language) => (
+            <option key={language.value} value={language.value}>
+              {language.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-sm text-muted-foreground bg-muted/50 rounded-xl px-4 py-2.5">
+          <span className="font-medium text-foreground/80">{languageLabel(draft.language)}</span> — {languageDescription(draft.language)}
         </p>
       </div>
 
-      {/* Book type — visual cards */}
+      {/* ─── Topic textarea — HERO of the page ─── */}
+      <div className="space-y-2.5">
+        <label
+          htmlFor="topic"
+          className="text-base sm:text-lg font-bold text-foreground"
+        >
+          Kitabının konusu ne?
+        </label>
+        <Textarea
+          id="topic"
+          name="topic"
+          value={draft.topic}
+          onChange={(event) => onUpdate({ topic: event.target.value })}
+          placeholder={topicPlaceholder}
+          rows={4}
+          autoFocus
+          className="resize-none text-lg sm:text-xl leading-8 placeholder:text-lg placeholder:text-muted-foreground/50 min-h-[200px] sm:min-h-[240px] px-5 py-4 rounded-2xl border-2 border-border/70 bg-background shadow-sm focus-visible:border-primary/40 focus-visible:shadow-md focus-visible:ring-primary/20 transition-all duration-200"
+        />
+        <p className="text-sm text-muted-foreground bg-muted/50 rounded-xl px-4 py-2.5">
+          💡 Konuyu net yazdığında başlık önerileri ve bölüm planı otomatik gelir.
+        </p>
+      </div>
+
+      {/* ─── Book type — visual cards ─── */}
       <div className="space-y-3">
-        <div className="text-sm font-semibold text-foreground">Kitap tipi</div>
+        <div className="text-base font-bold text-foreground">
+          Kitap tipi
+        </div>
         <ChoiceGrid
           values={BOOK_TYPES}
           selected={draft.bookType}
           labelFor={(value) => bookTypeLabel(value)}
           descriptionFor={(value) => BOOK_TYPE_DESCRIPTIONS[value]}
           onSelect={(value) => onUpdate({ bookType: value })}
-          columns="md:grid-cols-2 xl:grid-cols-3"
+          columns="grid-cols-2"
         />
       </div>
 
-      {/* Target audience — optional, collapsible feel */}
-      <div className="space-y-2">
-        <label htmlFor="audience" className="text-sm font-semibold text-foreground">
-          Hedef okur <span className="font-normal text-muted-foreground">(isteğe bağlı)</span>
+      {/* ─── Target audience — optional ─── */}
+      <div className="space-y-2.5">
+        <label
+          htmlFor="audience"
+          className="text-base sm:text-lg font-bold text-foreground"
+        >
+          Hedef okur{" "}
+          <span className="font-normal text-muted-foreground/50">
+            (isteğe bağlı)
+          </span>
         </label>
         <Input
           id="audience"
+          name="audience"
           value={draft.audience}
           onChange={(event) => onUpdate({ audience: event.target.value })}
-          placeholder="örnek: yeni başlayan oyuncular ve ebeveynler"
-          className="h-12 text-base"
+          placeholder={audiencePlaceholder}
+          className="h-14 text-base rounded-2xl px-4 border-2"
         />
-      </div>
-
-      {error ? (
-        <div role="alert" className="rounded-[16px] border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
-          {error}
-        </div>
-      ) : null}
-
-      {/* Actions */}
-      <div className="flex flex-wrap items-center gap-3 pt-1">
-        <Button size="lg" onClick={onNext}>
-          Başlık Önerilerine Geç
-        </Button>
-        <Button
-          variant="outline"
-          size="lg"
+        <button
+          type="button"
+          className="text-sm py-2 px-4 text-muted-foreground underline underline-offset-2 decoration-muted-foreground/30 hover:text-foreground hover:decoration-foreground transition-all duration-200 rounded-lg hover:bg-muted/50"
           onClick={() =>
             onUpdate({
-              topic: draft.topic || "uzmanlığını kitaba dönüştürmek isteyen danışmanlar için authority book rehberi",
-              audience: draft.audience || "koçlar, danışmanlar ve course creator'lar",
+              topic:
+                draft.topic ||
+                (isTurkishLanguage(draft.language)
+                  ? "uzmanlığını kitaba dönüştürmek isteyen danışmanlar için authority book rehberi"
+                  : "authority book playbook for consultants who want to turn expertise into a book"),
+              audience:
+                draft.audience ||
+                (isTurkishLanguage(draft.language)
+                  ? "koçlar, danışmanlar ve course creator'lar"
+                  : "coaches, consultants, and course creators"),
             })
           }
         >
           Örnek Doldur
-        </Button>
+        </button>
       </div>
-    </div>
+
+      {/* ─── Error display ─── */}
+      {error ? (
+        <div role="alert" className="text-sm sm:text-base text-destructive bg-destructive/5 rounded-xl px-4 py-3 flex items-start gap-2">
+          <span className="shrink-0 mt-0.5">⚠️</span>
+          <span>{error}</span>
+        </div>
+      ) : null}
+    </form>
   );
 }

@@ -19,9 +19,7 @@ const MOTIVATION_FACTS = [
 
 export default function RootLoading() {
   const [factIndex, setFactIndex] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(() => (
-    typeof window === "undefined" ? null : getSession() !== null
-  ));
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     // Rotate facts every 4 seconds
@@ -33,6 +31,7 @@ export default function RootLoading() {
 
   useEffect(() => {
     let active = true;
+    setIsLoggedIn(getSession() !== null);
 
     void syncPreviewAuthState().then((payload) => {
       if (!active) return;

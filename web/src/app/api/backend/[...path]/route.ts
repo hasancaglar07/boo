@@ -8,6 +8,7 @@ import {
   attachGuestCookie,
   canAccessBookPreview,
   canAccessFullBook,
+  claimGuestBooksForUser,
   enrichPreviewEntitlements,
   extractSlugFromWorkspacePath,
   getBookStartAllowance,
@@ -26,17 +27,77 @@ const BACKEND_ORIGIN =
   process.env.DASHBOARD_ORIGIN ||
   process.env.NEXT_PUBLIC_DASHBOARD_ORIGIN ||
   "http://127.0.0.1:8765";
-const BACKEND_FETCH_TIMEOUT_MS = 30_000;
+const BACKEND_FETCH_TIMEOUT_MS = 60_000;
+const BACKEND_BOOKS_FETCH_TIMEOUT_MS = 45_000;
+const BACKEND_UNREACHABLE_LOG_THROTTLE_MS = 5_000;
+const BACKEND_UNAVAILABLE_BACKOFF_MS = 5_000;
 
 const IMAGE_FILE_PATTERN = /\.(png|jpe?g|webp|gif|svg|ico)$/i;
 
 export const runtime = "nodejs";
 
 class BackendUnavailableError extends Error {
+  readonly code = "BACKEND_UNAVAILABLE";
+
   constructor() {
     super("BACKEND_UNAVAILABLE");
     this.name = "BackendUnavailableError";
   }
+}
+
+declare global {
+  var __backendLastUnreachableLogAt: number | undefined;
+  var __backendUnavailableUntilByPath: Record<string, number> | undefined;
+}
+
+function isBackendUnavailableLike(error: unknown) {
+  if (error instanceof BackendUnavailableError) return true;
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { name?: unknown; code?: unknown; message?: unknown };
+  if (candidate.name === "BackendUnavailableError") return true;
+  if (candidate.code === "BACKEND_UNAVAILABLE") return true;
+  return typeof candidate.message === "string" && candidate.message.includes("BACKEND_UNAVAILABLE");
+}
+
+function logUpstreamUnavailable(details: {
+  method: string;
+  upstream: string;
+  timeoutMs: number;
+  reason: string;
+}) {
+  const now = Date.now();
+  const last = globalThis.__backendLastUnreachableLogAt || 0;
+  if (now - last < BACKEND_UNREACHABLE_LOG_THROTTLE_MS) return;
+  globalThis.__backendLastUnreachableLogAt = now;
+  console.error("[api/backend] upstream unreachable", details);
+}
+
+function backendCircuitKeyForPath(upstreamPath: string) {
+  if (upstreamPath === "/api/settings") return "/api/settings";
+  if (upstreamPath === "/api/books" || upstreamPath.startsWith("/api/books/")) return "/api/books";
+  return null;
+}
+
+function markBackendUnavailable(pathKey: string | null) {
+  if (!pathKey) return;
+  const cache = globalThis.__backendUnavailableUntilByPath || {};
+  cache[pathKey] = Date.now() + BACKEND_UNAVAILABLE_BACKOFF_MS;
+  globalThis.__backendUnavailableUntilByPath = cache;
+}
+
+function clearBackendUnavailable(pathKey: string | null) {
+  if (!pathKey) return;
+  const cache = globalThis.__backendUnavailableUntilByPath;
+  if (!cache) return;
+  cache[pathKey] = 0;
+}
+
+function shouldShortCircuitBackend(pathKey: string | null) {
+  if (!pathKey) return false;
+  const cache = globalThis.__backendUnavailableUntilByPath;
+  if (!cache) return false;
+  const until = cache[pathKey] || 0;
+  return Date.now() < until;
 }
 
 function jsonError(status: number, error: string, code?: string) {
@@ -90,10 +151,24 @@ async function forwardToBackend(
   const url = new URL(upstreamPath, BACKEND_ORIGIN);
   url.search = request.nextUrl.search;
 
+  const timeoutMs =
+    upstreamPath === "/api/books" && request.method === "GET"
+      ? BACKEND_BOOKS_FETCH_TIMEOUT_MS
+      : BACKEND_FETCH_TIMEOUT_MS;
+  const circuitPathKey = request.method === "GET" ? backendCircuitKeyForPath(upstreamPath) : null;
+
+  if (shouldShortCircuitBackend(circuitPathKey)) {
+    throw new BackendUnavailableError();
+  }
+
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), BACKEND_FETCH_TIMEOUT_MS);
+  let didTimeout = false;
+  const timeout = setTimeout(() => {
+    didTimeout = true;
+    controller.abort();
+  }, timeoutMs);
   try {
-    return await fetch(url, {
+    const response = await fetch(url, {
       method: request.method,
       headers,
       body:
@@ -104,7 +179,23 @@ async function forwardToBackend(
       redirect: "manual",
       signal: controller.signal,
     });
-  } catch {
+    clearBackendUnavailable(circuitPathKey);
+    return response;
+  } catch (error) {
+    const reason =
+      error instanceof Error
+        ? `${error.name}: ${error.message}`
+        : String(error);
+    const isAbortError = error instanceof Error && error.name === "AbortError";
+    if (didTimeout || !isAbortError) {
+      logUpstreamUnavailable({
+        method: request.method,
+        upstream: url.toString(),
+        timeoutMs,
+        reason,
+      });
+      markBackendUnavailable(circuitPathKey);
+    }
     throw new BackendUnavailableError();
   } finally {
     clearTimeout(timeout);
@@ -157,12 +248,23 @@ async function requirePreviewAccess(input: {
 async function requireFullAccess(input: {
   slug: string;
   userId: string | null;
+  guestIdentityId?: string | null;
 }) {
   if (!input.userId) {
     return jsonError(401, "Bu işlem için oturum gerekli.", "AUTH_REQUIRED");
   }
 
-  const ownsBook = await canAccessBookPreview(viewerFromIds(input.userId, null), input.slug);
+  let ownsBook = await canAccessBookPreview(viewerFromIds(input.userId, null), input.slug);
+  if (!ownsBook && input.guestIdentityId) {
+    const guestHasBook = await canAccessBookPreview(viewerFromIds(null, input.guestIdentityId), input.slug);
+    if (guestHasBook) {
+      await claimGuestBooksForUser({
+        userId: input.userId,
+        guestIdentityId: input.guestIdentityId,
+      }).catch(() => 0);
+      ownsBook = await canAccessBookPreview(viewerFromIds(input.userId, null), input.slug);
+    }
+  }
   if (!ownsBook) {
     return jsonError(403, "Bu kitaba erişim iznin yok.", "BOOK_ACCESS_DENIED");
   }
@@ -203,6 +305,7 @@ async function handleBookCreateOrUpdate(
   request: NextRequest,
   body: ArrayBuffer | null,
   userId: string | null,
+  guestIdentityId: string | null,
 ) {
   const payload = await readJsonBody(body);
   const slug = typeof payload?.slug === "string" ? payload.slug.trim() : "";
@@ -217,6 +320,7 @@ async function handleBookCreateOrUpdate(
     const denied = await requireFullAccess({
       slug: existingBook.slug,
       userId,
+      guestIdentityId,
     });
     if (denied) {
       return denied;
@@ -250,17 +354,17 @@ async function handleBookCreateOrUpdate(
     }
   }
 
-  let guestIdentityId: string | null = null;
+  let createdGuestIdentityId: string | null = null;
   let guestToken: string | null = null;
 
   if (!userId) {
     const guestIdentity = await getOrCreateGuestIdentity();
-    guestIdentityId = guestIdentity.guest.id;
+    createdGuestIdentityId = guestIdentity.guest.id;
     guestToken = guestIdentity.rawToken;
 
     const rateLimit = await consumeRateLimit({
       scope: "guest-generate",
-      key: requestMeta(request).ipHash || guestIdentityId,
+      key: requestMeta(request).ipHash || createdGuestIdentityId,
       ...GUEST_GENERATE_RATE_LIMIT,
     });
     if (!rateLimit.allowed) {
@@ -286,7 +390,7 @@ async function handleBookCreateOrUpdate(
     await assignBookOwner({
       slug: createdSlug,
       userId,
-      guestIdentityId,
+      guestIdentityId: createdGuestIdentityId,
       origin: "api.books.create",
       statusSnapshot: upstreamPayload.status,
     });
@@ -338,6 +442,31 @@ async function handleBookScopedRoute(
     if (action === "preview") {
       const payload = (await response.json()) as Record<string, unknown>;
       const enriched = await enrichPreviewEntitlements(payload, userId, slug);
+      const entitlements = (enriched.entitlements || {}) as Record<string, unknown>;
+      const canViewFullBook = Boolean(entitlements.can_view_full_book);
+      const generation = (enriched.generation && typeof enriched.generation === "object")
+        ? (enriched.generation as Record<string, unknown>)
+        : {};
+      const fullGenerationRaw = generation.full_generation;
+      const fullGeneration = (fullGenerationRaw && typeof fullGenerationRaw === "object")
+        ? (fullGenerationRaw as Record<string, unknown>)
+        : {};
+      const fullGenerationComplete = Boolean(fullGeneration.complete);
+      const fullGenerationStage = String(fullGeneration.stage || "").trim().toLowerCase();
+      const shouldBootstrapFullGeneration =
+        canViewFullBook &&
+        !fullGenerationComplete &&
+        fullGenerationStage !== "queued" &&
+        fullGenerationStage !== "running";
+      if (shouldBootstrapFullGeneration) {
+        void forwardToBackend(
+          request,
+          `/api/books/${encodeURIComponent(slug)}/full-bootstrap`,
+          null,
+        ).catch(() => {
+          // Continue rendering preview even if background full-generation bootstrap fails.
+        });
+      }
       return NextResponse.json(enriched, { status: response.status });
     }
 
@@ -347,6 +476,7 @@ async function handleBookScopedRoute(
   const denied = await requireFullAccess({
     slug,
     userId,
+    guestIdentityId,
   });
   if (denied) {
     return denied;
@@ -386,6 +516,7 @@ async function handleWorkflowRoute(
         const denied = await requireFullAccess({
           slug: record.slug,
           userId,
+          guestIdentityId,
         });
         if (denied) {
           return denied;
@@ -447,6 +578,7 @@ async function handleWorkspaceRoute(
   const fullDenied = await requireFullAccess({
     slug,
     userId,
+    guestIdentityId,
   });
   if (fullDenied) {
     return fullDenied;
@@ -470,43 +602,43 @@ async function handleProxyRequest(
     const guestIdentityId = guest?.id || null;
 
     if (upstreamPath === "/api/health") {
-      return forwardResponse(request, upstreamPath, body);
+      return await forwardResponse(request, upstreamPath, body);
     }
 
     if (upstreamPath === "/api/books" && request.method === "GET") {
-      return handleBooksIndex(request, body, userId, guestIdentityId);
+      return await handleBooksIndex(request, body, userId, guestIdentityId);
     }
 
     if (upstreamPath === "/api/books" && request.method === "POST") {
-      return handleBookCreateOrUpdate(request, body, userId);
+      return await handleBookCreateOrUpdate(request, body, userId, guestIdentityId);
     }
 
     if (upstreamPath.startsWith("/api/books/")) {
-      return handleBookScopedRoute(request, upstreamPath, body, userId, guestIdentityId);
+      return await handleBookScopedRoute(request, upstreamPath, body, userId, guestIdentityId);
     }
 
     if (upstreamPath === "/api/workflows" && request.method === "POST") {
-      return handleWorkflowRoute(request, body, userId, guestIdentityId);
+      return await handleWorkflowRoute(request, body, userId, guestIdentityId);
     }
 
     if (upstreamPath === "/api/settings") {
-      return handleSettingsRoute(request, body, userId);
+      return await handleSettingsRoute(request, body, userId);
     }
 
     if (upstreamPath === "/api/logs") {
       if (!userId) {
         return jsonError(401, "Log kayıtları için oturum gerekli.", "AUTH_REQUIRED");
       }
-      return forwardResponse(request, upstreamPath, body);
+      return await forwardResponse(request, upstreamPath, body);
     }
 
     if (upstreamPath.startsWith("/workspace/")) {
-      return handleWorkspaceRoute(request, upstreamPath, body, userId, guestIdentityId);
+      return await handleWorkspaceRoute(request, upstreamPath, body, userId, guestIdentityId);
     }
 
     return jsonError(404, "Bilinmeyen backend route.");
   } catch (error) {
-    if (error instanceof BackendUnavailableError) {
+    if (isBackendUnavailableLike(error)) {
       return jsonError(
         503,
         "Servis geçici olarak erişilemiyor. Lütfen birkaç saniye sonra tekrar dene.",

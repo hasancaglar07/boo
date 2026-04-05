@@ -3,13 +3,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  BookOpen,
   CheckCircle2,
+  FileText,
   ImagePlus,
   LogOut,
   Mail,
   ShieldAlert,
   Sparkles,
+  Target,
   Trash2,
+  Upload,
   User2,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -147,20 +151,6 @@ export function AccountScreen() {
 
   if (!ready) return null;
 
-  if (backendUnavailable) {
-    return (
-      <AppFrame
-        current="account"
-        title="Profil ayarları"
-        subtitle="Bağlantı sorunu oluştu."
-        books={[]}
-        viewer={viewer}
-      >
-        <BackendUnavailableState onRetry={() => void refreshBooks()} />
-      </AppFrame>
-    );
-  }
-
   async function handleSave() {
     setSaving(true);
     setSaveMessage("");
@@ -237,7 +227,7 @@ export function AccountScreen() {
     }).catch(() => null);
 
     const payload = response
-      ? ((await response.json().catch(() => null)) as { error?: string } | null)
+      ? ((await response.json().catch(() => null)) as { error?: string; message?: string } | null)
       : null;
 
     if (!response?.ok) {
@@ -246,7 +236,7 @@ export function AccountScreen() {
       return;
     }
 
-    setVerificationMessage("Doğrulama maili tekrar gönderildi.");
+    setVerificationMessage(payload?.message || "Doğrulama maili tekrar gönderildi.");
     setVerificationSending(false);
     await refreshViewer();
   }
@@ -266,17 +256,23 @@ export function AccountScreen() {
       books={books}
       viewer={viewer}
     >
-      <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-        <div className="space-y-6">
-          <Card className="overflow-hidden border-primary/15 bg-[radial-gradient(circle_at_top_right,_rgba(188,104,67,0.12),_transparent_52%)]">
-            <CardContent className="p-6">
+      {backendUnavailable ? (
+        <div className="mb-6">
+          <BackendUnavailableState onRetry={() => void refreshBooks()} />
+        </div>
+      ) : null}
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr] xl:grid-cols-[0.8fr_1.2fr]">
+        <div className="space-y-5">
+          <Card className="overflow-hidden border-primary/15 bg-[radial-gradient(circle_at_top_right,_rgba(188,104,67,0.08),_transparent_60%)] transition-shadow hover:shadow-[0_4px_16px_rgba(188,104,67,0.08)]">
+            <CardContent className="p-5">
               <div className="flex items-start gap-4">
                 <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
                   {viewer ? displayName(viewer.name, viewer.email).slice(0, 2).toUpperCase() : "BG"}
                 </div>
-                <div className="min-w-0">
-                  <div className="text-sm text-muted-foreground">Aktif hesap</div>
-                  <div className="truncate text-2xl font-semibold text-foreground">
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-medium text-muted-foreground">Aktif hesap</div>
+                  <div className="truncate text-xl font-semibold text-foreground">
                     {displayName(viewer?.name, viewer?.email)}
                   </div>
                   <div className="mt-1 truncate text-sm text-muted-foreground">{viewer?.email}</div>
@@ -284,11 +280,11 @@ export function AccountScreen() {
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <span className="rounded-full border border-border/70 bg-card/75 px-3 py-1 text-xs font-medium text-foreground">
+                <span className="rounded-full border border-border/50 bg-card/60 px-3 py-1.5 text-xs font-medium text-foreground">
                   Plan: {PLAN_LABELS[viewer?.planId || "free"] || "Free"}
                 </span>
                 <span
-                  className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
                     viewer?.emailVerified
                       ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                       : "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400"
@@ -300,25 +296,31 @@ export function AccountScreen() {
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-            <Card>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+            <Card className="border-border/60 bg-card/50 transition-colors hover:border-border/80">
               <CardContent className="p-5">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Kitaplar
+                <div className="flex items-center gap-2">
+                  <BookOpen className="size-3.5 text-muted-foreground/60" />
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                    Kitaplar
+                  </div>
                 </div>
-                <div className="mt-3 text-4xl font-bold text-foreground">{books.length}</div>
+                <div className="mt-3 text-3xl font-bold text-foreground">{books.length}</div>
                 <div className="mt-2 text-sm text-muted-foreground">
                   Bu hesapla oluşturulmuş toplam kitap.
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-border/60 bg-card/50 transition-colors hover:border-border/80">
               <CardContent className="p-5">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Çıktılar
+                <div className="flex items-center gap-2">
+                  <Upload className="size-3.5 text-muted-foreground/60" />
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                    Çıktılar
+                  </div>
                 </div>
-                <div className="mt-3 text-4xl font-bold text-foreground">{compactNumber(exports)}</div>
+                <div className="mt-3 text-3xl font-bold text-foreground">{compactNumber(exports)}</div>
                 <div className="mt-2 text-sm text-muted-foreground">
                   PDF / EPUB ve diğer dışa aktarma toplamı.
                 </div>
@@ -330,10 +332,10 @@ export function AccountScreen() {
             <Card className="border-amber-500/20 bg-amber-500/5">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3">
-                  <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400">
-                    <ShieldAlert className="size-4" />
+                  <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                    <ShieldAlert className="size-5" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-foreground">E-posta doğrulaması gerekli</div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Hesap güvenliği, giriş kurtarma ve bildirimler için e-postanı doğrula. Bu adım yalnızca bir kez gerekir.
@@ -342,6 +344,7 @@ export function AccountScreen() {
                       <Button
                         size="sm"
                         variant="outline"
+                        className="min-h-[44px]"
                         onClick={() => void handleResendVerification()}
                         disabled={verificationSending}
                       >
@@ -359,10 +362,10 @@ export function AccountScreen() {
             <Card className="border-emerald-500/20 bg-emerald-500/5">
               <CardContent className="p-5">
                 <div className="flex items-start gap-3">
-                  <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-                    <CheckCircle2 className="size-4" />
+                  <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle2 className="size-5" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="text-sm font-semibold text-foreground">E-posta doğrulandı</div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Hesabın ödeme, dışa aktarma ve tam erişim akışları için hazır.
@@ -374,14 +377,14 @@ export function AccountScreen() {
           )}
         </div>
 
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="p-6">
+        <div className="space-y-5">
+          <Card className="border-border/60 bg-card/50">
+            <CardContent className="p-5">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <User2 className="size-4" />
+                  <User2 className="size-4.5" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <h2 className="text-lg font-semibold text-foreground">Profil bilgileri</h2>
                   <p className="text-sm text-muted-foreground">
                     Kütüphane karşılama alanı ve sihirbaz varsayımları bu bilgilerden beslenir.
@@ -389,11 +392,12 @@ export function AccountScreen() {
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-5 md:grid-cols-2">
+              <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="profile-name">Görünen ad</Label>
+                  <Label htmlFor="profile-name" className="text-sm">Görünen ad</Label>
                   <Input
                     id="profile-name"
+                    className="min-h-[48px] mt-2"
                     value={name}
                     onChange={(event) => updateDraft({ name: event.target.value })}
                     placeholder="Adını gir"
@@ -402,18 +406,19 @@ export function AccountScreen() {
                 </div>
 
                 <div>
-                  <Label htmlFor="profile-email">E-posta</Label>
-                  <div className="flex h-14 items-center rounded-[20px] border border-input bg-card px-5 text-[15px] text-muted-foreground shadow-[0_1px_0_rgba(255,255,255,0.35)_inset]">
-                    <Mail className="mr-2 size-4 text-muted-foreground" />
+                  <Label htmlFor="profile-email" className="text-sm">E-posta</Label>
+                  <div className="mt-2 flex min-h-[48px] items-center rounded-[20px] border border-border/60 bg-card px-4 text-[15px] text-muted-foreground">
+                    <Mail className="mr-2 size-4 text-muted-foreground/60" />
                     {viewer?.email || "—"}
                   </div>
                 </div>
               </div>
 
               <div className="mt-5">
-                <Label htmlFor="profile-goal">Yazım hedefi</Label>
+                <Label htmlFor="profile-goal" className="text-sm">Yazım hedefi</Label>
                 <Textarea
                   id="profile-goal"
+                  className="min-h-[120px] mt-2"
                   value={goal}
                   onChange={(event) => updateDraft({ goal: event.target.value })}
                   placeholder="Örnek: B2B ekipler için pratik bir prompting rehberi üretmek istiyorum."
@@ -424,9 +429,9 @@ export function AccountScreen() {
               </div>
 
               {canCustomizePublisherBrand ? (
-                <div className="mt-6 rounded-[26px] border border-border/70 bg-background/65 p-5">
+                <div className="mt-6 rounded-[24px] border border-border/60 bg-background/50 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
+                    <div className="flex-1">
                       <div className="text-sm font-semibold text-foreground">Yayınevi markası</div>
                       <p className="mt-1 text-sm leading-6 text-muted-foreground">
                         Pro planında profil logonu bir kez tanımla; `/app/new/style` içinde varsayılan gelsin.
@@ -446,12 +451,12 @@ export function AccountScreen() {
                           event.currentTarget.value = "";
                         }}
                       />
-                      <Button size="sm" variant="outline" onClick={() => logoInputRef.current?.click()}>
+                      <Button size="sm" variant="outline" className="min-h-[40px]" onClick={() => logoInputRef.current?.click()}>
                         <ImagePlus className="mr-1.5 size-3.5" />
                         Logo yükle
                       </Button>
                       {publisherLogoUrl ? (
-                        <Button size="sm" variant="ghost" onClick={() => updateDraft({ publisherLogoUrl: "" })}>
+                        <Button size="sm" variant="ghost" className="min-h-[40px]" onClick={() => updateDraft({ publisherLogoUrl: "" })}>
                           <Trash2 className="mr-1.5 size-3.5" />
                           Kaldır
                         </Button>
@@ -459,11 +464,12 @@ export function AccountScreen() {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <Label htmlFor="profile-imprint">İmprint / yayınevi adı</Label>
+                      <Label htmlFor="profile-imprint" className="text-sm">İmprint / yayınevi adı</Label>
                       <Input
                         id="profile-imprint"
+                        className="min-h-[48px] mt-2"
                         value={publisherImprint}
                         onChange={(event) => updateDraft({ publisherImprint: event.target.value })}
                         placeholder="örnek: North Peak Press"
@@ -473,11 +479,14 @@ export function AccountScreen() {
                       </p>
                     </div>
 
-                    <div className="rounded-[22px] border border-border/70 bg-card/85 p-4">
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                        Önizleme
+                    <div className="rounded-[22px] border border-border/50 bg-card/60 p-4">
+                      <div className="flex items-center gap-2">
+                        <ImagePlus className="size-3.5 text-muted-foreground/60" />
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                          Önizleme
+                        </div>
                       </div>
-                      <div className="mt-3 flex min-h-[88px] items-center rounded-[18px] border border-border/60 bg-background/90 px-4 py-4">
+                      <div className="mt-3 flex min-h-[88px] items-center justify-center rounded-[18px] border border-border/50 bg-background/80 px-4 py-4">
                         {publisherLogoUrl ? (
                           <img
                             src={publisherLogoUrl}
@@ -485,12 +494,12 @@ export function AccountScreen() {
                             className="h-14 w-auto max-w-full object-contain"
                           />
                         ) : (
-                          <div>
-                            <div className="text-sm font-semibold text-foreground">
-                              {publisherImprint || "Henüz logo yüklenmedi"}
+                          <div className="text-center">
+                            <div className="text-sm font-medium text-foreground">
+                              {publisherImprint || "Logo yok"}
                             </div>
                             <div className="mt-1 text-xs leading-5 text-muted-foreground">
-                              PNG, JPG, WEBP veya SVG kabul edilir.
+                              PNG, JPG, WEBP veya SVG
                             </div>
                           </div>
                         )}
@@ -499,13 +508,13 @@ export function AccountScreen() {
                   </div>
                 </div>
               ) : (
-                <div className="mt-6 rounded-[26px] border border-primary/15 bg-primary/5 p-5">
+                <div className="mt-6 rounded-[24px] border border-primary/15 bg-primary/5 p-5">
                   <div className="text-sm font-semibold text-foreground">Özel yayınevi logosu</div>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
                     Kendi yayınevi wordmark’ını profil bazlı kaydetmek ve wizard’da otomatik kullanmak için Pro plan gerekir.
                   </p>
                   <div className="mt-4">
-                    <Button variant="outline" onClick={() => router.push("/app/settings/billing")}>
+                    <Button variant="outline" className="min-h-[44px]" onClick={() => router.push("/app/settings/billing")}>
                       Pro plana geç
                     </Button>
                   </div>
@@ -516,12 +525,13 @@ export function AccountScreen() {
               {saveMessage ? <p className="mt-4 text-sm text-primary">{saveMessage}</p> : null}
 
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button onClick={() => void handleSave()} isLoading={saving}>
+                <Button onClick={() => void handleSave()} className="min-h-[48px]" isLoading={saving}>
                   Kaydet
                 </Button>
                 {!viewer?.emailVerified ? (
                   <Button
                     variant="outline"
+                    className="min-h-[48px]"
                     onClick={() => void handleResendVerification()}
                     disabled={verificationSending}
                   >
@@ -532,13 +542,13 @@ export function AccountScreen() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-6">
+          <Card className="border-border/60 bg-card/50">
+            <CardContent className="p-5">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Sparkles className="size-4" />
+                  <Sparkles className="size-4.5" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <h2 className="text-lg font-semibold text-foreground">Hesap özeti</h2>
                   <p className="text-sm text-muted-foreground">
                     Bu alanlar salt-okunurdur; plan ve email değiştirme bu iterasyonun dışında.
@@ -546,26 +556,35 @@ export function AccountScreen() {
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-3">
-                <div className="rounded-[20px] border border-border/70 bg-background/65 p-4">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Plan
+              <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                <div className="rounded-[20px] border border-border/50 bg-background/50 p-4">
+                  <div className="flex items-center gap-2">
+                    <Target className="size-3.5 text-muted-foreground/60" />
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                      Plan
+                    </div>
                   </div>
                   <div className="mt-2 text-lg font-semibold text-foreground">
                     {PLAN_LABELS[viewer?.planId || "free"] || "Free"}
                   </div>
                 </div>
-                <div className="rounded-[20px] border border-border/70 bg-background/65 p-4">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Doğrulama
+                <div className="rounded-[20px] border border-border/50 bg-background/50 p-4">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="size-3.5 text-muted-foreground/60" />
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                      Doğrulama
+                    </div>
                   </div>
                   <div className="mt-2 text-lg font-semibold text-foreground">
                     {viewer?.emailVerified ? "Tamam" : "Bekleniyor"}
                   </div>
                 </div>
-                <div className="rounded-[20px] border border-border/70 bg-background/65 p-4">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Hedef
+                <div className="rounded-[20px] border border-border/50 bg-background/50 p-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="size-3.5 text-muted-foreground/60" />
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                      Hedef
+                    </div>
                   </div>
                   <div className="mt-2 text-sm font-medium leading-6 text-foreground">
                     {viewer?.goal?.trim() ? viewer.goal : "Henüz hedef eklenmedi."}
@@ -573,8 +592,8 @@ export function AccountScreen() {
                 </div>
               </div>
 
-              <div className="mt-6 border-t border-border/60 pt-5">
-                <Button variant="ghost" onClick={() => void handleLogout()}>
+              <div className="mt-6 border-t border-border/50 pt-5">
+                <Button variant="ghost" className="min-h-[44px]" onClick={() => void handleLogout()}>
                   <LogOut className="mr-2 size-4" />
                   Çıkış yap
                 </Button>

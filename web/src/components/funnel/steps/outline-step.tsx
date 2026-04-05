@@ -1,19 +1,16 @@
 "use client";
 
-import { ChevronDown, GripVertical, Sparkles } from "lucide-react";
+import { ChevronDown, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { ChoiceGrid } from "@/components/funnel/shared/choice-grid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { trackEvent } from "@/lib/analytics";
 import { formatChapterReference } from "@/lib/book-language";
 import {
-  bookLengthDescription,
   bookLengthLabel,
   chapterLengthLabel,
-  chapterRoleDescription,
   chapterRoleLabel,
   chapterWordRange,
   CHAPTER_LENGTHS,
@@ -28,6 +25,12 @@ import {
 import { cn } from "@/lib/utils";
 
 const BOOK_LENGTHS: FunnelBookLength[] = ["compact", "standard", "extended"];
+
+const BOOK_LENGTH_ESTIMATES: Record<FunnelBookLength, string> = {
+  compact: "~15k",
+  standard: "~30k",
+  extended: "~50k",
+};
 
 function formatWordCount(value: number) {
   return new Intl.NumberFormat("en-US").format(Math.max(0, Math.round(value)));
@@ -103,81 +106,70 @@ export function OutlineStep({
     trackEvent("outline_manual_edited", { action: "remove", index });
   }
 
+  const avgWordEstimate = Math.round((wordEstimate.min + wordEstimate.max) / 2);
+  const estimatedPages = Math.round(avgWordEstimate / 167);
+
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-[24px] border border-border/80 bg-background/72 p-5">
-          <div className="text-sm font-semibold text-foreground">Kitap uzunluğu hedefi</div>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Önce kitabın toplam ritmini belirle. Sonra bölümler bu hedefe göre daha dengeli dağılır.
-          </p>
-          <div className="mt-4">
-            <ChoiceGrid
-              values={BOOK_LENGTHS}
-              selected={draft.bookLength}
-              labelFor={(value) => bookLengthLabel(value, draft.language)}
-              descriptionFor={(value) => bookLengthDescription(value, draft.language)}
-              onSelect={(value) => onUpdate({ bookLength: value })}
-              columns="sm:grid-cols-3"
-            />
-          </div>
-        </div>
+    <form
+      id="wizard-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onNext();
+      }}
+      className="space-y-6"
+    >
+      {/* ── Word Count Estimate ── */}
+      <p className="text-base font-medium text-muted-foreground rounded-xl bg-muted/50 px-4 py-3">
+        📊 ~{formatWordCount(avgWordEstimate)} kelime · {draft.outline.length} bölüm · ~{estimatedPages} sayfa
+      </p>
 
-        <div className="rounded-[24px] border border-primary/12 bg-primary/5 p-5">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Tahmini toplam hacim
-          </div>
-          <div className="mt-3 text-3xl font-semibold text-foreground">
-            {formatWordCount(wordEstimate.min)}-{formatWordCount(wordEstimate.max)}
-          </div>
-          <div className="mt-2 text-sm leading-6 text-muted-foreground">kelime</div>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-border/40">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary/60 to-primary transition-all duration-500"
-              style={{ width: `${Math.min(100, (wordEstimate.max / 80000) * 100)}%` }}
-            />
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <div className="rounded-[18px] border border-border/60 bg-background/60 px-3 py-3">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Bölüm sayısı</div>
-              <div className="mt-1 font-semibold text-foreground">{draft.outline.length} bölüm</div>
-            </div>
-            <div className="rounded-[18px] border border-border/60 bg-background/60 px-3 py-3">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Durum</div>
-              <div className="mt-1 font-semibold text-foreground">
-                {draft.outline.filter((item) => item.title.trim()).length >= 3 ? "Hazır görünüyor" : "Biraz daha netleştir"}
-              </div>
-            </div>
-          </div>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            {isTurkishLanguage(draft.language)
-              ? "Açılış ve kapanış bölümleri daha kısa olabilir. Taşıyıcı bölümler doğal olarak daha fazla alan alır."
-              : "Opening and closing chapters can stay shorter. Core chapters naturally take more room."}
-          </p>
+      {/* ── Book Length Selector — Horizontal Pill Buttons ── */}
+      <div>
+        <label className="text-base sm:text-lg font-bold text-foreground mb-2 block">
+          Kitap uzunluğu hedefi
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {BOOK_LENGTHS.map((value) => {
+            const isSelected = draft.bookLength === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={isSelected}
+                className={cn(
+                  "h-12 rounded-2xl px-5 text-sm sm:text-base font-semibold border transition-all",
+                  isSelected
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card text-foreground border-border/60 hover:border-primary/30",
+                )}
+                onClick={() => onUpdate({ bookLength: value })}
+              >
+                {bookLengthLabel(value, draft.language)}{" "}
+                <span className="opacity-60">({BOOK_LENGTH_ESTIMATES[value]})</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div className="rounded-[24px] border border-border/80 bg-card/60 p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="text-sm font-semibold text-foreground">Bölüm planı editörü</div>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              AI ile iskeleti oluştur, sonra sadece gerekli bölümleri açıp düzenle. Böylece ekran daha sakin kalır.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" onClick={() => void onAiGenerate()} isLoading={aiLoading === "outline"}>
-              <Sparkles className="mr-1.5 size-3.5" />
-              AI ile oluştur
-            </Button>
-            <Button size="sm" variant="outline" onClick={addChapter}>
-              + Bölüm ekle
-            </Button>
-          </div>
-        </div>
+      {/* ── Chapter Plan Header ── */}
+      <div className="flex items-center justify-between gap-3">
+        <label className="text-base sm:text-lg font-bold text-foreground">
+          Bölüm planı
+        </label>
+        <button
+          type="button"
+          onClick={() => void onAiGenerate()}
+          disabled={aiLoading === "outline"}
+          className="inline-flex h-12 items-center gap-2 rounded-2xl bg-primary/8 border border-primary/20 px-5 text-sm sm:text-base font-semibold text-primary hover:bg-primary/15 active:scale-[0.97] transition-all disabled:opacity-50 disabled:pointer-events-none"
+        >
+          <Sparkles className="size-4" />
+          {aiLoading === "outline" ? "Oluşturuluyor…" : "✨ AI ile Oluştur"}
+        </button>
       </div>
 
-      <div className="space-y-3">
+      {/* ── Chapter Accordion ── */}
+      <div className="space-y-2">
         {draft.outline.map((item, index) => {
           const isOpen = openIndexes.includes(index);
           const wordRange = chapterWordRange(item.length, draft.bookLength);
@@ -186,93 +178,89 @@ export function OutlineStep({
             <div
               key={`${index}-${item.title}`}
               className={cn(
-                "overflow-hidden rounded-[24px] border transition-all duration-200",
-                isOpen ? "border-primary/25 bg-primary/[0.035] shadow-sm" : "border-border/70 bg-card hover:border-primary/15",
+                "rounded-2xl border transition-all duration-200",
+                isOpen
+                  ? "border-primary/30 bg-card"
+                  : "border-border/50 bg-card hover:border-primary/15",
               )}
             >
+              {/* Collapsed / Expandable header */}
               <button
                 type="button"
                 onClick={() => toggleChapter(index)}
-                className="flex w-full items-start gap-4 px-4 py-4 text-left sm:px-5"
+                className={cn(
+                  "flex w-full items-center gap-3 px-4 py-3.5 text-left",
+                  isOpen && "border-b border-border/40",
+                )}
                 aria-expanded={isOpen}
               >
-                <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                   {index + 1}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="truncate text-[15px] font-semibold text-foreground">
-                      {item.title || defaultChapterReference(draft.language, index + 1)}
-                    </div>
-                    <span className="rounded-full border border-border/60 bg-background/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      {chapterRoleLabel(item.role, draft.language)}
-                    </span>
-                    <span className="rounded-full border border-border/60 bg-background/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      {chapterLengthLabel(item.length, draft.language)}
-                    </span>
-                  </div>
-                  <div className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                    {item.summary || (isTurkishLanguage(draft.language) ? "Bu bölüm için kısa bir amaç yazısı ekleyebilirsin." : "Add a short purpose summary for this chapter.")}
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-primary/12 bg-primary/[0.06] px-3 py-1 text-[11px] font-semibold text-primary">
-                      {formatWordCount(wordRange.min)}-{formatWordCount(wordRange.max)} kelime
-                    </span>
-                    <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1 text-[11px] text-muted-foreground">
-                      {chapterRoleDescription(item.role, draft.language)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 pl-2">
-                  <GripVertical className="hidden size-4 text-muted-foreground/45 sm:block" />
-                  <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
-                </div>
+                </span>
+                <span className="min-w-0 flex-1 truncate text-base font-medium text-foreground">
+                  {item.title || defaultChapterReference(draft.language, index + 1)}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "size-4 shrink-0 text-muted-foreground/50 transition-transform duration-200",
+                    isOpen && "rotate-180",
+                  )}
+                />
               </button>
 
+              {/* Expanded content */}
               {isOpen ? (
-                <div className="border-t border-border/60 px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
-                    <div className="space-y-3">
-                      <div className="space-y-2">
-                        <label htmlFor={`outline-title-${index}`} className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                          Bölüm başlığı
-                        </label>
-                        <Input
-                          id={`outline-title-${index}`}
-                          value={item.title}
-                          onChange={(event) => onUpdateOutline(index, { title: event.target.value })}
-                          placeholder="Bölüm başlığı"
-                          className="h-11 font-medium"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label htmlFor={`outline-summary-${index}`} className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                          Bölüm özeti
-                        </label>
-                        <Textarea
-                          id={`outline-summary-${index}`}
-                          value={item.summary}
-                          onChange={(event) => onUpdateOutline(index, { summary: event.target.value })}
-                          placeholder="Bu bölümde ne anlatılacak?"
-                          rows={4}
-                          className="resize-none text-sm leading-6"
-                        />
-                      </div>
+                <div className="px-4 pb-5 pt-4">
+                  <div className="space-y-5">
+                    {/* Title */}
+                    <div>
+                      <label
+                        htmlFor={`outline-title-${index}`}
+                        className="text-sm font-bold text-muted-foreground mb-2 block"
+                      >
+                        Başlık
+                      </label>
+                      <Input
+                        id={`outline-title-${index}`}
+                        value={item.title}
+                        onChange={(event) => onUpdateOutline(index, { title: event.target.value })}
+                        placeholder="Bölüm başlığı"
+                        className="h-11 text-sm px-3 rounded-xl"
+                      />
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="rounded-[20px] border border-border/60 bg-background/70 p-3">
-                        <label htmlFor={`outline-role-${index}`} className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                          Bölüm rolü
+                    {/* Summary */}
+                    <div>
+                      <label
+                        htmlFor={`outline-summary-${index}`}
+                        className="text-sm font-bold text-muted-foreground mb-2 block"
+                      >
+                        Özet
+                      </label>
+                      <Textarea
+                        id={`outline-summary-${index}`}
+                        value={item.summary}
+                        onChange={(event) => onUpdateOutline(index, { summary: event.target.value })}
+                        placeholder="Bu bölümde ne anlatılacak?"
+                        rows={3}
+                        className="min-h-[80px] text-sm px-3 py-2.5 rounded-xl resize-none leading-relaxed"
+                      />
+                    </div>
+
+                    {/* Role + Length row */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label
+                          htmlFor={`outline-role-${index}`}
+                          className="text-sm font-bold text-muted-foreground mb-2 block"
+                        >
+                          Rol
                         </label>
                         <select
                           id={`outline-role-${index}`}
                           value={item.role}
                           onChange={(event) => onUpdateOutline(index, { role: event.target.value as FunnelChapterRole })}
-                          className="mt-2 flex h-10 w-full rounded-[14px] border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-ring/50 focus:ring-2 focus:ring-ring/20"
+                          className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-ring/50 focus:ring-2 focus:ring-ring/20"
                         >
                           {CHAPTER_ROLES.map((role) => (
                             <option key={role} value={role}>
@@ -281,16 +269,18 @@ export function OutlineStep({
                           ))}
                         </select>
                       </div>
-
-                      <div className="rounded-[20px] border border-border/60 bg-background/70 p-3">
-                        <label htmlFor={`outline-length-${index}`} className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                          Bölüm derinliği
+                      <div>
+                        <label
+                          htmlFor={`outline-length-${index}`}
+                          className="text-sm font-bold text-muted-foreground mb-2 block"
+                        >
+                          Derinlik
                         </label>
                         <select
                           id={`outline-length-${index}`}
                           value={item.length}
                           onChange={(event) => onUpdateOutline(index, { length: event.target.value as FunnelChapterLength })}
-                          className="mt-2 flex h-10 w-full rounded-[14px] border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-ring/50 focus:ring-2 focus:ring-ring/20"
+                          className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-ring/50 focus:ring-2 focus:ring-ring/20"
                         >
                           {CHAPTER_LENGTHS.map((length) => (
                             <option key={length} value={length}>
@@ -299,27 +289,22 @@ export function OutlineStep({
                           ))}
                         </select>
                       </div>
+                    </div>
 
-                      <div className="rounded-[20px] border border-primary/12 bg-primary/[0.05] p-3">
-                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                          Tahmini bölüm hacmi
-                        </div>
-                        <div className="mt-2 text-sm font-semibold text-foreground">
-                          {formatWordCount(wordRange.min)}-{formatWordCount(wordRange.max)} kelime
-                        </div>
-                        <div className="mt-1 text-xs leading-5 text-muted-foreground">
-                          {chapterRoleDescription(item.role, draft.language)}
-                        </div>
-                      </div>
-
+                    {/* Bottom row: word estimate + delete */}
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs text-muted-foreground">
+                        ≈ {formatWordCount(wordRange.min)}–{formatWordCount(wordRange.max)} kelime
+                      </span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-10 justify-start px-3 text-destructive hover:text-destructive"
+                        className="h-auto gap-1 px-2 text-sm text-destructive/60 hover:text-destructive"
                         disabled={draft.outline.length <= 3}
                         onClick={() => removeChapter(index)}
                       >
-                        Bölümü sil
+                        <Trash2 className="size-3.5" />
+                        🗑️ Sil
                       </Button>
                     </div>
                   </div>
@@ -330,20 +315,22 @@ export function OutlineStep({
         })}
       </div>
 
-      {error ? (
-        <div role="alert" className="rounded-[16px] border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
-          {error}
-        </div>
-      ) : null}
+      {/* ── Add Chapter Button ── */}
+      <button
+        type="button"
+        onClick={addChapter}
+        className="w-full h-12 rounded-2xl border border-dashed border-border/60 px-5 text-base font-medium text-muted-foreground hover:border-primary/40 hover:text-primary transition-all"
+      >
+        <Plus className="size-4 inline-block mr-1.5 -mt-0.5" />
+        Bölüm ekle
+      </button>
 
-      <div className="flex flex-wrap items-center gap-3 pt-2">
-        <Button variant="ghost" size="lg" onClick={onBack}>
-          Geri
-        </Button>
-        <Button size="lg" onClick={onNext}>
-          Stil ve Kapak Yönünü Seç
-        </Button>
-      </div>
-    </div>
+      {/* ── Error ── */}
+      {error ? (
+        <p role="alert" className="text-sm text-red-500 rounded-xl px-4 py-3 bg-destructive/5">
+          {error}
+        </p>
+      ) : null}
+    </form>
   );
 }

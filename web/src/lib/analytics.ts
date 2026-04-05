@@ -102,7 +102,8 @@ export type AnalyticsEventName =
   | "fast_preview_loading_started"
   | "fast_preview_loading_completed"
   | "start_page_viewed"
-  | "start_option_clicked";
+  | "start_option_clicked"
+  | "preview_custom_front_cover_uploaded";
 
 type AnalyticsPayload = {
   event: AnalyticsEventName;

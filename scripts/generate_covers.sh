@@ -128,15 +128,15 @@ EOF
 configure_settings() {
     print_status "Configuring Codefast cover generation..."
     echo "Select image generation service:"
-    echo "1) Auto fallback (Grok Imagine -> Nano Banana Pro -> Nano Banana 2)"
-    echo "2) Grok Imagine"
+    echo "1) Auto fallback (Vertex Imagen - Banana Pro - Banana 2)"
+    echo "2) Vertex Imagen"
     echo "3) Nano Banana Pro"
     echo "4) Nano Banana 2"
     read -r -p "Enter choice (1-4) [default: 1]: " service_choice
 
-    case "$service_choice" in
-        2) SERVICE="grok-imagine" ;;
+        2) SERVICE="vertex-imagen-standard" ;;
         3) SERVICE="nano-banana-pro" ;;
+        4) SERVICE="nano-banana-2" ;;
         4) SERVICE="nano-banana-2" ;;
         *) SERVICE="auto" ;;
     esac
@@ -171,23 +171,23 @@ generate_prompts() {
 
     cleaned_theme="$(printf '%s' "$THEME_SUMMARY" \
         | tr '\n' ' ' \
-        | sed -E "s/[0-9]{1,4}//g; s/[\"'“”‘’:;,.()\\/_-]+/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//")"
+        | sed -E "s/[0-9]{1,4}//g; s/[\"'â€œâ€â€˜â€™:;,.()\\/_-]+/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//")"
     cleaned_words="$(printf '%s\n' "$cleaned_theme" | awk '{for (i = 1; i <= NF && i <= 12; i++) printf("%s%s", $i, (i < NF && i < 12 ? " " : ""))}')"
 
     if [[ -n "$cleaned_words" && ${#cleaned_words} -le 96 ]]; then
         prompt_subject="$cleaned_words"
     else
         keyword_source="$(printf '%s %s %s' "$LABEL_LINE" "$BOOK_SUBTITLE" "$THEME_SUMMARY" | tr '[:upper:]' '[:lower:]')"
-        if [[ "$keyword_source" == *vision* || "$keyword_source" == *görü* || "$keyword_source" == *gorsel* ]]; then
+        if [[ "$keyword_source" == *vision* || "$keyword_source" == *gÃ¶rÃ¼* || "$keyword_source" == *gorsel* ]]; then
             keyword_hints+=("machine vision systems")
         fi
-        if [[ "$keyword_source" == *coding* || "$keyword_source" == *code* || "$keyword_source" == *yazılım* || "$keyword_source" == *kod* ]]; then
+        if [[ "$keyword_source" == *coding* || "$keyword_source" == *code* || "$keyword_source" == *yazÄ±lÄ±m* || "$keyword_source" == *kod* ]]; then
             keyword_hints+=("software architecture")
         fi
-        if [[ "$keyword_source" == *reason* || "$keyword_source" == *mantık* || "$keyword_source" == *akıl* ]]; then
+        if [[ "$keyword_source" == *reason* || "$keyword_source" == *mantÄ±k* || "$keyword_source" == *akÄ±l* ]]; then
             keyword_hints+=("reasoning engines")
         fi
-        if [[ "$keyword_source" == *"gerçek zaman"* || "$keyword_source" == *"real time"* || "$keyword_source" == *live* ]]; then
+        if [[ "$keyword_source" == *"gerÃ§ek zaman"* || "$keyword_source" == *"real time"* || "$keyword_source" == *live* ]]; then
             keyword_hints+=("live data streams")
         fi
         if [[ "$keyword_source" == *ai* || "$keyword_source" == *"yapay zeka"* || "$keyword_source" == *agent* || "$keyword_source" == *ajan* ]]; then

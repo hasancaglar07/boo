@@ -22,6 +22,7 @@ const STORAGE_KEY = "book-generator-theme";
 const MEDIA_QUERY = "(prefers-color-scheme: dark)";
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null);
+let missingThemeProviderWarned = false;
 
 function getResolvedTheme(theme: Theme, enableSystem: boolean) {
   if (theme === "system" && enableSystem && typeof window !== "undefined") {
@@ -102,7 +103,21 @@ export function ThemeProvider({
 export function useTheme() {
   const context = React.useContext(ThemeContext);
   if (!context) {
-    throw new Error("useTheme must be used within ThemeProvider");
+    const resolvedTheme =
+      typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+        ? "dark"
+        : "light";
+
+    if (process.env.NODE_ENV !== "production" && !missingThemeProviderWarned) {
+      missingThemeProviderWarned = true;
+      console.warn("useTheme called outside ThemeProvider. Falling back to system/light theme.");
+    }
+
+    return {
+      theme: "system" as Theme,
+      resolvedTheme,
+      setTheme: () => undefined,
+    };
   }
   return context;
 }

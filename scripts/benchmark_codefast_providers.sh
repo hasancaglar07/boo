@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" && pwd)"
@@ -9,8 +9,8 @@ source "$ROOT_DIR/book-generator-env.sh"
 . "$SCRIPT_DIR/multi_provider_ai_simple.sh"
 
 TITLE="Minecraft Oyun Rehberi"
-DEFAULT_SUBTITLE="Hayatta Kalma, İnşa, Maden ve Macera İçin Başlangıçtan İleri Seviyeye Türkçe Rehber"
-DEFAULT_DESCRIPTION="Minecraft dünyasına yeni giren ya da temel bilgilerini sistemli biçimde güçlendirmek isteyen oyuncular için hazırlanmış Türkçe uygulama rehberi. Oyun akışını ilk geceden End ejderhasına, redstone mantığından çok oyunculu ipuçlarına kadar düzenli ve anlaşılır bir sırayla anlatır."
+DEFAULT_SUBTITLE="Hayatta Kalma, Ä°nÅŸa, Maden ve Macera Ä°Ã§in BaÅŸlangÄ±Ã§tan Ä°leri Seviyeye TÃ¼rkÃ§e Rehber"
+DEFAULT_DESCRIPTION="Minecraft dÃ¼nyasÄ±na yeni giren ya da temel bilgilerini sistemli biÃ§imde gÃ¼Ã§lendirmek isteyen oyuncular iÃ§in hazÄ±rlanmÄ±ÅŸ TÃ¼rkÃ§e uygulama rehberi. Oyun akÄ±ÅŸÄ±nÄ± ilk geceden End ejderhasÄ±na, redstone mantÄ±ÄŸÄ±ndan Ã§ok oyunculu ipuÃ§larÄ±na kadar dÃ¼zenli ve anlaÅŸÄ±lÄ±r bir sÄ±rayla anlatÄ±r."
 AUTHOR="${BENCHMARK_AUTHOR:-Benchmark Bot}"
 PUBLISHER="${BENCHMARK_PUBLISHER:-Speedy Quick Publishing}"
 PUBLICATION_YEAR="$(date +%Y)"
@@ -41,13 +41,13 @@ TEXT_PROVIDERS=(
     glm-main
     qwen-main
     grok-main
-    api13-premium
+
     api5-open
     api3-chat
 )
 
 IMAGE_PROVIDERS=(
-    grok-imagine
+
     nano-banana-pro
     nano-banana-2
 )
@@ -117,28 +117,28 @@ build_canonical_outline() {
             description: $description,
             chapters: [
                 {
-                    title: "İlk Dünya, Ayarlar ve İlk Gece",
-                    summary: "Yeni bir dünya açtıktan sonra en kritik ilk kararları, temel ayarları ve ilk geceyi güvenle atlatmak için gereken adımları anlatır."
+                    title: "Ä°lk DÃ¼nya, Ayarlar ve Ä°lk Gece",
+                    summary: "Yeni bir dÃ¼nya aÃ§tÄ±ktan sonra en kritik ilk kararlarÄ±, temel ayarlarÄ± ve ilk geceyi gÃ¼venle atlatmak iÃ§in gereken adÄ±mlarÄ± anlatÄ±r."
                 },
                 {
-                    title: "Kaynak Toplama, Crafting ve Taş Çağına Geçiş",
-                    summary: "Ağaç, taş, kömür ve yiyecek gibi temel kaynakları verimli toplama yöntemlerini ve ilk alet setini kurma mantığını açıklar."
+                    title: "Kaynak Toplama, Crafting ve TaÅŸ Ã‡aÄŸÄ±na GeÃ§iÅŸ",
+                    summary: "AÄŸaÃ§, taÅŸ, kÃ¶mÃ¼r ve yiyecek gibi temel kaynaklarÄ± verimli toplama yÃ¶ntemlerini ve ilk alet setini kurma mantÄ±ÄŸÄ±nÄ± aÃ§Ä±klar."
                 },
                 {
-                    title: "Barınak, Maden ve Demir Ekipman Düzeni",
-                    summary: "Güvenli bir üs kurmayı, mağara ve maden disiplinini, fırın-demir döngüsünü ve ölmeden ilerleme alışkanlıklarını işler."
+                    title: "BarÄ±nak, Maden ve Demir Ekipman DÃ¼zeni",
+                    summary: "GÃ¼venli bir Ã¼s kurmayÄ±, maÄŸara ve maden disiplinini, fÄ±rÄ±n-demir dÃ¶ngÃ¼sÃ¼nÃ¼ ve Ã¶lmeden ilerleme alÄ±ÅŸkanlÄ±klarÄ±nÄ± iÅŸler."
                 },
                 {
-                    title: "Köyler, Nether ve Orta Oyun İlerlemesi",
-                    summary: "Köy takası, enchantment hazırlığı, Nether keşfi ve oyunun orta safhasında riskleri yöneterek güçlenme planını anlatır."
+                    title: "KÃ¶yler, Nether ve Orta Oyun Ä°lerlemesi",
+                    summary: "KÃ¶y takasÄ±, enchantment hazÄ±rlÄ±ÄŸÄ±, Nether keÅŸfi ve oyunun orta safhasÄ±nda riskleri yÃ¶neterek gÃ¼Ã§lenme planÄ±nÄ± anlatÄ±r."
                 },
                 {
-                    title: "End Hazırlığı ve Ejderha Savaşı",
-                    summary: "End portalı bulma, savaş öncesi ekipman listesi, ejderha dövüşü ve savaş sonrası ilk hedefleri sistemli biçimde sunar."
+                    title: "End HazÄ±rlÄ±ÄŸÄ± ve Ejderha SavaÅŸÄ±",
+                    summary: "End portalÄ± bulma, savaÅŸ Ã¶ncesi ekipman listesi, ejderha dÃ¶vÃ¼ÅŸÃ¼ ve savaÅŸ sonrasÄ± ilk hedefleri sistemli biÃ§imde sunar."
                 },
                 {
-                    title: "Redstone, Çiftlikler ve Uzun Vadeli Gelişim",
-                    summary: "Basit redstone mantığını, başlangıç seviyesinde otomasyon kurmayı, verimli çiftlikleri ve çok oyunculu dünyalarda düzenli ilerlemeyi ele alır."
+                    title: "Redstone, Ã‡iftlikler ve Uzun Vadeli GeliÅŸim",
+                    summary: "Basit redstone mantÄ±ÄŸÄ±nÄ±, baÅŸlangÄ±Ã§ seviyesinde otomasyon kurmayÄ±, verimli Ã§iftlikleri ve Ã§ok oyunculu dÃ¼nyalarda dÃ¼zenli ilerlemeyi ele alÄ±r."
                 }
             ]
         }'
@@ -176,7 +176,7 @@ write_outline_markdown() {
             "# " + (.title // ""),
             "## " + (.subtitle // ""),
             "",
-            (.chapters // [] | to_entries[] | "### Bölüm \(.key + 1): \(.value.title)")
+            (.chapters // [] | to_entries[] | "### BÃ¶lÃ¼m \(.key + 1): \(.value.title)")
         ] | join("\n")
     ' "$json_file" > "$output_file"
 }
@@ -210,21 +210,21 @@ count_english_leaks() {
 
 render_outline_prompt() {
     cat <<EOF
-Sen deneyimli bir oyun rehberi editörüsün. Sadece geçerli JSON döndür.
+Sen deneyimli bir oyun rehberi editÃ¶rÃ¼sÃ¼n. Sadece geÃ§erli JSON dÃ¶ndÃ¼r.
 
-Kitabın dili: Türkçe
-Ana başlık sabit kalmalı: ${TITLE}
-Hedef okur: Oyuna yeni başlayan ve orta seviyeye geçmek isteyen Türkçe konuşan oyuncular
+KitabÄ±n dili: TÃ¼rkÃ§e
+Ana baÅŸlÄ±k sabit kalmalÄ±: ${TITLE}
+Hedef okur: Oyuna yeni baÅŸlayan ve orta seviyeye geÃ§mek isteyen TÃ¼rkÃ§e konuÅŸan oyuncular
 
-Aşağıdaki omurgaya sadık kalarak daha güçlü bir satış dili ve daha temiz bölüm başlıkları üret:
-1. İlk dünya, ayarlar ve ilk gece
-2. Kaynak toplama, crafting ve taş araçlara geçiş
-3. Barınak, maden ve demir ekipman düzeni
-4. Köyler, Nether ve orta oyun ilerlemesi
-5. End hazırlığı ve ejderha savaşı
-6. Redstone, çiftlikler ve uzun vadeli gelişim
+AÅŸaÄŸÄ±daki omurgaya sadÄ±k kalarak daha gÃ¼Ã§lÃ¼ bir satÄ±ÅŸ dili ve daha temiz bÃ¶lÃ¼m baÅŸlÄ±klarÄ± Ã¼ret:
+1. Ä°lk dÃ¼nya, ayarlar ve ilk gece
+2. Kaynak toplama, crafting ve taÅŸ araÃ§lara geÃ§iÅŸ
+3. BarÄ±nak, maden ve demir ekipman dÃ¼zeni
+4. KÃ¶yler, Nether ve orta oyun ilerlemesi
+5. End hazÄ±rlÄ±ÄŸÄ± ve ejderha savaÅŸÄ±
+6. Redstone, Ã§iftlikler ve uzun vadeli geliÅŸim
 
-Şu JSON şemasını kullan:
+Åu JSON ÅŸemasÄ±nÄ± kullan:
 {
   "title": "...",
   "subtitle": "...",
@@ -235,13 +235,13 @@ Aşağıdaki omurgaya sadık kalarak daha güçlü bir satış dili ve daha temi
 }
 
 Kurallar:
-- title tam olarak "${TITLE}" olmalı
-- subtitle doğal ve satış odaklı Türkçe olmalı
-- description 2 ya da 3 cümle olmalı
-- tam olarak 6 chapter dön
-- chapter title ve summary alanlarının tamamı Türkçe olmalı
-- İngilizce chapter etiketi, "Chapter 1" gibi ifadeler bırakma
-- sadece JSON döndür
+- title tam olarak "${TITLE}" olmalÄ±
+- subtitle doÄŸal ve satÄ±ÅŸ odaklÄ± TÃ¼rkÃ§e olmalÄ±
+- description 2 ya da 3 cÃ¼mle olmalÄ±
+- tam olarak 6 chapter dÃ¶n
+- chapter title ve summary alanlarÄ±nÄ±n tamamÄ± TÃ¼rkÃ§e olmalÄ±
+- Ä°ngilizce chapter etiketi, "Chapter 1" gibi ifadeler bÄ±rakma
+- sadece JSON dÃ¶ndÃ¼r
 EOF
 }
 
@@ -253,29 +253,29 @@ render_chapter_prompt() {
     local previous_context_file="$5"
 
     cat <<EOF
-Minecraft için profesyonel bir Türkçe oyun rehberi yazıyorsun.
+Minecraft iÃ§in profesyonel bir TÃ¼rkÃ§e oyun rehberi yazÄ±yorsun.
 
 Kitap: ${TITLE}
-Dil: Türkçe
-Bu bölüm numarası: ${chapter_number}
-Bu bölüm başlığı: ${chapter_title}
-Bu bölüm hedefi: ${chapter_summary}
+Dil: TÃ¼rkÃ§e
+Bu bÃ¶lÃ¼m numarasÄ±: ${chapter_number}
+Bu bÃ¶lÃ¼m baÅŸlÄ±ÄŸÄ±: ${chapter_title}
+Bu bÃ¶lÃ¼m hedefi: ${chapter_summary}
 
-Kitap omurgası:
+Kitap omurgasÄ±:
 $(outline_context_for_prompt "$outline_file")
 
-Önceki bölümlerden bağlam:
+Ã–nceki bÃ¶lÃ¼mlerden baÄŸlam:
 $(cat "$previous_context_file")
 
-Yazım kuralları:
-- ${TEXT_MIN_WORDS}-${TEXT_MAX_WORDS} kelime aralığında yaz
-- sadece Türkçe yaz
-- yeni başlayan okur için açık, akıcı ve öğretici ol
-- gerektiğinde kısa madde listeleri kullan
-- somut ipuçları, sık yapılan hatalar ve uygulanabilir tavsiyeler ver
-- "Bölüm ${chapter_number}:" gibi başlık satırı ekleme; sadece bölüm gövdesini yaz
-- İngilizce etiket, İngilizce bölüm başlığı veya meta açıklama bırakma
-- oyun terimlerinde doğal Türkçe kullan, çok gerekli teknik terimler dışında gereksiz İngilizceye kaçma
+YazÄ±m kurallarÄ±:
+- ${TEXT_MIN_WORDS}-${TEXT_MAX_WORDS} kelime aralÄ±ÄŸÄ±nda yaz
+- sadece TÃ¼rkÃ§e yaz
+- yeni baÅŸlayan okur iÃ§in aÃ§Ä±k, akÄ±cÄ± ve Ã¶ÄŸretici ol
+- gerektiÄŸinde kÄ±sa madde listeleri kullan
+- somut ipuÃ§larÄ±, sÄ±k yapÄ±lan hatalar ve uygulanabilir tavsiyeler ver
+- "BÃ¶lÃ¼m ${chapter_number}:" gibi baÅŸlÄ±k satÄ±rÄ± ekleme; sadece bÃ¶lÃ¼m gÃ¶vdesini yaz
+- Ä°ngilizce etiket, Ä°ngilizce bÃ¶lÃ¼m baÅŸlÄ±ÄŸÄ± veya meta aÃ§Ä±klama bÄ±rakma
+- oyun terimlerinde doÄŸal TÃ¼rkÃ§e kullan, Ã§ok gerekli teknik terimler dÄ±ÅŸÄ±nda gereksiz Ä°ngilizceye kaÃ§ma
 EOF
 }
 
@@ -284,17 +284,17 @@ render_judge_prompt() {
     local provider_dir="$2"
 
     cat <<EOF
-Sen kıdemli bir Türkçe editör ve oyun rehberi değerlendiricisisin. Aşağıdaki benchmark çıktısını puanla ve sadece geçerli JSON döndür.
+Sen kÄ±demli bir TÃ¼rkÃ§e editÃ¶r ve oyun rehberi deÄŸerlendiricisisin. AÅŸaÄŸÄ±daki benchmark Ã§Ä±ktÄ±sÄ±nÄ± puanla ve sadece geÃ§erli JSON dÃ¶ndÃ¼r.
 
-Değerlendirme ölçütleri:
-- turkish_naturalness: Türkçe ne kadar doğal?
-- structural_consistency: Bölümler birbiriyle ne kadar tutarlı?
-- beginner_usefulness: Yeni başlayan için ne kadar faydalı?
-- actionability: Adımlar ve tavsiyeler ne kadar uygulanabilir?
-- formatting_compliance: İstenen format ve dil kurallarına ne kadar uyulmuş?
-- overall: Genel kalite puanı
+DeÄŸerlendirme Ã¶lÃ§Ã¼tleri:
+- turkish_naturalness: TÃ¼rkÃ§e ne kadar doÄŸal?
+- structural_consistency: BÃ¶lÃ¼mler birbiriyle ne kadar tutarlÄ±?
+- beginner_usefulness: Yeni baÅŸlayan iÃ§in ne kadar faydalÄ±?
+- actionability: AdÄ±mlar ve tavsiyeler ne kadar uygulanabilir?
+- formatting_compliance: Ä°stenen format ve dil kurallarÄ±na ne kadar uyulmuÅŸ?
+- overall: Genel kalite puanÄ±
 
-JSON biçimi:
+JSON biÃ§imi:
 {
   "scores": {
     "turkish_naturalness": 0,
@@ -310,16 +310,16 @@ JSON biçimi:
 }
 
 Kurallar:
-- Tüm puanlar 1 ile 10 arasında tam sayı olsun
+- TÃ¼m puanlar 1 ile 10 arasÄ±nda tam sayÄ± olsun
 - strengths tam 3 madde olsun
 - weaknesses tam 3 madde olsun
-- verdict en fazla 3 cümle olsun
-- sadece JSON döndür
+- verdict en fazla 3 cÃ¼mle olsun
+- sadece JSON dÃ¶ndÃ¼r
 
 Outline:
 $(jq '.' "$outline_file")
 
-Kitap örnekleri:
+Kitap Ã¶rnekleri:
 $(for file in "$provider_dir"/chapter_*_final.md; do
     [ -f "$file" ] || continue
     printf '=== %s ===\n' "$(basename "$file")"
@@ -336,7 +336,7 @@ append_previous_context() {
     local previous_context_file="$4"
 
     {
-        printf 'Bölüm %s - %s\n' "$chapter_number" "$chapter_title"
+        printf 'BÃ¶lÃ¼m %s - %s\n' "$chapter_number" "$chapter_title"
         chapter_excerpt "$chapter_file"
         printf '\n\n'
     } >> "$previous_context_file"
@@ -399,7 +399,7 @@ generate_text_benchmark() {
     log "Text benchmark basladi: $provider_id ($provider_label)"
     start_ts="$(date +%s)"
 
-    outline_system="Sen deneyimli bir oyun rehberi editörüsün. Sadece geçerli JSON döndür."
+    outline_system="Sen deneyimli bir oyun rehberi editÃ¶rÃ¼sÃ¼n. Sadece geÃ§erli JSON dÃ¶ndÃ¼r."
     outline_prompt="$(render_outline_prompt)"
     outline_stderr="$research_dir/outline_stderr.log"
     local outline_start
@@ -445,16 +445,16 @@ generate_text_benchmark() {
         local chapter_ok=false
         local chapter_start
 
-        chapter_title="$(jq -r ".chapters[$((chapter_number - 1))].title // \"Bölüm ${chapter_number}\"" "$working_outline_file")"
+        chapter_title="$(jq -r ".chapters[$((chapter_number - 1))].title // \"BÃ¶lÃ¼m ${chapter_number}\"" "$working_outline_file")"
         chapter_summary="$(jq -r ".chapters[$((chapter_number - 1))].summary // \"\"" "$working_outline_file")"
         chapter_prompt="$(render_chapter_prompt "$working_outline_file" "$chapter_number" "$chapter_title" "$chapter_summary" "$previous_context_file")"
-        chapter_system="Sen profesyonel bir Türkçe oyun rehberi yazarı ve editörüsün. Sadece bölüm gövdesini yaz."
+        chapter_system="Sen profesyonel bir TÃ¼rkÃ§e oyun rehberi yazarÄ± ve editÃ¶rÃ¼sÃ¼n. Sadece bÃ¶lÃ¼m gÃ¶vdesini yaz."
         chapter_stderr_file="$research_dir/chapter_${chapter_number}_stderr.log"
         chapter_file="$provider_dir/chapter_${chapter_number}_final.md"
         chapter_start="$(date +%s)"
         if chapter_raw="$(call_text_provider "$provider_id" "$chapter_model" "$chapter_prompt" "$chapter_system" "0.6" "$CHAPTER_MAX_TOKENS" "1" 2>"$chapter_stderr_file")"; then
             chapter_ok=true
-            printf '# Bölüm %s: %s\n\n%s\n' "$chapter_number" "$chapter_title" "$(clean_llm_output "$chapter_raw")" > "$chapter_file"
+            printf '# BÃ¶lÃ¼m %s: %s\n\n%s\n' "$chapter_number" "$chapter_title" "$(clean_llm_output "$chapter_raw")" > "$chapter_file"
             chapter_success_count=$((chapter_success_count + 1))
             chapter_words="$(wc -w < "$chapter_file" | tr -d ' ')"
             total_words=$((total_words + chapter_words))
@@ -462,7 +462,7 @@ generate_text_benchmark() {
         else
             chapter_ok=false
             chapter_words=0
-            printf '# Bölüm %s: %s\n\nBu bölüm benchmark sırasında üretilemedi.\n' "$chapter_number" "$chapter_title" > "$chapter_file"
+            printf '# BÃ¶lÃ¼m %s: %s\n\nBu bÃ¶lÃ¼m benchmark sÄ±rasÄ±nda Ã¼retilemedi.\n' "$chapter_number" "$chapter_title" > "$chapter_file"
         fi
         chapter_seconds=$(( $(date +%s) - chapter_start ))
         jq -n \
@@ -491,7 +491,7 @@ generate_text_benchmark() {
     local judge_stderr="$research_dir/judge_stderr.log"
     local judge_raw=""
     judge_prompt="$(render_judge_prompt "$working_outline_file" "$provider_dir")"
-    if judge_raw="$(call_text_provider "$JUDGE_PROVIDER" "$judge_model" "$judge_prompt" "Sen kıdemli bir Türkçe editörsün. Sadece geçerli JSON döndür." "0.2" "$JUDGE_MAX_TOKENS" "1" 2>"$judge_stderr")"; then
+    if judge_raw="$(call_text_provider "$JUDGE_PROVIDER" "$judge_model" "$judge_prompt" "Sen kÄ±demli bir TÃ¼rkÃ§e editÃ¶rsÃ¼n. Sadece geÃ§erli JSON dÃ¶ndÃ¼r." "0.2" "$JUDGE_MAX_TOKENS" "1" 2>"$judge_stderr")"; then
         printf '%s\n' "$judge_raw" > "$judge_raw_file"
         extract_json_payload "$judge_raw" > "$judge_json_file"
         if json_is_valid "$judge_json_file"; then
@@ -597,7 +597,7 @@ generate_image_benchmark() {
         --arg back_cover_blurb "$DEFAULT_DESCRIPTION" \
         --arg publisher_name "$PUBLISHER" \
         --arg publication_year "$PUBLICATION_YEAR" \
-        --arg label_line "Minecraft • Hayatta Kalma • İnşa • Macera" \
+        --arg label_line "Minecraft â€¢ Hayatta Kalma â€¢ Ä°nÅŸa â€¢ Macera" \
         '{
             service: $service,
             book_title: $title,
@@ -793,7 +793,7 @@ report_json.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
 lines = []
 lines.append("# Minecraft Oyun Rehberi Benchmark")
 lines.append("")
-lines.append("## Önerilen Text Fallback Sırası")
+lines.append("## Ã–nerilen Text Fallback SÄ±rasÄ±")
 lines.append("")
 for index, item in enumerate(text_ranked, start=1):
     lines.append(
@@ -802,9 +802,9 @@ for index, item in enumerate(text_ranked, start=1):
         f"sure `{item.get('total_seconds', 0)}s`"
     )
 lines.append("")
-lines.append("## Text Sonuçları")
+lines.append("## Text SonuÃ§larÄ±")
 lines.append("")
-lines.append("| Sıra | Provider | Toplam Skor | Genel | Yapı | Türkçe | Format | Bölüm | Kelime | Sızıntı | PDF | Süre | PDF |")
+lines.append("| SÄ±ra | Provider | Toplam Skor | Genel | YapÄ± | TÃ¼rkÃ§e | Format | BÃ¶lÃ¼m | Kelime | SÄ±zÄ±ntÄ± | PDF | SÃ¼re | PDF |")
 lines.append("| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: | --- | ---: | --- |")
 for index, item in enumerate(text_ranked, start=1):
     lines.append(
@@ -820,13 +820,13 @@ for index, item in enumerate(text_ranked, start=1):
             target=item.get("chapter_target", 6),
             words=item.get("total_words", 0),
             leaks=item.get("english_leaks", 0),
-            pdf_ok="evet" if item.get("compile_ok") else "hayır",
+            pdf_ok="evet" if item.get("compile_ok") else "hayÄ±r",
             seconds=item.get("total_seconds", 0),
             pdf=item.get("pdf_file", ""),
         )
     )
 lines.append("")
-lines.append("## Önerilen Kapak Fallback Sırası")
+lines.append("## Ã–nerilen Kapak Fallback SÄ±rasÄ±")
 lines.append("")
 for index, item in enumerate(image_ranked, start=1):
     lines.append(
@@ -834,9 +834,9 @@ for index, item in enumerate(image_ranked, start=1):
         f"ortalama kalite `{item.get('average_quality', 0)}` | sure `{item.get('total_seconds', 0)}s`"
     )
 lines.append("")
-lines.append("## Image Sonuçları")
+lines.append("## Image SonuÃ§larÄ±")
 lines.append("")
-lines.append("| Sıra | Provider | Toplam Skor | Ön | Arka | Ortalama | Süre | Ön Kapak | Arka Kapak |")
+lines.append("| SÄ±ra | Provider | Toplam Skor | Ã–n | Arka | Ortalama | SÃ¼re | Ã–n Kapak | Arka Kapak |")
 lines.append("| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |")
 for index, item in enumerate(image_ranked, start=1):
     lines.append(
@@ -855,9 +855,9 @@ for index, item in enumerate(image_ranked, start=1):
 lines.append("")
 lines.append("## Notlar")
 lines.append("")
-lines.append("- Text benchmark için her provider aynı kitap başlığı, aynı bölüm omurgası ve aynı kelime aralığıyla çalıştırıldı.")
-lines.append("- Outline JSON başarısız olduğunda benchmark devam edebilsin diye kanonik outline kullanıldı; bu durum skora ceza olarak yansıtıldı.")
-lines.append("- Image benchmark sadece statik kapak üretimi için uygun servisleri kapsar; Veo 3.1 video odaklı olduğu için bu sıralamaya alınmadı.")
+lines.append("- Text benchmark iÃ§in her provider aynÄ± kitap baÅŸlÄ±ÄŸÄ±, aynÄ± bÃ¶lÃ¼m omurgasÄ± ve aynÄ± kelime aralÄ±ÄŸÄ±yla Ã§alÄ±ÅŸtÄ±rÄ±ldÄ±.")
+lines.append("- Outline JSON baÅŸarÄ±sÄ±z olduÄŸunda benchmark devam edebilsin diye kanonik outline kullanÄ±ldÄ±; bu durum skora ceza olarak yansÄ±tÄ±ldÄ±.")
+lines.append("- Image benchmark sadece statik kapak Ã¼retimi iÃ§in uygun servisleri kapsar; Veo 3.1 video odaklÄ± olduÄŸu iÃ§in bu sÄ±ralamaya alÄ±nmadÄ±.")
 
 report_md.write_text("\n".join(lines) + "\n", encoding="utf-8")
 PY

@@ -2,7 +2,7 @@
 
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -19,17 +19,26 @@ export function SearchInput({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentValue = searchParams.get(queryKey) || "";
+  const queryString = searchParams.toString();
+  const currentHref = queryString ? `${pathname}?${queryString}` : pathname;
+  const onReplace = useCallback(
+    (href: string) => {
+      if (href === currentHref) return;
+      router.replace(href);
+    },
+    [currentHref, router],
+  );
 
   return (
     <SearchInputField
       key={`${pathname}:${queryKey}:${currentValue}`}
       pathname={pathname}
       queryKey={queryKey}
-      queryString={searchParams.toString()}
+      queryString={queryString}
       initialValue={currentValue}
       placeholder={placeholder}
       className={className}
-      onReplace={(href) => router.replace(href)}
+      onReplace={onReplace}
     />
   );
 }
@@ -59,7 +68,9 @@ function SearchInputField({
       if (value.trim()) params.set(queryKey, value.trim());
       else params.delete(queryKey);
       params.set("page", "1");
-      onReplace(`${pathname}?${params.toString()}`);
+      const nextQuery = params.toString();
+      const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+      onReplace(nextHref);
     }, 300);
 
     return () => window.clearTimeout(timer);

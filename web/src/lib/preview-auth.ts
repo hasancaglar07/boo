@@ -213,7 +213,7 @@ export function persistViewer(payload: PreviewViewer) {
 
 export function hasPremiumAccess(planId?: string | null) {
   const plan = String(planId || getPlan()).trim().toLowerCase();
-  return plan === "starter" || plan === "creator" || plan === "pro" || plan === "premium";
+  return plan === "starter" || plan === "creator" || plan === "pro" || plan === "studio" || plan === "premium";
 }
 
 export function wizardStorageKey(slug = "draft") {

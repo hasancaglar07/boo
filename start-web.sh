@@ -13,8 +13,9 @@ LOG_FILE="$ROOT_DIR/.web-server.log"
 DASHBOARD_HOST="${BOOK_DASHBOARD_HOST:-127.0.0.1}"
 DASHBOARD_PORT="${BOOK_DASHBOARD_PORT:-8765}"
 DASHBOARD_HEALTH_URL="http://${DASHBOARD_HOST}:${DASHBOARD_PORT}/api/health"
+DASHBOARD_FORCE_RESTART="${BOOK_DASHBOARD_FORCE_RESTART:-1}"
 
-NODE_HOME="$ROOT_DIR/.tools/node-current"
+NODE_HOME="${BOOK_NODE_HOME:-$ROOT_DIR/.tools/node-current}"
 NODE_BIN="$NODE_HOME/bin/node"
 COREPACK_BIN="$NODE_HOME/bin/corepack"
 NEXT_BIN="$WEB_DIR/node_modules/next/dist/bin/next"
@@ -22,6 +23,17 @@ BUILD_MODE="${BOOK_WEB_BUILD_MODE:-auto}"
 REQUIRED_NODE_MAJOR="24"
 
 dashboard_started_by_serve=0
+
+dashboard_force_restart_enabled() {
+  case "${DASHBOARD_FORCE_RESTART,,}" in
+    1|true|yes|on)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
 
 node_path() {
   echo "$NODE_HOME/bin:$PATH"
@@ -113,6 +125,34 @@ clear_stale_next_lock() {
 prepare_next_locks() {
   clear_stale_next_lock build
   clear_stale_next_lock dev
+}
+
+ensure_fast_dev_next_dir() {
+  if [ "${BOOK_FAST_DEV:-0}" != "1" ]; then
+    return
+  fi
+
+  case "$WEB_DIR" in
+    /mnt/*) ;;&
+    *)
+      return
+      ;;
+  esac
+
+  local fast_next_root
+  fast_next_root="${BOOK_FAST_NEXT_DIR:-$HOME/.cache/book-web-next-dev}"
+  mkdir -p "$fast_next_root"
+
+  if [ -L "$WEB_DIR/.next" ]; then
+    return
+  fi
+
+  if [ -e "$WEB_DIR/.next" ]; then
+    rm -rf "$WEB_DIR/.next"
+  fi
+
+  ln -sfn "$fast_next_root" "$WEB_DIR/.next"
+  echo "Fast dev cache hazir: $WEB_DIR/.next -> $fast_next_root"
 }
 
 is_healthy() {
@@ -388,10 +428,29 @@ build_only() {
 }
 
 ensure_dashboard_running() {
+  if dashboard_force_restart_enabled; then
+    "$ROOT_DIR/start-dashboard.sh" stop >/dev/null 2>&1 || true
+  fi
   if dashboard_is_healthy; then
     return
   fi
   "$ROOT_DIR/start-dashboard.sh" start >/dev/null
+}
+
+ensure_dashboard_running_optional() {
+  if dashboard_force_restart_enabled; then
+    "$ROOT_DIR/start-dashboard.sh" stop >/dev/null 2>&1 || true
+  fi
+  if dashboard_is_healthy; then
+    return
+  fi
+
+  if "$ROOT_DIR/start-dashboard.sh" start >/dev/null 2>&1; then
+    return
+  fi
+
+  echo "Uyari: dashboard baslatilamadi, web dev yine de aciliyor."
+  echo "Dashboard gerekli akislarda backend baglanti hatasi gorebilirsiniz."
 }
 
 start_server() {
@@ -486,7 +545,8 @@ serve_foreground() {
 
 serve_dev_foreground() {
   ensure_runtime
-  ensure_dashboard_running
+  ensure_dashboard_running_optional
+  ensure_fast_dev_next_dir
   prepare_next_locks
 
   if port_in_use; then
@@ -519,7 +579,7 @@ serve_dev_foreground() {
   echo "Web dev modu baslatiliyor: $HEALTH_URL"
   echo "Durdurmak icin Ctrl+C"
   cd "$WEB_DIR"
-  exec env CI=true PATH="$(node_path)" "$COREPACK_BIN" pnpm dev --hostname "$HOST" --port "$PORT"
+  exec env PATH="$(node_path)" "$COREPACK_BIN" pnpm dev --hostname "$HOST" --port "$PORT"
 }
 
 logs_tail() {

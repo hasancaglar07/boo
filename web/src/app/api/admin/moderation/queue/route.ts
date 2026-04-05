@@ -6,10 +6,12 @@ export async function GET(request: Request) {
   if (session instanceof Response) return session;
   const url = new URL(request.url);
   const base = parseListParams(url);
+  const summaryOnly = url.searchParams.get("summary") === "1";
   return listResponse(
     await listAdminModerationQueue({
       ...base,
       status: url.searchParams.get("status") || "all",
+      summaryOnly,
     }),
   );
 }

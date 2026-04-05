@@ -13,7 +13,6 @@ import {
   Lock,
   Mail,
   Palette,
-  RefreshCw,
   Shield,
   Sparkles,
   TimerReset,
@@ -119,10 +118,31 @@ function GenerationBanner({
   coverReady: boolean;
   recoveryEmailEnabled: boolean;
 }) {
-  if (generation.stage === "error") return null;
+  const fullGeneration = generation.full_generation || {};
+  const fullTargetCount = Number(fullGeneration.target_count || 0);
+  const fullReadyCount = Number(fullGeneration.ready_count || 0);
+  const fullComplete = Boolean(fullGeneration.complete);
+  const fullActive = Boolean(fullGeneration.active);
+  const fullStage = String(fullGeneration.stage || "");
+  const fullError = String(fullGeneration.error || "").trim();
+  const usingFullGeneration =
+    fullTargetCount > 1 || fullActive || fullComplete || (fullStage && fullStage !== "idle");
 
-  const rawProgress = Math.max(0, Math.min(100, Number(generation.progress || 0)));
-  const progress = generation.product_ready ? 100 : rawProgress === 0 ? 25 : rawProgress;
+  if (generation.stage === "error" && !fullError) return null;
+
+  const rawPreviewProgress = Math.max(0, Math.min(100, Number(generation.progress || 0)));
+  const rawFullProgress = Math.max(0, Math.min(100, Number(fullGeneration.progress || 0)));
+  const progress = usingFullGeneration
+    ? fullComplete
+      ? 100
+      : rawFullProgress === 0
+      ? Math.max(12, Math.min(95, Math.round((fullReadyCount / Math.max(1, fullTargetCount)) * 100)))
+      : rawFullProgress
+    : generation.product_ready
+    ? 100
+    : rawPreviewProgress === 0
+    ? 25
+    : rawPreviewProgress;
 
   const steps = [
     {
@@ -137,13 +157,15 @@ function GenerationBanner({
     },
     {
       label: "Tam kitap",
-      done: Boolean(generation.product_ready),
-      live: Boolean(generation.active) && !generation.product_ready,
+      done: usingFullGeneration ? fullComplete : Boolean(generation.product_ready),
+      live: usingFullGeneration
+        ? fullActive && !fullComplete
+        : Boolean(generation.active) && !generation.product_ready,
     },
   ];
 
   return (
-    <div className="rounded-[24px] border border-primary/15 bg-[linear-gradient(135deg,rgba(188,104,67,0.09),rgba(188,104,67,0.02))] px-5 py-5">
+    <div className="rounded-2xl border border-primary/20 border-l-4 border-l-primary bg-[linear-gradient(135deg,rgba(188,104,67,0.07),rgba(188,104,67,0.02))] px-5 py-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
@@ -151,13 +173,28 @@ function GenerationBanner({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative inline-flex size-2 rounded-full bg-primary" />
             </span>
-            {generation.product_ready ? "Üretim tamamlandı" : "Publishing stüdyosu çalışıyor"}
+            {usingFullGeneration
+              ? fullComplete
+                ? "Tam kitap hazır"
+                : "Tam kitap arka planda yazılıyor"
+              : generation.product_ready
+              ? "Üretim tamamlandı"
+              : "Publishing stüdyosu çalışıyor"}
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            {generation.product_ready
+            {usingFullGeneration
+              ? fullComplete
+                ? "Tüm bölümler tamamlandı. Aynı sayfadan PDF/EPUB indirebilir ve çalışma alanında düzenlemeye devam edebilirsin."
+                : "Pro erişim için eksik bölümler arka planda üretiliyor. Sayfa açık kalmasa da süreç devam eder."
+              : generation.product_ready
               ? "Preview, kapak ve tam kitap akışı hazır. Aynı sayfadan kapağı seçip satın alma kararını verebilirsin."
               : "Bu sayfayı kapatsan da üretim devam eder. Preview hazır olduğunda ilgili sayfaya e-posta ile dönebilirsin."}
           </p>
+          {usingFullGeneration && fullGeneration.message ? (
+            <p className="mt-1.5 max-w-2xl text-xs leading-5 text-muted-foreground">
+              {String(fullGeneration.message)}
+            </p>
+          ) : null}
         </div>
         <div className="shrink-0 rounded-full border border-primary/20 bg-background/80 px-3 py-1.5 text-sm font-bold tabular-nums text-primary">
           %{progress}
@@ -206,9 +243,9 @@ function GenerationBanner({
         </div>
       ) : null}
 
-      {generation.error && (
+      {(fullError || generation.error) && (
         <div className="mt-3 rounded-[14px] border border-destructive/20 bg-destructive/8 px-4 py-2.5 text-sm leading-6 text-destructive">
-          {readableGenerationError(generation.error)}
+          {readableGenerationError(fullError || generation.error)}
         </div>
       )}
     </div>
@@ -255,36 +292,42 @@ function PremiumCTA({
   }
 
   return (
-    <div className="space-y-3">
-      <Card className="overflow-hidden border-primary/30 shadow-lg shadow-primary/10">
-        <div className="bg-primary px-5 py-3">
+    <div className="space-y-4">
+      {/* ── Premium Pricing Card ── */}
+      <div className="relative overflow-hidden rounded-2xl border border-primary/25 shadow-xl shadow-primary/15 bg-card">
+        {/* Top accent gradient line */}
+        <div className="h-1.5 bg-gradient-to-r from-primary via-primary/70 to-primary/30" />
+
+        {/* Price header */}
+        <div className="bg-gradient-to-br from-primary/12 via-primary/6 to-transparent px-6 py-5">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground/80">
+            <span className="rounded-full bg-primary/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
               {commerce?.primaryOffer.badge || "Lansman fiyatı"}
             </span>
             {bonusLabel ? (
-              <span className="rounded-full bg-primary-foreground/15 px-2 py-0.5 text-xs font-bold text-primary-foreground">
+              <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-400">
                 {bonusLabel}
               </span>
             ) : null}
           </div>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-primary-foreground">
+          <div className="mt-3 flex items-baseline gap-3">
+            <span className="text-5xl font-extrabold tracking-tight text-foreground">
               {formatUsd(commerce?.primaryOffer.priceCents || 400)}
             </span>
-            <span className="text-sm text-primary-foreground/70 line-through">
+            <span className="text-lg text-muted-foreground line-through">
               {formatUsd(commerce?.primaryOffer.originalPriceCents || 2900)}
             </span>
-            <span className="text-xs text-primary-foreground/70">tek seferlik</span>
           </div>
+          <p className="mt-1 text-sm text-muted-foreground">Tek seferlik • Abonelik yok</p>
         </div>
 
-        <CardContent className="p-5">
+        {/* Features */}
+        <div className="px-6 pb-5 pt-4">
           <p className="text-sm font-semibold text-foreground">
-            {commerce?.primaryOffer.description || "Bu kitap için tam erişim — abonelik yok"}
+            {commerce?.primaryOffer.description || "Bu kitap için tam erişim - abonelik yok"}
           </p>
 
-          <ul className="mt-4 space-y-2.5">
+          <ul className="mt-4 space-y-3">
             {[
               { icon: FileText, text: "Tüm bölümler kilitsiz" },
               { icon: Download, text: "PDF + EPUB export" },
@@ -292,16 +335,19 @@ function PremiumCTA({
               { icon: Zap, text: "Çalışma alanı ve düzenleme" },
               { icon: Shield, text: "30 gün iade garantisi" },
             ].map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-2.5 text-sm text-foreground">
-                <Icon className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+              <li key={text} className="flex items-center gap-3 text-sm text-foreground">
+                <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                  <Icon className="size-3.5 text-primary" aria-hidden="true" />
+                </div>
                 {text}
               </li>
             ))}
           </ul>
 
+          {/* Main CTA */}
           <Button
             size="lg"
-            className="mt-5 w-full text-base font-bold shadow-md shadow-primary/20"
+            className="mt-6 w-full text-base font-bold shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all duration-300"
             onClick={() => onUpgrade("full_unlock")}
           >
             <Sparkles className="mr-2 size-4" aria-hidden="true" />
@@ -309,10 +355,10 @@ function PremiumCTA({
             <ArrowRight className="ml-2 size-4" aria-hidden="true" />
           </Button>
 
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            Anında erişim · Kredi kartı güvenli
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Anında erişim • Kredi kartı güvenli
           </p>
-          <div className="mt-3 flex justify-center gap-4">
+          <div className="mt-2 flex justify-center gap-6">
             <button
               type="button"
               className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline transition-colors"
@@ -328,8 +374,8 @@ function PremiumCTA({
               EPUB indir
             </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <div className="rounded-[18px] border border-border/60 bg-background/60 px-4 py-3">
         <div className="grid grid-cols-2 gap-2">
@@ -660,7 +706,7 @@ function CoverLabCard({
           </div>
 
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
-            İlk üretimde 1 ön + 1 arka konsept gelir. Beğenmezsen AI ile yeniden üret'e basıp alternatif set alabilirsin.
+            İlk üretimde 1 ön + 1 arka konsept gelir. Beğenmezsen AI ile yeniden üret&apos;e basıp alternatif set alabilirsin.
           </p>
         </CardContent>
       </Card>
@@ -751,7 +797,7 @@ function BookMetaStrip({
       ].map(({ label, value }) => (
         <div
           key={label}
-          className="rounded-[14px] border border-border/70 bg-background/70 px-3 py-2"
+          className="rounded-xl bg-muted/50 px-3 py-2 border-0"
         >
           <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             {label}
@@ -787,7 +833,7 @@ function VisibleSection({
             <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               {isLive ? "Canlı hazırlanan bölüm" : "Okunabilir bölüm"}
             </div>
-            <h2 className="mt-1.5 text-xl font-semibold text-foreground md:text-2xl">
+            <h2 className="mt-1.5 text-2xl font-bold text-foreground md:text-3xl tracking-tight">
               {section.number ? `${section.number}. ` : ""}
               {section.title}
             </h2>
@@ -806,7 +852,7 @@ function VisibleSection({
           )}
         </div>
 
-        <div className="text-sm leading-[1.9] text-muted-foreground md:text-[15px]">
+        <div className="text-base leading-[1.85] text-muted-foreground md:text-lg">
           {section.content || (
             <span className="italic">İçerik hazırlanıyor, sayfayı açık bırak...</span>
           )}
@@ -848,7 +894,7 @@ function LockedSectionCard({
       className="w-full text-left"
       onClick={onClick}
     >
-      <div className="group rounded-[20px] border border-dashed border-border/70 bg-background/50 px-5 py-4 transition hover:border-primary/30 hover:bg-accent/40">
+      <div className="group rounded-2xl border border-border/40 bg-gradient-to-r from-muted/60 to-muted/30 px-5 py-4 backdrop-blur-sm transition-all duration-200 hover:border-primary/30 hover:from-muted/80 hover:to-muted/50 hover:shadow-md">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -868,7 +914,7 @@ function LockedSectionCard({
             {section.teaser}
           </p>
         )}
-        <div className="mt-3 text-xs font-semibold text-primary opacity-0 transition group-hover:opacity-100">
+        <div className="mt-3 text-xs font-semibold text-primary opacity-80">
           Premium ile aç →
         </div>
       </div>
@@ -1003,8 +1049,13 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   useEffect(() => {
     if (!preview) return;
     const generation = preview.generation || EMPTY_GENERATION;
+    const fullGeneration = generation.full_generation || {};
+    const fullTargetCount = Number(fullGeneration.target_count || 0);
+    const fullComplete = Boolean(fullGeneration.complete);
+    const fullErrored = String(fullGeneration.stage || "") === "error";
+    const keepPollingForFullBook = fullTargetCount > 1 && !fullComplete && !fullErrored;
     if (
-      generation.product_ready ||
+      (generation.product_ready && !keepPollingForFullBook) ||
       generation.stage === "error" ||
       generation.stage === "needs_attention"
     ) {
@@ -1031,7 +1082,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     }
   }, [preview, slug]);
 
-  async function generateCoverLab(force = false, variantCount = 1) {
+  const generateCoverLab = useCallback(async (force = false, variantCount = 1) => {
     setCoverGenerating(true);
     setCoverTargetCount(Math.max(1, Math.min(3, variantCount)));
     try {
@@ -1047,7 +1098,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     } finally {
       setCoverGenerating(false);
     }
-  }
+  }, [hydrate, slug]);
 
   useEffect(() => {
     if (!preview || coverGenerating || coverLabRequestedRef.current) return;
@@ -1057,7 +1108,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     void generateCoverLab(false, 1).finally(() => {
       coverLabRequestedRef.current = false;
     });
-  }, [preview, coverGenerating]);
+  }, [preview, coverGenerating, generateCoverLab]);
 
   async function handleSelectVariant(variantId: string) {
     setSelectingVariantId(variantId);
@@ -1103,7 +1154,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
           {/* Generation status placeholder */}
           <div className="h-[72px] animate-pulse rounded-[20px] bg-muted" />
 
-          <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)_288px]">
+          <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)_288px]">
             {/* Cover column */}
             <div className="space-y-4">
               <div className="aspect-[3/4] animate-pulse rounded-[24px] bg-muted" />
@@ -1132,6 +1183,10 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
   const premium = Boolean(preview.entitlements?.can_view_full_book);
   const generation = preview.generation || EMPTY_GENERATION;
+  const fullGeneration = generation.full_generation;
+  const effectiveProductReady = premium
+    ? Boolean(fullGeneration?.complete || generation.product_ready)
+    : Boolean(generation.product_ready);
   const ratio = Math.round((preview.preview.ratio || 0.2) * 100);
   const authorName = preview.book.author || draftMeta?.authorName || "Book Creator";
   const imprint = preview.book.publisher || draftMeta?.imprint || "Book Generator";
@@ -1196,7 +1251,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       />
 
       {/* Main grid: cover | content | sidebar */}
-      <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_272px]">
+      <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_272px]">
 
         {/* ── LEFT: Cover + TOC ─────────────────────────────────────────────── */}
         <div className="space-y-4 lg:sticky lg:top-6 lg:h-fit">
@@ -1251,7 +1306,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   {preview.preview.toc.map((item) => (
                     <div
                       key={`${item.number}-${item.title}`}
-                      className="rounded-[12px] border border-border/60 bg-background/60 px-3 py-2 text-sm leading-6 text-foreground"
+                      className="rounded-lg px-3 py-2 text-sm border-0 hover:bg-muted/60 transition-colors leading-6 text-foreground"
                     >
                       {item.number ? (
                         <span className="mr-1.5 font-semibold text-muted-foreground">{item.number}.</span>
@@ -1268,11 +1323,11 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         {/* ── CENTER: Book info + Content ───────────────────────────────────── */}
         <div className="space-y-5">
           {/* Book header card */}
-          <Card className="border-primary/15 bg-[radial-gradient(ellipse_at_top_right,rgba(188,104,67,0.08),transparent_60%)]">
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/8 via-primary/4 to-transparent">
             <CardContent className="p-6 md:p-8">
               {/* Badges */}
               <div className="mb-4 flex flex-wrap items-center gap-1.5">
-                <span className="rounded-full border border-primary/25 bg-primary/8 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+                <span className="rounded-full bg-primary/12 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-primary border-0">
                   Preview
                 </span>
                 {generation.active && (
@@ -1284,7 +1339,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
               </div>
 
               {/* Title */}
-              <h2 className="text-3xl font-semibold leading-tight text-foreground md:text-4xl xl:text-5xl">
+              <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-foreground md:text-4xl xl:text-5xl md:text-4xl xl:text-5xl">
                 {preview.book.title}
               </h2>
               {preview.book.subtitle && (
@@ -1402,7 +1457,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
           )}
 
           {/* Locked sections */}
-          {preview.preview.locked_sections.length > 0 && (
+          {!premium && preview.preview.locked_sections.length > 0 && (
             <div>
               <div className="mb-3 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Kilitli bölümler ({preview.preview.locked_sections.length})
@@ -1444,7 +1499,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
             premium={premium}
             coverReady={Boolean(coverUrl)}
             previewReady={Boolean(generation.preview_ready)}
-            productReady={Boolean(generation.product_ready)}
+            productReady={effectiveProductReady}
             onUnlock={() => openUpgrade("full_unlock")}
           />
 
@@ -1463,7 +1518,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                 ].map((item) => (
                   <div
                     key={item}
-                    className="rounded-[16px] border border-border/60 bg-background/60 px-3 py-3 text-sm leading-6 text-foreground"
+                    className="rounded-xl border border-border/40 bg-muted/30 px-3 py-2.5 text-sm leading-6 text-foreground"
                   >
                     {item}
                   </div>
@@ -1480,7 +1535,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   Kitap Kimliği
                 </div>
                 <div className="space-y-3">
-                  <div className="rounded-[14px] border border-border/60 bg-background/60 px-3 py-3">
+                  <div className="rounded-xl bg-muted/30 px-3 py-3 border-0">
                     <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                       Yazar
                     </div>
@@ -1488,7 +1543,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   </div>
 
                   {logoUrl && (
-                    <div className="rounded-[14px] border border-border/60 bg-background/60 px-3 py-3">
+                    <div className="rounded-xl bg-muted/30 px-3 py-3 border-0">
                       <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                         Logo
                       </div>
@@ -1505,7 +1560,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   )}
 
                   {coverBrief && (
-                    <div className="rounded-[14px] border border-border/60 bg-background/60 px-3 py-3">
+                    <div className="rounded-xl bg-muted/30 px-3 py-3 border-0">
                       <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                         Kapak vurgusu
                       </div>
@@ -1514,7 +1569,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   )}
 
                   {authorBio && (
-                    <div className="rounded-[14px] border border-border/60 bg-background/60 px-3 py-3">
+                    <div className="rounded-xl bg-muted/30 px-3 py-3 border-0">
                       <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                         Yazar biyografisi
                       </div>
@@ -1530,7 +1585,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
       {/* ── Mobile fixed bottom bar (non-premium only) ─────────────────────── */}
       {!premium && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/97 px-4 pb-safe pt-3 pb-3 backdrop-blur-md xl:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background/98 px-4 pb-safe pt-3 pb-4 backdrop-blur-lg shadow-[0_-8px_30px_rgba(0,0,0,0.08)] xl:hidden">
           <div className="mx-auto flex max-w-lg items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-foreground">
