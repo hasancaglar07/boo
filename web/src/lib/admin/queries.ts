@@ -1868,7 +1868,7 @@ export async function unlockBookPremium(slug: string, actorUserId: string) {
     where: { slug },
   });
   if (!book?.ownerUserId) {
-    throw new Error("Kitabın bağlı bir kullanıcı sahibi yok.");
+    throw new Error("Book has no associated user owner.");
   }
 
   const entitlement = await prisma.entitlement.create({
@@ -1891,7 +1891,7 @@ export async function unlockBookPremium(slug: string, actorUserId: string) {
       status: "paid",
       amount: 0,
       currency: PLAN_CURRENCY,
-      description: `${slug} için admin tarafından premium açıldı`,
+      description: `Premium unlocked by admin for ${slug}`,
       bookSlug: slug,
       metadata: {
         actorUserId,
@@ -1967,7 +1967,7 @@ export async function changeUserPlan(
         status: "paid",
         amount: 0,
         currency: PLAN_CURRENCY,
-        description: `Admin tarafından plan değiştirildi: ${PLAN_LABELS[oldPlan] || oldPlan} → ${PLAN_LABELS[newPlanId] || newPlanId}${reason ? ` | Sebep: ${reason}` : ""}`,
+        description: `Plan changed by admin: ${PLAN_LABELS[oldPlan] || oldPlan} → ${PLAN_LABELS[newPlanId] || newPlanId}${reason ? ` | Reason: ${reason}` : ""}`,
         metadata: {
           actorUserId,
           oldPlan,

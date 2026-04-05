@@ -22,7 +22,7 @@ export async function adminFetch<T>(path: string, init?: AdminFetchOptions) {
   };
 
   if (!response.ok && !init?.allowErrorPayload) {
-    throw new Error(payload?.error || "Admin isteği başarısız.");
+    throw new Error(payload?.error || "Admin request failed.");
   }
 
   return payload;
@@ -45,7 +45,7 @@ export function useAdminResource<T>(
       });
       setData(payload);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Yüklenemedi.");
+      setError(cause instanceof Error ? cause.message : "Failed to load.");
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ export function useAdminResource<T>(
         setError("");
       } catch (cause) {
         if (!active) return;
-        setError(cause instanceof Error ? cause.message : "Yüklenemedi.");
+        setError(cause instanceof Error ? cause.message : "Failed to load.");
       } finally {
         if (active) {
           setLoading(false);

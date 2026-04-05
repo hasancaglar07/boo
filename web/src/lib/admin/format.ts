@@ -1,5 +1,5 @@
 export function formatAdminCurrency(amountCents: number, currency = "USD") {
-  return new Intl.NumberFormat("tr-TR", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
@@ -7,7 +7,7 @@ export function formatAdminCurrency(amountCents: number, currency = "USD") {
 }
 
 export function formatAdminNumber(value: number) {
-  return new Intl.NumberFormat("tr-TR", {
+  return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 1,
   }).format(value || 0);
 }
@@ -16,7 +16,7 @@ export function formatAdminDate(value?: string | Date | null) {
   if (!value) return "—";
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return new Intl.DateTimeFormat("tr-TR", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -27,7 +27,7 @@ export function formatAdminDateTime(value?: string | Date | null) {
   if (!value) return "—";
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return new Intl.DateTimeFormat("tr-TR", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -42,7 +42,7 @@ export function formatRelativeTime(value?: string | Date | null) {
   if (Number.isNaN(date.getTime())) return "—";
 
   const diffMs = date.getTime() - Date.now();
-  const formatter = new Intl.RelativeTimeFormat("tr-TR", { numeric: "auto" });
+  const formatter = new Intl.RelativeTimeFormat("en-US", { numeric: "auto" });
   const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
     ["year", 1000 * 60 * 60 * 24 * 365],
     ["month", 1000 * 60 * 60 * 24 * 30],
@@ -58,7 +58,7 @@ export function formatRelativeTime(value?: string | Date | null) {
     }
   }
 
-  return "şimdi";
+  return "now";
 }
 
 export function toCsv(rows: Array<Record<string, unknown>>) {

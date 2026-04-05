@@ -79,20 +79,20 @@ export async function sendMagicLinkEmail(to: string, url: string) {
 
   await deliverEmail({
     to,
-    subject: checkoutPath ? "Book Generator giriş + ödeme bağlantın" : "Book Generator giriş bağlantın",
+    subject: checkoutPath ? "Book Generator login + payment link" : "Book Generator login link",
     html: checkoutPath
       ? `
-      <p>Book Generator'a devam etmek için aşağıdaki giriş bağlantısını kullan.</p>
-      <p>Hesabın yoksa hızlı kayıt, hesabın varsa giriş yapılır ve ödeme penceresi otomatik açılır.</p>
-      <p><a href="${url}">Hızlı kayıt / giriş bağlantısı</a></p>
-      <p><a href="${checkoutUrl}">Doğrudan ödeme ekranı</a></p>
-      <p>Bağlantı 15 dakika boyunca geçerlidir.</p>
+      <p>Use the login link below to continue with Book Generator.</p>
+      <p>If you don't have an account, you'll get a quick signup. If you do, you'll be logged in and the payment window will open automatically.</p>
+      <p><a href="${url}">Quick signup / login link</a></p>
+      <p><a href="${checkoutUrl}">Direct payment screen</a></p>
+      <p>The link is valid for 15 minutes.</p>
     `
       : `
-      <p>Book Generator'a giriş yapmak için aşağıdaki bağlantıyı kullan.</p>
-      <p>Hesabın yoksa aynı bağlantı ile hızlı kayıt olur, varsa doğrudan giriş yaparsın.</p>
+      <p>Use the link below to log in to Book Generator.</p>
+      <p>If you don't have an account, the same link will give you a quick signup. If you do, you'll be logged in directly.</p>
       <p><a href="${url}">${url}</a></p>
-      <p>Bağlantı 15 dakika boyunca geçerlidir.</p>
+      <p>The link is valid for 15 minutes.</p>
     `,
   });
 }
@@ -101,8 +101,8 @@ export async function sendEmailVerificationEmail(to: string, token: string) {
   const url = absoluteUrl(`/api/auth/verify-email/confirm?token=${encodeURIComponent(token)}`);
   await deliverEmail({
     to,
-    subject: "E-posta adresini doğrula",
-    html: `<p>Hesap güvenliği ve fatura bildirimleri için e-posta adresini doğrula.</p><p><a href="${url}">${url}</a></p><p>Bağlantı 24 saat boyunca geçerlidir.</p>`,
+    subject: "Verify your email address",
+    html: `<p>Verify your email address for account security and billing notifications.</p><p><a href="${url}">${url}</a></p><p>The link is valid for 24 hours.</p>`,
   });
 }
 
@@ -110,8 +110,8 @@ export async function sendPasswordResetEmail(to: string, token: string) {
   const url = absoluteUrl(`/reset-password?token=${encodeURIComponent(token)}`);
   await deliverEmail({
     to,
-    subject: "Şifreni sıfırla",
-    html: `<p>Şifreni sıfırlamak için aşağıdaki bağlantıyı aç.</p><p><a href="${url}">${url}</a></p><p>Bağlantı 30 dakika boyunca geçerlidir.</p>`,
+    subject: "Reset your password",
+    html: `<p>Open the link below to reset your password.</p><p><a href="${url}">${url}</a></p><p>The link is valid for 30 minutes.</p>`,
   });
 }
 
@@ -129,12 +129,12 @@ export async function sendPreviewReadyEmail(input: {
   const url = previewCampaignUrl(input.token);
   await deliverEmail({
     to: input.to,
-    subject: `${input.title} preview'ın hazır`,
+    subject: `${input.title} preview is ready`,
     html: `
-      <p>${input.name ? `${input.name}, ` : ""}kitabın için ilk okunabilir bölüm ve preview yüzeyi hazır.</p>
-      <p><strong>${input.title}</strong> için kapağı inceleyebilir, kilitli bölümleri görebilir ve tek tıkla kaldığın preview sayfasına dönebilirsin.</p>
-      <p><a href="${url}">Preview'a dön</a></p>
-      <p>Hazır olunca tam kitabı, PDF ve EPUB export'u aynı sayfadan açabilirsin.</p>
+      <p>${input.name ? `${input.name}, ` : ""}the first readable chapter and preview surface for your book is ready.</p>
+      <p>You can review the cover for <strong>${input.title}</strong>, see locked chapters, and return to your preview page with one click.</p>
+      <p><a href="${url}">Return to preview</a></p>
+      <p>When ready, you can unlock the full book, PDF and EPUB export from the same page.</p>
     `,
   });
 }
@@ -149,21 +149,21 @@ export async function sendPreviewRecoveryEmail(input: {
   const url = previewCampaignUrl(input.token);
   const subject =
     input.stage === "day10"
-      ? `${input.title} için bonus hâlâ aktif`
-      : `${input.title} preview'ın seni bekliyor`;
+      ? `${input.title} bonus is still active`
+      : `${input.title} preview is waiting for you`;
   const bonusLine =
     input.stage === "day10"
-      ? "Dönüşünde bonus cover reroll ve export paketi seni bekliyor."
-      : "Hazır preview'ına geri dönüp kapağı seçebilir ve kitabını tamamlayabilirsin.";
+      ? "Bonus cover reroll and export package are waiting for you on your return."
+      : "You can return to your ready preview, select a cover, and complete your book."
 
   await deliverEmail({
     to: input.to,
     subject,
     html: `
-      <p>${input.name ? `${input.name}, ` : ""}${input.title} için hazırladığın preview hâlâ hazır durumda.</p>
+      <p>${input.name ? `${input.name}, ` : ""}the preview you created for ${input.title} is still ready.</p>
       <p>${bonusLine}</p>
       <p><a href="${url}">Preview'a geri dön</a></p>
-      <p>Bu e-postalar ayda en fazla bir kez gönderilir. İstersen hesap ayarlarından kapatabilirsin.</p>
+      <p>These emails are sent at most once per month. You can turn them off in your account settings if you wish.</p>
     `,
   });
 }
@@ -186,21 +186,21 @@ export async function sendBookIdeaReportEmail(input: {
 
   await deliverEmail({
     to: input.to,
-    subject: `Book Idea Validator raporun hazır: ${result.overallScore}/100`,
+    subject: `Your Book Idea Validator report is ready: ${result.overallScore}/100`,
     html: `
-      <p>Book Idea Validator raporun hazır.</p>
-      <p><strong>Skor:</strong> ${result.overallScore}/100<br /><strong>Verdict:</strong> ${result.verdict}<br /><strong>Önerilen format:</strong> ${result.recommendedFormat}</p>
-      <p><strong>Önerilen açı:</strong><br />${result.recommendedAngle}</p>
-      <p><strong>Güçlü yönler</strong></p>
+      <p>Your Book Idea Validator report is ready.</p>
+      <p><strong>Skor:</strong> ${result.overallScore}/100<br /><strong>Verdict:</strong> ${result.verdict}<br /><strong>Recommended format:</strong> ${result.recommendedFormat}</p>
+      <p><strong>Recommended angle:</strong><br />${result.recommendedAngle}</p>
+      <p><strong>Strengths</strong></p>
       <ul>${strongItems}</ul>
-      <p><strong>Riskler</strong></p>
+      <p><strong>Risks</strong></p>
       <ul>${riskItems}</ul>
-      <p><strong>Başlık önerileri</strong></p>
+      <p><strong>Title suggestions</strong></p>
       <ul>${titleIdeas}</ul>
       <p><strong>Mini outline</strong></p>
       <ol>${outlineItems}</ol>
-      <p><strong>Sonraki adım:</strong> ${result.nextStep}</p>
-      <p><a href="${previewUrl.toString()}">Bu fikri şimdi ücretsiz preview akışına taşı</a></p>
+      <p><strong>Next step:</strong> ${result.nextStep}</p>
+      <p><a href="${previewUrl.toString()}">Move this idea to the free preview flow now</a></p>
     `,
   });
 }
@@ -212,7 +212,7 @@ export async function sendGenericMarketingToolReportEmail(input: {
 }) {
   const tool = getGenericMarketingToolBySlug(input.toolSlug);
   if (!tool) {
-    throw new Error("Geçersiz tool report isteği.");
+    throw new Error("Invalid tool report request.");
   }
 
   const result = tool.evaluate(input.values);
@@ -229,18 +229,18 @@ export async function sendGenericMarketingToolReportEmail(input: {
 
   await deliverEmail({
     to: input.to,
-    subject: `${tool.name} raporun hazır: ${result.overallScore}/100`,
+    subject: `Your ${tool.name} report is ready: ${result.overallScore}/100`,
     html: `
-      <p>${tool.name} raporun hazır.</p>
-      <p><strong>Skor:</strong> ${result.overallScore}/100<br /><strong>Verdict:</strong> ${result.verdict}<br /><strong>Önerilen format:</strong> ${result.recommendedFormat}</p>
-      <p><strong>Önerilen açı:</strong><br />${result.recommendedAngle}</p>
-      <p><strong>Güçlü yönler</strong></p>
+      <p>Your ${tool.name} report is ready.</p>
+      <p><strong>Skor:</strong> ${result.overallScore}/100<br /><strong>Verdict:</strong> ${result.verdict}<br /><strong>Recommended format:</strong> ${result.recommendedFormat}</p>
+      <p><strong>Recommended angle:</strong><br />${result.recommendedAngle}</p>
+      <p><strong>Strengths</strong></p>
       <ul>${strongItems}</ul>
-      <p><strong>Riskler</strong></p>
+      <p><strong>Risks</strong></p>
       <ul>${riskItems}</ul>
       ${sectionHtml}
-      <p><strong>Sonraki adım:</strong> ${result.nextStep}</p>
-      <p><a href="${previewUrl}">Bu açıyı şimdi ücretsiz preview akışına taşı</a></p>
+      <p><strong>Next step:</strong> ${result.nextStep}</p>
+      <p><a href="${previewUrl}">Move this angle to the free preview flow now</a></p>
     `,
   });
 }
@@ -251,7 +251,7 @@ export async function sendLeadMagnetDeliveryEmail(input: {
 }) {
   const leadMagnet = getLeadMagnetBySlug(input.leadMagnetSlug);
   if (!leadMagnet) {
-    throw new Error("Geçersiz lead magnet isteği.");
+    throw new Error("Invalid lead magnet request.");
   }
 
   const deliveryHtml = leadMagnet.deliverySections
@@ -268,12 +268,12 @@ export async function sendLeadMagnetDeliveryEmail(input: {
 
   await deliverEmail({
     to: input.to,
-    subject: `${leadMagnet.title} hazır`,
+    subject: `Your ${leadMagnet.title} is ready`,
     html: `
-      <p>${leadMagnet.title} hazır.</p>
+      <p>Your ${leadMagnet.title} is ready.</p>
       <p>${leadMagnet.description}</p>
       ${deliveryHtml}
-      <p><strong>Hemen uygulayabileceğin hızlı adımlar</strong></p>
+      <p><strong>Quick steps you can apply right now</strong></p>
       <ul>${instantAccessHtml}</ul>
       <p><a href="${nextStepUrl}">${leadMagnet.nextStepLabel}</a></p>
       <p><a href="${secondaryUrl}">${leadMagnet.secondaryCtaLabel}</a></p>
@@ -298,21 +298,21 @@ export async function sendContactRequestEmails(input: {
     to: inbox,
     subject: `[Contact] ${subjectLabel} - ${input.name}`,
     html: `
-      <p>Yeni bir iletişim talebi gönderildi.</p>
-      <p><strong>Ad:</strong> ${safeName}<br /><strong>E-posta:</strong> ${safeEmail}<br /><strong>Konu:</strong> ${safeSubjectLabel}</p>
-      <p><strong>Mesaj</strong></p>
+      <p>A new contact request has been submitted.</p>
+      <p><strong>Name:</strong> ${safeName}<br /><strong>Email:</strong> ${safeEmail}<br /><strong>Subject:</strong> ${safeSubjectLabel}</p>
+      <p><strong>Message</strong></p>
       <p>${safeMessage}</p>
     `,
   });
 
   await deliverEmail({
     to: input.email,
-    subject: "Mesajını aldık",
+    subject: "We received your message",
     html: `
-      <p>Mesajını aldık.</p>
+      <p>We received your message.</p>
       <p><strong>Konu:</strong> ${safeSubjectLabel}</p>
-      <p>Ekibimiz en kısa sürede sana geri dönecek. Gerekirse iletişim sayfasından ek bağlam paylaşabilirsin.</p>
-      <p><strong>Gönderdiğin mesaj</strong></p>
+      <p>Our team will get back to you as soon as possible. You can share additional context from the contact page if needed.</p>
+      <p><strong>Your submitted message</strong></p>
       <p>${safeMessage}</p>
     `,
   });

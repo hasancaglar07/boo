@@ -218,6 +218,89 @@ export async function getOwnedBookSlugs(viewer: Viewer) {
   return new Set(books.map((item) => item.slug));
 }
 
+export async function backfillLegacyBookOwnership(input: {
+  userId: string;
+  candidateSlugs: string[];
+}) {
+  const slugs = Array.from(
+    new Set(
+      input.candidateSlugs
+        .map((slug) => String(slug || "").trim())
+        .filter(Boolean),
+    ),
+  );
+  if (!input.userId || slugs.length === 0) return 0;
+
+  let allowFilesystemBackfill =
+    process.env.BOOK_ENABLE_LEGACY_FILESYSTEM_BACKFILL === "1" ||
+    process.env.NODE_ENV !== "production";
+  if (!allowFilesystemBackfill) {
+    // In production keep the original single-user safety gate unless explicitly enabled.
+    const userCount = await prisma.user.count();
+    allowFilesystemBackfill = userCount === 1;
+  }
+
+  const existing = await prisma.bookRecord.findMany({
+    where: {
+      slug: {
+        in: slugs,
+      },
+    },
+    select: {
+      slug: true,
+      ownerUserId: true,
+      guestIdentityId: true,
+    },
+  });
+
+  const existingBySlug = new Map(existing.map((item) => [item.slug, item] as const));
+  const missingSlugs = allowFilesystemBackfill
+    ? slugs.filter((slug) => !existingBySlug.has(slug))
+    : [];
+  const unassignedSlugs = existing
+    .filter((item) => !item.ownerUserId && !item.guestIdentityId)
+    .map((item) => item.slug);
+
+  if (missingSlugs.length === 0 && unassignedSlugs.length === 0) {
+    return 0;
+  }
+
+  const now = new Date();
+  let claimedCount = 0;
+
+  await prisma.$transaction(async (tx) => {
+    if (unassignedSlugs.length > 0) {
+      const updated = await tx.bookRecord.updateMany({
+        where: {
+          slug: {
+            in: unassignedSlugs,
+          },
+        },
+        data: {
+          ownerUserId: input.userId,
+          claimedAt: now,
+          origin: "legacy.backfill.unassigned",
+        },
+      });
+      claimedCount += updated.count;
+    }
+
+    if (missingSlugs.length > 0) {
+      const created = await tx.bookRecord.createMany({
+        data: missingSlugs.map((slug) => ({
+          slug,
+          ownerUserId: input.userId,
+          origin: "legacy.backfill.filesystem",
+          claimedAt: now,
+        })),
+      });
+      claimedCount += created.count;
+    }
+  });
+
+  return claimedCount;
+}
+
 export async function canAccessBookPreview(viewer: Viewer, slug: string) {
   const book = await prisma.bookRecord.findUnique({
     where: { slug },
@@ -247,7 +330,9 @@ export async function getEffectivePlanId(userId?: string | null): Promise<BookPl
   const entitlements = await prisma.entitlement.findMany({
     where: {
       userId,
-      status: "active",
+      status: {
+        in: ["active", "trialing"],
+      },
       OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
     },
     orderBy: { createdAt: "desc" },
@@ -268,7 +353,9 @@ export async function canAccessFullBook(userId: string | null, slug: string) {
   const entitlements = await prisma.entitlement.findMany({
     where: {
       userId,
-      status: "active",
+      status: {
+        in: ["active", "trialing"],
+      },
       OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
     },
     select: {
@@ -403,13 +490,13 @@ export async function getBookStartAllowance(userId: string | null): Promise<Book
 
 export function usageReasonLabel(reason: BookStartReason) {
   if (reason === "premium_single_book_used") {
-    return "Tek kitap erişimini mevcut kitabında kullandın. Yeni kitap için yeni bir plan seç.";
+    return "You have used your single-book access on your current book. Choose a new plan for a new book.";
   }
   if (reason === "monthly_quota_reached") {
-    return "Aylık kitap kotana ulaştın. Yeni kitap başlatmak için planını yükselt ya da dönem yenilenmesini bekle.";
+    return "You have reached your monthly book quota. Upgrade your plan or wait for the next billing cycle to start a new book.";
   }
   if (reason === "free_preview_used") {
-    return "Free plan ilk preview ile sınırlı. İkinci kitabı başlatmak için planını yükselt.";
+    return "Free plan is limited to the first preview. Upgrade your plan to start a second book.";
   }
   return "";
 }
@@ -441,31 +528,31 @@ export async function buildPreviewCommerce(userId: string | null, slug: string):
   return {
     primaryOffer: {
       planId: "premium",
-      label: "Bu kitabı aç",
+      label: "Unlock this book",
       priceCents: PLAN_PRICES_CENTS.premium,
       originalPriceCents: 2900,
-      badge: "Tek kitap · anında erişim",
-      description: "Bu kitap için tüm bölümleri, PDF/EPUB export'u ve workspace düzenlemelerini aç.",
+      badge: "Single book · instant access",
+      description: "Unlock all chapters, PDF/EPUB export, and workspace editing for this book.",
     },
     secondaryOffer: {
       planId: "starter",
       label: "Starter",
       priceCents: PLAN_PRICES_CENTS.starter,
       interval: "monthly",
-      quotaLabel: "Ayda 10 kitap",
-      description: "Düzenli üretim ritmi için aylık kota, export ve kapak akışını aç.",
+      quotaLabel: "10 books per month",
+      description: "Open monthly quota, export, and cover workflow for a steady production rhythm.",
     },
     bonusDeadlineAt: bonusDeadlineAt?.toISOString() || null,
     paywallState: fullAccess ? "unlocked" : "locked",
     launchBonus: [
-      "3 kapak konsepti seçimi",
-      "1 ekstra cover reroll hakkı",
-      "PDF + EPUB export paketi",
+      "3 cover concept selections",
+      "1 extra cover reroll credit",
+      "PDF + EPUB export package",
     ],
     trustPoints: [
-      "30 gün iade garantisi",
-      "KDP uyumlu export",
-      "Abonelik zorunlu değil",
+      "30-day money-back guarantee",
+      "KDP-compatible export",
+      "No subscription required",
     ],
     recoveryEmailEnabled: Boolean(user?.email && !user?.previewRecoveryOptOut),
   };
@@ -777,7 +864,7 @@ export async function recordCheckoutEntitlement(input: {
 }, dbClient: PrismaClient | Prisma.TransactionClient = prisma) {
   async function runWithDb(db: Prisma.TransactionClient) {
     if (input.planId === "free") {
-      throw new Error("Ücretsiz plan satın alma ile değiştirilemez.");
+      throw new Error("Free plan cannot be changed via purchase.");
     }
 
     if (SUBSCRIPTION_PLANS.has(input.planId)) {
@@ -812,7 +899,7 @@ export async function recordCheckoutEntitlement(input: {
           status: "paid",
           amount: PLAN_PRICES_CENTS[input.planId] || 0,
           currency: PLAN_CURRENCY,
-          description: `${input.planId} planı aktif edildi`,
+          description: `${input.planId} plan activated`,
         },
       });
 
@@ -842,7 +929,7 @@ export async function recordCheckoutEntitlement(input: {
         status: "paid",
         amount: PLAN_PRICES_CENTS.premium,
         currency: PLAN_CURRENCY,
-        description: input.bookSlug ? `${input.bookSlug} için premium erişim` : "Premium erişim",
+        description: input.bookSlug ? `Premium access for ${input.bookSlug}` : "Premium access",
         bookSlug: input.bookSlug || null,
       },
     });
@@ -854,7 +941,7 @@ export async function recordCheckoutEntitlement(input: {
   }
 
   if (input.planId === "free") {
-    throw new Error("Ücretsiz plan satın alma ile değiştirilemez.");
+    throw new Error("Free plan cannot be changed via purchase.");
   }
 
   if ("$transaction" in dbClient) {
