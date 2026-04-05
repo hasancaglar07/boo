@@ -9,31 +9,31 @@ export type FunnelBookLength = "compact" | "standard" | "extended";
 export type FunnelChapterRole = "opening" | "foundation" | "core" | "case" | "advanced" | "closing";
 export type FunnelChapterLength = "short" | "medium" | "long";
 export const SUPPORTED_LANGUAGES = [
-  { value: "Turkish", label: "Türkçe", description: "Yerel okur tonu, Türkçe bölüm akışı ve doğal başlık yapısı." },
-  { value: "English", label: "İngilizce", description: "Uluslararası okur için temiz, anlaşılır ve akıcı İngilizce yapı." },
-  { value: "German", label: "Deutsch", description: "Daha teknik ve sistemli Alman okur beklentisine uygun çıktı." },
-  { value: "French", label: "Français", description: "Daha editoryal ve akıcı Fransız okur ritmi." },
-  { value: "Spanish", label: "Español", description: "Latin ve Avrupa pazarına uygun güçlü genel dil." },
+  { value: "Turkish", label: "Türkçe", description: "Local reader tone, Turkish chapter flow, and natural title structure." },
+  { value: "English", label: "İngilizce", description: "Clean, clear, and fluent English structure for international readers." },
+  { value: "German", label: "Deutsch", description: "Output suited for more technical and systematic German reader expectations." },
+  { value: "French", label: "Français", description: "More editorial and fluent French reader rhythm." },
+  { value: "Spanish", label: "Español", description: "Strong general language suitable for Latin and European markets." },
   { value: "Italian", label: "Italiano", description: "Daha akıcı ve editoryal İtalyan anlatı yapısı." },
-  { value: "Portuguese", label: "Português", description: "Portekizce geniş pazar hedefleri için uygun." },
-  { value: "Dutch", label: "Nederlands", description: "Sade ve pratik Hollanda okur akışı." },
-  { value: "Polish", label: "Polski", description: "Orta Avrupa okurları için güçlü metin yapısı." },
-  { value: "Romanian", label: "Română", description: "Romanian market için temiz non-fiction omurgası." },
-  { value: "Swedish", label: "Svenska", description: "İskandinav sade tonu ve temiz bölüm geçişleri." },
-  { value: "Danish", label: "Dansk", description: "Kısa, net ve erişilebilir Danimarka okuyucu tonu." },
-  { value: "Norwegian", label: "Norsk", description: "Nordic pazar için okunabilir kitap akışı." },
+  { value: "Portuguese", label: "Português", description: "Suitable for broad Portuguese market targets." },
+  { value: "Dutch", label: "Nederlands", description: "Simple and practical Dutch reader flow." },
+  { value: "Polish", label: "Polski", description: "Strong text structure for Central European readers." },
+  { value: "Romanian", label: "Română", description: "Clean non-fiction backbone for the Romanian market." },
+  { value: "Swedish", label: "Svenska", description: "Scandinavian clean tone and smooth chapter transitions." },
+  { value: "Danish", label: "Dansk", description: "Short, clear, and accessible Danish reader tone." },
+  { value: "Norwegian", label: "Norsk", description: "Readable book flow for the Nordic market." },
   { value: "Finnish", label: "Suomi", description: "Daha yapısal ve berrak bir Finlandiya okur dili." },
-  { value: "Czech", label: "Čeština", description: "Doğu Avrupa pazarına uygun yapı." },
-  { value: "Slovak", label: "Slovenčina", description: "Slovak okur için sade ve pratik akış." },
-  { value: "Hungarian", label: "Magyar", description: "Macar okur kitlesi için net rehber kurgusu." },
-  { value: "Greek", label: "Ελληνικά", description: "Yunan pazarına uygun kitap akışı." },
-  { value: "Russian", label: "Русский", description: "Daha güçlü bilgi yoğunluğu ve bölümlenme." },
-  { value: "Ukrainian", label: "Українська", description: "Ukraynaca genişletilmiş non-fiction yapı." },
-  { value: "Arabic", label: "العربية", description: "Arapça pazarı için yüksek erişilebilirlik." },
-  { value: "Japanese", label: "日本語", description: "Japonca uzmanlık ve eğitim kitapları için güçlü editoryal akış." },
-  { value: "Hindi", label: "हिन्दी", description: "Hint okur kitlesi için geniş kapsamlı dil seçeneği." },
-  { value: "Indonesian", label: "Bahasa Indonesia", description: "SEA pazarı için hızlı ve okunabilir akış." },
-  { value: "Malay", label: "Bahasa Melayu", description: "Malayca sade rehber ve iş kitabı kurgusu." },
+  { value: "Czech", label: "Čeština", description: "Structure suited for the Eastern European market." },
+  { value: "Slovak", label: "Slovenčina", description: "Simple and practical flow for Slovak readers." },
+  { value: "Hungarian", label: "Magyar", description: "Clear guide structure for Hungarian readership." },
+  { value: "Greek", label: "Ελληνικά", description: "Book flow suited for the Greek market." },
+  { value: "Russian", label: "Русский", description: "Stronger information density and chapter segmentation." },
+  { value: "Ukrainian", label: "Українська", description: "Extended non-fiction structure for Ukrainian." },
+  { value: "Arabic", label: "العربية", description: "High accessibility for the Arabic market." },
+  { value: "Japanese", label: "日本語", description: "Strong editorial flow for Japanese expertise and educational books." },
+  { value: "Hindi", label: "हिन्दी", description: "Broad language option for Indian readership." },
+  { value: "Indonesian", label: "Bahasa Indonesia", description: "Fast and readable flow for the SEA market." },
+  { value: "Malay", label: "Bahasa Melayu", description: "Simple guide and business book structure in Malay." },
 ] as const;
 export type FunnelLanguage = (typeof SUPPORTED_LANGUAGES)[number]["value"];
 
@@ -108,7 +108,7 @@ export function languageLabel(language?: string) {
 export function languageDescription(language?: string) {
   return (
     SUPPORTED_LANGUAGES.find((item) => item.value === language)?.description ||
-    "Uluslararası okur için temiz ve profesyonel kitap akışı."
+    "Clean and professional book flow for international readers."
   );
 }
 
@@ -152,7 +152,7 @@ export function createDefaultFunnelDraft(): FunnelDraft {
     language: "Turkish",
     languageLocked: false,
     authorName: "",
-    imprint: "Kitap Oluşturucu",
+    imprint: "Book Generator",
     logoText: "",
     logoUrl: "",
     authorBio: "",
@@ -333,20 +333,20 @@ export function canOpenStep(draft: FunnelDraft, step: FunnelStep) {
 
 export function localTitleSuggestions(draft: FunnelDraft) {
   const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Kitap Fikri" : "Book Idea"));
-  const audience = draft.audience?.trim() || (isTurkishLanguage(draft.language) ? "başlangıç okurları" : "first-time readers");
+  const audience = draft.audience?.trim() || (isTurkishLanguage(draft.language) ? "first-time readers" : "first-time readers");
   if (isTurkishLanguage(draft.language)) {
     return [
       {
         title: `${subject} Rehberi`,
-        subtitle: `${audience} için başlangıçtan ileri seviyeye net yol haritası`,
+        subtitle: `A clear roadmap from beginner to advanced for ${audience}`,
       },
       {
         title: `${subject}: Adım Adım Uygulama Kitabı`,
-        subtitle: `${audience} için sade, pratik ve tutarlı bir öğrenme akışı`,
+        subtitle: `A simple, practical, and consistent learning flow for ${audience}`,
       },
       {
-        title: `${subject} Ustalığı`,
-        subtitle: `${audience} için temel mantık, kritik taktikler ve uygulanabilir sistem`,
+        title: `${subject} Mastery`,
+        subtitle: `Core logic, critical tactics, and actionable systems for ${audience}`,
       },
     ];
   }
@@ -372,13 +372,13 @@ export function localOutlineSuggestions(draft: FunnelDraft) {
   const language = draft.language;
   if (isTurkishLanguage(language)) {
     return enrichOutlineItems([
-      { title: `${subject} Dünyasına Giriş`, summary: `${subject} için temel kavramlar, beklentiler ve başlangıç çerçevesi.` },
-      { title: "İlk Adımlar ve Temel Kurulum", summary: "Başlamak için gereken hazırlıklar, ayarlar ve ilk uygulamalar." },
-      { title: "Ana Mekanikler ve Kritik Mantık", summary: "Konuya dair en önemli sistemleri sade örneklerle açıklayan bölüm." },
-      { title: "Sık Yapılan Hatalar", summary: "Başlangıç seviyesinde görülen hatalar ve bunları düzeltmenin yolları." },
-      { title: "Strateji ve İlerlemenin Temeli", summary: "Daha iyi sonuç almak için izlenecek düzenli ilerleme planı." },
+      { title: `Introduction to ${subject}`, summary: `Core concepts, expectations, and starting framework for ${subject}.` },
+      { title: "First Steps and Basic Setup", summary: "Preparations, settings, and first applications needed to get started." },
+      { title: "Core Mechanics and Critical Logic", summary: "Chapter explaining the most important systems with simple examples." },
+      { title: "Common Mistakes", summary: "Mistakes seen at the beginner level and ways to fix them." },
+      { title: "Strategy and Foundation for Progress", summary: "A regular progress plan to follow for better results." },
       { title: "İleri Seviye Taktikler", summary: "Temeller oturduktan sonra fark yaratan yöntemler ve ince ayarlar." },
-      { title: "Uzun Vadeli Gelişim Planı", summary: "Kazanımı kalıcı hale getirecek çalışma, tekrar ve geliştirme önerileri." },
+      { title: "Long-Term Development Plan", summary: "Practice, review, and improvement suggestions to make gains permanent." },
     ], draft);
   }
 
@@ -504,7 +504,7 @@ export function suggestedStyleProfile(draft: FunnelDraft) {
 
 export function buildDraftDescription(draft: FunnelDraft) {
   if (isTurkishLanguage(draft.language)) {
-    return `${draft.topic} konusunda ${draft.audience || "hedef okur"} için hazırlanan, adım adım ilerleyen bir ${bookTypeLabel(draft.bookType).toLowerCase()}.`;
+    return `A step-by-step ${bookTypeLabel(draft.bookType).toLowerCase()} prepared on ${draft.topic} for ${draft.audience || "target readers"}.`;
   }
   return `A ${bookTypeLabel(draft.bookType).toLowerCase()} about ${draft.topic} for ${draft.audience || "the target reader"}.`;
 }
@@ -528,7 +528,7 @@ export function chapterRoleLabel(role: FunnelChapterRole, language: FunnelLangua
   }
   switch (role) {
     case "opening":
-      return "Açılış";
+      return "Opening";
     case "foundation":
       return "Temel";
     case "core":
@@ -538,7 +538,7 @@ export function chapterRoleLabel(role: FunnelChapterRole, language: FunnelLangua
     case "advanced":
       return "İleri seviye";
     case "closing":
-      return "Kapanış";
+      return "Closing";
   }
 }
 
@@ -561,17 +561,17 @@ export function chapterRoleDescription(role: FunnelChapterRole, language: Funnel
   }
   switch (role) {
     case "opening":
-      return "Kitabın vaadini, bağlamını ve neden önemli olduğunu kurar.";
+      return "Establishes the book's promise, context, and why it matters.";
     case "foundation":
-      return "Daha ağır bölümlerden önce okurun temelini oturtur.";
+      return "Grounds the reader before heavier chapters.";
     case "core":
-      return "Ana yöntemi, sistemi veya dönüşümü taşır.";
+      return "Carries the main method, system, or transformation.";
     case "case":
-      return "Uygulama, örnek ve gerçek dünya karşılığını gösterir.";
+      return "Shows application, examples, and real-world counterpart.";
     case "advanced":
-      return "Nüans, istisna ve daha yüksek kaldıraçlı içgörü ekler.";
+      return "Adds nuance, exceptions, and higher-leverage insights.";
     case "closing":
-      return "Kitabı toparlar, sonraki adımları ve kapanış ritmini verir.";
+      return "Wraps up the book, provides next steps, and delivers the closing rhythm.";
   }
 }
 
@@ -606,7 +606,7 @@ export function bookLengthDescription(bookLength: FunnelBookLength, language: Fu
     ? `Daha hızlı okunan ve odaklı yapı. Genelde ${range} kelime civarı.`
     : bookLength === "extended"
     ? `Daha raf hissi veren, daha örnekli ve daha nefesli yapı. Genelde ${range} kelime civarı.`
-    : `Ücretli non-fiction için en güvenli denge. Genelde ${range} kelime civarı.`;
+    : `The safest balance for paid non-fiction. Usually around ${range} words.`;
 }
 
 function buildChapterGenerationBrief(item: FunnelOutlineItem, bookLength: FunnelBookLength, language: FunnelLanguage) {
@@ -640,7 +640,7 @@ export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
     subtitle: draft.subtitle.trim(),
     language: draft.language,
     author: draft.authorName.trim() || author.trim() || "Kitap Sahibi",
-    publisher: draft.imprint.trim() || "Kitap Oluşturucu",
+    publisher: draft.imprint.trim() || "Book Generator",
     year: String(new Date().getFullYear()),
     description: buildDraftDescription(draft),
     author_bio: draft.authorBio.trim(),
@@ -691,11 +691,11 @@ export function bookTypeLabel(bookType: FunnelBookType) {
     case "rehber":
       return "Rehber";
     case "is":
-      return "İş kitabı";
+      return "Business book";
     case "egitim":
-      return "Eğitim";
+      return "Education";
     case "cocuk":
-      return "Çocuk kitabı";
+      return "Children's book";
     default:
       return "Kitap";
   }
@@ -716,7 +716,7 @@ export function toneLabel(tone: FunnelTone, language: FunnelLanguage) {
     : tone === "inspiring"
       ? "İlham verici"
       : tone === "clear"
-        ? "Açık ve öğretici"
+        ? "Clear and instructive"
         : "Profesyonel";
 }
 
@@ -742,6 +742,6 @@ export function coverDirectionLabel(direction: FunnelCoverDirection, language: F
     : direction === "minimal"
       ? "Minimal profesyonel"
       : direction === "energetic"
-        ? "Genç ve enerjik"
+        ? "Young and energetic"
         : "Modern editoryal";
 }
