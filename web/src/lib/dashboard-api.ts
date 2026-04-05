@@ -263,7 +263,8 @@ export const BACKEND_PUBLIC_ORIGIN =
   process.env.NEXT_PUBLIC_DASHBOARD_ORIGIN || "http://127.0.0.1:8765";
 const API_TIMEOUT_MS = 20_000;
 const API_BOOKS_TIMEOUT_MS = 25_000;
-const API_BOOK_PREVIEW_TIMEOUT_MS = 65_000;
+const API_BOOK_PREVIEW_TIMEOUT_MS = 130_000;
+const API_WORKFLOW_TIMEOUT_MS = 240_000;
 const API_BOOKS_BACKOFF_MS = 5_000;
 const API_SETTINGS_BACKOFF_MS = 5_000;
 const API_BOOKS_CACHE_TTL_MS = 2_000;
@@ -346,6 +347,9 @@ function timeoutForPath(path: string) {
   if (/^\/api\/books\/[^/]+\/preview(?:-bootstrap)?$/.test(normalized)) {
     return API_BOOK_PREVIEW_TIMEOUT_MS;
   }
+  if (normalized === "/api/workflows") {
+    return API_WORKFLOW_TIMEOUT_MS;
+  }
   return API_TIMEOUT_MS;
 }
 
@@ -402,7 +406,7 @@ async function api<T>(path: string, options: ApiOptions = {}) {
     const message =
       typeof payload === "string"
         ? payload
-        : (payload?.error as string) || (payload?.output as string) || "İstek başarısız.";
+        : (payload?.error as string) || (payload?.output as string) || "Request failed.";
     throw new ApiRequestError(message, response.status, payloadCode);
   }
 
@@ -487,7 +491,7 @@ export async function selectBookCoverVariant(slug: string, variantId: string) {
     | { ok?: boolean; error?: string; book?: Book; selectedVariantId?: string }
     | null;
   if (!response.ok || !payload?.book) {
-    throw new Error(payload?.error || "Kapak seçimi kaydedilemedi.");
+    throw new Error(payload?.error || "Cover selection could not be saved.");
   }
   clearBooksCache();
   return {
@@ -588,7 +592,7 @@ function fileToBase64(file: File) {
       const result = String(reader.result || "");
       const base64 = result.includes(",") ? result.split(",")[1] : result;
       if (!base64) {
-        reject(new Error("Dosya içeriği çözümlenemedi."));
+        reject(new Error("File content could not be parsed."));
         return;
       }
       resolve(base64);
@@ -633,8 +637,8 @@ export function responseSummary(response: Record<string, unknown>) {
   const short = response.ok
     ? produced.length
       ? `${produced.length} dosya üretildi veya güncellendi.`
-      : "İşlem tamamlandı."
-    : firstLine || "İşlem başarısız.";
+      : "Operation completed."
+    : firstLine || "Operation failed.";
   return { short, produced, warnings };
 }
 
@@ -783,11 +787,11 @@ export function createFallbackBookPayload(input: {
   const chapterLabel = chapterLabelForLanguage(language);
   const subtitleMap: Record<string, Record<string, string>> = {
     Turkish: {
-      rehber: "Başlangıçtan ileri seviyeye adım adım uygulanabilir rehber",
-      is: "Daha tutarlı sonuçlar için pratik uygulama planı",
-      egitim: "Yeni başlayanlar için sade ve sistemli öğrenme yolu",
-      cocuk: "Genç okurlar için sıcak ve anlaşılır anlatım",
-      diger: "Tek bir güçlü fikir etrafında kurulan odaklı içerik",
+      rehber: "Step-by-step applicable guide from beginner to advanced",
+      is: "Practical application plan for more consistent results",
+      egitim: "Simple and systematic learning path for beginners",
+      cocuk: "Warm and clear narrative for young readers",
+      diger: "Focused content built around a single powerful idea",
     },
     English: {
       rehber: "A clear step-by-step guide",
@@ -800,7 +804,7 @@ export function createFallbackBookPayload(input: {
   const subtitleSet = subtitleMap[language] || subtitleMap.English;
   const description =
     language === "Turkish"
-      ? `${input.audience} için ${input.topic} konusunda hazırlanmış ${input.language} bir kitap.`
+      ? `A ${input.language} book prepared on ${input.topic} for ${input.audience}.`
       : `A ${input.language} book about ${input.topic} for ${input.audience}.`;
 
   return {
@@ -819,7 +823,7 @@ export function createFallbackBookPayload(input: {
       title: formatChapterReference(language, index + 1) || `${chapterLabel} ${index + 1}`,
       content:
         language === "Turkish"
-          ? `${input.topic} konusunda ${input.audience} için odaklı bir bölüm taslağı.`
+          ? `A focused chapter draft on ${input.topic} for ${input.audience}.`
           : `Focus on ${input.topic} for ${input.audience}.`,
     })),
   };

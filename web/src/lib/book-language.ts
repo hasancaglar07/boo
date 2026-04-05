@@ -188,4 +188,3 @@ export function normalizeStructuralHeading(title: string, language: string, numb
   if (cleaned) return cleaned;
   return number ? formatChapterReference(language, number) : chapterLabelForLanguage(language);
 }
-

@@ -70,7 +70,7 @@ const STOP_WORDS = new Set([
   "ve",
   "ile",
   "bir",
-  "için",
+  "for",
   "the",
   "and",
   "for",
@@ -135,7 +135,7 @@ function audienceClarityScore(input: BookIdeaValidatorInput) {
   const score =
     45 +
     Math.min(audienceWords.length, 6) * 6 +
-    (/\bfor\b|için|yönelik|owner|coach|consultant|creator|educator|operator/iu.test(input.audience) ? 12 : 0) +
+    (/\bfor\b|for|targeting|owner|coach|consultant|creator|educator|operator/iu.test(input.audience) ? 12 : 0) +
     (input.audience.length > 18 ? 8 : 0);
   return clamp(score, 35, 95);
 }
@@ -144,13 +144,13 @@ function promiseStrengthScore(input: BookIdeaValidatorInput) {
   const score =
     42 +
     (/\b(help|teach|grow|build|launch|scale|write|publish|create|increase|reduce)\b/iu.test(input.goal) ? 18 : 0) +
-    (/\b(sonuç|artır|büyüt|kur|yayınla|yaz|çıkar|dönüştür|ölçekle)\b/iu.test(input.goal) ? 18 : 0) +
+    (/\b(result|increase|grow|build|publish|write|extract|transform|scale)\b/iu.test(input.goal) ? 18 : 0) +
     Math.min(uniqueWords(input.goal).length, 5) * 4;
   return clamp(score, 32, 94);
 }
 
 function specificityScore(input: BookIdeaValidatorInput) {
-  const broadTerms = /\b(kişisel gelişim|business|iş|marketing|sağlık|health|başarı|productivity|verimlilik)\b/iu.test(
+  const broadTerms = /\b(personal development|business|business|marketing|health|health|success|productivity|productivity)\b/iu.test(
     input.topic,
   );
   const score = 58 + Math.min(uniqueWords(input.topic).length, 6) * 5 - (broadTerms ? 14 : 0);
@@ -189,7 +189,7 @@ function commercialUtilityScore(input: BookIdeaValidatorInput) {
     (input.intent === "authority_book" ? 16 : 0) +
     (input.intent === "paid_guide" ? 14 : 0) +
     (input.intent === "kdp_publish" ? 12 : 0) +
-    (/\b(client|müşteri|lead|course|kurs|sale|satış|consult|danışman)\b/iu.test(`${input.goal} ${input.audience}`)
+    (/\b(client|client|lead|course|course|sale|sale|consult|consultant)\b/iu.test(`${input.goal} ${input.audience}`)
       ? 10
       : 0);
   return clamp(score, 36, 96);
@@ -199,32 +199,32 @@ function buildRecommendedAngle(input: BookIdeaValidatorInput) {
   const topicCore = titleCase(getTopicCore(input) || input.topic.trim());
   const audienceCore = input.audience.trim();
   const goalCore = input.goal.trim();
-  return `${topicCore} konusunu genel bir kitap olarak bırakmak yerine, ${audienceCore} için ${goalCore.toLocaleLowerCase(
+  return `${topicCore} instead of leaving the topic as a general book, ${audienceCore} for ${goalCore.toLocaleLowerCase(
     "tr-TR",
-  )} odağıyla çerçevelemek daha güçlü bir başlangıç sağlar.`;
+  )} framing it with a focus provides a stronger start.`;
 }
 
 function buildStrongestPoints(input: BookIdeaValidatorInput, scores: Record<DimensionKey, number>) {
   const points: string[] = [];
 
   if (scores.audienceClarity >= 74) {
-    points.push("Hedef okur tanımı yeterince net; bu da başlık ve vaat netliğini güçlendirir.");
+    points.push("Target reader definition is clear enough; this strengthens title and promise clarity.");
   }
   if (scores.promiseStrength >= 72) {
-    points.push("Konunun sonucu net tarif edilmiş; bu fikir yalnız bilgi değil dönüşüm vaat ediyor.");
+    points.push("The outcome of the topic is clearly described; this idea promises transformation, not just information.");
   }
   if (scores.contentDepth >= 72) {
-    points.push("Bu konuda bölümleşebilecek kadar malzeme var; mini rehber değil tam iskelet çıkar.");
+    points.push("There's enough material on this topic to divide into chapters; it produces a full skeleton, not a mini guide.");
   }
   if (scores.commercialUtility >= 72) {
-    points.push("Kitap, yalnız okunacak bir içerik değil; lead, authority veya satış katkısı da üretebilir.");
+    points.push("The book is not just content to read; it can also generate lead, authority, or sales value.");
   }
   if (scores.differentiation >= 72) {
-    points.push("Konu, kişisel yöntem veya framework üzerinden ayrışma potansiyeli taşıyor.");
+    points.push("The topic has potential to differentiate through a personal method or framework.");
   }
 
   while (points.length < 3) {
-    points.push("Fikir başlangıç için yeterince somut; küçük bir positioning daraltmasıyla çok daha güçlü hale gelebilir.");
+    points.push("The idea is concrete enough for a start; with a small positioning refinement it can become much stronger.");
   }
 
   return points.slice(0, 3);
@@ -234,23 +234,23 @@ function buildRisks(input: BookIdeaValidatorInput, scores: Record<DimensionKey, 
   const risks: string[] = [];
 
   if (scores.specificity < 68) {
-    risks.push("Konu biraz geniş görünüyor; daha dar bir problem veya segment seçmek kitabı daha okunur yapar.");
+    risks.push("The topic seems somewhat broad; choosing a narrower problem or segment makes the book more readable.");
   }
   if (scores.audienceClarity < 68) {
-    risks.push("Hedef okur daha net yazılmalı; şu an kitap herkese hitap ediyor gibi durabilir.");
+    risks.push("The target reader should be defined more clearly; currently the book may seem to address everyone.");
   }
   if (scores.promiseStrength < 68) {
-    risks.push("Okurun kitap sonunda ne kazanacağı daha güçlü bir sonuç cümlesiyle keskinleştirilmeli.");
+    risks.push("What the reader gains at the end of the book should be sharpened with a stronger outcome statement.");
   }
   if (scores.contentDepth < 68) {
     risks.push("Mevcut materyal sınırlı olabilir; outline öncesi örnekler, notlar veya vaka seti eklemek iyi olur.");
   }
   if (input.intent === "not_sure") {
-    risks.push("Kullanım amacı belirsiz; lead magnet mi authority book mü olduğuna karar vermek yapıyı güçlendirir.");
+    risks.push("The usage purpose is unclear; deciding whether it's a lead magnet or authority book strengthens the structure.");
   }
 
   while (risks.length < 3) {
-    risks.push("Başlık, format ve örnek vaka katmanı doğru kurulmazsa fikir jenerik görünebilir.");
+    risks.push("If the title, format, and example case layer are not set up correctly, the idea may look generic.");
   }
 
   return risks.slice(0, 3);
@@ -262,11 +262,11 @@ function buildTitleIdeas(input: BookIdeaValidatorInput) {
   const goalCore = input.goal.trim();
 
   return [
-    `${topicCore}: ${titleCase(audienceCore.split(/\s+/).slice(0, 4).join(" "))} İçin Net Bir Sistem`,
+    `${topicCore}: ${titleCase(audienceCore.split(/\s+/).slice(0, 4).join(" "))}: A Clear System`,
     `${topicCore} Playbook`,
-    `${titleCase(goalCore)} İçin ${topicCore}`,
+    `${titleCase(goalCore)} for ${topicCore}`,
     `${topicCore} ile İlk 90 Gün`,
-    `${audienceCore} İçin ${topicCore} Rehberi`,
+    `${audienceCore} for ${topicCore} Rehberi`,
   ].map((item) => item.replace(/\s+/g, " ").trim());
 }
 
@@ -275,12 +275,12 @@ function buildMiniOutline(input: BookIdeaValidatorInput) {
   const format = getIntentFormat(input.intent);
 
   return [
-    `${format} için giriş: neden şimdi ${topicCore}`,
-    "Hedef okurun yaşadığı temel problem ve yanlış varsayımlar",
-    `${topicCore} için çekirdek yaklaşım veya framework`,
-    "En sık yapılan hatalar ve neden sonuç alınamadığı",
+    `${format} introduction: why ${topicCore}`,
+    "The core problem and misconceptions the target reader faces",
+    `${topicCore} core approach or framework`,
+    "Most common mistakes and why they don't produce results",
     "Adım adım uygulama planı",
-    "Gerçek senaryo, örnek veya mini vaka seti",
+    "Real scenario, example, or mini case study set",
     "İlk 7 gün uygulanacak hızlı kazanım planı",
     "Sonraki adım: tam outline ve preview üretimi",
   ];
@@ -295,12 +295,12 @@ function buildVerdict(score: number) {
 
 function buildNextStep(input: BookIdeaValidatorInput, score: number) {
   if (score >= 80) {
-    return `${getIntentFormat(input.intent)} yönünde ilerle. Bu fikri şimdi tam outline ve preview akışına taşı.`;
+    return `${getIntentFormat(input.intent)} direction. Move this idea to the full outline and preview flow now.`;
   }
   if (score >= 68) {
-    return "Önce hedef okuru ve sonucu bir cümlede keskinleştir; ardından tam outline üretimine geç.";
+    return "First sharpen the target reader and outcome in one sentence; then proceed to full outline generation.";
   }
-  return "Bu konuyu daha dar bir segment ve daha net bir sonuç vaadiyle yeniden çerçevele, sonra ikinci analizi çalıştır.";
+  return "Reframe this topic with a narrower segment and a clearer outcome promise, then run a second analysis.";
 }
 
 export function evaluateBookIdea(input: BookIdeaValidatorInput): BookIdeaValidatorResult {
@@ -319,14 +319,14 @@ export function evaluateBookIdea(input: BookIdeaValidatorInput): BookIdeaValidat
       label: "Audience clarity",
       score: scores.audienceClarity,
       weight: 20,
-      summary: "Kimin için yazdığın ne kadar net.",
+      summary: "How clearly you define who you're writing for.",
     },
     {
       key: "promiseStrength",
       label: "Promise strength",
       score: scores.promiseStrength,
       weight: 20,
-      summary: "Okura hangi sonucu vadettiğin ne kadar açık.",
+      summary: "How clear your promised outcome to the reader is.",
     },
     {
       key: "specificity",
@@ -340,21 +340,21 @@ export function evaluateBookIdea(input: BookIdeaValidatorInput): BookIdeaValidat
       label: "Differentiation",
       score: scores.differentiation,
       weight: 15,
-      summary: "Fikirin kişisel yöntem veya açınla ayrışma ihtimali.",
+      summary: "Potential for the idea to differentiate through personal method or angle.",
     },
     {
       key: "contentDepth",
       label: "Content depth",
       score: scores.contentDepth,
       weight: 15,
-      summary: "Bölümlenebilir malzeme yoğunluğu.",
+      summary: "Density of chapter-ready material.",
     },
     {
       key: "commercialUtility",
       label: "Commercial utility",
       score: scores.commercialUtility,
       weight: 15,
-      summary: "Lead, authority veya satış katkısı üretme potansiyeli.",
+      summary: "Potential to generate lead, authority, or sales value.",
     },
   ];
 
