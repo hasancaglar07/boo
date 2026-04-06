@@ -219,7 +219,7 @@ export default function AdminBookDetailPage() {
                     <div className="font-semibold text-[color:var(--admin-text)]">
                       {chapter.number}. {chapter.title}
                     </div>
-                    <div className="text-xs admin-muted">{chapter.wordCount.toLocaleString("tr-TR")} kelime</div>
+                    <div className="text-xs admin-muted">{chapter.wordCount.toLocaleString("en-US")} words</div>
                   </div>
                   <div className="mt-2 h-1.5 rounded-full bg-black/5 dark:bg-white/10">
                     <div

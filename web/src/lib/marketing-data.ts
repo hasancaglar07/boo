@@ -73,7 +73,7 @@ export const howItWorksPageSteps = [
   },
   {
     step: "3",
-    title: "EPUB ve PDF'ini al",
+    title: "Get your EPUB and PDF",
     text: "Önizlemeyi gör, beğenirsen tam kitabı aç. Çıktı dosyaları KDP'ye yüklemeye hazır gelir.",
     output: "Preview, EPUB, and PDF output files",
   },

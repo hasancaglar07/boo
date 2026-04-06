@@ -216,7 +216,7 @@ export default function AdminAnalyticsPage() {
             <div key={item.id} className="rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-sm font-medium text-[color:var(--admin-text)]">{item.eventName}</div>
-                <div className="text-xs admin-muted">{new Date(item.createdAt).toLocaleString("tr-TR")}</div>
+                <div className="text-xs admin-muted">{new Date(item.createdAt).toLocaleString("en-US")}</div>
               </div>
               <div className="mt-2 flex flex-wrap gap-1">
                 {Object.entries(item.properties || {}).map(([key, value]) => (
