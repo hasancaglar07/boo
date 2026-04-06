@@ -58,22 +58,22 @@ type CheckoutConfirmPayload = {
 /* ------------------------------------------------------------------ */
 
 const KDP_GUARANTEE_CLAIM = "KDP Uyumlu Format";
-const REFUND_GUARANTEE_CLAIM = "14 Gün Para İade Garantisi";
+const REFUND_GUARANTEE_CLAIM = "14-Day Money-Back Guarantee";
 
 const ANNUAL_DISCOUNT = 0.2; // 20% discount for annual
 
-const PLAN_HIGHLIGHT_ID = "creator"; // "En Popüler" badge gösterilecek plan
+const PLAN_HIGHLIGHT_ID = "creator"; // "Most Popular" badge will be shown for this plan
 
 const COMPARISON_FEATURES = [
   { label: "Book Production", starter: "10 books/mo", creator: "30 books/mo", pro: "80 books/mo" },
-  { label: "AI Cover Hakkı", starter: "20 cover/ay", creator: "60 cover/ay", pro: "200 cover/ay" },
-  { label: "AI Chapter Üretimi", starter: true, creator: true, pro: true },
-  { label: "Çıkış Formatları", starter: "EPUB + PDF", creator: "EPUB + PDF + HTML", pro: "EPUB + PDF + HTML + MD" },
-  { label: "Araştırma Merkezi", starter: false, creator: true, pro: true },
+  { label: "AI Cover Allowance", starter: "20 covers/mo", creator: "60 covers/mo", pro: "200 covers/mo" },
+  { label: "AI Chapter Generation", starter: true, creator: true, pro: true },
+  { label: "Export Formats", starter: "EPUB + PDF", creator: "EPUB + PDF + HTML", pro: "EPUB + PDF + HTML + MD" },
+  { label: "Research Center", starter: false, creator: true, pro: true },
   { label: "KDP Pazar Analizi", starter: false, creator: true, pro: true },
-  { label: "Çok Dilli Üretim", starter: true, creator: true, pro: true },
+  { label: "Multi-Language Production", starter: true, creator: true, pro: true },
   { label: "API & Otomasyon", starter: false, creator: false, pro: true },
-  { label: "Öncelikli Destek", starter: false, creator: true, pro: true },
+  { label: "Priority Support", starter: false, creator: true, pro: true },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -174,7 +174,7 @@ export function BillingScreen() {
       : null;
 
     if (!response?.ok || !payload?.url) {
-      setCheckoutError(payload?.error || "Payment başlatılamadı. Lütfen tekrar dene.");
+      setCheckoutError(payload?.error || "Payment could not be initiated. Please try again.");
       autoStartHandledRef.current = false;
       setSubmitting(false);
       return;
@@ -236,7 +236,7 @@ export function BillingScreen() {
       return;
     }
 
-    setCheckoutNotice("Payment doğrulanıyor...");
+    setCheckoutNotice("Verifying payment...");
     setCheckoutNoticeTone("info");
     setSubmitting(true);
 
@@ -261,7 +261,7 @@ export function BillingScreen() {
       }
 
       if (!payload?.ok) {
-        setCheckoutNotice(payload?.error || "Payment doğrulanamadı.");
+        setCheckoutNotice(payload?.error || "Payment could not be verified.");
         setCheckoutNoticeTone("warning");
         setSubmitting(false);
         clearCheckoutQueryParams();
@@ -269,7 +269,7 @@ export function BillingScreen() {
       }
 
       trackEvent("checkout_completed", { plan: payload.planId || null });
-      setCheckoutNotice("Planın başarıyla aktifleştirildi!");
+      setCheckoutNotice("Your plan has been successfully activated!");
       setCheckoutNoticeTone("success");
       setSubmitting(false);
       await refreshAuthState();
@@ -323,7 +323,7 @@ export function BillingScreen() {
             <div>
               <p className="editorial-eyebrow mb-1">Billing</p>
               <h1 className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
-                Planını Yönet
+                Manage Your Plan
               </h1>
             </div>
             {activePlan && (
@@ -360,7 +360,7 @@ export function BillingScreen() {
             <div className="flex items-center gap-2">
               <Sparkles className="size-4 text-primary" />
               <span>
-                <strong>{returnBook}</strong> kitabın için premium erişim alıyorsun.
+                <strong>{returnBook}</strong> you are purchasing premium access for.
               </span>
             </div>
           </div>
@@ -373,7 +373,7 @@ export function BillingScreen() {
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="size-4 text-primary" />
-                  <span className="text-sm font-medium">Kullanımın</span>
+                  <span className="text-sm font-medium">Your Usage</span>
                 </div>
                 <span className="text-sm text-muted-foreground">
                   {usage.usedBooks} / {usage.limit === null ? "∞" : usage.limit}{" "}
@@ -402,7 +402,7 @@ export function BillingScreen() {
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">
                     {usagePercent >= 90
-                      ? "Limitine yaklaştın! Planını yükselt."
+                      ? "You're approaching your limit! Upgrade your plan."
                       : "Upgrade your plan to produce more books."}
                   </p>
                   <button
@@ -413,7 +413,7 @@ export function BillingScreen() {
                       el?.scrollIntoView({ behavior: "smooth" });
                     }}
                   >
-                    Plansı Gör
+                    See Plans
                     <ArrowRight className="ml-1 size-3" />
                   </button>
                 </div>
@@ -426,10 +426,10 @@ export function BillingScreen() {
         <div id="pricing-section" className="billing-animate-in-4">
           <div className="mb-6 text-center">
             <h2 className="font-serif text-2xl font-semibold tracking-tight">
-              Senin İçin En İyi Select Plan
+              Select the Best Plan for You
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Tüm planlar KDP uyumlu formatta. İstediğin zaman iptal et.
+              All plans come in KDP-compatible format. Cancel anytime.
             </p>
           </div>
 
@@ -445,7 +445,7 @@ export function BillingScreen() {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              Aylık
+              Monthly
             </button>
             <button
               type="button"
@@ -457,9 +457,9 @@ export function BillingScreen() {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              Yıllık
+              Annual
               <span className="ml-1.5 inline-flex rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                %20 İndirim
+                20% Off
               </span>
             </button>
           </div>
@@ -486,12 +486,12 @@ export function BillingScreen() {
                     isActive && "ring-2 ring-emerald-500/30",
                   )}
                 >
-                  {/* "En Popüler" Badge */}
+                  {/* "Most Popular" Badge */}
                   {isPopular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md">
                         <Star className="size-3" />
-                        En Popüler
+                        Most Popular
                       </span>
                     </div>
                   )}
@@ -511,7 +511,7 @@ export function BillingScreen() {
                         </span>
                         {plan.interval && (
                           <span className="text-sm text-muted-foreground">
-                            /{billingPeriod === "annual" ? "ay (yıllık)" : plan.interval}
+                            /{billingPeriod === "annual" ? "/mo (annual)" : plan.interval}
                           </span>
                         )}
                       </div>
@@ -538,7 +538,7 @@ export function BillingScreen() {
                     {isActive ? (
                       <Button variant="outline" className="w-full" disabled>
                         <Check className="mr-2 size-4" />
-                        Aktif Planın
+                        Your Active Plan
                       </Button>
                     ) : (
                       <Button
@@ -569,7 +569,7 @@ export function BillingScreen() {
           >
             <div className="flex items-center gap-2">
               <Zap className="size-4 text-primary" />
-              <span className="font-serif text-lg font-semibold">Plan Karşılaştırma</span>
+              <span className="font-serif text-lg font-semibold">Plan Comparison</span>
             </div>
             {comparisonOpen ? (
               <ChevronUp className="size-5 text-muted-foreground" />
@@ -583,10 +583,10 @@ export function BillingScreen() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/60 bg-muted/30">
-                    <th className="p-3 text-left font-medium text-muted-foreground">Özellik</th>
+                    <th className="p-3 text-left font-medium text-muted-foreground">Feature</th>
                     <th className="p-3 text-center font-medium">Temel</th>
                     <th className="p-3 text-center font-medium text-primary">Author</th>
-                    <th className="p-3 text-center font-medium">Stüdyo</th>
+                    <th className="p-3 text-center font-medium">Studio</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -643,7 +643,7 @@ export function BillingScreen() {
             </div>
             <div className="flex items-center gap-2">
               <Lock className="size-4 text-primary" />
-              <span>SSL ile Güvenli Payment</span>
+              <span>Secure Payment with SSL</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="size-4 text-emerald-600 dark:text-emerald-400" />
@@ -672,7 +672,7 @@ export function BillingScreen() {
               {pendingPlan ? pendingPlan.name : "Plan"} Onayı
             </DialogTitle>
             <DialogDescription>
-              <span className="sr-only">Plan değişikliğini onayla</span>
+              <span className="sr-only">Confirm plan change</span>
             </DialogDescription>
           </DialogHeader>
 
@@ -692,7 +692,7 @@ export function BillingScreen() {
                         : pendingPlan.price}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      /{billingPeriod === "annual" ? "ay (yıllık)" : pendingPlan.interval}
+                      /{billingPeriod === "annual" ? "/mo (annual)" : pendingPlan.interval}
                     </p>
                   </div>
                 </div>
@@ -715,9 +715,9 @@ export function BillingScreen() {
                 <div className="flex items-start gap-2.5">
                   <Shield className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                   <div className="text-xs">
-                    <p className="font-semibold text-foreground">Güvenli Payment</p>
+                    <p className="font-semibold text-foreground">Secure Payment</p>
                     <p className="text-muted-foreground">
-                      SSL korumalı payment. Memnun kalmazsan 14 gün içinde tam iade.
+                      SSL-protected payment. Full refund within 14 days if you're not satisfied.
                     </p>
                   </div>
                 </div>
@@ -754,12 +754,12 @@ export function BillingScreen() {
               {submitting ? (
                 <>
                   <Clock className="mr-2 size-4 animate-spin" />
-                  İşleniyor...
+                  Processing...
                 </>
               ) : (
                 <>
                   <Lock className="mr-2 size-4" />
-                  Paymentye Geç
+                  Proceed to Payment
                 </>
               )}
             </Button>

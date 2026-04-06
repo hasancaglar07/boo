@@ -64,15 +64,15 @@ const PLAN_LABELS: Record<string, string> = {
   free: "Free",
   starter: "Starter",
   creator: "Author",
-  pro: "Stüdyo",
+  pro: "Studio",
   premium: "Single Book",
 };
 
 function displayNameForViewer(viewer?: PreviewViewer | null) {
-  if (!viewer) return "Hesabın";
+  if (!viewer) return "Your Account";
   const name = viewer.name.trim();
   if (!name || name === "Book Creator") {
-    return viewer.email.split("@")[0] || "Hesabın";
+    return viewer.email.split("@")[0] || "Your Account";
   }
   return name;
 }
@@ -177,7 +177,7 @@ function SidebarContent({
         <AppBrandLogo />
       </Link>
 
-      <nav className="mt-5 shrink-0 space-y-1" aria-label="Ana menü">
+      <nav className="mt-5 shrink-0 space-y-1" aria-label="Main menu">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = current === item.key;
@@ -335,7 +335,7 @@ function SidebarContent({
             onClick={() => void onLogout?.()}
           >
             <LogOut className="size-4" />
-            Çıkış yap
+            Sign Out
           </button>
 
           {verificationMessage ? (
@@ -445,12 +445,12 @@ export function AppFrame({
       : null;
 
     if (!response?.ok) {
-      setVerificationMessage(payload?.error || "Verifyma maili tekrar gönderilemedi.");
+      setVerificationMessage(payload?.error || "Verification email could not be resent.");
       setVerificationSending(false);
       return;
     }
 
-    setVerificationMessage(payload?.message || "Verifyma maili tekrar gönderildi.");
+    setVerificationMessage(payload?.message || "Verification email has been resent.");
     setVerificationSending(false);
     await refreshViewer();
   }
@@ -483,18 +483,18 @@ export function AppFrame({
           "fixed inset-y-0 left-0 z-50 w-72 border-r border-sidebar-border bg-sidebar shadow-2xl transition-transform duration-300 lg:hidden",
           drawerOpen ? "translate-x-0" : "-translate-x-full",
         )}
-        aria-label="Mobil menü"
+        aria-label="Mobile menu"
       >
         <div className="flex h-full flex-col px-3.5 py-4">
           <div className="mb-3 flex shrink-0 items-center justify-between">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
-              Menü
+              Menu
             </span>
             <button
               type="button"
               className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent transition hover:bg-sidebar-accent/80"
               onClick={() => setDrawerOpen(false)}
-              aria-label="Menüyü kapat"
+              aria-label="Menuyü kapat"
             >
               <X className="size-3.5" />
             </button>
@@ -523,7 +523,7 @@ export function AppFrame({
               type="button"
               className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card transition hover:bg-accent lg:hidden"
               onClick={() => setDrawerOpen(true)}
-              aria-label="Menüyü aç"
+              aria-label="Menuyü aç"
             >
               <Menu className="size-4" />
             </button>
@@ -592,7 +592,7 @@ export function AppFrame({
                           {currentViewer.emailVerified ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                               <CheckCircle2 className="size-3.5" />
-                              Verifyndı
+                              Verified
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
@@ -607,21 +607,21 @@ export function AppFrame({
                     <div className="mt-2 space-y-1">
                       <MenuLink
                         href="/app/settings/profile"
-                        label="Profile ayarları"
+                        label="Profile Settings"
                         description="Manage your name, writing goal, and account status."
                         onSelect={() => setAccountMenuOpen(false)}
                       />
                       <MenuLink
                         href="/app/settings/billing"
                         label="Plans"
-                        description="Paketini, erişim durumunu ve payment akışını gör."
+                        description="View your package, access status, and payment flow."
                         onSelect={() => setAccountMenuOpen(false)}
                       />
                       {currentViewer.role !== "USER" ? (
                         <MenuLink
                           href="/admin"
                           label="Admin"
-                          description="Yönetim paneline kısa yoldan geç."
+                          description="Quick access to the admin panel."
                           onSelect={() => setAccountMenuOpen(false)}
                         />
                       ) : null}
@@ -634,7 +634,7 @@ export function AppFrame({
                         onClick={() => void handleLogout()}
                       >
                         <LogOut className="size-4 text-muted-foreground" />
-                        Çıkış yap
+                        Sign Out
                       </button>
                     </div>
                   </div>
@@ -667,14 +667,14 @@ export function AppFrame({
                       onClick={() => void handleResendVerification()}
                       disabled={verificationSending}
                     >
-                    {verificationSending ? "Sending..." : "Verifyma mailini tekrar gönder"}
+                    {verificationSending ? "Sending..." : "Resend verification email"}
                     </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => router.push("/app/settings/profile")}
                   >
-                    Profile ayarlarını aç
+                    Open Profile Settings
                   </Button>
                 </div>
               </div>

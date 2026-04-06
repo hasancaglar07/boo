@@ -424,7 +424,7 @@ export function HomeScreen() {
                       router.push("/app/settings/billing?intent=start-book");
                     }}
                   >
-                    Plansı gör
+                    See Plans
                   </Button>
                 </div>
               </div>
@@ -438,10 +438,10 @@ export function HomeScreen() {
                 {books.length} books
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
-                {viewer?.emailVerified ? "Email doğrulandı" : "Email doğrulanmadı"}
+                {viewer?.emailVerified ? "Email verified" : "Email not verified"}
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
-                {latestActivity ? `Son hareket: ${formatDate(latestActivity)}` : "Henüz aktivite yok"}
+                {latestActivity ? `Last activity: ${formatDate(latestActivity)}` : "No activity yet"}
               </div>
             </div>
 
@@ -470,12 +470,12 @@ export function HomeScreen() {
                     router.push(`/app/book/${encodeURIComponent(latestBook.slug)}/workspace?tab=writing`)
                   }
                 >
-                  Düzenle
+                  Edit
                 </Button>
               ) : null}
 
               <Button size="lg" variant="ghost" className="min-h-[48px]" onClick={() => router.push("/app/settings/profile")}>
-                Profilei aç
+                Open Profile
               </Button>
             </div>
           </CardContent>
@@ -486,7 +486,7 @@ export function HomeScreen() {
             {[
               { label: "Book", value: books.length, icon: BookOpen },
               { label: "Output", value: compactNumber(totalExports), icon: Upload },
-              { label: "Araştırma", value: compactNumber(totalResearch), icon: FileText },
+              { label: "Research", value: compactNumber(totalResearch), icon: FileText },
               { label: "Plan", value: currentPlanLabel, small: true, icon: Target },
             ].map(({ label, value, small, icon: Icon }) => (
               <div
@@ -518,7 +518,7 @@ export function HomeScreen() {
                 </h3>
               </div>
               <p className="text-xs leading-5 text-muted-foreground">
-                Bu linki paylaş. Linkinden üye olan ve payment yapan herkesten %30 commission kazanırsın.
+                Share this link. You earn 30% commission from everyone who signs up through your link and makes a payment.
               </p>
               <div className="flex items-center gap-2 rounded-[14px] border border-border/60 bg-muted/40 px-3 py-2.5">
                 <span className="flex-1 truncate font-mono text-xs text-muted-foreground">
@@ -561,7 +561,7 @@ export function HomeScreen() {
                 </Button>
               </div>
               <p className="text-center text-[10px] leading-4 text-muted-foreground/70">
-                No limit • Minimum payment $50 • Aylık payment
+                No limit • Minimum payout $50 • Monthly payout
               </p>
             </CardContent>
           </Card>
@@ -570,11 +570,11 @@ export function HomeScreen() {
             <CardContent className="space-y-2 p-5">
               <div className="mb-3 flex items-center justify-between">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                  {onboardingActions.length ? "Sıradaki adımlar" : "Hızlı işlemler"}
+                  {onboardingActions.length ? "Next Steps" : "Quick Actions"}
                 </div>
                 {onboardingActions.length ? (
                   <span className="text-xs font-medium text-muted-foreground">
-                    {onboardingActions.length} açık adım
+                    {onboardingActions.length} remaining steps
                   </span>
                 ) : null}
               </div>
@@ -583,13 +583,13 @@ export function HomeScreen() {
                 {
                   icon: BookOpen,
                   label: "Start new book",
-                  description: "Kısa sihirbaz ile yeni üretim akışını başlat.",
+                  description: "Start a new production flow with the quick wizard.",
                   run: () => router.push(newBookHref),
                 },
                 {
                   icon: FileText,
-                  label: "Metin akışına dön",
-                  description: "Son kitabının yazım sekmesine geri dön.",
+                  label: "Back to Text Flow",
+                  description: "Return to the writing tab of your last book.",
                   run: () =>
                     router.push(
                       latestBook
@@ -599,8 +599,8 @@ export function HomeScreen() {
                 },
                 {
                   icon: Upload,
-                  label: "Yayına hazırla",
-                  description: "Export ve publish hazırlık ekranını aç.",
+                  label: "Prepare for Publishing",
+                  description: "Open the export and publish preparation screen.",
                   run: () =>
                     router.push(
                       latestBook
@@ -655,7 +655,7 @@ export function HomeScreen() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  aria-label="Aramayı temizle"
+                  aria-label="Clear search"
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <X className="size-4" aria-hidden="true" />
@@ -667,7 +667,7 @@ export function HomeScreen() {
             <div className="relative">
               <button
                 onClick={() => setSortOpen((v) => !v)}
-                aria-label="Sıralama seç"
+                aria-label="Select sorting"
                 aria-expanded={sortOpen}
                 className="flex min-h-[44px] items-center gap-2 rounded-[18px] border border-input bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
               >
@@ -724,7 +724,7 @@ export function HomeScreen() {
                     {book.status?.product_ready ? (
                       <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
                         <CheckCircle2 className="mr-1 size-3" aria-hidden="true" />
-                        Tam erişim
+                        Full access
                       </Badge>
                     ) : null}
                   </div>
@@ -754,9 +754,9 @@ export function HomeScreen() {
                       onClick={() =>
                         router.push(`/app/book/${encodeURIComponent(book.slug)}/workspace?tab=writing`)
                       }
-                      aria-label={`${book.title} - Düzenle`}
+                      aria-label={`${book.title} - Edit`}
                     >
-                      Düzenle
+                      Edit
                     </Button>
                   </div>
                 </CardContent>
@@ -771,7 +771,7 @@ export function HomeScreen() {
                   <Search className="size-6 text-primary" aria-hidden="true" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">
-                  Sonuç bulunamadı
+                  No results found
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   &ldquo;{debouncedSearch}&rdquo; No matching books found. Try a different term.
@@ -782,7 +782,7 @@ export function HomeScreen() {
                   className="mt-4 min-h-[40px]"
                   onClick={() => setSearchQuery("")}
                 >
-                  Aramayı temizle
+                  Clear search
                 </Button>
               </div>
             </CardContent>
@@ -795,28 +795,28 @@ export function HomeScreen() {
                   <BookOpen className="size-8 text-primary" aria-hidden="true" />
                 </div>
                 <h3 className="text-2xl font-semibold text-foreground">
-                  İlk kitabın için alan hazır
+                  Your space for the first book is ready
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Hesabın açık. Şimdi ilk üretim akışını başlat, preview üret ve bu ekranı gerçek kütüphanene dönüştür.
+                  Your account is set up. Now start your first production flow, generate a preview, and turn this screen into your real library.
                 </p>
                 <ul className="mt-6 space-y-2 text-left text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
-                    AI destekli 5 adımlı sihirbaz
+                    AI-powered 5-step wizard
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
-                    Dakikalar içinde preview
+                    Preview in minutes
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
-                    PDF, EPUB ve daha fazlası
+                    PDF, EPUB, and more
                   </li>
                 </ul>
                 <div className="mt-8 flex justify-center">
                   <Button size="lg" className="min-h-[48px]" onClick={() => router.push(newBookHref)}>
-                    Hemen başla
+                    Get Started
                     <ArrowRight className="ml-2 size-4" aria-hidden="true" />
                   </Button>
                 </div>

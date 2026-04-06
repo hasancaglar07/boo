@@ -66,12 +66,12 @@ export function ReferralBanner() {
               Your Affiliate Link — %30 Commission
             </div>
             <div className="text-xs text-muted-foreground">
-              Linkinden üye olan ve payment yapan herkesten kalıcı %30 kazan.
+              Earn a permanent 30% from everyone who signs up through your link and makes a payment.
             </div>
           </div>
           {data.clicks > 0 && (
             <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-              {data.clicks} tıklanma
+              {data.clicks} clicks
             </span>
           )}
         </div>
@@ -125,7 +125,7 @@ export function ReferralBanner() {
 
         {/* Info line */}
         <p className="mt-2.5 text-center text-[10px] leading-4 text-muted-foreground/70">
-          No limit • Min. payment $50 • Aylık payment
+          No limit • Min. payout $50 • Monthly payout
         </p>
       </CardContent>
     </Card>

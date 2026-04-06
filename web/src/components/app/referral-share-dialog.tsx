@@ -80,9 +80,9 @@ export function ReferralShareDialog({ open, onOpenChange }: ReferralShareDialogP
         <DialogHeader>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground w-fit">
             <Share2 className="size-3.5" />
-            Arkadaşlarını davet et
+            Invite Your Friends
           </div>
-          <DialogTitle>Your Affiliate Linki Paylaş, %30 Commission Kazan!</DialogTitle>
+          <DialogTitle>Share Your Affiliate Link, Earn 30% Commission!</DialogTitle>
           <DialogDescription>
             Arkadaşların senin linkinden üye olup payment yaparsa, her paymentnin %30'unu commission olarak kazanırsın. Inviteiye linki zorunludur — üye olmak için senin linkini kullanmalılar.
           </DialogDescription>
@@ -119,14 +119,14 @@ export function ReferralShareDialog({ open, onOpenChange }: ReferralShareDialogP
 
           {data && data.clicks > 0 && (
             <p className="text-center text-xs text-muted-foreground">
-              {data.clicks} kişi referral linkine tıkladı
+              {data.clicks} people clicked your referral link
             </p>
           )}
         </div>
 
         <DialogFooter className="mt-4">
           <Button variant="ghost" size="sm" onClick={handleDismiss}>
-            Şimdi değil
+            Not now
           </Button>
         </DialogFooter>
       </DialogContent>

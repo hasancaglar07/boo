@@ -26,30 +26,30 @@ const questions = [
   {
     key: "type",
     title: "What kind of book do you want to write?",
-    stepLabel: "Tür",
+    stepLabel: "Genre",
     options: [
       { value: "rehber", label: "Rehber" },
-      { value: "is", label: "İş kitabı" },
-      { value: "egitim", label: "Eğitim" },
-      { value: "cocuk", label: "Çocuk kitabı" },
-      { value: "diger", label: "Diğer" },
+      { value: "is", label: "Business" },
+      { value: "egitim", label: "Education" },
+      { value: "cocuk", label: "Children's Book" },
+      { value: "diger", label: "Other" },
     ],
   },
   {
     key: "topic",
     title: "Topic ne?",
     stepLabel: "Topic",
-    placeholder: "örnek: practical prompting for small teams",
+    placeholder: "e.g.: practical prompting for small teams",
   },
   {
     key: "audience",
-    title: "Kime yazıyorsun?",
+    title: "Who are you writing for?",
     stepLabel: "Hedef",
-    placeholder: "örnek: first-time founders and operators",
+    placeholder: "e.g.: first-time founders and operators",
   },
   {
     key: "language",
-    title: "Hangi dilde üretelim?",
+    title: "Which language to produce in?",
     stepLabel: "Dil",
     options: [
       { value: "English", label: "English" },
@@ -61,9 +61,9 @@ const questions = [
     title: "Ne kadar detay istiyorsun?",
     stepLabel: "Derinlik",
     options: [
-      { value: "hizli", label: "Kısa ve hızlı" },
+      { value: "hizli", label: "Short & Fast" },
       { value: "dengeli", label: "Dengeli" },
-      { value: "detayli", label: "Daha detaylı" },
+      { value: "detayli", label: "More Detailed" },
     ],
   },
 ] as const;
@@ -120,7 +120,7 @@ export function WizardScreen() {
 
   if (backendUnavailable) {
     return (
-      <AppFrame current="new" title="İlk kitabı başlat" subtitle="Bağlantı sorunu oluştu." books={books}>
+      <AppFrame current="new" title="Start Your First Book" subtitle="Connection error occurred." books={books}>
         <BackendUnavailableState onRetry={() => void refreshBooks()} />
       </AppFrame>
     );
@@ -130,7 +130,7 @@ export function WizardScreen() {
     const isTextStep = !("options" in step);
     const val = String(answers[step.key] || "").trim();
     if (isTextStep && !val) {
-      setFieldError("Bu alan boş bırakılamaz.");
+      setFieldError("This field cannot be empty.");
       return;
     }
     setFieldError("");
@@ -289,10 +289,10 @@ export function WizardScreen() {
               {creating ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
-                  Hazırlanıyor...
+                  Preparing...
                 </>
               ) : isLastStep ? (
-                "Kitabı hazırla"
+                "Prepare the Book"
               ) : (
                 "Continue"
               )}

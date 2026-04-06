@@ -45,7 +45,7 @@ const PLAN_LABELS: Record<string, string> = {
   free: "Free",
   starter: "Starter",
   creator: "Author",
-  pro: "Stüdyo",
+  pro: "Studio",
   premium: "Single Book",
 };
 
@@ -61,12 +61,12 @@ function readImageAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Logo dosyası okunamadı."));
+    reader.onerror = () => reject(new Error("Logo file could not be read."));
     reader.readAsDataURL(file);
   });
 }
 
-/** Affiliate link kopyalama + paylaşım bileşeni — profile sayfasında hızlı erişim */
+/** Affiliate link copy + share component — quick access on profile page */
 function AffiliateLinkCopy() {
   const [data, setData] = useState<{ referralUrl: string; clicks: number } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -117,13 +117,13 @@ function AffiliateLinkCopy() {
 
   return (
     <div className="mt-2 space-y-2">
-      {/* Link kutusu - tıklanabilir, seçilebilir */}
+      {/* Link box - clickable, selectable */}
       <div className="flex items-center gap-2 rounded-[14px] border border-border/60 bg-background/70 px-3 py-2.5">
         <span className="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground select-all">
           {data.referralUrl}
         </span>
       </div>
-      {/* Büyük kopyala butonu */}
+      {/* Large copy button */}
       <Button
         className="w-full min-h-[44px] text-sm font-semibold"
         onClick={handleCopy}
@@ -140,7 +140,7 @@ function AffiliateLinkCopy() {
           </>
         )}
       </Button>
-      {/* Paylaşım butonları */}
+      {/* Share buttons */}
       <div className="flex gap-2">
         <Button
           variant="outline"
@@ -161,7 +161,7 @@ function AffiliateLinkCopy() {
       </div>
       {data.clicks > 0 && (
         <p className="text-center text-[10px] text-muted-foreground/70">
-          {data.clicks} kişi linkine tıkladı
+          {data.clicks} people clicked your link
         </p>
       )}
     </div>
@@ -290,7 +290,7 @@ export function AccountScreen() {
       : null;
 
     if (!response?.ok || !payload?.viewer) {
-      setSaveError(payload?.error || "Profile güncellenemedi.");
+      setSaveError(payload?.error || "Profile could not be updated.");
       setSaving(false);
       return;
     }
@@ -298,17 +298,17 @@ export function AccountScreen() {
     persistViewer(payload.viewer);
     setViewer(payload.viewer);
     setDraft(null);
-    setSaveMessage("Profile ayarları kaydedildi.");
+    setSaveMessage("Profile settings saved.");
     setSaving(false);
   }
 
   async function handlePublisherLogoUpload(file: File) {
     if (!file.type.startsWith("image/")) {
-      setSaveError("Yalnızca görsel dosyası yükleyebilirsin.");
+      setSaveError("Only image files can be uploaded.");
       return;
     }
     if (file.size > 750 * 1024) {
-      setSaveError("Logo dosyası 750 KB'den küçük olmalı.");
+      setSaveError("Logo file must be smaller than 750 KB.");
       return;
     }
     try {
@@ -316,7 +316,7 @@ export function AccountScreen() {
       updateDraft({ publisherLogoUrl: dataUrl });
       setSaveError("");
     } catch (cause) {
-      setSaveError(cause instanceof Error ? cause.message : "Logo yüklenemedi.");
+      setSaveError(cause instanceof Error ? cause.message : "Logo could not be uploaded.");
     }
   }
 
@@ -335,12 +335,12 @@ export function AccountScreen() {
       : null;
 
     if (!response?.ok) {
-      setVerificationMessage(payload?.error || "Verifyma maili tekrar gönderilemedi.");
+      setVerificationMessage(payload?.error || "Verification email could not be resent.");
       setVerificationSending(false);
       return;
     }
 
-    setVerificationMessage(payload?.message || "Verifyma maili tekrar gönderildi.");
+    setVerificationMessage(payload?.message || "Verification email has been resent.");
     setVerificationSending(false);
     await refreshViewer();
   }
@@ -355,7 +355,7 @@ export function AccountScreen() {
   return (
     <AppFrame
       current="account"
-      title="Profile ayarları"
+      title="Profile Settings"
       subtitle="Manage your name, writing goal, and account status."
       books={books}
       viewer={viewer}
@@ -426,7 +426,7 @@ export function AccountScreen() {
                 </div>
                 <div className="mt-3 text-3xl font-bold text-foreground">{compactNumber(exports)}</div>
                 <div className="mt-2 text-sm text-muted-foreground">
-                  PDF / EPUB ve diğer dışa aktarma toplamı.
+                  PDF / EPUB and other export totals.
                 </div>
               </CardContent>
             </Card>
@@ -440,7 +440,7 @@ export function AccountScreen() {
                     <ShieldAlert className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-foreground">Email doğrulaması gerekli</div>
+                    <div className="text-sm font-semibold text-foreground">Email verification required</div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Verify your email for account security, login recovery, and notifications. This step is required only once.
                     </p>
@@ -452,7 +452,7 @@ export function AccountScreen() {
                         onClick={() => void handleResendVerification()}
                         disabled={verificationSending}
                       >
-                        {verificationSending ? "Sending..." : "Verifyma mailini tekrar gönder"}
+                        {verificationSending ? "Sending..." : "Resend verification email"
                       </Button>
                     </div>
                     {verificationMessage ? (
@@ -470,9 +470,9 @@ export function AccountScreen() {
                     <CheckCircle2 className="size-5" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-semibold text-foreground">Email doğrulandı</div>
+                    <div className="text-sm font-semibold text-foreground">Email verified</div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Hesabın payment, dışa aktarma ve tam erişim akışları için hazır.
+                      Your account is ready for payment, export, and full access flows.
                     </p>
                   </div>
                 </div>
@@ -491,7 +491,7 @@ export function AccountScreen() {
                 <div className="flex-1">
                   <h2 className="text-lg font-semibold text-foreground">Profile bilgileri</h2>
                   <p className="text-sm text-muted-foreground">
-                    Kütüphane karşılama alanı ve sihirbaz varsayımları bu bilgilerden beslenir.
+                    Library welcome area and wizard assumptions feed from this information.
                   </p>
                 </div>
               </div>
@@ -504,7 +504,7 @@ export function AccountScreen() {
                     className="min-h-[48px] mt-2"
                     value={name}
                     onChange={(event) => updateDraft({ name: event.target.value })}
-                    placeholder="Adını gir"
+                    placeholder="Enter your name"
                     autoComplete="name"
                   />
                 </div>
@@ -519,16 +519,16 @@ export function AccountScreen() {
               </div>
 
               <div className="mt-5">
-                <Label htmlFor="profile-goal" className="text-sm">Yazım hedefi</Label>
+                <Label htmlFor="profile-goal" className="text-sm">Writing Goal</Label>
                 <Textarea
                   id="profile-goal"
                   className="min-h-[120px] mt-2"
                   value={goal}
                   onChange={(event) => updateDraft({ goal: event.target.value })}
-                  placeholder="Örnek: B2B ekipler için pratik bir prompting rehberi üretmek istiyorum."
+                  placeholder="Example: I want to produce a practical prompting guide for B2B teams."
                 />
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Bu alan hero mesajlarını ve ilk sihirbaz varsayımlarını netleştirir.
+                  This field clarifies hero messages and initial wizard assumptions.
                 </p>
               </div>
 
@@ -536,9 +536,9 @@ export function AccountScreen() {
                 <div className="mt-6 rounded-[24px] border border-border/60 bg-background/50 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex-1">
-                      <div className="text-sm font-semibold text-foreground">Yayınevi markası</div>
+                      <div className="text-sm font-semibold text-foreground">Publisher Brand</div>
                       <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                        Pro planında profil logonu bir kez tanımla; `/app/new/style` içinde varsayılan gelsin.
+                        In the Pro plan, define your profile logo once; it will appear as default in `/app/new/style`.
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -557,12 +557,12 @@ export function AccountScreen() {
                       />
                       <Button size="sm" variant="outline" className="min-h-[40px]" onClick={() => logoInputRef.current?.click()}>
                         <ImagePlus className="mr-1.5 size-3.5" />
-                        Logo yükle
+                        Upload Logo
                       </Button>
                       {publisherLogoUrl ? (
                         <Button size="sm" variant="ghost" className="min-h-[40px]" onClick={() => updateDraft({ publisherLogoUrl: "" })}>
                           <Trash2 className="mr-1.5 size-3.5" />
-                          Kaldır
+                          Remove
                         </Button>
                       ) : null}
                     </div>
@@ -570,16 +570,16 @@ export function AccountScreen() {
 
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <Label htmlFor="profile-imprint" className="text-sm">İmprint / yayınevi adı</Label>
+                      <Label htmlFor="profile-imprint" className="text-sm">Imprint / Publisher Name</Label>
                       <Input
                         id="profile-imprint"
                         className="min-h-[48px] mt-2"
                         value={publisherImprint}
                         onChange={(event) => updateDraft({ publisherImprint: event.target.value })}
-                        placeholder="örnek: North Peak Press"
+                        placeholder="e.g.: North Peak Press"
                       />
                       <p className="mt-2 text-xs text-muted-foreground">
-                        Hazır logolardan farklı olarak kendi markanı sihirbaz ve cover previewsine otomatik taşır.
+                        Unlike ready-made logos, it automatically carries your brand to the wizard and cover previews.
                       </p>
                     </div>
 
@@ -594,7 +594,7 @@ export function AccountScreen() {
                         {publisherLogoUrl ? (
                           <img
                             src={publisherLogoUrl}
-                            alt={publisherImprint || "Yayınevi logosu"}
+                            alt={publisherImprint || "Publisher logo"}
                             className="h-14 w-auto max-w-full object-contain"
                           />
                         ) : (
@@ -613,13 +613,13 @@ export function AccountScreen() {
                 </div>
               ) : (
                 <div className="mt-6 rounded-[24px] border border-primary/15 bg-primary/5 p-5">
-                  <div className="text-sm font-semibold text-foreground">Özel yayınevi logosu</div>
+                  <div className="text-sm font-semibold text-foreground">Custom Publisher Logo</div>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Kendi yayınevi wordmark’ını profil bazlı kaydetmek ve wizard’da otomatik kullanmak için Pro plan gerekir.
+                    Your own publisher wordmark’ını profil bazlı kaydetmek ve wizard’da otomatik kullanmak için Pro plan gerekir.
                   </p>
                   <div className="mt-4">
                     <Button variant="outline" className="min-h-[44px]" onClick={() => router.push("/app/settings/billing")}>
-                      Pro plana geç
+                      Upgrade to Pro
                     </Button>
                   </div>
                 </div>
@@ -639,7 +639,7 @@ export function AccountScreen() {
                     onClick={() => void handleResendVerification()}
                     disabled={verificationSending}
                   >
-                    {verificationSending ? "Sending..." : "Verifyma Mailini Tekrar Gönder"}
+                    {verificationSending ? "Sending..." : "Resend Verification Email"}
                   </Button>
                 ) : null}
               </div>
@@ -656,7 +656,7 @@ export function AccountScreen() {
                 <div className="flex-1">
                   <h2 className="text-lg font-semibold text-foreground">Affiliate — %30 Commission</h2>
                   <p className="text-sm text-muted-foreground">
-                    Özel linkini paylaş, her abonelikten %30 kazan.
+                    Share your special link, earn 30% from every subscription.
                   </p>
                 </div>
               </div>
@@ -671,7 +671,7 @@ export function AccountScreen() {
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[16px] border border-border/50 bg-background/50 p-3 text-center">
                   <div className="text-2xl font-bold text-primary">%30</div>
-                  <div className="text-xs text-muted-foreground">Commission oranı</div>
+                  <div className="text-xs text-muted-foreground">Commission rate</div>
                 </div>
                 <div className="rounded-[16px] border border-border/50 bg-background/50 p-3 text-center">
                   <div className="text-2xl font-bold text-foreground">$50</div>
@@ -684,7 +684,7 @@ export function AccountScreen() {
               </div>
 
               <div className="mt-4 rounded-[16px] border border-primary/15 bg-primary/5 px-4 py-3 text-xs leading-5 text-muted-foreground">
-                <strong className="text-foreground">Nasıl çalışır?</strong> Affiliate linkini paylaş. Bağlantından üye olan ve payment yapan herkesten kalıcı olarak %30 commission kazanırsın. Paymentler aylık PayPal veya banka transferi ile yapılır.
+                <strong className="text-foreground">How does it work?</strong> Affiliate linkini paylaş. Bağlantından üye olan ve payment yapan herkesten kalıcı olarak %30 commission kazanırsın. Paymentler aylık PayPal veya banka transferi ile yapılır.
               </div>
             </CardContent>
           </Card>
@@ -698,7 +698,7 @@ export function AccountScreen() {
                 <div className="flex-1">
                   <h2 className="text-lg font-semibold text-foreground">Account summary</h2>
                   <p className="text-sm text-muted-foreground">
-                    Bu alanlar salt-okunurdur; plan ve email değiştirme bu iterasyonun dışında.
+                    These fields are read-only; plan and email changes are outside this iteration.
                   </p>
                 </div>
               </div>
@@ -734,7 +734,7 @@ export function AccountScreen() {
                     </div>
                   </div>
                   <div className="mt-2 text-sm font-medium leading-6 text-foreground">
-                    {viewer?.goal?.trim() ? viewer.goal : "Henüz hedef eklenmedi."}
+                    {viewer?.goal?.trim() ? viewer.goal : "No goal added yet."}
                   </div>
                 </div>
               </div>
@@ -742,7 +742,7 @@ export function AccountScreen() {
               <div className="mt-6 border-t border-border/50 pt-5">
                 <Button variant="ghost" className="min-h-[44px]" onClick={() => void handleLogout()}>
                   <LogOut className="mr-2 size-4" />
-                  Çıkış yap
+                  Sign Out
                 </Button>
               </div>
             </CardContent>

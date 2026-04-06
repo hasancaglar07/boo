@@ -76,7 +76,7 @@ export function CommandPalette({ actions }: { actions: PaletteAction[] }) {
             ))}
             {!filtered.length ? (
               <div className="rounded-2xl border border-border bg-background px-4 py-6 text-sm text-muted-foreground">
-                Sonuç bulunamadı.
+                No results found.
               </div>
             ) : null}
           </div>

@@ -129,7 +129,7 @@ export function AffiliateDashboard() {
       viewer={viewer}
     >
       <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        {/* ── Sol: Ana kart — home-screen hero ile aynı dil ── */}
+        {/* ── Left: Main card — same language as home-screen hero ── */}
         <Card className="overflow-hidden border-primary/20 bg-[radial-gradient(circle_at_top_right,_rgba(188,104,67,0.08),_transparent_60%)] transition-shadow hover:shadow-[0_4px_20px_rgba(188,104,67,0.12)]">
           <CardContent className="p-5 md:p-8 lg:p-12">
             <div className="flex flex-wrap items-center gap-2">
@@ -144,11 +144,11 @@ export function AffiliateDashboard() {
             </div>
 
             <h2 className="mt-5 text-balance text-3xl font-bold leading-tight text-foreground md:text-4xl lg:text-5xl">
-              Hoş geldin, {readableName}
+              Welcome, {readableName}
             </h2>
 
             <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
-              Kayıt olduğunuz anda affiliate linkiniz otomatik oluştu. Aşağıdaki linki kopyalayıp paylaşarak her payment yapan üyeden <strong className="text-foreground">%30 commission</strong> kazanabilirsiniz.
+              Your affiliate link was automatically created when you signed up. Copy and share the link below to earn <strong className="text-foreground">%30 commission</strong> kazanabilirsiniz.
             </p>
 
             {/* ── Affiliate URL kutusu ── */}
@@ -225,7 +225,7 @@ export function AffiliateDashboard() {
               {data && data.clicks > 0 && (
                 <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Users className="size-3.5" />
-                  <span><strong className="text-foreground">{data.clicks}</strong> kişi linkine tıkladı</span>
+                  <span><strong className="text-foreground">{data.clicks}</strong> people clicked your link</span>
                 </div>
               )}
             </div>
@@ -238,7 +238,7 @@ export function AffiliateDashboard() {
                 Min. payment: $50
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
-                Aylık payment
+                Monthly payment
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
                 No limit
@@ -254,11 +254,11 @@ export function AffiliateDashboard() {
                 </div>
                 <div className="flex items-center gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Kullanılabilir: </span>
+                    <span className="text-muted-foreground">Available: </span>
                     <span className="font-bold text-emerald-700 dark:text-emerald-400">${data.availableBalance.toFixed(2)}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Ödenen: </span>
+                    <span className="text-muted-foreground">Paid: </span>
                     <span className="font-semibold text-foreground">${data.paidOut.toFixed(2)}</span>
                   </div>
                   <div>
@@ -280,10 +280,10 @@ export function AffiliateDashboard() {
                     });
                     const json = await res.json();
                     if (json.ok) {
-                      alert(`Talebiniz alındı! $${json.payout.amount.toFixed(2)} — En kısa sürede işlenecek.`);
+                      alert(`Your request has been received! $${json.payout.amount.toFixed(2)} — It will be processed as soon as possible.`);
                       window.location.reload();
                     } else {
-                      alert(json.error || "Hata oluştu.");
+                      alert(json.error || "An error occurred.");
                     }
                   }}
                 >
@@ -295,15 +295,15 @@ export function AffiliateDashboard() {
           </CardContent>
         </Card>
 
-        {/* ── Sağ: İstatistik + bilgi kartları ── */}
+        {/* ── Right: Statistics + info cards ── */}
         <div className="flex flex-col gap-5">
-          {/* İstatistikler */}
+          {/* Statistics */}
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              { label: "Tıklama", value: data?.clicks ?? 0, icon: Users, numeric: true },
-              { label: "Toplam Kazanç", value: `$${(data?.totalEarned ?? 0).toFixed(2)}`, icon: DollarSign, numeric: false },
-              { label: "Kullanılabilir Bakiye", value: `$${(data?.availableBalance ?? 0).toFixed(2)}`, icon: BadgeDollarSign, numeric: false, highlight: true },
-              { label: "Dönüşüm", value: `${data?.totalConversions ?? 0} (${data?.rewardedConversions ?? 0} ödüllü)`, icon: CheckCircle2, numeric: false },
+              { label: "Clicks", value: data?.clicks ?? 0, icon: Users, numeric: true },
+              { label: "Total Earnings", value: `$${(data?.totalEarned ?? 0).toFixed(2)}`, icon: DollarSign, numeric: false },
+              { label: "Available Balance", value: `$${(data?.availableBalance ?? 0).toFixed(2)}`, icon: BadgeDollarSign, numeric: false, highlight: true },
+              { label: "Conversion", value: `${data?.totalConversions ?? 0} (${data?.rewardedConversions ?? 0} rewarded)`, icon: CheckCircle2, numeric: false },
             ].map(({ label, value, icon: Icon, highlight }) => (
               <div
                 key={label}
@@ -345,7 +345,7 @@ export function AffiliateDashboard() {
                   <div key={row.plan} className="flex items-center justify-between rounded-[14px] border border-border/40 bg-background/50 px-4 py-3">
                     <div>
                       <div className="text-sm font-semibold text-foreground">{row.plan}</div>
-                      <div className="text-xs text-muted-foreground">Aylık {row.price}</div>
+                      <div className="text-xs text-muted-foreground">Monthly {row.price}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-bold text-primary">%30</div>
@@ -361,12 +361,12 @@ export function AffiliateDashboard() {
             </CardContent>
           </Card>
 
-          {/* Nasıl çalışır */}
+          {/* How It Works */}
           <Card className="border-border/60 bg-card/50">
             <CardContent className="space-y-2 p-5">
               <div className="mb-3 flex items-center justify-between">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                  Nasıl Çalışır?
+                  How It Works?
                 </div>
               </div>
 
@@ -374,11 +374,11 @@ export function AffiliateDashboard() {
                 {
                   icon: LinkIcon,
                   label: "Linkini kopyala",
-                  description: "Yukarıdaki özel affiliate linkini kopyala.",
+                  description: "Copy the special affiliate link above.",
                 },
                 {
                   icon: Share2,
-                  label: "Paylaş",
+                  label: "Share",
                   description: "Share via social media, blog, email, or WhatsApp.",
                 },
                 {
@@ -403,26 +403,26 @@ export function AffiliateDashboard() {
             </CardContent>
           </Card>
 
-          {/* Son Dönüşümler */}
+          {/* Recent Conversions */}
           {data && data.conversions.length > 0 && (
             <Card className="border-border/60 bg-card/50">
               <CardContent className="p-5">
                 <div className="mb-3 flex items-center gap-2">
                   <Users className="size-3.5 text-muted-foreground/60" />
                   <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                    Son Dönüşümler
+                    Recent Conversions
                   </div>
                 </div>
                 <div className="space-y-2">
                   {data.conversions.slice(0, 10).map((c, i) => (
                     <div key={i} className="flex items-center justify-between rounded-[14px] border border-border/40 bg-background/50 px-4 py-3">
                       <div>
-                        <div className="text-sm font-medium text-foreground">{c.newUserName || c.newUserEmail || "Kullanıcı"}</div>
+                        <div className="text-sm font-medium text-foreground">{c.newUserName || c.newUserEmail || "User"}</div>
                         <div className="text-xs text-muted-foreground">{new Date(c.convertedAt).toLocaleDateString("en-US")}</div>
                       </div>
                       {c.rewardGranted ? (
                         <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 className="size-3" /> Ödüllü
+                          <CheckCircle2 className="size-3" /> Rewarded
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 text-xs font-medium text-amber-600">
@@ -436,14 +436,14 @@ export function AffiliateDashboard() {
             </Card>
           )}
 
-          {/* Payment Geçmişi */}
+          {/* Payment History */}
           {data && data.payoutRequests.length > 0 && (
             <Card className="border-border/60 bg-card/50">
               <CardContent className="p-5">
                 <div className="mb-3 flex items-center gap-2">
                   <BadgeDollarSign className="size-3.5 text-muted-foreground/60" />
                   <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                    Payment Geçmişi
+                    Payment History
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -455,7 +455,7 @@ export function AffiliateDashboard() {
                       </div>
                       {p.status === "paid" ? (
                         <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 className="size-3" /> Ödendi
+                          <CheckCircle2 className="size-3" /> Paid
                         </span>
                       ) : p.status === "open" || p.status === "draft" ? (
                         <span className="flex items-center gap-1 text-xs font-medium text-amber-600">
@@ -474,7 +474,7 @@ export function AffiliateDashboard() {
             <CardContent className="space-y-2 p-5">
               <div className="mb-3 flex items-center justify-between">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                  Hızlı İşlemler
+                  Quick Actions
                 </div>
               </div>
 
@@ -487,7 +487,7 @@ export function AffiliateDashboard() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-semibold text-foreground">Back to My Books</div>
-                  <div className="mt-0.5 text-xs leading-5 text-muted-foreground">Kütüphane ve yazım alanına geri dön.</div>
+                  <div className="mt-0.5 text-xs leading-5 text-muted-foreground">Return to library and writing area.</div>
                 </div>
                 <ArrowRight className="mt-2 size-4 text-muted-foreground/40" />
               </Link>
@@ -501,7 +501,7 @@ export function AffiliateDashboard() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-semibold text-foreground">Soru Sor</div>
-                  <div className="mt-0.5 text-xs leading-5 text-muted-foreground">affiliate@bookgenerator.net — 2 iş günü içinde yanıt.</div>
+                  <div className="mt-0.5 text-xs leading-5 text-muted-foreground">affiliate@bookgenerator.net — response within 2 business days.</div>
                 </div>
                 <ArrowRight className="mt-2 size-4 text-muted-foreground/40" />
               </a>
