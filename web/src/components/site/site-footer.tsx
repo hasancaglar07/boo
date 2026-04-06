@@ -14,6 +14,7 @@ import { useState, type FormEvent } from "react";
 
 import { useTheme } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useLang } from "@/components/lang-provider";
 import {
   KDP_GUARANTEE_CLAIM,
   NO_API_COST_CLAIM,
@@ -22,51 +23,44 @@ import {
 
 /* ─── Data ───────────────────────────────────────────────── */
 
-const productLinks = [
-  { href: "/start/topic", label: "Ücretsiz Önizleme", highlight: true },
-  { href: "/how-it-works", label: "Nasıl Çalışır" },
-  { href: "/examples", label: "Örnekler" },
-  { href: "/pricing", label: "Fiyatlar" },
-  { href: "/compare", label: "Karşılaştır" },
+const productLinkKeys = [
+  { href: "/start/topic", labelKey: "footer.freePreview", highlight: true },
+  { href: "/how-it-works", labelKey: "nav.howItWorks" },
+  { href: "/examples", labelKey: "nav.examples" },
+  { href: "/pricing", labelKey: "nav.pricing" },
+  { href: "/compare", labelKey: "footer.compare" },
 ];
 
-const resourceLinks = [
-  { href: "/tools", label: "Ücretsiz Araçlar" },
-  { href: "/blog", label: "Blog" },
-  { href: "/faq", label: "SSS" },
-  { href: "/resources", label: "Kaynaklar" },
-  { href: "/use-cases", label: "Kullanım Senaryoları" },
+const resourceLinkKeys = [
+  { href: "/tools", labelKey: "footer.freeTools" },
+  { href: "/blog", labelKey: "footer.blog" },
+  { href: "/faq", labelKey: "nav.faq" },
+  { href: "/resources", labelKey: "footer.resources" },
+  { href: "/use-cases", labelKey: "footer.useCases" },
 ];
 
-const companyLinks = [
-  { href: "/about", label: "Hakkında" },
-  { href: "/contact", label: "İletişim" },
-  { href: "/affiliate", label: "Affiliate Programı" },
+const companyLinkKeys = [
+  { href: "/about", labelKey: "footer.about" },
+  { href: "/contact", labelKey: "footer.contact" },
+  { href: "/affiliate", labelKey: "footer.affiliate" },
 ];
 
-const legalLinks = [
-  { href: "/privacy", label: "Gizlilik Politikası" },
-  { href: "/terms", label: "Kullanım Şartları" },
-  { href: "/refund-policy", label: "İade Politikası" },
-];
-
-const trustBadges = [
-  { icon: Sparkles, text: "Ücretsiz Preview" },
-  { icon: BookOpen, text: KDP_GUARANTEE_CLAIM },
-  { icon: Heart, text: REFUND_GUARANTEE_CLAIM },
-  { icon: Mail, text: NO_API_COST_CLAIM },
+const legalLinkKeys = [
+  { href: "/privacy", labelKey: "footer.privacy" },
+  { href: "/terms", labelKey: "footer.terms" },
+  { href: "/refund-policy", labelKey: "footer.refund" },
 ];
 
 /* ─── Newsletter Form ────────────────────────────────────── */
 
 function NewsletterForm() {
+  const { t } = useLang();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    // TODO: integrate with real newsletter endpoint
     setStatus("success");
     setEmail("");
     setTimeout(() => setStatus("idle"), 4000);
@@ -75,10 +69,10 @@ function NewsletterForm() {
   return (
     <div className="footer-newsletter">
       <p className="text-sm font-semibold text-foreground">
-        Yazım ipuçları ve kampanyalar
+        {t("footer.writingTips")}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
-        Haftalık bültenimize katıl, ilk kitabını daha hızlı yaz.
+        {t("footer.newsletterDesc")}
       </p>
       <form onSubmit={handleSubmit} className="footer-newsletter-form">
         <div className="footer-newsletter-input-wrap">
@@ -87,21 +81,21 @@ function NewsletterForm() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="E-posta adresin"
+            placeholder={t("footer.emailPlaceholder")}
             required
             className="footer-newsletter-input"
-            aria-label="E-posta adresi"
+            aria-label={t("footer.emailLabel")}
           />
         </div>
         <button type="submit" className="footer-newsletter-btn" disabled={status === "success"}>
           {status === "success" ? (
             <span className="flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5" />
-              Katıldın!
+              {t("footer.subscribed")}
             </span>
           ) : (
             <span className="flex items-center gap-1.5">
-              Abone Ol
+              {t("footer.subscribe")}
               <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </span>
           )}
@@ -114,15 +108,17 @@ function NewsletterForm() {
 /* ─── Footer Link Group ──────────────────────────────────── */
 
 function FooterLinkGroup({
-  title,
+  titleKey,
   links,
 }: {
-  title: string;
-  links: { href: string; label: string; highlight?: boolean }[];
+  titleKey: string;
+  links: { href: string; labelKey: string; highlight?: boolean }[];
 }) {
+  const { t } = useLang();
+
   return (
     <div>
-      <p className="footer-col-title">{title}</p>
+      <p className="footer-col-title">{t(titleKey)}</p>
       <ul className="space-y-2.5">
         {links.map((item) => (
           <li key={item.href}>
@@ -131,7 +127,7 @@ function FooterLinkGroup({
               className="footer-link group"
             >
               <span className={item.highlight ? "text-primary font-medium" : ""}>
-                {item.label}
+                {t(item.labelKey)}
               </span>
               {item.highlight && (
                 <ArrowRight className="footer-link-arrow" aria-hidden="true" />
@@ -148,7 +144,15 @@ function FooterLinkGroup({
 
 export function SiteFooter() {
   const { resolvedTheme } = useTheme();
+  const { t } = useLang();
   const logoSrc = resolvedTheme === "dark" ? "/dark-logo.png" : "/logo.png";
+
+  const trustBadges = [
+    { icon: Sparkles, text: t("footer.freePreview") },
+    { icon: BookOpen, text: KDP_GUARANTEE_CLAIM },
+    { icon: Heart, text: REFUND_GUARANTEE_CLAIM },
+    { icon: Mail, text: NO_API_COST_CLAIM },
+  ];
 
   return (
     <footer className="site-footer">
@@ -160,16 +164,14 @@ export function SiteFooter() {
         <div className="shell">
           <div className="footer-cta-inner">
             <div className="footer-cta-copy">
-              <h3 className="footer-cta-title">
-                Kitabını <em>bugün</em> yazmaya başla
-              </h3>
+              <h3 className="footer-cta-title" dangerouslySetInnerHTML={{ __html: t("footer.ctaTitle") }} />
               <p className="footer-cta-sub">
-                Ücretsiz preview ile ilk kitabını dakikalar içinde oluştur.
+                {t("footer.ctaSub")}
               </p>
             </div>
             <Link href="/start/topic" className="footer-cta-btn">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
-              Ücretsiz Önizleme Başlat
+              {t("footer.ctaBtn")}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
@@ -185,13 +187,13 @@ export function SiteFooter() {
               {/* Logo */}
               <Link
                 href="/"
-                aria-label="Ana sayfaya git"
+                aria-label={t("footer.goHome")}
                 className="footer-logo-link"
               >
                 <span className="relative block h-10 w-[200px] overflow-hidden md:h-11 md:w-[240px]">
                   <Image
                     src={logoSrc}
-                    alt="Kitap Oluşturucu"
+                    alt="Book Generator"
                     className="h-full w-full object-contain object-left"
                     fill
                     sizes="(min-width: 768px) 240px, 200px"
@@ -201,8 +203,7 @@ export function SiteFooter() {
 
               {/* Description */}
               <p className="footer-brand-desc">
-                Yapay zeka destekli, sade ve premium kitap yazım arayüzü.
-                İlk kitabını profesyonel standartlarda oluştur.
+                {t("footer.brandDesc")}
               </p>
 
               {/* Trust Badges */}
@@ -220,15 +221,15 @@ export function SiteFooter() {
             </div>
 
             {/* Col 2: Product */}
-            <FooterLinkGroup title="Ürün" links={productLinks} />
+            <FooterLinkGroup titleKey="footer.product" links={productLinkKeys} />
 
             {/* Col 3: Resources */}
-            <FooterLinkGroup title="Kaynaklar" links={resourceLinks} />
+            <FooterLinkGroup titleKey="footer.resources" links={resourceLinkKeys} />
 
             {/* Col 4: Company + Legal */}
             <div className="space-y-6">
-              <FooterLinkGroup title="Şirket" links={companyLinks} />
-              <FooterLinkGroup title="Yasal" links={legalLinks} />
+              <FooterLinkGroup titleKey="footer.company" links={companyLinkKeys} />
+              <FooterLinkGroup titleKey="footer.legal" links={legalLinkKeys} />
             </div>
           </div>
         </div>
@@ -241,16 +242,16 @@ export function SiteFooter() {
             {/* Left: Copyright */}
             <div className="footer-bottom-left">
               <p className="text-xs text-muted-foreground">
-                © {new Date().getFullYear()} Kitap Oluşturucu. Tüm hakları saklıdır.
+                © {new Date().getFullYear()} {t("footer.copyright")}
               </p>
               <p className="footer-bottom-tagline">
-                Yapay zeka destekli kitap yazımı.
+                {t("footer.tagline")}
               </p>
             </div>
 
             {/* Right: Theme Toggle */}
             <div className="footer-bottom-right">
-              <span className="footer-bottom-label">Tema</span>
+              <span className="footer-bottom-label">{t("footer.theme")}</span>
               <ThemeToggle />
             </div>
           </div>

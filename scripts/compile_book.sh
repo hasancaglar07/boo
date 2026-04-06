@@ -1418,16 +1418,17 @@ for CHAPTER_FILE in "${CHAPTER_FILES[@]}"; do
     ')
     
     # Remove duplicate chapter titles, including the formats we've seen in the example
-    FORMATTED_CONTENT=$(echo "$CLEAN_CONTENT" | 
+    FORMATTED_CONTENT=$(printf '%s\n' "$CLEAN_CONTENT" |
         # First, remove headings in the first few lines
-        sed '1,5{/^# /d; /^\*\*/d; /^Chapter [0-9]/d; /^Bölüm [0-9]/d;}' |
-        # Remove any line that contains the full chapter title
-        grep -v -F "$CLEAN_CHAPTER_TITLE" |
-        # Remove any line that contains "Chapter N:" followed by the title
-        grep -v -E "^(Chapter|Bölüm) ${CHAPTER_NUM}:.*${CLEAN_CHAPTER_TITLE}" |
-        # Remove lines with just the chapter number and title
-        grep -v -E "^(Chapter|Bölüm) ${CHAPTER_NUM}[[:space:]]+${CLEAN_CHAPTER_TITLE}"
+        sed '1,5{/^# /d; /^\*\*/d; /^Chapter [0-9]/d; /^Bölüm [0-9]/d;}'
     )
+    if [ -n "$CLEAN_CHAPTER_TITLE" ]; then
+        # Under set -e, grep -v returning 1 (all lines filtered) can abort the build.
+        # Run filters stepwise with || true so short/edge chapters do not force fallback exports.
+        FORMATTED_CONTENT=$(printf '%s\n' "$FORMATTED_CONTENT" | grep -v -F "$CLEAN_CHAPTER_TITLE" || true)
+        FORMATTED_CONTENT=$(printf '%s\n' "$FORMATTED_CONTENT" | grep -v -E "^(Chapter|Bölüm) ${CHAPTER_NUM}:.*${CLEAN_CHAPTER_TITLE}" || true)
+        FORMATTED_CONTENT=$(printf '%s\n' "$FORMATTED_CONTENT" | grep -v -E "^(Chapter|Bölüm) ${CHAPTER_NUM}[[:space:]]+${CLEAN_CHAPTER_TITLE}" || true)
+    fi
 
     # Further formatting for subsections
     # Avoid converting bold (**text**) into headings (prevents unwanted TOC entries).

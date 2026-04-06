@@ -2,32 +2,52 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X, Sparkles, Globe } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useLang } from "@/components/lang-provider";
 
-const primaryNav = [
-  { href: "/how-it-works", label: "Nasıl Çalışır" },
-  { href: "/examples", label: "Örnekler" },
-  { href: "/pricing", label: "Fiyatlar" },
-  { href: "/compare", label: "Karşılaştır" },
-  { href: "/faq", label: "SSS" },
+const primaryNavKeys = [
+  { href: "/how-it-works", labelKey: "nav.howItWorks" },
+  { href: "/examples", labelKey: "nav.examples" },
+  { href: "/pricing", labelKey: "nav.pricing" },
+  { href: "/compare", labelKey: "footer.compare" },
+  { href: "/faq", labelKey: "nav.faq" },
 ];
 
-const secondaryNav = [
-  { href: "/tools", label: "Araçlar" },
-  { href: "/resources", label: "Kaynaklar" },
-  { href: "/blog", label: "Blog" },
-  { href: "/use-cases", label: "Kullanım Alanları" },
+const secondaryNavKeys = [
+  { href: "/tools", labelKey: "nav.tools" },
+  { href: "/resources", labelKey: "footer.resources" },
+  { href: "/blog", labelKey: "footer.blog" },
+  { href: "/use-cases", labelKey: "footer.useCases" },
 ];
+
+/* ─── Language Toggle for Mobile ─────────────────────────────── */
+
+function MobileLangToggle() {
+  const { lang, setLang } = useLang();
+  const next = lang === "en" ? "tr" : "en";
+
+  return (
+    <button
+      onClick={() => setLang(next)}
+      className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[14px] font-medium text-muted-foreground transition-all duration-150 hover:bg-accent/70 hover:text-foreground"
+      aria-label={lang === "en" ? "Switch to Turkish" : "Türkçe'ye geç"}
+    >
+      <Globe className="h-4 w-4" aria-hidden="true" />
+      {lang === "en" ? "Türkçe" : "English"}
+    </button>
+  );
+}
 
 export function MobileNav({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
+  const { t } = useLang();
   const [open, setOpen] = React.useState(false);
 
   return (
     <>
       <button
-        aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
+        aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-card/60 text-muted-foreground backdrop-blur-sm transition-all duration-150 hover:border-border hover:bg-accent/80 hover:text-foreground active:scale-95 lg:hidden"
         onClick={() => setOpen((v) => !v)}
@@ -58,47 +78,48 @@ export function MobileNav({ isAuthenticated = false }: { isAuthenticated?: boole
               aria-hidden="true"
             />
 
-            <nav className="flex flex-col gap-0.5" aria-label="Mobil menü">
-              {primaryNav.map((item) => (
+            <nav className="flex flex-col gap-0.5" aria-label="Mobile menu">
+              {primaryNavKeys.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className="rounded-lg px-3 py-2.5 text-[14px] font-medium tracking-[-0.01em] text-muted-foreground transition-all duration-150 hover:bg-accent/70 hover:text-foreground"
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               ))}
             </nav>
 
             <div className="mt-4 border-t border-border/60 pt-4">
               <div className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Daha Fazla
+                More
               </div>
-              <nav className="flex flex-col gap-0.5" aria-label="Mobil yardımcı menü">
-                {secondaryNav.map((item) => (
+              <nav className="flex flex-col gap-0.5" aria-label="Mobile secondary menu">
+                {secondaryNavKeys.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
                     className="rounded-lg px-3 py-2.5 text-[14px] font-medium tracking-[-0.01em] text-muted-foreground transition-all duration-150 hover:bg-accent/70 hover:text-foreground"
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </Link>
                 ))}
+                <MobileLangToggle />
               </nav>
             </div>
 
             <div className="mt-4 flex flex-col gap-2 border-t border-border/60 pt-4">
               <Link href={isAuthenticated ? "/app/library" : "/login"} onClick={() => setOpen(false)}>
                 <Button variant="outline" className="w-full text-[13.5px] font-medium tracking-[-0.01em]">
-                  {isAuthenticated ? "Kitaplarım" : "Giriş Yap"}
+                  {isAuthenticated ? t("nav.myBooks") : t("nav.login")}
                 </Button>
               </Link>
               <Link href={isAuthenticated ? "/app/new/topic" : "/start/topic"} onClick={() => setOpen(false)}>
                 <Button className="site-cta-btn w-full gap-1.5 text-[13.5px] font-semibold tracking-[-0.01em]">
                   <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                  {isAuthenticated ? "Yeni Kitap" : "Ücretsiz Önizleme"}
+                  {isAuthenticated ? t("nav.newBook") : t("nav.freePreview")}
                 </Button>
               </Link>
             </div>

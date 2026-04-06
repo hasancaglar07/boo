@@ -7,6 +7,7 @@ import { AssetLoadRecoveryScript } from "@/components/app/asset-load-recovery-sc
 import { ChunkLoadRecovery } from "@/components/app/chunk-load-recovery";
 import { CookieConsent } from "@/components/app/cookie-consent";
 import { RefCodeDetector } from "@/components/app/ref-code-detector";
+import { LangProvider } from "@/components/lang-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { PUBLIC_BILLING_EMAIL, PUBLIC_SUPPORT_EMAIL } from "@/lib/contact-shared";
@@ -207,6 +208,7 @@ export default function RootLayout(props: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }}
         />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <LangProvider>
           <ChunkLoadRecovery />
           <AuthStateHydrator />
           <RefCodeDetector />
@@ -215,6 +217,7 @@ export default function RootLayout(props: LayoutProps<"/">) {
           </div>
           <CookieConsent />
           <Toaster richColors position="top-right" />
+          </LangProvider>
         </ThemeProvider>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID ?? "G-GEEGMJ1L7R"}`}

@@ -134,9 +134,9 @@ configure_settings() {
     echo "4) Nano Banana 2"
     read -r -p "Enter choice (1-4) [default: 1]: " service_choice
 
+    case "$service_choice" in
         2) SERVICE="vertex-imagen-standard" ;;
         3) SERVICE="nano-banana-pro" ;;
-        4) SERVICE="nano-banana-2" ;;
         4) SERVICE="nano-banana-2" ;;
         *) SERVICE="auto" ;;
     esac

@@ -1,4 +1,4 @@
-import {
+﻿import {
   evaluateBookIdea,
   mapValidatorIntentToBookType,
   mapValidatorLanguageToFunnelLanguage,
@@ -141,7 +141,7 @@ const STOP_WORDS = new Set([
   "ve",
   "ile",
   "bir",
-  "için",
+  "for",
   "bu",
   "the",
   "and",
@@ -157,11 +157,11 @@ const STOP_WORDS = new Set([
 ]);
 
 const GENERIC_OUTCOME_PATTERN =
-  /\b(help|teach|build|grow|launch|scale|write|publish|increase|reduce|sonuç|artır|büyüt|kur|yayınla|yaz|dönüştür|satış|lead)\b/iu;
+  /\b(help|teach|build|grow|launch|scale|write|publish|increase|reduce|result|establish|convert|sales|lead)\b/iu;
 const AUDIENCE_PATTERN =
-  /\b(for|için|owner|coach|consultant|creator|educator|founder|marketer|yazar|eğitmen|koç|danışman|uzman|yayıncı)\b/iu;
+  /\b(for|owner|coach|consultant|creator|educator|founder|marketer|author|expert|publisher)\b/iu;
 const METHOD_PATTERN =
-  /\b(system|framework|method|playbook|blueprint|sistem|metod|yöntem|harita|çerçeve)\b/iu;
+  /\b(system|framework|method|playbook|blueprint|map)\b/iu;
 const BROAD_TOPIC_PATTERN =
   /\b(iş|business|marketing|pazarlama|başarı|verimlilik|productivity|kişisel gelişim|health|sağlık|growth)\b/iu;
 
@@ -201,10 +201,10 @@ function averageScore(dimensions: MarketingToolDimension[]) {
 }
 
 function verdictFromScore(score: number) {
-  if (score >= 82) return "Güçlü aday";
-  if (score >= 70) return "İyi ama biraz daraltılmalı";
-  if (score >= 58) return "Temel sinyal var, konumlandırma istiyor";
-  return "Önce açıyı sıkılaştır";
+  if (score >= 82) return "Strong candidate";
+  if (score >= 70) return "Good but needs to be narrowed down a bit";
+  if (score >= 58) return "Base signal exists, requires positioning";
+  return "First tighten the angle";
 }
 
 function wordsBonus(value: string, limit: number, perWord: number) {
@@ -287,12 +287,12 @@ function buildStrengthsAndRisks(dimensions: MarketingToolDimension[], positives:
 
   while (strengths.length < 3) {
     const candidate = sorted[strengths.length];
-    strengths.push(candidate ? `${candidate.label} tarafında kullanılabilir bir sinyal var.` : "Çekirdek fikir test etmeye değer.");
+    strengths.push(candidate ? `There is an available signal on ${candidate.label}.` : "The core idea is worth testing.");
   }
 
   while (risks.length < 3) {
     const candidate = weakest[risks.length];
-    risks.push(candidate ? `${candidate.label} alanını biraz daha netleştirmek dönüşümü artırır.` : "Başlık ve vaat netliği biraz daha sıkılaştırılmalı.");
+    risks.push(candidate ? `Clarifying the ${candidate.label} field a bit more would increase conversion.` : "The clarity of the title and promise could be tightened a bit more.");
   }
 
   return { strengths: strengths.slice(0, 3), risks: risks.slice(0, 3) };
@@ -304,62 +304,62 @@ function outlineStarterEvaluation(values: MarketingToolValues): MarketingToolEva
   const goal = values.goal || "";
   const bookType = values.bookType || "authority_book";
   const topicCore = shortCore(topic, "Kitap konusu");
-  const goalCore = goal.trim() || "net bir sonuç";
+  const goalCore = goal.trim() || "a clear result";
 
   const dimensions: MarketingToolDimension[] = [
     {
       key: "focus",
-      label: "Konu odağı",
+      label: "Topic focus",
       score: clamp(48 + wordsBonus(topic, 6, 5) - regexBonus(topic, BROAD_TOPIC_PATTERN, 12), 32, 95),
-      summary: "Outline güçlü çalışsın diye konu tek bir problem veya dönüşüm etrafında dar olmalı.",
+      summary: "For the outline to work effectively, the topic should be narrow, centered around a single problem or transformation.",
     },
     {
       key: "reader_fit",
       label: "Okur uyumu",
       score: clamp(46 + wordsBonus(audience, 6, 6) + regexBonus(audience, AUDIENCE_PATTERN, 12), 34, 95),
-      summary: "Hedef okur net olduğunda bölüm sırası ve örnek tipi daha kolay belirlenir.",
+      summary: "When the target reader is clear, chapter order and example type are easier to determine.",
     },
     {
       key: "promise",
-      label: "Vaat netliği",
+      label: "Clarity of promises",
       score: clamp(44 + wordsBonus(goal, 5, 5) + regexBonus(goal, GENERIC_OUTCOME_PATTERN, 16), 34, 94),
-      summary: "Kitap sonunda okuyucunun ne alacağı net tarif edilirse taslak daha ikna edici olur.",
+      summary: "If what the reader will gain by the end of the book is clearly described, the outline becomes more persuasive.",
     },
     {
       key: "structure",
-      label: "Bölümleşme sinyali",
+      label: "Chapter signal",
       score: clamp(42 + wordsBonus(topic, 6, 4) + regexBonus(`${topic} ${goal}`, METHOD_PATTERN, 16), 30, 94),
-      summary: "Yöntem, sistem veya aşamalı süreç sinyali bölüm omurgasını kolaylaştırır.",
+      summary: "The method, system, or step-by-step process facilitates the chapter backbone signal.",
     },
     {
       key: "completion",
       label: "Tamamlama ihtimali",
       score: clamp(50 + (bookType === "lead_magnet" ? 10 : 6) + (values.language === "multilingual" ? -2 : 4), 36, 92),
-      summary: "Kapsamın kontrol altında olması kitabın yarım kalma riskini düşürür.",
+      summary: "Keeping the scope under control reduces the risk of the book being left unfinished.",
     },
   ];
 
   const overallScore = averageScore(dimensions);
   const outlineItems = [
-    `${audience || "Hedef okur"} neden ${topicCore.toLocaleLowerCase("tr-TR")} konusunda zorlanıyor?`,
-    `Bugün kullanılan ama zayıf kalan yaklaşım`,
-    `${topicCore} için temel çerçeve veya çalışma mantığı`,
-    `İlk hızlı kazanım ve uygulama adımı`,
-    `En sık görülen hatalar ve nasıl önleneceği`,
-    `Gerçek örnek veya mini vaka akışı`,
-    `Sistemin sürdürülebilir hale getirilmesi`,
-    `Sonraki adım: ${goalCore.toLocaleLowerCase("tr-TR")} için çağrı`,
+    `Why does ${audience || "Target reader"} struggle with ${topicCore.toLocaleLowerCase("tr-TR")}?`,
+    `An approach that is still used today but remains weak`,
+    `Core framework or working logic for ${topicCore}`,
+    `First quick win and implementation step`,
+    `Most common errors and how to prevent them`,
+    `Real example or mini case flow`,
+    `Making the system sustainable`,
+    `Next step: call for ${goalCore.toLocaleLowerCase("tr-TR")}`,
   ];
 
   const reportSections: MarketingToolReportSection[] = [
-    { title: "Önerilen bölüm omurgası", ordered: true, items: outlineItems },
+    { title: "Suggested chapter outline", ordered: true, items: outlineItems },
     {
       title: "Editoryal notlar",
       items: [
-        "İlk bölümde problem maliyetini sayısallaştır veya görünür kıl.",
-        "Orta bölümlerde yalnız teori değil, karar ağacı ve örnek akış göster.",
-        "Son bölümde okuyucuyu ürün, danışmanlık veya bir sonraki aksiyona taşı.",
-        "Her bölüm başında tek cümlelik vaat kullan.",
+        "In the first chapter, quantify or make the problem cost visible.",
+        "In the middle chapters, show not only theory but also a decision tree and example flow.",
+        "In the final chapter, guide the reader toward your product, consulting services, or the next action.",
+        "Use a one-sentence promise at the beginning of each chapter.",
       ],
     },
   ];
@@ -367,14 +367,14 @@ function outlineStarterEvaluation(values: MarketingToolValues): MarketingToolEva
   const { strengths, risks } = buildStrengthsAndRisks(
     dimensions,
     [
-      dimensions[0].score >= 72 ? "Konu yeterince dar; bu da taslak'ın dağılmasını engeller." : "",
-      dimensions[1].score >= 72 ? "Hedef okur net olduğu için bölüm tonu kolay oturur." : "",
-      dimensions[3].score >= 70 ? "Konu içinde yöntem veya çerçeve sinyali var; bu iyi bölümleşir." : "",
+      dimensions[0].score >= 72 ? "The topic is narrow enough; this prevents the outline from scattering." : "",
+      dimensions[1].score >= 72 ? "Since the target reader is clear, the chapter tone is easily established." : "",
+      dimensions[3].score >= 70 ? "There is a method or framework signal within the topic; this chapters well." : "",
     ].filter(Boolean),
     [
-      dimensions[0].score < 65 ? "Konuyu biraz daha daralt; şu haliyle bölümler jenerikleşebilir." : "",
+      dimensions[0].score < 65 ? "Narrow down the topic a bit more; in its current state, chapters could become too generic." : "",
       dimensions[2].score < 65 ? "Okur sonunda hangi sonucu alacak, bunu daha keskin yaz." : "",
-      dimensions[3].score < 64 ? "Yöntem, aşama veya karar ağacı katmanı ekle; taslak daha kolay çıkar." : "",
+      dimensions[3].score < 64 ? "Add method, stage, or decision tree layer; the outline comes out more easily." : "",
     ].filter(Boolean),
   );
 
@@ -382,12 +382,12 @@ function outlineStarterEvaluation(values: MarketingToolValues): MarketingToolEva
     overallScore,
     verdict: verdictFromScore(overallScore),
     recommendedFormat: formatBookType(bookType),
-    recommendedAngle: `${topicCore} konusunu ${audience || "net bir segment"} için ${goalCore.toLocaleLowerCase(
+    recommendedAngle: `${topicCore} topic for ${audience || "a clear segment"} ${goalCore.toLocaleLowerCase(
       "tr-TR",
-    )} odağıyla 8 bölümlük bir akışa çevirmek en güçlü başlangıç olur.`,
+    )} focusing on an 8-chapter flow would be the strongest start.`,
     strongestPoints: strengths,
     risks,
-    nextStep: "Bu taslak'ı önizleme akışına taşı ve ilk bölümün tonunu test et.",
+    nextStep: "Move this draft to the preview flow and test the tone of the first chapter.",
     dimensions,
     reportSections,
   };
@@ -399,7 +399,7 @@ function contentToBookMapperEvaluation(values: MarketingToolValues): MarketingTo
   const goal = values.goal || "";
   const sourceType = values.sourceType || "course_workshop";
   const materialDepth = values.materialDepth || "medium";
-  const assetCore = shortCore(assetSummary, "Mevcut içerik");
+  const assetCore = shortCore(assetSummary, "Current content");
 
   const sourceBonus =
     sourceType === "consulting_framework" ? 16 : sourceType === "course_workshop" ? 14 : sourceType === "newsletter_content" ? 10 : 12;
@@ -408,66 +408,66 @@ function contentToBookMapperEvaluation(values: MarketingToolValues): MarketingTo
   const dimensions: MarketingToolDimension[] = [
     {
       key: "coverage",
-      label: "İçerik kapsamı",
+      label: "Content scope",
       score: clamp(44 + wordsBonus(assetSummary, 7, 4) + depthBonus, 34, 95),
-      summary: "Kitaba dönüşüm için dağınık değil kümelenebilir içerik gerekir.",
+      summary: "Clusterable, not scattered, content is needed for book conversion.",
     },
     {
       key: "repurpose_fit",
-      label: "Dönüştürme uyumu",
+      label: "Conversion Compatibility",
       score: clamp(48 + sourceBonus + regexBonus(assetSummary, METHOD_PATTERN, 10), 36, 96),
-      summary: "Kurs, framework ve düzenli içerik serileri kitaplaştırmaya daha hazırdır.",
+      summary: "Courses, frameworks, and organized content series are more ready to be converted into books.",
     },
     {
       key: "reader_fit",
-      label: "Okur eşleşmesi",
+      label: "Reader matching",
       score: clamp(46 + wordsBonus(audience, 6, 6) + regexBonus(audience, AUDIENCE_PATTERN, 10), 34, 95),
-      summary: "İçerik formatı kadar o içeriğin kime çevrildiği de önemlidir.",
+      summary: "Just as the content format matters, so does who that content is addressed to.",
     },
     {
       key: "commercial_fit",
-      label: "Ticari katkı",
+      label: "Commercial contribution",
       score: clamp(42 + wordsBonus(goal, 5, 5) + regexBonus(goal, GENERIC_OUTCOME_PATTERN, 16), 32, 94),
-      summary: "Kitap yalnız içerik derlemesi değil, bir iş amacına da hizmet etmeli.",
+      summary: "A book should not only be a compilation of content, but also serve a business purpose.",
     },
     {
       key: "gaps",
-      label: "Eksik parça riski",
+      label: "Missing piece risk",
       score: clamp(62 + (materialDepth === "rich" ? 14 : materialDepth === "medium" ? 6 : -4), 40, 94),
-      summary: "Derinlik arttıkça geçiş, örnek ve sonuç bölümleri daha kolay tamamlanır.",
+      summary: "As depth increases, the transition, example, and conclusion sections become easier to complete.",
     },
   ];
 
   const overallScore = averageScore(dimensions);
   const clusterLabel =
     sourceType === "course_workshop"
-      ? "modül"
+      ? "module"
       : sourceType === "consulting_framework"
-        ? "framework bloğu"
+        ? "framework block"
         : sourceType === "newsletter_content"
-          ? "newsletter kümesi"
-          : "içerik serisi";
+          ? "newsletter collection"
+          : "content series";
 
   const reportSections: MarketingToolReportSection[] = [
     {
-      title: "Önerilen içerik kümeleri",
+      title: "Suggested content collections",
       ordered: true,
       items: [
-        `${assetCore} için ana problem girişi`,
-        `${audience || "Hedef okur"} için temel karar çerçevesi`,
-        `En güçlü ${clusterLabel} ve bunların yeniden sıralanması`,
-        `Sık tekrar eden içeriğin tek bir merkezi bölüme toplanması`,
-        `Örnek vaka ve uygulama bölümünün eklenmesi`,
-        `Son bölümde ${goal.toLocaleLowerCase("tr-TR") || "bir sonraki aksiyon"} çağrısı`,
+        `Main problem input for ${assetCore}`,
+        `Core decision framework for ${audience || "Target reader"}`,
+        `The most powerful ${clusterLabel} and their reordering`,
+        `Consolidation of frequently repeated content into a single central section`,
+        `Adding example case and application section`,
+        `In the last chapter, a call to action for ${goal.toLocaleLowerCase("tr-TR") || "next action"}`,
       ],
     },
     {
-      title: "Eksik parça uyarıları",
+      title: "Missing piece warnings",
       items: [
-        "İçerik parçaları arasında geçiş cümleleri ayrıca yazılmalı.",
-        "Tekrarlayan örnekler yerine 1-2 kuvvetli vaka seçilmeli.",
-        "Kitap açılışı, içeriği listelemekten çok problemi çerçevelemeli.",
-        "Son bölüm hizmet, kurs veya newsletter devamına bağlanmalı.",
+        "Transition sentences between content sections should also be written separately.",
+        "Instead of repetitive examples, 1-2 strong cases should be selected.",
+        "The book opening should frame the problem rather than list the content.",
+        "The final chapter should connect to a service, course, or newsletter continuation.",
       ],
     },
   ];
@@ -475,14 +475,14 @@ function contentToBookMapperEvaluation(values: MarketingToolValues): MarketingTo
   const { strengths, risks } = buildStrengthsAndRisks(
     dimensions,
     [
-      dimensions[1].score >= 74 ? "Mevcut içerik tipi kitaplaştırma için doğal bir iskelet sunuyor." : "",
-      dimensions[0].score >= 72 ? "Elde yeterince malzeme var; kitap sıfırdan yazılmak zorunda değil." : "",
+      dimensions[1].score >= 74 ? "The current content type provides a natural skeleton for bookification." : "",
+      dimensions[0].score >= 72 ? "There is enough material available; the book does not have to be written from scratch." : "",
       dimensions[3].score >= 70 ? "Kitap, içeriği yalnız toparlamaz; aynı zamanda dönüşüm üretir." : "",
     ].filter(Boolean),
     [
-      dimensions[4].score < 64 ? "Geçiş, vaka ve kapanış bölümleri ayrıca tasarlanmalı." : "",
-      dimensions[2].score < 66 ? "İçeriği kimin için yeniden yazdığını daha net tarif et." : "",
-      dimensions[0].score < 66 ? "Malzemeyi modül, seri veya tema bazlı kümelere ayır." : "",
+      dimensions[4].score < 64 ? "Transition, case, and closing sections should also be designed." : "",
+      dimensions[2].score < 66 ? "Describe more clearly for whom the content is being rewritten." : "",
+      dimensions[0].score < 66 ? "Separate the material into module, series, or theme-based clusters." : "",
     ].filter(Boolean),
   );
 
@@ -490,12 +490,12 @@ function contentToBookMapperEvaluation(values: MarketingToolValues): MarketingTo
     overallScore,
     verdict: verdictFromScore(overallScore),
     recommendedFormat: "Repurposed authority guide",
-    recommendedAngle: `${assetCore} içeriğini olduğu gibi kopyalamak yerine, ${audience || "hedef okur"} için ${
-      goal.toLocaleLowerCase("tr-TR") || "net bir dönüşüm"
-    } odaklı bir rehbere çevirmek daha güçlü sonuç verir.`,
+    recommendedAngle: `Instead of copying ${assetCore} content as is, for ${audience || "target reader"} ${
+      goal.toLocaleLowerCase("tr-TR") || "clear conversion"
+    }converting into a focused guide yields stronger results.`,
     strongestPoints: strengths,
     risks,
-    nextStep: "Bu kümeleri sihirbaza taşı ve ilk üç bölümü preview içinde test et.",
+    nextStep: "Move these sets to the wizard and test the first three chapters in the preview.",
     dimensions,
     reportSections,
   };
@@ -506,56 +506,56 @@ function kdpNicheScoreEvaluation(values: MarketingToolValues): MarketingToolEval
   const audience = values.audience || "";
   const promise = values.promise || "";
   const competition = values.competition || "medium";
-  const nicheCore = shortCore(niche, "Niş");
+  const nicheCore = shortCore(niche, "Niche");
 
   const competitionScore = competition === "low" ? 86 : competition === "medium" ? 68 : 46;
   const dimensions: MarketingToolDimension[] = [
     {
       key: "specificity",
-      label: "Mikro niş netliği",
+      label: "Micro niche clarity",
       score: clamp(52 + wordsBonus(niche, 6, 5) - regexBonus(niche, BROAD_TOPIC_PATTERN, 14), 34, 96),
-      summary: "KDP için geniş konu değil, aranabilir ve savunulabilir mikro niş gerekir.",
+      summary: "KDP requires a searchable and defensible micro niche, not a broad topic.",
     },
     {
       key: "buyer_fit",
-      label: "Okur eşleşmesi",
+      label: "Reader matching",
       score: clamp(44 + wordsBonus(audience, 6, 6) + regexBonus(audience, AUDIENCE_PATTERN, 10), 34, 95),
-      summary: "Kategori kadar kitabın kimin için olduğu da satış sinyali üretir.",
+      summary: "Just like the category, who the book is for also generates sales signals.",
     },
     {
       key: "promise",
-      label: "Vaat gücü",
+      label: "Promise power",
       score: clamp(44 + wordsBonus(promise, 5, 5) + regexBonus(promise, GENERIC_OUTCOME_PATTERN, 16), 34, 95),
-      summary: "Subtitle ve açıklama için somut kazanım cümlesi gerekir.",
+      summary: "A concrete benefit statement is required for the subtitle and description.",
     },
     {
       key: "competition",
-      label: "Rekabet yönetilebilirliği",
+      label: "Competition manageability",
       score: competitionScore,
-      summary: "Rekabet sinyali yüksekse başlığı daha da daraltmak gerekir.",
+      summary: "If the competition signal is high, the title needs to be narrowed down further.",
     },
     {
       key: "series",
       label: "Seri potansiyeli",
       score: clamp(46 + wordsBonus(`${niche} ${promise}`, 6, 4) + (competition === "low" ? 10 : 4), 34, 94),
-      summary: "İyi mikro niş çoğu zaman yan başlıklar veya seri fırsatı da taşır.",
+      summary: "A good micro niche often also carries subheading or series opportunities.",
     },
   ];
 
   const overallScore = averageScore(dimensions);
   const reportSections: MarketingToolReportSection[] = [
     {
-      title: "Subtitle açıları",
+      title: "Subtitle angles",
       items: [
-        `${nicheCore} için pratik başlangıç rehberi`,
-        `${audience || "Yeni başlayanlar"} için adım adım ${nicheCore.toLocaleLowerCase("tr-TR")}`,
-        `${promise || `${nicheCore.toLocaleLowerCase("tr-TR")} konusunda net sonuç`}`,
-        `${nicheCore} hatalarını azaltan saha rehberi`,
-        `${nicheCore} için uygulanabilir kısa sistem`,
+        `Practical getting started guide for ${nicheCore}`,
+        `Step by step ${nicheCore.toLocaleLowerCase("tr-TR")} for ${audience || "Beginners"}`,
+        `${promise || `Clear result on ${nicheCore.toLocaleLowerCase("tr-TR")}`}`,
+        `Field guide to reducing ${nicheCore} errors`,
+        `Applicable short system for ${nicheCore}`,
       ],
     },
     {
-      title: "Metadata başlangıçları",
+      title: "Metadata beginnings",
       items: [
         `${nicheCore} guide`,
         `${nicheCore} handbook`,
@@ -565,15 +565,15 @@ function kdpNicheScoreEvaluation(values: MarketingToolValues): MarketingToolEval
       ],
     },
     {
-      title: "Mini bölüm yolu",
+      title: "Mini chapter path",
       ordered: true,
       items: [
-        `Niş problemin maliyeti`,
-        `Pazardaki zayıf yaklaşımlar`,
-        `${nicheCore} için temel sistem`,
-        `Hızlı başlangıç adımları`,
-        `Vaka veya örnek sonuçlar`,
-        `Sonraki kitap veya seri fırsatı`,
+        `Cost of the niche problem`,
+        `Weak approaches in the market`,
+        `Core system for ${nicheCore}`,
+        `Quick start steps`,
+        `Case or example results`,
+        `Next book or series opportunity`,
       ],
     },
   ];
@@ -581,14 +581,14 @@ function kdpNicheScoreEvaluation(values: MarketingToolValues): MarketingToolEval
   const { strengths, risks } = buildStrengthsAndRisks(
     dimensions,
     [
-      dimensions[0].score >= 76 ? "Niş yeterince dar; bu KDP aramalarında avantaj sağlar." : "",
-      dimensions[2].score >= 72 ? "Vaat subtitle ve açıklama tarafında iyi taşınabilir." : "",
-      dimensions[4].score >= 72 ? "Bu niş tek kitap yerine seri başlangıcına da uygun görünüyor." : "",
+      dimensions[0].score >= 76 ? "The niche is narrow enough; this provides an advantage in KDP searches." : "",
+      dimensions[2].score >= 72 ? "Promises can be carried well on the subtitle and description side." : "",
+      dimensions[4].score >= 72 ? "This seems suitable for a series starter rather than a single standalone book." : "",
     ].filter(Boolean),
     [
-      dimensions[0].score < 66 ? "Nişi daha mikro seviyeye indir; aksi halde rekabet boğar." : "",
-      dimensions[3].score < 60 ? "Rekabet yüksek; başlığa alt segment veya kullanım durumu ekle." : "",
-      dimensions[1].score < 66 ? "Kimin için yazdığını başlığa veya subtitle'a daha net taşı." : "",
+      dimensions[0].score < 66 ? "Niche down to a more micro level; otherwise, the competition will suffocate you." : "",
+      dimensions[3].score < 60 ? "Competition is high; add a sub-niche or use case to the title." : "",
+      dimensions[1].score < 66 ? "Carry more clearly in the title or subtitle who you are writing for." : "",
     ].filter(Boolean),
   );
 
@@ -596,12 +596,12 @@ function kdpNicheScoreEvaluation(values: MarketingToolValues): MarketingToolEval
     overallScore,
     verdict: verdictFromScore(overallScore),
     recommendedFormat: "KDP micro-niche nonfiction",
-    recommendedAngle: `${nicheCore} konusunu genel bir başlık olarak bırakmak yerine, ${
+    recommendedAngle: `Instead of leaving ${nicheCore} as a general topic, ${
       audience || "belirli bir okur segmenti"
-    } için ${promise.toLocaleLowerCase("tr-TR") || "tek bir ana sonuç"} odağıyla mikro nişleştirmek daha doğru olur.`,
+    } için ${promise.toLocaleLowerCase("tr-TR") || "a single main result"} odağıyla mikro nişleştirmek daha doğru olur.`,
     strongestPoints: strengths,
     risks,
-    nextStep: "Bu mikro nişi önizleme akışına taşı ve ilk subtitle setini test et.",
+    nextStep: "Move this micro niche to the preview flow and test the first subtitle set.",
     dimensions,
     reportSections,
   };
@@ -612,74 +612,74 @@ function leadMagnetBookAngleFinderEvaluation(values: MarketingToolValues): Marke
   const client = values.client || "";
   const outcome = values.outcome || "";
   const offerType = values.offerType || "consulting";
-  const expertiseCore = shortCore(expertise, "Uzmanlık");
+  const expertiseCore = shortCore(expertise, "Expertise");
 
   const offerBonus =
     offerType === "consulting" ? 16 : offerType === "coaching" ? 14 : offerType === "course" ? 12 : offerType === "service" ? 12 : 10;
   const dimensions: MarketingToolDimension[] = [
     {
       key: "client",
-      label: "İdeal müşteri netliği",
+      label: "Ideal customer clarity",
       score: clamp(46 + wordsBonus(client, 6, 6) + regexBonus(client, AUDIENCE_PATTERN, 10), 34, 95),
-      summary: "Lead magnet kitap, herkese değil doğru müşteriye yazıldığında çalışır.",
+      summary: "A lead magnet book works when it's written not for everyone, but for the right customer.",
     },
     {
       key: "outcome",
-      label: "Sonuç cümlesi",
+      label: "Conclusion sentence",
       score: clamp(44 + wordsBonus(outcome, 5, 5) + regexBonus(outcome, GENERIC_OUTCOME_PATTERN, 16), 34, 95),
-      summary: "Kısa kitabın vaadi hızlı ve ölçülebilir bir kazanca bağlanmalı.",
+      summary: "The short book's promise should be tied to a quick and measurable gain.",
     },
     {
       key: "offer",
       label: "Teklif uyumu",
       score: clamp(48 + offerBonus, 40, 96),
-      summary: "Kitabın sonunda okutacağın teklif ne kadar netse tool o kadar güçlü çalışır.",
+      summary: "The clearer the prompt you feed at the end of the book, the more powerfully the tool will work.",
     },
     {
       key: "trust",
-      label: "Güven kurma gücü",
+      label: "Trust-building power",
       score: clamp(42 + wordsBonus(expertise, 6, 4) + regexBonus(expertise, METHOD_PATTERN, 12), 32, 92),
-      summary: "Uzmanlık, çerçeve ve süreç sinyali kitaba otorite kazandırır.",
+      summary: "Expertise, framework, and process signals lend authority to the book.",
     },
     {
       key: "conversion",
-      label: "Dönüşüm potansiyeli",
+      label: "Conversion potential",
       score: clamp(46 + regexBonus(`${client} ${outcome}`, GENERIC_OUTCOME_PATTERN, 12) + offerBonus / 2, 36, 94),
-      summary: "Kitap, doğru CTA ile görüşme veya teklif talebine dönebilmelidir.",
+      summary: "The book should be able to convert into a meeting or proposal request with the right CTA.",
     },
   ];
 
   const overallScore = averageScore(dimensions);
   const reportSections: MarketingToolReportSection[] = [
     {
-      title: "Açı önerileri",
+      title: "Angle suggestions",
       items: [
-        `${client || "İdeal müşteri"} için ${outcome.toLocaleLowerCase("tr-TR") || "hızlı kazanım"} rehberi`,
-        `${expertiseCore} ile ilk sonucu daha hızlı alma`,
-        `${client || "Doğru müşteri"} hatalarını azaltan kısa playbook`,
-        `${expertiseCore} kullanarak ilk 30 günde ilerleme planı`,
-        `${offerType === "course" ? "Kursa" : "Hizmete"} geçiş yapan kısa otorite kitabı`,
+        `${client || "Ideal customer"} ${outcome.toLocaleLowerCase("tr-TR") || "quick gain"} guide`,
+        `${expertiseCore} getting the first result faster with`,
+        `Short playbook that reduces ${client || "Right customer"} errors`,
+        `30-day progress plan using ${expertiseCore}`,
+        `Short authority book transitioning to ${offerType === "course" ? "Course" : "Service"}`,
       ],
     },
     {
-      title: "Kısa rehber taslağı",
+      title: "Short guide draft",
       ordered: true,
       items: [
-        `Problem ve yanlış varsayımlar`,
-        `Kimler için işe yarar / kimler için yaramaz`,
-        `${expertiseCore} çerçevesi`,
-        `İlk uygulama adımı`,
-        `Örnek senaryo veya vaka`,
-        `Teklif veya sonraki adım`,
+        `Problems and incorrect assumptions`,
+        `Who it works for / who it doesn't work for`,
+        `within the framework of ${expertiseCore}`,
+        `First app step`,
+        `Sample scenario or case`,
+        `Offer or next step`,
       ],
     },
     {
-      title: "CTA fırsatları",
+      title: "CTA opportunities",
       items: [
         "Checklist veya worksheet indirimi",
-        "Tanı görüşmesi veya demo çağrısı",
-        "Mini eğitim veya webinar geçişi",
-        "Case study veya teklif sayfasına yönlendirme",
+        "Diagnosis interview or demo call",
+        "Mini training or webinar transition",
+        "Redirect to case study or proposal page",
       ],
     },
   ];
@@ -687,14 +687,14 @@ function leadMagnetBookAngleFinderEvaluation(values: MarketingToolValues): Marke
   const { strengths, risks } = buildStrengthsAndRisks(
     dimensions,
     [
-      dimensions[0].score >= 72 ? "Müşteri tanımı net; bu lead magnet tonu için kritik." : "",
-      dimensions[2].score >= 74 ? "Kitabın bağlanacağı teklif net olduğu için dönüşüm köprüsü kurulabilir." : "",
-      dimensions[3].score >= 70 ? "Uzmanlık çerçevesi güven kuran bir çekirdek taşıyor." : "",
+      dimensions[0].score >= 72 ? "The customer definition is clear; this is critical for the lead magnet tone." : "",
+      dimensions[2].score >= 74 ? "Since the offer the book will be linked to is clear, a conversion bridge can be established." : "",
+      dimensions[3].score >= 70 ? "Its core builds trust through a framework of expertise." : "",
     ].filter(Boolean),
     [
-      dimensions[1].score < 66 ? "Okur kitabın sonunda ne kazanacak, bunu daha keskin yaz." : "",
-      dimensions[0].score < 66 ? "Kitabı herkese değil, tek bir müşteri segmentine konuşacak kadar daralt." : "",
-      dimensions[2].score < 66 ? "Kitabın sonunda hangi teklifin çağrılacağını netleştir." : "",
+      dimensions[1].score < 66 ? "Write more sharply what the reader will gain at the end of the book." : "",
+      dimensions[0].score < 66 ? "Narrow the book down enough to speak to a single customer segment, not everyone." : "",
+      dimensions[2].score < 66 ? "Clarify which offer will be called at the end of the book." : "",
     ].filter(Boolean),
   );
 
@@ -702,12 +702,12 @@ function leadMagnetBookAngleFinderEvaluation(values: MarketingToolValues): Marke
     overallScore,
     verdict: verdictFromScore(overallScore),
     recommendedFormat: "Client-converting short guide",
-    recommendedAngle: `${expertiseCore} bilgisini genel uzmanlık kitabı gibi sunmak yerine, ${
-      client || "ideal müşteri"
-    } için ${outcome.toLocaleLowerCase("tr-TR") || "tek bir ana sonuç"} odaklı kısa rehbere çevirmek daha fazla lead üretir.`,
+    recommendedAngle: `Instead of presenting ${expertiseCore} knowledge like a general expertise book, ${
+      client || "ideal customer"
+    } için ${outcome.toLocaleLowerCase("tr-TR") || "single main result"} odaklı kısa rehbere çevirmek daha fazla lead üretir.`,
     strongestPoints: strengths,
     risks,
-    nextStep: "Bu açıyı önizleme akışına taşı ve kitabın sonunda bağlayacağın CTA'yı test et.",
+    nextStep: "Move this angle to the preview flow and test the CTA you will place at the end of the book.",
     dimensions,
     reportSections,
   };
@@ -719,7 +719,7 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
   const audience = values.audience || "";
   const goal = values.goal || "";
   const intent = values.intent || "authority_book";
-  const titleCore = shortCore(title, "Başlık");
+  const titleCore = shortCore(title, "Title");
   const titleWordCount = normalizeWords(title).length;
 
   const clarityScore =
@@ -728,56 +728,56 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
   const dimensions: MarketingToolDimension[] = [
     {
       key: "clarity",
-      label: "Başlık açıklığı",
+      label: "Title clarity",
       score: clamp(clarityScore - regexBonus(title, BROAD_TOPIC_PATTERN, 10), 34, 94),
-      summary: "Başlık çok geniş veya çok kalabalıksa tıklama düşer.",
+      summary: "If the title is too broad or too crowded, clicks drop.",
     },
     {
       key: "promise",
       label: "Subtitle vaadi",
       score: clamp(42 + wordsBonus(`${subtitle} ${goal}`, 6, 5) + regexBonus(`${subtitle} ${goal}`, GENERIC_OUTCOME_PATTERN, 16), 34, 95),
-      summary: "Subtitle, okurun neden ilgilenmesi gerektiğini tek cümlede anlatmalı.",
+      summary: "The subtitle should explain in a single sentence why the reader should be interested.",
     },
     {
       key: "specificity",
-      label: "Özgüllük",
+      label: "Specificity",
       score: clamp(44 + wordsBonus(`${title} ${subtitle}`, 7, 4) - regexBonus(`${title} ${subtitle}`, BROAD_TOPIC_PATTERN, 12), 32, 94),
-      summary: "Genel kelimeler yerine konu, kitle ve sonuç işaretleri gerekir.",
+      summary: "General words need to be replaced with topic, audience, and outcome indicators.",
     },
     {
       key: "audience",
       label: "Kitle sinyali",
       score: clamp(42 + wordsBonus(audience, 6, 6) + regexBonus(`${subtitle} ${audience}`, AUDIENCE_PATTERN, 12), 34, 95),
-      summary: "Başlığın kimi çağırdığı ne kadar netse doğru tıklama o kadar artar.",
+      summary: "The clearer the title's call to action, the more correct clicks increase.",
     },
     {
       key: "memorability",
-      label: "Akılda kalıcılık",
+      label: "Memorability",
       score: clamp(76 - Math.max(titleWordCount - 6, 0) * 4 + regexBonus(title, METHOD_PATTERN, 6), 34, 92),
-      summary: "Daha kısa ve ritmik başlıklar daha kolay hatırlanır.",
+      summary: "Shorter and more rhythmic titles are easier to remember.",
     },
   ];
 
   const overallScore = averageScore(dimensions);
   const recommendedFormat = formatBookType(intent);
   const audienceCore = shortCore(audience, "Okur");
-  const goalCore = goal.trim() || "somut bir sonuç";
+  const goalCore = goal.trim() || "concrete result";
 
   const reportSections: MarketingToolReportSection[] = [
     {
-      title: "Alternatif başlıklar",
+      title: "Alternative titles",
       items: [
-        `${audienceCore} İçin ${titleCore}`,
+        `${titleCore} for ${audienceCore}`,
         `${titleCore}: ${goalCore}`,
         `${titleCore} Playbook`,
         `${titleCore} Rehberi`,
-        `${audienceCore} İçin ${goalCore} Sistemi`,
+        `${audienceCore} ${goalCore} System`,
       ],
     },
     {
-      title: "Güçlendirilmiş subtitle yönleri",
+      title: "Enhanced subtitle directions",
       items: [
-        `${audience || "Doğru okur"} için ${goal.toLocaleLowerCase("tr-TR") || "ölçülebilir sonuç"} sağlayan kısa yol haritası`,
+        `${audience || "Correct reader"} için ${goal.toLocaleLowerCase("tr-TR") || "measurable result"} sağlayan kısa yol haritası`,
         `Dağınık denemeler yerine net bir ${titleCore.toLocaleLowerCase("tr-TR")} sistemi`,
         `İlk uygulamadan sürdürülebilir sonuca kadar karar rehberi`,
         `${intent === "kdp_publish" ? "Amazon KDP için" : "Gerçek dünyada"} uygulanabilir adım adım çerçeve`,
@@ -802,9 +802,9 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
       dimensions[4].score >= 70 ? "Başlık ritim açısından akılda kalmaya yakın." : "",
     ].filter(Boolean),
     [
-      dimensions[0].score < 66 ? "Başlığı kısalt veya genel kelimeleri azalt." : "",
-      dimensions[1].score < 66 ? "Subtitle içinde açık sonuç ve zaman/çıktı sinyali ekle." : "",
-      dimensions[3].score < 66 ? "Kimin için yazıldığı daha görünür olmalı." : "",
+      dimensions[0].score < 66 ? "Shorten the title or reduce generic words." : "",
+      dimensions[1].score < 66 ? "Add open-ended result and time/output signal in Subtitle." : "",
+      dimensions[3].score < 66 ? "Who it was written for should be more visible." : "",
     ].filter(Boolean),
   );
 
@@ -812,12 +812,12 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
     overallScore,
     verdict: verdictFromScore(overallScore),
     recommendedFormat,
-    recommendedAngle: `Başlığı yalnız kulağa iyi gelen bir etiket gibi bırakma. ${audience || "doğru okur"} için ${
+    recommendedAngle: `Başlığı yalnız kulağa iyi gelen bir etiket gibi bırakma. ${audience || "reads correctly"} için ${
       goalCore.toLocaleLowerCase("tr-TR")
-    } sonucunu daha açık vaat eden bir başlık + subtitle çifti kur.`,
+    } result in a more promising title + subtitle pair.`,
     strongestPoints: strengths,
     risks,
-    nextStep: "En iyi başlık çiftini önizleme akışına taşı ve kitap pozisyonunu onun etrafında sabitle.",
+    nextStep: "Move the best title pair to the preview flow and fix the book position around it.",
     dimensions,
     reportSections,
   };
@@ -827,10 +827,10 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
   {
     slug: "book-idea-validator",
     id: "book_idea_validator",
-    name: "Kitap Fikri Değerlendirici",
+    name: "Book Idea Evaluator",
     badge: "Fikir",
     path: "/tools/book-idea-validator",
-    description: "Fikrin gücünü puanlar, format önerir ve taslak başlangıcı verir.",
+    description: "Scores your idea's strength, suggests a format, and provides a draft starting point.",
     shortLabel: "Fikir Testi",
     ctaLabel: "Fikri Test Et",
     icon: "sparkles",
@@ -839,20 +839,20 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
   {
     slug: "book-outline-starter",
     id: "book_outline_starter",
-    name: "Kitap Taslak Oluşturucu",
-    badge: "Yapı",
+    name: "Book Outline Generator",
+    badge: "Structure",
     path: "/tools/book-outline-starter",
-    description: "Konunu 8 bölümlük net bir omurgaya çevirir ve önizlemeye hazırlar.",
-    shortLabel: "Taslak Oluşturucu",
-    ctaLabel: "Taslağı Oluştur",
+    description: "Converts your topic into a clear 8-chapter outline and prepares it for preview.",
+    shortLabel: "Draft Creator",
+    ctaLabel: "Generate Draft",
     icon: "layers",
     experience: "generic",
   },
   {
     slug: "content-to-book-mapper",
     id: "content_to_book_mapper",
-    name: "İçerikten Kitaba Dönüştürücü",
-    badge: "Dönüşüm",
+    name: "Content to Book Converter",
+    badge: "Conversion",
     path: "/tools/content-to-book-mapper",
     description: "Mevcut kurs, blog veya podcast içeriğini kitap omurgasına çevirir.",
     shortLabel: "İçerik Dönüştürücü",
@@ -878,16 +878,16 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
     name: "Müşteri Çeken Kitap Açısı Bulucu",
     badge: "Hedef",
     path: "/tools/lead-magnet-book-angle-finder",
-    description: "Uzmanlığını müşteri çeken kısa kitap açısına dönüştürür.",
-    shortLabel: "Açı Bulucu",
-    ctaLabel: "Açıyı Bul",
+    description: "Turns your expertise into a short book hook that attracts customers.",
+    shortLabel: "Angle Finder",
+    ctaLabel: "Find the Angle",
     icon: "magnet",
     experience: "generic",
   },
   {
     slug: "title-subtitle-critic",
     id: "title_subtitle_critic",
-    name: "Başlık ve Alt Başlık Eleştirmeni",
+    name: "Title and Subtitle Critic",
     badge: "Kopya",
     path: "/tools/title-subtitle-critic",
     description: "Başlık çiftini netlik, vaat ve konumlandırma açısından eleştirir.",

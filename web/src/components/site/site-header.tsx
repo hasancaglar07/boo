@@ -3,11 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Globe } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useTheme } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useLang } from "@/components/lang-provider";
 import { MobileNav } from "@/components/site/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { getSession, syncPreviewAuthState } from "@/lib/preview-auth";
@@ -15,20 +16,40 @@ import { cn } from "@/lib/utils";
 
 /* ─── Nav structure ──────────────────────────────────────── */
 
-type NavItem = { type: "link"; href: string; label: string };
+type NavItem = { type: "link"; href: string; labelKey: string };
 
 const nav: NavItem[] = [
-  { type: "link", href: "/how-it-works", label: "Nasıl Çalışır" },
-  { type: "link", href: "/examples", label: "Örnekler" },
-  { type: "link", href: "/pricing", label: "Fiyatlar" },
-  { type: "link", href: "/tools", label: "Araçlar" },
-  { type: "link", href: "/faq", label: "SSS" },
+  { type: "link", href: "/how-it-works", labelKey: "nav.howItWorks" },
+  { type: "link", href: "/examples", labelKey: "nav.examples" },
+  { type: "link", href: "/pricing", labelKey: "nav.pricing" },
+  { type: "link", href: "/tools", labelKey: "nav.tools" },
+  { type: "link", href: "/faq", labelKey: "nav.faq" },
 ];
+
+/* ─── Language Toggle ─────────────────────────────────────── */
+
+function LangToggle() {
+  const { lang, setLang } = useLang();
+  const next = lang === "en" ? "tr" : "en";
+
+  return (
+    <button
+      onClick={() => setLang(next)}
+      className="inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      aria-label={lang === "en" ? "Switch to Turkish" : "Türkçe'ye geç"}
+      title={lang === "en" ? "Türkçe'ye geç" : "Switch to English"}
+    >
+      <Globe className="h-4 w-4" aria-hidden="true" />
+      <span className="uppercase">{next}</span>
+    </button>
+  );
+}
 
 /* ─── Main header ────────────────────────────────────────── */
 
 export function SiteHeader() {
   const { resolvedTheme } = useTheme();
+  const { t, lang } = useLang();
   const pathname = usePathname();
   const logoSrc = resolvedTheme === "dark" ? "/dark-logo.png" : "/logo.png";
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getSession()));
@@ -57,12 +78,12 @@ export function SiteHeader() {
         <Link
           href="/"
           className="flex shrink-0 items-center transition-opacity duration-150 hover:opacity-85"
-          aria-label="Ana sayfaya git"
+          aria-label={t("nav.goHome")}
         >
           <span className="relative block h-10 w-[250px] overflow-hidden md:h-12 md:w-[320px] lg:w-[360px]">
             <Image
               src={logoSrc}
-              alt="Kitap Oluşturucu"
+              alt="Book Generator"
               className="h-full w-full object-contain object-left"
               fill
               priority
@@ -74,7 +95,7 @@ export function SiteHeader() {
         {/* ── Desktop nav ── */}
         <nav
           className="hidden flex-1 items-center justify-center gap-0.5 lg:flex"
-          aria-label="Ana menü"
+          aria-label={t("nav.mainMenu")}
         >
           {nav.map((item) => {
             const isActive = pathname === item.href;
@@ -90,7 +111,7 @@ export function SiteHeader() {
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                 )}
               >
-                {item.label}
+                {t(item.labelKey)}
               </Link>
             );
           })}
@@ -98,6 +119,7 @@ export function SiteHeader() {
 
         {/* ── Actions ── */}
         <div className="flex shrink-0 items-center gap-1">
+          <LangToggle />
           <ThemeToggle />
 
           <div className="mx-2 hidden h-4 w-px bg-border/80 lg:block" aria-hidden="true" />
@@ -108,7 +130,7 @@ export function SiteHeader() {
               size="sm"
               className="h-9 px-3.5 text-[13px] font-medium tracking-[-0.01em]"
             >
-              {isAuthenticated ? "Kitaplarım" : "Giriş Yap"}
+              {isAuthenticated ? t("nav.myBooks") : t("nav.login")}
             </Button>
           </Link>
 
@@ -118,7 +140,7 @@ export function SiteHeader() {
               className="header-cta-btn h-9 gap-1.5 px-4 text-[13px] font-semibold tracking-[-0.02em]"
             >
               <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              {isAuthenticated ? "Yeni Kitap" : "Ücretsiz Preview"}
+              {isAuthenticated ? t("nav.newBook") : t("nav.freePreview")}
             </Button>
           </Link>
 
