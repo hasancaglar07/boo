@@ -191,9 +191,9 @@ export default function AdminReferralsPage() {
                             onClick={() => setExpanded(expanded === row.id ? null : row.id)}
                           >
                             {expanded === row.id ? (
-                              <><ChevronUp className="size-3.5" />Gizle</>
+                              <><ChevronUp className="size-3.5" />Hide</>
                             ) : (
-                              <><ChevronDown className="size-3.5" />Detaylar</>
+                              <><ChevronDown className="size-3.5" />Details</>
                             )}
                           </button>
                         )}

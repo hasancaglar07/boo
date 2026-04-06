@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -151,7 +151,7 @@ export function AffiliateDashboard() {
               Your affiliate link was automatically created when you signed up. Copy and share the link below to earn <strong className="text-foreground">%30 commission</strong> kazanabilirsiniz.
             </p>
 
-            {/* ── Affiliate URL kutusu ── */}
+            {/* ── Affiliate URL box ── */}
             <div className="mt-6 max-w-2xl">
               {loading ? (
                 <div className="rounded-2xl border border-border/60 bg-muted/40 px-4 py-4">
@@ -245,7 +245,7 @@ export function AffiliateDashboard() {
               </div>
             </div>
 
-            {/* ── Payment Talebi ── */}
+            {/* ── Payment Request ── */}
             {data && (
               <div className="mt-8 rounded-[20px] border border-border/60 bg-card/40 p-5">
                 <div className="flex items-center gap-2 mb-3">

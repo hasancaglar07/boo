@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -457,7 +457,7 @@ export function HomeScreen() {
                   )
                 }
               >
-                {latestBook ? "Preview’a dön" : "Start your first book"}
+                {latestBook ? "Back to Preview : Start your first book}
                 <ArrowRight className="ml-2 size-4" aria-hidden="true" />
               </Button>
 
@@ -676,7 +676,7 @@ export function HomeScreen() {
                 <ChevronDown className={`size-3.5 text-muted-foreground transition-transform ${sortOpen ? "rotate-180" : ""}`} aria-hidden="true" />
               </button>
               {sortOpen && (
-                <div className="home-anim-in absolute right-0 top-full z-30 mt-2 min-w-[200px] rounded-[16px] border border-border bg-card p-2 shadow-lg" role="listbox" aria-label="Sıralama seçenekleri">
+                <div className="home-anim-in absolute right-0 top-full z-30 mt-2 min-w-[200px] rounded-[16px] border border-border bg-card p-2 shadow-lg" role="listbox" aria-label="Sort options">
                   {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([key, label]) => (
                     <button
                       key={key}

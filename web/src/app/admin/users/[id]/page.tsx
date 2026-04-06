@@ -257,7 +257,7 @@ export default function AdminUserDetailPage() {
                   </div>
                 )}
                 {busy === "plan" && (
-                  <div className="mt-2 text-xs admin-muted">Change Planiliyor…</div>
+                  <div className="mt-2 text-xs admin-muted">Changing Plan…</div>
                 )}
               </div>
               {data.permissions.canChangeRole ? (
@@ -296,7 +296,7 @@ export default function AdminUserDetailPage() {
                 className="rounded-2xl bg-[color:var(--admin-primary)] px-4 py-3 text-sm font-semibold text-white"
                 disabled={busy === "note"}
               >
-                {busy === "note" ? "Kaydediliyor..." : "Notu kaydet"}
+                {busy === "note" ? "Saving..." : "Save note"}
               </button>
             </form>
             <div className="mt-4 space-y-3">

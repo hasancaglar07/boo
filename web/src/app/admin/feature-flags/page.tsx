@@ -200,7 +200,7 @@ export default function AdminFeatureFlagsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-xs font-semibold text-[color:var(--admin-primary)]">{flag.key}</span>
-                      <StatusBadge status={flag.enabled ? "success" : "default"} label={flag.enabled ? "Aktif" : "Pasif"} />
+                      <StatusBadge status={flag.enabled ? "success" : "default"} label={flag.enabled ? "Active" : "Inactive"} />
                     </div>
                     <div className="mt-0.5 text-sm font-medium text-[color:var(--admin-text)]">{flag.label}</div>
                     {flag.description && (
@@ -259,7 +259,7 @@ export default function AdminFeatureFlagsPage() {
                         />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs font-medium admin-muted">Açıklama</label>
+                        <label className="mb-1 block text-xs font-medium admin-muted">Description</label>
                         <input
                           value={editDesc}
                           onChange={(e) => setEditDesc(e.target.value)}
@@ -273,7 +273,7 @@ export default function AdminFeatureFlagsPage() {
                         disabled={editSaving}
                         className="rounded-xl bg-[color:var(--admin-primary)] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                       >
-                        {editSaving ? "Kaydediliyor..." : "Kaydet"}
+                        {editSaving ? "Saving..." : "Save"}
                       </button>
                       <button
                         type="button"

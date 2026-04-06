@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Copy, Check, Share2 } from "lucide-react";
@@ -84,7 +84,7 @@ export function ReferralShareDialog({ open, onOpenChange }: ReferralShareDialogP
           </div>
           <DialogTitle>Share Your Affiliate Link, Earn 30% Commission!</DialogTitle>
           <DialogDescription>
-            When your friends sign up through your link and make a payment, you earn 30% commission from each payment. An invite link is required — to sign up senin linkini kullanmalılar.
+            When your friends sign up through your link and make a payment, you earn 30% commission from each payment. They must use your link to sign up.
           </DialogDescription>
         </DialogHeader>
 

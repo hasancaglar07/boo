@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -615,7 +615,7 @@ export function AccountScreen() {
                 <div className="mt-6 rounded-[24px] border border-primary/15 bg-primary/5 p-5">
                   <div className="text-sm font-semibold text-foreground">Custom Publisher Logo</div>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Your own publisher wordmark’ını profil bazlı kaydetmek ve wizard’da otomatik kullanmak için Pro plan gerekir.
+                    You need a Pro plan to save your own publisher wordmark per profile and use it automatically in the wizard.
                   </p>
                   <div className="mt-4">
                     <Button variant="outline" className="min-h-[44px]" onClick={() => router.push("/app/settings/billing")}>
@@ -646,7 +646,7 @@ export function AccountScreen() {
             </CardContent>
           </Card>
 
-          {/* ── Affiliate Paneli ── */}
+          {/* ── Affiliate Panel ── */}
           <Card className="overflow-hidden border-primary/20 bg-[radial-gradient(circle_at_bottom_right,_rgba(188,104,67,0.10),_transparent_60%)]">
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
@@ -684,7 +684,7 @@ export function AccountScreen() {
               </div>
 
               <div className="mt-4 rounded-[16px] border border-primary/15 bg-primary/5 px-4 py-3 text-xs leading-5 text-muted-foreground">
-                <strong className="text-foreground">How does it work?</strong> Affiliate linkini paylaş. Bağlantından üye olan ve payment yapan herkesten kalıcı olarak %30 commission kazanırsın. Paymentler aylık PayPal veya banka transferi ile yapılır.
+                <strong className="text-foreground>How does it work?</strong> Share your affiliate link. You earn a permanent 30%% commission from everyone who signs up and makes a payment through your link. Payouts are made monthly via PayPal or bank transfer.
               </div>
             </CardContent>
           </Card>

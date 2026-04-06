@@ -89,7 +89,7 @@ export default function AdminJobsPage() {
             className="text-xs text-[color:var(--admin-primary)] hover:underline"
             onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
           >
-            {expandedId === row.id ? "Gizle" : "Detay"}
+            {expandedId === row.id ? "Hide" : "Details"}
           </button>
           {row.status === "failed" && (
             <button
@@ -141,7 +141,7 @@ export default function AdminJobsPage() {
         columns={columns}
         getRowId={(row) => row.id}
         loading={loading}
-        emptyTitle="Aktif job yok"
+        emptyTitle="No active jobs"
         emptyMessage="The queue appears to be empty right now."
       />
     </div>

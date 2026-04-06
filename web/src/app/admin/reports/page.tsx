@@ -42,7 +42,7 @@ const REPORTS: ReportConfig[] = [
         label: "Durum",
         options: [
           { value: "all", label: "All" },
-          { value: "active", label: "Aktif" },
+          { value: "active", label: "Active" },
           { value: "inactive", label: "Inactive" },
         ],
       },

@@ -136,7 +136,7 @@ export default function AdminSubscriptionsPage() {
             <div className="mt-3 text-3xl font-semibold text-[color:var(--admin-text)]">{data.items.length}</div>
           </div>
           <div className="admin-panel rounded-[24px] p-5">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] admin-muted">Aktif</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] admin-muted">Active</div>
             <div className="mt-3 text-3xl font-semibold text-emerald-600">{data.items.filter(i => i.status === "ACTIVE").length}</div>
           </div>
         </section>
@@ -174,7 +174,7 @@ export default function AdminSubscriptionsPage() {
         getRowId={(row) => row.id}
         loading={loading}
         emptyTitle="No subscriptions found"
-        emptyMessage="Aktif subscription entitlement yok."
+        emptyMessage="No active subscription entitlements."
         sort={searchParams.get("sort") || "startedAt"}
         order={(searchParams.get("order") as "asc" | "desc" | null) || "desc"}
         onSort={handleSort}

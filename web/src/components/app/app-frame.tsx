@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -523,7 +523,7 @@ export function AppFrame({
               type="button"
               className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card transition hover:bg-accent lg:hidden"
               onClick={() => setDrawerOpen(true)}
-              aria-label="Menuyü aç"
+              aria-label="Open menu"
             >
               <Menu className="size-4" />
             </button>
