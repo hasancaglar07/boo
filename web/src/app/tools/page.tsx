@@ -23,23 +23,23 @@ const iconMap: Record<ToolIconKey, LucideIcon> = {
 };
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Ücretsiz Kitap Araçları | Kitap Oluşturucu",
+  title: "Free Book Tools | Book Generator",
   description:
-    "Fikrini puanla, taslak çıkar, KDP nişini test et. Yapay zeka destekli ücretsiz araçlarla kitabını yayına hazırla.",
+    "Score your idea, generate an outline, test your KDP niche. Prepare your book for publishing with AI-powered free tools.",
   path: "/tools",
   keywords: [
-    "ücretsiz kitap araçları",
-    "kitap fikri test et",
-    "kitap taslak oluşturucu",
-    "KDP niş analizi",
-    "kitap başlık kontrolü",
+    "free book tools",
+    "book idea test",
+    "book outline generator",
+    "KDP niche analysis",
+    "book title checker",
   ],
 });
 
 const pillars = [
-  "Fikrini puanla, taslağını çıkar",
-  "Anında skor, detaylı rapor e-postana gelsin",
-  "Her araçtan kitap önizlemesine doğrudan geç",
+  "Score your idea, generate your outline",
+  "Get instant scores and a detailed report delivered to your email",
+  "Jump straight to a book preview from any tool",
 ];
 
 export default function ToolsPage() {
@@ -48,12 +48,12 @@ export default function ToolsPage() {
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="mb-4">Ücretsiz Araçlar</Badge>
+            <Badge className="mb-4">Free Tools</Badge>
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              Kitabını hızlandıran <span className="text-primary">ücretsiz araçlar</span>
+              <span className="text-primary">Free tools</span> to accelerate your book
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
-              Fikrini puanla, taslağını çıkar, başlığını test et. Her araç seni kitap önizlemesine bir adım yaklaştırır.
+              Score your idea, generate your outline, test your title. Every tool brings you one step closer to a finished book preview.
             </p>
             <div className="mx-auto mt-8 grid max-w-3xl gap-3 md:grid-cols-3">
               {pillars.map((item) => (
@@ -69,9 +69,9 @@ export default function ToolsPage() {
       <section className="border-b border-border/80 py-16">
         <div className="shell">
           <SectionHeading
-            badge="Araç Kütüphanesi"
-            title="Tek tek güçlü, birlikte bütünsel."
-            description="Her araç aynı mantıkla çalışır: hızlı skor, net öneri, detaylı rapor ve önizleme akışına geçiş."
+            badge="Tool Library"
+            title="Powerful individually, comprehensive together."
+            description="Every tool works the same way: quick score, clear recommendations, detailed report, and a seamless path to preview."
           />
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -105,13 +105,13 @@ export default function ToolsPage() {
       </section>
 
       <MarketingCtaSection
-        title="Aracı kurcalama, kitabını başlat."
-        description="Araçlarla yönü netleştir, sonra önizleme akışına geç. Karar burada, üretim sihirbazda."
+        title="Done exploring? Start writing your book."
+        description="Use the tools to clarify your direction, then move into the preview flow. Decide here, produce in the wizard."
         items={[
-          "Fikirden taslağa tek tıkla geç",
-          "KDP ve müşteri açılarını erkenden sına",
-          "Detaylı rapor e-postana gelsin",
-          "Önizleme → tam kitap → EPUB/PDF zinciri",
+          "Go from idea to outline in a single click",
+          "Test KDP and customer angles early on",
+          "Get a detailed report delivered to your email",
+          "Preview → full book → EPUB/PDF pipeline",
         ]}
       />
     </MarketingPage>
