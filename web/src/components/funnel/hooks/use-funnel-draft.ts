@@ -67,7 +67,7 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
       ...stored,
       currentStep: step,
       authorName: stored.authorName || account.name || "",
-      imprint: stored.imprint || "Kitap Oluşturucu",
+      imprint: stored.imprint || "Book Generator",
     };
     setDraft(nextDraft);
     saveFunnelDraft(nextDraft);
@@ -148,11 +148,11 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
 
   const summary = useMemo(
     () => [
-      { label: "Konu", value: draft.topic || "Henüz seçilmedi" },
-      { label: "Başlık", value: draft.title || "Henüz seçilmedi" },
-      { label: "Yazar", value: draft.authorName || "Henüz girilmedi" },
+      { label: "Topic", value: draft.topic || "Not yet selected" },
+      { label: "Title", value: draft.title || "Not yet selected" },
+      { label: "Author", value: draft.authorName || "Not yet entered" },
       { label: "Dil", value: languageLabel(draft.language) },
-      { label: "Uzunluk", value: draft.outline.length ? `${draft.outline.length} bölüm` : "Henüz oluşturulmadı" },
+      { label: "Length", value: draft.outline.length ? `${draft.outline.length} chapters` : "Not yet generated" },
     ],
     [draft.topic, draft.title, draft.authorName, draft.language, draft.outline.length],
   );
@@ -215,23 +215,23 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
   function goNext() {
     if (step === "topic") {
       if (!draft.languageLocked) {
-        setError("Önce kitap dilini seç.");
+        setError("Please select the book language first.");
         return;
       }
       if (!draft.topic.trim()) {
-        setError("Konu boş bırakılamaz.");
+        setError("Topic cannot be empty.");
         return;
       }
       trackEvent("wizard_topic_completed", { language: draft.language });
     }
 
     if (step === "title" && !draft.title.trim()) {
-      setError("Başlık gerekli.");
+      setError("Title is required.");
       return;
     }
 
     if (step === "outline" && draft.outline.filter((item) => item.title.trim()).length < 3) {
-      setError("En az 3 bölüm gerekli.");
+      setError("At least 3 chapters are required.");
       return;
     }
 

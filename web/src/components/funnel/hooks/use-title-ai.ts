@@ -31,7 +31,7 @@ export function useTitleAi(
 
   async function handleTitleAi(forceReplace = false) {
     if (!draft.topic.trim()) {
-      setError("Önce konuyu netleştir.");
+      setError("Please clarify the topic first.");
       return;
     }
 
@@ -73,7 +73,7 @@ export function useTitleAi(
       if (suggestions[0] && (forceReplace || !draft.title.trim())) {
         updateDraft({ title: suggestions[0].title, subtitle: suggestions[0].subtitle });
       }
-      setError(error instanceof Error ? error.message : "AI başlık önerileri alınamadı.");
+      setError(error instanceof Error ? error.message : "AI title suggestions could not be retrieved.");
       trackEvent("title_ai_used", { fallback: true });
     } finally {
       setAiLoading("");
