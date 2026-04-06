@@ -57,7 +57,7 @@ const pipeline = [
 ];
 
 function formatBytes(size?: number) {
-  if (!size) return "Hazır";
+  if (!size) return "Ready";
   if (size >= 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
   if (size >= 1024) return `${Math.round(size / 1024)} KB`;
   return `${size} B`;
@@ -71,11 +71,11 @@ function availableFormats(item: ExampleCardEntry) {
 
 function exportSummary(item: ExampleCardEntry) {
   const formats = availableFormats(item);
-  return formats.length ? formats.join(" + ") : "Yakında";
+  return formats.length ? formats.join(" + ") : "Coming soon";
 }
 
 function publicationMeta(item: ExampleCardEntry) {
-  return [item.publisher, item.year].filter(Boolean).join(" · ");
+  return [item.publisher, item.year].filter(Boolean).join(" \u00B7 ");
 }
 
 function creatorMeta(item: ExampleCardEntry) {
@@ -175,7 +175,7 @@ function BookCover({
                 className="text-[6px] uppercase tracking-widest opacity-60"
                 style={{ color: item.textAccent }}
               >
-                ÖRNEK
+                EXAMPLE
               </div>
             </div>
             <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent" />
@@ -243,7 +243,7 @@ function ExportCard({
             }
           >
             <Download className="size-3" />
-            {isHtml ? "Aç" : "İndir"}
+            {isHtml ? "Open" : "Download"}
           </a>
         ) : null}
       </div>
@@ -485,7 +485,7 @@ function OutlineModal({
           {activeTab === "export" ? (
             <div className="p-6">
               <div className="mb-4">
-                <h4 className="font-serif text-lg font-semibold text-foreground">Teslim Formatları</h4>
+                <h4 className="font-serif text-lg font-semibold text-foreground">Delivery Formats</h4>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Only actually generated output files remain active.
                 </p>
@@ -729,7 +729,7 @@ export function ExamplesShowcase({
                       className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border/80 bg-background px-3 py-2.5 text-xs font-semibold text-foreground transition hover:bg-accent"
                     >
                       <Eye className="size-3.5" />
-                      Hızlı bak
+                      Quick look
                     </button>
                     <Link
                       href={`/examples/${item.slug}`}
@@ -756,7 +756,7 @@ export function ExamplesShowcase({
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="mb-4 text-5xl">📚</div>
               <p className="text-base font-medium text-foreground">No examples for this filter</p>
-              <p className="mt-2 text-sm text-muted-foreground">Farklı bir kategori veya dil seç.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Try a different category or language.</p>
             </div>
           ) : null}
         </div>
@@ -787,10 +787,10 @@ export function ExamplesShowcase({
               href={`/start/topic${topic ? `?topic=${encodeURIComponent(topic)}` : ""}`}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90"
             >
-              Başlat <ArrowRight className="size-4" />
+              Start <ArrowRight className="size-4" />
             </Link>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">Ücretsiz preview · Kayıt gerekmez</p>
+          <p className="mt-3 text-xs text-muted-foreground">Free preview · No sign-up required</p>
         </div>
       </section>
 
@@ -798,7 +798,7 @@ export function ExamplesShowcase({
         <div className="shell">
           <SectionHeading
             badge="Production chain"
-            title="Chapter planından outputya kadar görülebilir akış"
+            title="Visible flow from chapter plan to output"
             description="Each step is a separate screen. You always know where you are and what comes next."
           />
 

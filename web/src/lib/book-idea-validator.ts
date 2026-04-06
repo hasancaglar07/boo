@@ -262,12 +262,7 @@ function buildTitleIdeas(input: BookIdeaValidatorInput) {
   const goalCore = input.goal.trim();
 
   return [
-    `${topicCore}: ${titleCase(audienceCore.split(/\s+/).slice(0, 4).join(" "))}: A Clear System`,
-    `${topicCore} Playbook`,
-    `${titleCase(goalCore)} for ${topicCore}`,
-    `${topicCore} ile İlk 90 Gün`,
-    `${audienceCore} for ${topicCore} Rehberi`,
-  ].map((item) => item.replace(/\s+/g, " ").trim());
+    `${topicCore}: ${titleCase(audienceCore.split(/\s+/).slice(0, 4).join(" First 90 Days ").trim());
 }
 
 function buildMiniOutline(input: BookIdeaValidatorInput) {
@@ -279,10 +274,10 @@ function buildMiniOutline(input: BookIdeaValidatorInput) {
     "The core problem and misconceptions the target reader faces",
     `${topicCore} core approach or framework`,
     "Most common mistakes and why they don't produce results",
-    "Adım adım uygulama planı",
+    Step-by-step implementation plan,
     "Real scenario, example, or mini case study set",
-    "İlk 7 gün uygulanacak hızlı kazanım planı",
-    "Sonraki adım: tam outline ve preview üretimi",
+    First 7-day quick win action plan,
+    Next step: full outline and preview generation,
   ];
 }
 

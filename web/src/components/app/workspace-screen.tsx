@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -39,11 +39,11 @@ const tabOptions = ["home", "book", "writing", "research", "publish", "settings"
 type WorkspaceTab = (typeof tabOptions)[number];
 
 const TAB_LABELS: Record<WorkspaceTab, string> = {
-  home: "Genel",
-  book: "Kitap",
+  home: "Overview",
+  book: "Book",
   writing: "Content",
-  research: "Araştırma",
-  publish: "Yayın",
+  research: "Research",
+  publish: "Publish",
   settings: "Settings",
 };
 
@@ -51,7 +51,7 @@ function normalizeTab(tab?: string): WorkspaceTab {
   return tab && tabOptions.includes(tab as WorkspaceTab) ? (tab as WorkspaceTab) : "home";
 }
 
-// ─── Toast ───────────────────────────────────────────────────────────────────
+// --- Toast helpers ---
 type ToastType = "info" | "success" | "error" | "loading";
 type Toast = { id: number; message: string; type: ToastType };
 
@@ -97,7 +97,7 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// --- Main Component ---
 export function WorkspaceScreen({
   slug,
   initialTab,
@@ -157,7 +157,7 @@ export function WorkspaceScreen({
         setBackendUnavailable(true);
         return;
       }
-      addToast(error instanceof Error ? error.message : "Yükleme başarısız.", "error");
+      addToast(error instanceof Error ? error.message : "Loading failed.", "error");
     }
   }
 
@@ -189,15 +189,15 @@ export function WorkspaceScreen({
   async function autoSave() {
     if (!draft || isSaving) return;
     setIsSaving(true);
-    const toastId = addToast("Otomatik kaydediliyor...", "loading");
+    const toastId = addToast("Auto-saving...", "loading");
     try {
       const saved = await saveBook(draft);
       setBook(saved);
       setDraft(saved);
       setIsDirty(false);
-      updateToast(toastId, "Otomatik kaydedildi.", "success");
+      updateToast(toastId, "Auto-saved.", "success");
     } catch {
-      updateToast(toastId, "Otomatik kayıt başarısız.", "error");
+      updateToast(toastId, "Auto-save failed.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -220,21 +220,21 @@ export function WorkspaceScreen({
   async function saveCurrentBook() {
     if (!draft) return;
     setIsSaving(true);
-    const toastId = addToast("Kaydediliyor...", "loading");
+    const toastId = addToast("Saving...", "loading");
     try {
       const saved = await saveBook(draft);
       setBook(saved);
       setDraft(saved);
       await refresh();
       setIsDirty(false);
-      updateToast(toastId, "Kitap kaydedildi.", "success");
+      updateToast(toastId, "Book saved.", "success");
     } catch (error) {
       if (isBackendUnavailableError(error)) {
         setBackendUnavailable(true);
         dismissToast(toastId);
         return;
       }
-      updateToast(toastId, error instanceof Error ? error.message : "Kaydetme başarısız.", "error");
+      updateToast(toastId, error instanceof Error ? error.message : "Save failed.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -242,15 +242,15 @@ export function WorkspaceScreen({
 
   async function handleLogoUpload(file: File) {
     if (!file.type.startsWith("image/")) {
-      addToast("Yalnızca görsel dosyası yükleyebilirsin.", "error");
+      addToast("Only image files can be uploaded.", "error");
       return;
     }
     if (file.size > 4 * 1024 * 1024) {
-      addToast("Logo dosyası 4 MB'den küçük olmalı.", "error");
+      addToast("Logo file must be under 4 MB.", "error");
       return;
     }
 
-    const toastId = addToast("Logo yükleniyor...", "loading");
+    const toastId = addToast("Uploading logo...", "loading");
     try {
       const uploaded = await uploadBookAsset(slug, file, "asset");
       const nextDraft = {
@@ -261,9 +261,9 @@ export function WorkspaceScreen({
       setBook(saved);
       setDraft(saved);
       setIsDirty(false);
-      updateToast(toastId, "Logo yüklendi ve markaya bağlandı.", "success");
+      updateToast(toastId, "Logo uploaded and linked to brand.", "success");
     } catch (error) {
-      updateToast(toastId, error instanceof Error ? error.message : "Logo yüklenemedi.", "error");
+      updateToast(toastId, error instanceof Error ? error.message : "Logo upload failed.", "error");
     }
   }
 
@@ -275,7 +275,7 @@ export function WorkspaceScreen({
         layout="book"
         currentBookSlug={slug}
         title="Workspace"
-        subtitle="Bağlantı sorunu oluştu."
+        subtitle="Connection issue occurred."
         books={books}
       >
         <BackendUnavailableState onRetry={() => void hydrateWorkspace()} />
@@ -287,17 +287,17 @@ export function WorkspaceScreen({
   const currentDraft = draft;
 
   const actions = [
-    { label: "Genel", description: "Ana ilerleme özeti", run: () => setActiveTab("home") },
-    { label: "Kitap", description: "Başlık ve chapter omurgası", run: () => setActiveTab("book") },
-    { label: "Content", description: "Outline ve chapter yazımı", run: () => setActiveTab("writing") },
-    { label: "Araştırma", description: "KDP ve anahtar words araçları", run: () => setActiveTab("research") },
-    { label: "Yayın", description: "EPUB ve PDF teslimi", run: () => setActiveTab("publish") },
+    { label: "Overview", description: "Main progress summary", run: () => setActiveTab("home") },
+    { label: "Book", description: "Title and chapter backbone", run: () => setActiveTab("book") },
+    { label: "Content", description: "Outline and chapter writing", run: () => setActiveTab("writing") },
+    { label: "Research", description: "KDP and keyword tools", run: () => setActiveTab("research") },
+    { label: "Publish", description: "EPUB and PDF delivery", run: () => setActiveTab("publish") },
     { label: "Settings", description: "API Keys", run: () => setActiveTab("settings") },
-    { label: "Kaydet", description: "Kitabı kaydet", run: () => saveCurrentBook() },
+    { label: "Save", description: "Save book", run: () => saveCurrentBook() },
   ];
 
   async function triggerWorkflow(payload: Record<string, unknown>) {
-    const toastId = addToast("İşlem çalışıyor...", "loading");
+    const toastId = addToast("Processing...", "loading");
     try {
       const response = await runWorkflow({ slug, ...payload });
       await refresh();
@@ -310,13 +310,13 @@ export function WorkspaceScreen({
         dismissToast(toastId);
         return;
       }
-      updateToast(toastId, error instanceof Error ? error.message : "İşlem başarısız.", "error");
+      updateToast(toastId, error instanceof Error ? error.message : "Operation failed.", "error");
     }
   }
 
   async function triggerBuild(format: "epub" | "pdf") {
     const hadExportBefore = Number(currentDraft.status?.export_count || 0) > 0;
-    const toastId = addToast("Çıktı hazırlanıyor...", "loading");
+    const toastId = addToast("Preparing output...", "loading");
     try {
       const response = await buildBook(slug, {
         format,
@@ -343,7 +343,7 @@ export function WorkspaceScreen({
         dismissToast(toastId);
         return;
       }
-      updateToast(toastId, error instanceof Error ? error.message : "Çıktı oluşturma başarısız.", "error");
+      updateToast(toastId, error instanceof Error ? error.message : "Output generation failed.", "error");
     }
   }
 
@@ -355,7 +355,7 @@ export function WorkspaceScreen({
     export_count: 0,
   };
 
-  // Progress score: outline(25) + chapters(25 if >0) + research(25 if >0) + export(25 if >0)
+  // --- RESEARCH ---
   const progressScore =
     (book.outline_file ? 25 : 0) +
     (stats.chapter_count > 0 ? 25 : 0) +
@@ -363,12 +363,12 @@ export function WorkspaceScreen({
     (stats.export_count > 0 ? 25 : 0);
 
   const nextStep = !book.outline_file
-    ? { label: "Outline üret", tab: "writing" as WorkspaceTab, desc: "Kitabın omurgası oluşmadan chapter üretimine geçme." }
+    ? { label: "Generate Outline", tab: "writing" as WorkspaceTab, desc: "Don't start chapter generation before building the book's backbone." }
     : stats.chapter_count === 0
-    ? { label: "İlk chapterü üret", tab: "writing" as WorkspaceTab, desc: "Outline hazır, şimdi içerik üretme vakti." }
+    ? { label: "Generate First Chapter", tab: "writing" as WorkspaceTab, desc: "Outline is ready, now it's time to produce content." }
     : stats.export_count === 0
-    ? { label: "EPUB al", tab: "publish" as WorkspaceTab, desc: "İlk hedefin EPUB alıp yapıyı kontrol etmek olmalı." }
-    : { label: "Yeni sürüm al", tab: "publish" as WorkspaceTab, desc: "Kapak, araştırma ve chapter kalitesini güçlendir." };
+    ? { label: "Get EPUB", tab: "publish" as WorkspaceTab, desc: "Your first goal should be getting the EPUB and checking the structure." }
+    : { label: "Get New Version", tab: "publish" as WorkspaceTab, desc: "Improve cover, research and chapter quality." };
 
   const activeChapterData = draft.chapters[activeChapter];
 
@@ -377,12 +377,12 @@ export function WorkspaceScreen({
       current="workspace"
       layout="book"
       currentBookSlug={slug}
-      title={draft.title || "Kitap"}
-      subtitle={isDirty ? "Kaydedilmemiş değişiklik var." : "Genel görünüm, içerik üretimi, araştırma ve yayın teslimi tek akışta."}
+      title={draft.title || "Book"}
+      subtitle={isDirty ? "Unsaved changes pending." : "Overview, content production, research and publish delivery in one flow."}
       books={books}
       actions={actions}
       primaryAction={{
-        label: isSaving ? "Kaydediliyor..." : isDirty ? "Kaydet *" : "Kaydet",
+        label: isSaving ? "Saving..." : isDirty ? "Save *" : "Save",
         onClick: () => saveCurrentBook(),
       }}
     >
@@ -402,9 +402,9 @@ export function WorkspaceScreen({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { icon: Layers, value: stats.chapter_count, label: "Chapter" },
-              { icon: FlaskConical, value: stats.research_count, label: "Araştırma" },
-              { icon: BarChart3, value: stats.export_count, label: "Çıktı" },
-              { icon: BookOpen, value: book.outline_file ? "Hazır" : "Eksik", label: "Taslak" },
+              { icon: FlaskConical, value: stats.research_count, label: "Research" },
+              { icon: BarChart3, value: stats.export_count, label: "Output" },
+              { icon: BookOpen, value: book.outline_file ? "Ready" : "Missing", label: "Draft" },
             ].map(({ icon: Icon, value, label }) => (
               <Card key={label}>
                 <CardContent className="flex items-start gap-3">
@@ -424,7 +424,7 @@ export function WorkspaceScreen({
           <Card>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">Kitap ilerleme</span>
+                <span className="text-sm font-medium text-foreground">Book progress</span>
                 <span className="text-sm font-semibold text-primary">{progressScore}%</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -437,8 +437,8 @@ export function WorkspaceScreen({
                 {[
                   { label: "Outline", done: !!book.outline_file },
                   { label: "Chapters", done: stats.chapter_count > 0 },
-                  { label: "Araştırma", done: stats.research_count > 0 },
-                  { label: "Çıktı", done: stats.export_count > 0 },
+                  { label: "Research", done: stats.research_count > 0 },
+                  { label: "Output", done: stats.export_count > 0 },
                 ].map(({ label, done }) => (
                   <div key={label} className={cn("flex items-center gap-1", done && "text-primary")}>
                     {done ? <Check className="size-3" /> : <div className="size-3 rounded-full border border-current" />}
@@ -452,7 +452,7 @@ export function WorkspaceScreen({
           {/* Next step */}
           <Card>
             <CardContent>
-              <div className="text-sm font-medium text-foreground">Sonraki önerilen adım</div>
+              <div className="text-sm font-medium text-foreground">Next recommended step</div>
               <div className="mt-3 text-2xl font-medium text-foreground">{nextStep.label}</div>
               <div className="mt-2 text-sm leading-7 text-muted-foreground">{nextStep.desc}</div>
               <Button className="mt-4" onClick={() => setActiveTab(nextStep.tab)}>
@@ -467,24 +467,24 @@ export function WorkspaceScreen({
           <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
             <Card>
               <CardContent className="space-y-4">
-                <div className="text-sm font-medium text-foreground">Kitap bilgileri</div>
+                <div className="text-sm font-medium text-foreground">Book information</div>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div><Label>Başlık</Label><Input value={draft.title} onChange={(e) => updateDraft({ title: e.target.value })} /></div>
-                  <div><Label>Alt başlık</Label><Input value={draft.subtitle || ""} onChange={(e) => updateDraft({ subtitle: e.target.value })} /></div>
+                  <div><Label>Title</Label><Input value={draft.title} onChange={(e) => updateDraft({ title: e.target.value })} /></div>
+                  <div><Label>Subtitle</Label><Input value={draft.subtitle || ""} onChange={(e) => updateDraft({ subtitle: e.target.value })} /></div>
                   <div><Label>Author</Label><Input value={draft.author || ""} onChange={(e) => updateDraft({ author: e.target.value })} /></div>
                   <div><Label>Publisher</Label><Input value={draft.publisher || ""} onChange={(e) => updateDraft({ publisher: e.target.value })} /></div>
                   <div><Label>ISBN</Label><Input value={draft.isbn || ""} onChange={(e) => updateDraft({ isbn: e.target.value })} /></div>
-                  <div><Label>Yıl</Label><Input value={draft.year || ""} onChange={(e) => updateDraft({ year: e.target.value })} /></div>
+                  <div><Label>Year</Label><Input value={draft.year || ""} onChange={(e) => updateDraft({ year: e.target.value })} /></div>
                   <div><Label>Branding / wordmark</Label><Input value={draft.branding_mark || ""} onChange={(e) => updateDraft({ branding_mark: e.target.value })} /></div>
                   <div><Label>Logo URL</Label><Input value={draft.branding_logo_url || ""} onChange={(e) => updateDraft({ branding_logo_url: e.target.value })} /></div>
-                  <div className="md:col-span-2"><Label>Kapak vurgusu</Label><Input value={draft.cover_brief || ""} onChange={(e) => updateDraft({ cover_brief: e.target.value })} /></div>
+                  <div className="md:col-span-2"><Label>Cover emphasis</Label><Input value={draft.cover_brief || ""} onChange={(e) => updateDraft({ cover_brief: e.target.value })} /></div>
                 </div>
                 <div className="rounded-2xl border border-border/80 bg-background/70 px-4 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <div className="text-sm font-medium text-foreground">Logo yükle</div>
+                      <div className="text-sm font-medium text-foreground">Upload logo</div>
                       <div className="mt-1 text-sm leading-7 text-muted-foreground">
-                        PNG, JPG veya WebP yükleyebilirsin. Yüklendiğinde branding alanına otomatik bağlanır.
+                        You can upload PNG, JPG or WebP. It automatically links to the branding area when uploaded.
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-3">
@@ -503,7 +503,7 @@ export function WorkspaceScreen({
                       />
                       <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
                         <ImagePlus className="mr-2 size-4" />
-                        Logo Yükle
+                        Upload Logo
                       </Button>
                       <Button
                         type="button"
@@ -513,21 +513,13 @@ export function WorkspaceScreen({
                             title: draft.title,
                             author: draft.author,
                             genre: "non-fiction",
-                          }).catch((error) => addToast(error instanceof Error ? error.message : "Kapak üretimi başarısız.", "error"))
+                          }).catch((error) => addToast(error instanceof Error ? error.message : "Cover generation failed.", "error"))
                         }
                       >
-                        <Sparkles className="mr-2 size-4" />
-                        Kapağı Yeniden Üret
-                      </Button>
-                    </div>
-                  </div>
+                        <Sparkles className="mr-2 size-4Regenerate Cover"} onChange={(e) => updateDraft({ description: e.target.value })} />
                 </div>
                 <div>
-                  <Label>Açıklama</Label>
-                  <Textarea value={draft.description || ""} onChange={(e) => updateDraft({ description: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Author biyografisi</Label>
+                  <Label>Author biography</Label>
                   <Textarea value={draft.author_bio || ""} onChange={(e) => updateDraft({ author_bio: e.target.value })} />
                 </div>
               </CardContent>
@@ -535,7 +527,7 @@ export function WorkspaceScreen({
 
             <Card>
               <CardContent className="space-y-4">
-                <div className="text-sm font-medium text-foreground">Kapak mockup</div>
+                <div className="text-sm font-medium text-foreground">Cover mockup</div>
                 <BookMockup
                   title={draft.title}
                   subtitle={draft.subtitle || ""}
@@ -543,21 +535,21 @@ export function WorkspaceScreen({
                   brand={draft.branding_mark || draft.publisher || ""}
                   logoUrl={draft.branding_logo_url ? buildBookAssetUrl(slug, draft.branding_logo_url) : undefined}
                   imageUrl={draft.cover_image ? buildBookAssetUrl(slug, draft.cover_image) : undefined}
-                  accentLabel={draft.cover_brief || "Ödeme öncesi ürün görünümü"}
+                  accentLabel={draft.cover_brief || "Pre-sale product preview"}
                   size="lg"
                 />
                 {draft.branding_logo_url ? (
                   <div className="rounded-2xl border border-border/80 bg-background/70 px-4 py-4">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Aktif logo</div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Active logo</div>
                     <img
                       src={buildBookAssetUrl(slug, draft.branding_logo_url)}
-                      alt={`${draft.branding_mark || draft.publisher || "Brand"} logosu`}
+                      alt={`${draft.branding_mark || draft.publisher || "Brand"} logo`}
                       className="mt-3 h-14 w-auto max-w-[180px] rounded-md bg-muted/30 object-contain p-1"
                     />
                   </div>
                 ) : null}
                 <div className="rounded-2xl border border-border/80 bg-background/70 px-4 py-4 text-sm leading-7 text-muted-foreground">
-                  Bu görünüm preview ve upgrade ekranındaki satış hissini güçlendirir. Branding ve başlık burada doğrudan algılanır.
+                  This view strengthens the sales feel on the preview and upgrade screens. Branding and title are directly recognized here.
                 </div>
               </CardContent>
             </Card>
@@ -565,12 +557,12 @@ export function WorkspaceScreen({
 
           {/* Chapters */}
           <div className="space-y-3">
-            <div className="text-sm font-medium text-foreground">Bölümler ({draft.chapters.length})</div>
+            <div className="text-sm font-medium text-foreground">Chapters ({draft.chapters.length})</div>
             {draft.chapters.map((chapter, index) => (
               <Card key={`${chapter.title}-${index}`}>
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Badge >Bölüm {index + 1}</Badge>
+                    <Badge >Ch. {index + 1}</Badge>
                     {chapter.content && (
                       <Badge >
                         {chapter.content.split(/\s+/).filter(Boolean).length} words
@@ -578,7 +570,7 @@ export function WorkspaceScreen({
                     )}
                   </div>
                   <div>
-                    <Label>Başlık</Label>
+                    <Label>Title</Label>
                     <Input
                       value={chapter.title}
                       onChange={(event) => {
@@ -589,7 +581,7 @@ export function WorkspaceScreen({
                     />
                   </div>
                   <div>
-                    <Label>İçerik</Label>
+                    <Label>Content</Label>
                     <Textarea
                       value={chapter.content}
                       onChange={(event) => {
@@ -624,10 +616,10 @@ export function WorkspaceScreen({
                   style: "clear and practical",
                   tone: "professional",
                   year: draft.year,
-                }).catch((error) => addToast(error instanceof Error ? error.message : "Outline başarısız.", "error"))
+                }).catch((error) => addToast(error instanceof Error ? error.message : "Outline generation failed.", "error"))
               }
             >
-              Outline üret
+              Generate Outline
             </Button>
             <Button
               variant="outline"
@@ -635,15 +627,15 @@ export function WorkspaceScreen({
                 triggerWorkflow({
                   action: "chapter_generate",
                   chapter_number: activeChapter + 1,
-                  chapter_title: draft.chapters[activeChapter]?.title || `Bölüm ${activeChapter + 1}`,
+                  chapter_title: draft.chapters[activeChapter]?.title || `Ch. ${activeChapter + 1}`,
                   min_words: 1600,
                   max_words: 2200,
                   style: "clear",
                   tone: "professional",
-                }).catch((error) => addToast(error instanceof Error ? error.message : "Bölüm üretimi başarısız.", "error"))
+                }).catch((error) => addToast(error instanceof Error ? error.message : "Chapter generation failed.", "error"))
               }
             >
-              Bölüm {activeChapter + 1}&apos;i üret
+              Generate Ch. {activeChapter + 1}
             </Button>
             <Button
               variant="ghost"
@@ -651,10 +643,10 @@ export function WorkspaceScreen({
                 triggerWorkflow({
                   action: "chapter_review",
                   chapter_number: activeChapter + 1,
-                }).catch((error) => addToast(error instanceof Error ? error.message : "Gözden geçirme başarısız.", "error"))
+                }).catch((error) => addToast(error instanceof Error ? error.message : "Review failed.", "error"))
               }
             >
-              Gözden geçir
+              Review
             </Button>
           </div>
 
@@ -687,7 +679,7 @@ export function WorkspaceScreen({
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="text-sm font-medium text-foreground">
-                  {activeChapterData?.title || `Bölüm ${activeChapter + 1}`}
+                  {activeChapterData?.title || `Ch. ${activeChapter + 1}`}
                 </div>
                 {activeChapterData?.content && (
                   <Badge >
@@ -697,7 +689,7 @@ export function WorkspaceScreen({
                 )}
               </div>
               <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
-                {activeChapterData?.content || "Henüz içerik yok. Yukarıdan üret butonunu kullan."}
+                {activeChapterData?.content || "No content yet. Use the generate button above."}
               </p>
             </CardContent>
           </Card>
@@ -709,13 +701,13 @@ export function WorkspaceScreen({
             <Input
               value={researchTopic}
               onChange={(event) => setResearchTopic(event.target.value)}
-              placeholder="Araştırma konusu"
+              placeholder="Research topic"
             />
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => triggerWorkflow({ action: "market_analyzer", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : "KDP analiz başarısız.", "error"))}>KDP analiz</Button>
-              <Button variant="outline" onClick={() => triggerWorkflow({ action: "keyword_research", keywords: [researchTopic] }).catch((error) => addToast(error instanceof Error ? error.message : "Anahtar words başarısız.", "error"))}>Anahtar words</Button>
-              <Button variant="outline" onClick={() => triggerWorkflow({ action: "topic_finder", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : "Konu bulucu başarısız.", "error"))}>Konu bulucu</Button>
-              <Button onClick={() => triggerWorkflow({ action: "research_insights", focus: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : "AI öneri başarısız.", "error"))}>AI öneri</Button>
+              <Button variant="outline" onClick={() => triggerWorkflow({ action: "market_analyzer", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : KDP Analysis failed., "error"))}>KDP Analysis</Button>
+              <Button variant="outline" onClick={() => triggerWorkflow({ action: "keyword_research", keywords: [researchTopic] }).catch((error) => addToast(error instanceof Error ? error.message : Keywords failed., "error"))}>Keywords</Button>
+              <Button variant="outline" onClick={() => triggerWorkflow({ action: "topic_finder", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : Topic Finder failed., "error"))}>Topic Finder</Button>
+              <Button onClick={() => triggerWorkflow({ action: "research_insights", focus: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : AI Suggestion failed., "error"))}>AI Suggestion</Button>
             </div>
           </div>
           <div className="grid gap-4">
@@ -727,13 +719,13 @@ export function WorkspaceScreen({
                     <div className="mt-1 text-xs text-muted-foreground">{file.relative_path}</div>
                   </div>
                   <a href={buildAssetUrl(file.url)} target="_blank" rel="noreferrer">
-                    <Button variant="ghost" size="sm">Aç</Button>
+                    <Button variant="ghost" size="sm">Open</Button>
                   </a>
                 </CardContent>
               </Card>
             ))}
             {!book.resources?.research?.length ? (
-              <Card><CardContent><div className="text-sm text-muted-foreground">Henüz araştırma dosyası yok.</div></CardContent></Card>
+              <Card><CardContent><div className="text-sm text-muted-foreground">No research files yet.</div></CardContent></Card>
             ) : null}
           </div>
         </TabsContent>
@@ -744,22 +736,22 @@ export function WorkspaceScreen({
             <Button
               variant="outline"
               onClick={async () => {
-                const toastId = addToast("Ön kontrol yapılıyor...", "loading");
+                const toastId = addToast("Running pre-check...", "loading");
                 try {
                   const response = await preflightBook(slug, { action: "build", format: "epub" });
-                  updateToast(toastId, response.ok ? "EPUB için hazır." : String(response.reason || "Hazır değil."), response.ok ? "success" : "error");
+                  updateToast(toastId, response.ok ? "Ready for EPUB." : String(response.reason || "Not ready."), response.ok ? "success" : "error");
                 } catch (error) {
-                  updateToast(toastId, error instanceof Error ? error.message : "Ön kontrol başarısız.", "error");
+                  updateToast(toastId, error instanceof Error ? error.message : "Pre-check failed.", "error");
                 }
               }}
             >
               Ön kontrol
             </Button>
-            <Button onClick={() => triggerBuild("epub").catch((error) => addToast(error instanceof Error ? error.message : "EPUB başarısız.", "error"))}>
+            <Button onClick={() => triggerBuild("epub").catch((error) => addToast(error instanceof Error ? error.message : "EPUB generation failed.", "error"))}>
               <Upload className="mr-2 size-4" />
-              EPUB al
+              Get EPUB
             </Button>
-            <Button variant="ghost" onClick={() => triggerBuild("pdf").catch((error) => addToast(error instanceof Error ? error.message : "PDF başarısız.", "error"))}>PDF al</Button>
+            <Button variant="ghost" onClick={() => triggerBuild("pdf").catch((error) => addToast(error instanceof Error ? error.message : "PDF generation failed.", "error"))}>Get PDF</Button>
           </div>
           <div className="grid gap-4">
             {(book.resources?.exports || []).slice(-12).reverse().map((file) => (
@@ -770,13 +762,13 @@ export function WorkspaceScreen({
                     <div className="mt-1 text-xs text-muted-foreground">{file.relative_path}</div>
                   </div>
                   <a href={buildAssetUrl(file.url)} target="_blank" rel="noreferrer">
-                    <Button variant="ghost" size="sm">Aç</Button>
+                    <Button variant="ghost" size="sm">Open</Button>
                   </a>
                 </CardContent>
               </Card>
             ))}
             {!book.resources?.exports?.length ? (
-              <Card><CardContent><div className="text-sm text-muted-foreground">Henüz çıktı yok.</div></CardContent></Card>
+              <Card><CardContent><div className="text-sm text-muted-foreground">No output yet.</div></CardContent></Card>
             ) : null}
           </div>
         </TabsContent>

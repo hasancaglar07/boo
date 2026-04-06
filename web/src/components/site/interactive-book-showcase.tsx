@@ -437,7 +437,7 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
                       className="w-fit"
                     >
                       <Maximize2 className="mr-2 h-4 w-4" />
-                      {isExpanded ? "Kompakt görünüm" : "Detaylı görünüm"}
+                      {isExpanded ? "Compact view" : "Detailed view"}
                     </Button>
                   </div>
                 </div>

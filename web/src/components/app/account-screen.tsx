@@ -58,7 +58,7 @@ function buildChecklistItems(
     },
     {
       id: "set_goal",
-      label: "Hedef belirle",
+      label: "Set goal",
       description: hasGoal ? account.goal.slice(0, 60) + (account.goal.length > 60 ? "…" : "") : "Ne yazmak istediğini tarif et",
       icon: <Target className="size-4" />,
       completed: hasGoal,
@@ -431,7 +431,7 @@ export function AccountScreen() {
               <div className="mt-3 text-base leading-7 text-foreground">{account.goal}</div>
             ) : (
               <div className="mt-3">
-                <EmptyStateMessage label="Hedef belirlenmemiş." actionLabel="Hedef ekle →" href="/app/settings/profile" />
+                <EmptyStateMessage label="Set goalnmemiş." actionLabel="Hedef ekle →" href="/app/settings/profile" />
               </div>
             )}
           </CardContent>

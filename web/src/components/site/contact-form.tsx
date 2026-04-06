@@ -81,7 +81,7 @@ export function ContactForm() {
       {/* Contact Info */}
       <div className="space-y-6">
         <div>
-          <h3 className="text-2xl font-semibold text-foreground">İletişim Bilgileri</h3>
+          <h3 className="text-2xl font-semibold text-foreground">Contact Information</h3>
           <p className="mt-2 text-muted-foreground">
             Have questions? Contact us and we'll help you as soon as possible.
           </p>
@@ -103,7 +103,7 @@ export function ContactForm() {
               <MessageSquare className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground">Yanıt süresi</h4>
+              <h4 className="font-semibold text-foreground">Response time</h4>
               <p className="mt-1 text-sm text-muted-foreground">Most messages are answered within the same business day</p>
             </div>
           </div>
@@ -111,12 +111,12 @@ export function ContactForm() {
 
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-6">
-            <h4 className="mb-2 font-semibold text-foreground">Hızlı notlar</h4>
+            <h4 className="mb-2 font-semibold text-foreground">Quick notes</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>• Keep the subject clear</li>
               <li>• Select the correct billing / access / technical support</li>
               <li>• Include the book slug or preview link</li>
-              <li>• Gerekirse ekran görüntüsü paylaşın</li>
+              <li>• Share a screenshot if needed</li>
             </ul>
           </CardContent>
         </Card>
@@ -140,7 +140,7 @@ export function ContactForm() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium text-foreground">
-                  Ad Soyad *
+                  Full Name *
                 </label>
                 <input
                   type="text"
@@ -151,7 +151,7 @@ export function ContactForm() {
                   autoComplete="name"
                   required
                   className="w-full rounded-xl border border-border/80 bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                  placeholder="Adınız Soyadınız"
+                  placeholder="Your Full Name"
                 />
               </div>
 

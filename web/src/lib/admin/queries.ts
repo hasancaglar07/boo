@@ -930,7 +930,7 @@ export async function listAdminUsers(input: {
     const revenue = billingTotal(user.billingRecords as BillingRecord[]);
     return {
       id: user.id,
-      name: user.name || "İsimsiz kullanıcı",
+      name: user.name || "Anonymous user",
       email: user.email,
       image: user.image,
       role: user.role,
@@ -1108,7 +1108,7 @@ export async function getAdminUserDetail(userId: string, actorRole: UserRole) {
   return {
     item: {
       id: user.id,
-      name: user.name || "İsimsiz kullanıcı",
+      name: user.name || "Anonymous user",
       email: user.email,
       image: user.image,
       goal: user.goal,
@@ -1428,7 +1428,7 @@ export async function listAdminSubscriptions(input: {
   ) => ({
     id: item.id,
     userId: item.user.id,
-    userName: item.user.name || "İsimsiz kullanıcı",
+    userName: item.user.name || "Anonymous user",
     userEmail: item.user.email,
     planId: item.planId,
     planLabel: PLAN_LABELS[item.planId] || item.planId,
@@ -1801,7 +1801,7 @@ export async function listAdminJobs(options?: { summaryOnly?: boolean }) {
           status: lifecycle,
           progress: Number(status.progress || 0),
           startedAt: status.started_at || status.updated_at || new Date().toISOString(),
-          message: status.message || status.error || "Hazır",
+          message: status.message || status.error || "Ready",
         };
       });
 
@@ -1913,7 +1913,7 @@ export async function changeUserPlan(
     include: { entitlements: true },
   });
   if (!user) {
-    throw new Error("Kullanıcı bulunamadı.");
+    throw new Error("User not found..");
   }
 
   // Derive current plan before changes

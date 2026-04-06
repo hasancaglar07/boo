@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     ...EMAIL_ACTION_RATE_LIMIT,
   });
   if (!rateLimit.allowed) {
-    return NextResponse.json({ ok: false, error: "Çok fazla kayıt denemesi yapıldı." }, { status: 429 });
+    return NextResponse.json({ ok: false, error: `Too many registration attempts.` }, { status: 429 });
   }
 
   const existing = await findUserByEmail(email);

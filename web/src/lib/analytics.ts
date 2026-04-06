@@ -202,7 +202,7 @@ export function trackEventOnce(
   } = {},
 ) {
   const key = options.key || event;
-  const ttlMs = options.ttlMs ?? 30 * 60 * 1000; // 30 dakika varsayılan
+  const ttlMs = options.ttlMs ?? 30 * 60 * 1000; // 30 minutes default
 
   if (!shouldTrackEventOnce(key, ttlMs)) {
     return;

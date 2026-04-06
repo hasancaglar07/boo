@@ -437,6 +437,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const trackedRef = useRef(false);
   const bootstrapRequestedRef = useRef(false);
   const previewSnapshotRef = useRef<BookPreview | null>(null);
+  const hydrateInFlightRef = useRef(false);
 
   // // Update auth state after successful Stripe payment
   useEffect(() => {
@@ -449,10 +450,21 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     }
   }, [searchParams, router]);
 
-  const hydrate = useCallback(async () => {
+  const hydrate = useCallback(async ({ includeBooks = false }: { includeBooks?: boolean } = {}) => {
+    if (hydrateInFlightRef.current) return;
+    hydrateInFlightRef.current = true;
     try {
-      const [bookList, previewPayload] = await Promise.all([loadBooks(), loadBookPreview(slug)]);
-      setBooks(bookList);
+      if (includeBooks) {
+        try {
+          const bookList = await loadBooks();
+          setBooks(bookList);
+        } catch (error) {
+          if (!isBackendUnavailableError(error)) {
+            console.error(error);
+          }
+        }
+      }
+      const previewPayload = await loadBookPreview(slug);
       setPreview(previewPayload);
       setBackendUnavailable(false);
       setTransientBackendIssue(false);
@@ -471,6 +483,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         return;
       }
       console.error(error);
+    } finally {
+      hydrateInFlightRef.current = false;
     }
   }, [slug]);
 
@@ -502,7 +516,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
   useEffect(() => {
     const frame = window.setTimeout(() => {
-      void hydrate();
+      void hydrate({ includeBooks: true });
     }, 0);
     return () => window.clearTimeout(frame);
   }, [hydrate]);
@@ -549,7 +563,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         subtitle="Connection issue occurred."
         books={books}
       >
-        <BackendUnavailableState onRetry={() => void hydrate()} />
+        <BackendUnavailableState onRetry={() => void hydrate({ includeBooks: true })} />
       </AppFrame>
     );
   }

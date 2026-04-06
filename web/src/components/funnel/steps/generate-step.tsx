@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -69,7 +69,7 @@ export function GenerateStep({
       {/* Summary card — compact */}
       <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/60">
-          Son kontrol
+          Final review
         </div>
 
         <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">

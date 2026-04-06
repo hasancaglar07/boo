@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import DottedMap from "dotted-map";
@@ -31,7 +31,7 @@ export interface Features9Props {
   supportTitle?: string;
   supportDescription?: string;
   uptimeLabel?: string;
-  activityTitle?: string;
+  activityTitle = 'Writing and editing rhythm'
   activityDescription?: string;
   chartData?: readonly ChartDatum[];
 }
@@ -126,7 +126,8 @@ export function Features9({
   supportTitle = "Support and revision flow",
   supportDescription = "Issue tracking and resolution progresses more controlled with email, panel, and notes system.",
   uptimeLabel = "Output ready %99.99",
-  activityTitle = "Yazım ve düzenleme ritmi",
+  activityTitle = "Writing and editing rhythm",
+
   activityDescription = "Outline, chapter writing, and quality editing can be tracked within the same timeline.",
   chartData = defaultChartData,
 }: Features9Props) {

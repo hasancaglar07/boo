@@ -70,8 +70,8 @@ function renderVisual(visual: FeatureVisual) {
       <div className="relative flex h-full items-end justify-center overflow-hidden rounded-[22px] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_10%,transparent),transparent)] px-4 pb-3 pt-8">
         {[
           ["Komut Sistemleri", "amber", "Maya Brooks"],
-          ["Araştırma Notları", "zinc", "David Hale"],
-          ["Yayına Giden Yol", "orange", "Ayla Kent"],
+          ["Research Notes", "zinc", "David Hale"],
+          ["Road to Publication", "orange", "Ayla Kent"],
         ].map(([title, tone, author], index) => (
           <div
             key={title}
@@ -98,15 +98,15 @@ function renderVisual(visual: FeatureVisual) {
 
   if (visual === "outline") {
     return (
-      <MockWindow title="Araştırma + Konumlama">
+      <MockWindow title="Research + Positioning">
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-2xl border border-border/80 bg-card p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <SearchCode className="size-4 text-primary" />
-              Anahtar kelime kümeleri
+              Keyword clusters
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {["Okur derdi", "Düşük rekabet", "KDP uyumu", "Hızlı vaat"].map((chip) => (
+              {["Reader pain point", "Low competition", "KDP compliance", "Fast promise"].map((chip) => (
                 <span key={chip} className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">
                   {chip}
                 </span>
@@ -119,9 +119,9 @@ function renderVisual(visual: FeatureVisual) {
               Book plan
             </div>
             <div className="mt-3 space-y-2 text-xs text-muted-foreground">
-              <div className="rounded-xl bg-background px-3 py-2">Okuru ilk anda yakala</div>
-              <div className="rounded-xl bg-background px-3 py-2">Sistemi net biçimde göster</div>
-              <div className="rounded-xl bg-background px-3 py-2">Son çıktıyı yayına hazırla</div>
+              <div className="rounded-xl bg-background px-3 py-2">Hook the reader instantly</div>
+              <div className="rounded-xl bg-background px-3 py-2">Present the system clearly</div>
+              <div className="rounded-xl bg-background px-3 py-2">Prepare the final output for publication</div>
             </div>
           </div>
         </div>
@@ -130,11 +130,11 @@ function renderVisual(visual: FeatureVisual) {
   }
 
   return (
-    <MockWindow title="Çıktı Akışı">
+    <MockWindow title="Output Pipeline">
       <div className="grid gap-3 sm:grid-cols-2">
         {[
-          ["EPUB", "Ana teslim biçimi"],
-          ["PDF", "Sabit yerleşim"],
+          ["EPUB", "Primary delivery format"],
+          ["PDF", "Fixed layout"],
           ["Book details", "Author, ISBN, publisher"],
           ["Arşiv", "Zaman damgalı çıktı klasörü"],
         ].map(([title, text]) => (

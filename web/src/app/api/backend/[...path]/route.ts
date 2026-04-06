@@ -33,13 +33,14 @@ const BACKEND_ORIGIN =
   "http://127.0.0.1:8765";
 const BACKEND_FETCH_TIMEOUT_MS = 20_000;
 const BACKEND_BOOKS_FETCH_TIMEOUT_MS = 30_000;
-const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = 45_000;
+const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = 12_000;
 const BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS = 45_000;
 const BACKEND_WORKFLOW_FETCH_TIMEOUT_MS = 240_000;
 const BACKEND_UNREACHABLE_LOG_THROTTLE_MS = 5_000;
 const BACKEND_UNAVAILABLE_BACKOFF_MS = 5_000;
 const BACKEND_AUTO_START_COOLDOWN_MS = 15_000;
 const BACKEND_RECOVERY_RETRY_TIMEOUT_MS = 8_000;
+const PREVIEW_CACHE_TTL_MS = 10 * 60_000;
 const BACKEND_AUTO_START_ENABLED = process.env.BOOK_AUTO_START_DASHBOARD !== "0";
 
 const IMAGE_FILE_PATTERN = /\.(png|jpe?g|webp|gif|svg|ico)$/i;
@@ -60,6 +61,7 @@ declare global {
   var __backendUnavailableUntilByPath: Record<string, number> | undefined;
   var __backendLastStartAttemptAt: number | undefined;
   var __backendStartInFlight: Promise<boolean> | undefined;
+  var __backendPreviewCacheBySlug: Record<string, { payload: Record<string, unknown>; cachedAt: number }> | undefined;
 }
 
 function isBackendUnavailableLike(error: unknown) {
@@ -89,6 +91,27 @@ function backendCircuitKeyForPath(upstreamPath: string) {
   if (upstreamPath === "/api/books") return "/api/books";
   if (/^\/api\/books\/[^/]+\/preview$/.test(upstreamPath)) return "/api/books/:slug/preview";
   return null;
+}
+
+function readCachedPreviewPayload(slug: string): Record<string, unknown> | null {
+  const cache = globalThis.__backendPreviewCacheBySlug;
+  if (!cache) return null;
+  const entry = cache[slug];
+  if (!entry) return null;
+  if (Date.now() - entry.cachedAt > PREVIEW_CACHE_TTL_MS) {
+    delete cache[slug];
+    return null;
+  }
+  return entry.payload;
+}
+
+function writeCachedPreviewPayload(slug: string, payload: Record<string, unknown>) {
+  const cache = globalThis.__backendPreviewCacheBySlug || {};
+  cache[slug] = {
+    payload,
+    cachedAt: Date.now(),
+  };
+  globalThis.__backendPreviewCacheBySlug = cache;
 }
 
 function markBackendUnavailable(pathKey: string | null) {
@@ -591,8 +614,31 @@ async function handleBookScopedRoute(
       return denied;
     }
 
-    const response = await forwardToBackend(request, upstreamPath, body);
+    let response: Response;
+    try {
+      response = await forwardToBackend(request, upstreamPath, body);
+    } catch (error) {
+      if (action === "preview" && isBackendUnavailableLike(error)) {
+        const cachedPayload = readCachedPreviewPayload(slug);
+        if (cachedPayload) {
+          return NextResponse.json(cachedPayload, {
+            status: 200,
+            headers: { "x-backend-preview": "stale-cache" },
+          });
+        }
+      }
+      throw error;
+    }
     if (!response.ok) {
+      if (action === "preview" && response.status === 503) {
+        const cachedPayload = readCachedPreviewPayload(slug);
+        if (cachedPayload) {
+          return NextResponse.json(cachedPayload, {
+            status: 200,
+            headers: { "x-backend-preview": "stale-cache" },
+          });
+        }
+      }
       return new NextResponse(response.body, {
         status: response.status,
         headers: cloneHeaders(response.headers),
@@ -626,6 +672,7 @@ async function handleBookScopedRoute(
           // Continue rendering preview even if background full-generation bootstrap fails.
         });
       }
+      writeCachedPreviewPayload(slug, enriched);
       return NextResponse.json(enriched, { status: response.status });
     }
 

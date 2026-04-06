@@ -7,35 +7,23 @@ import { trackEvent } from "@/lib/analytics";
 const QUICK_START_STEPS = [
   {
     icon: "✍️",
-    title: "Konunu Yaz",
-    description: "10 saniyede kitabın konusunu belirle",
-    time: "10 sn",
+    title: "Write Your TopicWrite Your TopicGenerate your book topic in 10 secondsGenerate your book topic in 10 sec10 sec",
   },
   {
     icon: "🤖",
     title: "AI ile Outline",
     description: "Generate automatic chapter plan",
-    time: "30 sn",
+    time: "30 sec",
   },
   {
     icon: "🎨",
-    title: "Kapağı Seç",
-    description: "Choose one of the AI cover drafts",
-    time: "15 sn",
+    title: "Choose CoverChoose CoverChoose one of the AI cover drafts",
+    time: "15 sec",
   },
   {
     icon: "📖",
-    title: "Preview Gör",
-    description: "Read the first chapter right away",
-    time: "Hemen",
-  },
-];
-
-export function QuickStartGuide() {
-  const router = useRouter();
-
-  function handleStart() {
-    trackEvent("quick_start_clicked", { location: "homepage_guide" });
+    title: "PreviewPreviewRead the first chapter right away",
+    time: "Nowowquick_start_clicked", { location: "homepage_guide" });
     router.push("/start/topic");
   }
 
@@ -44,11 +32,11 @@ export function QuickStartGuide() {
       <div className="mb-6">
         <h3 className="text-2xl font-bold text-foreground">⚡ Your First Book in 60 Seconds</h3>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Sadece 4 adımda fikrini yayına hazır kitaba dönüştür
+          Transform your idea into a publish-ready book in just 4 steps
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className=Transform your idea into a publish-ready book in just 4 steps>
         {QUICK_START_STEPS.map((step, index) => (
           <div
             key={index}
@@ -81,7 +69,7 @@ export function QuickStartGuide() {
           Start Now
         </Button>
         <p className="mt-3 text-center text-xs text-muted-foreground">
-          Kayıt gerekmez • Ücretsiz deneme • İstediğin zaman çık
+          No sign-up required · Free trial · Cancel anytime
         </p>
       </div>
     </div>

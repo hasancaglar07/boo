@@ -616,7 +616,7 @@ export async function saveBookFile(slug: string, relativePath: string, content: 
 function fileToBase64(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Dosya okunamadı."));
+    reader.onerror = () => reject(new Error(File could not be read.));
     reader.onload = () => {
       const result = String(reader.result || "");
       const base64 = result.includes(",") ? result.split(",")[1] : result;

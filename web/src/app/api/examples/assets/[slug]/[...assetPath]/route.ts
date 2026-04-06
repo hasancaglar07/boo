@@ -30,7 +30,7 @@ export async function GET(
   const asset = await resolvePublicExampleAsset(slug, assetPath);
 
   if (!asset) {
-    return NextResponse.json({ ok: false, error: "Asset bulunamadı." }, { status: 404 });
+    return NextResponse.json({ ok: false, error: "Asset not found." }, { status: 404 });
   }
 
   const ext = path.extname(asset.relativePath).toLowerCase();

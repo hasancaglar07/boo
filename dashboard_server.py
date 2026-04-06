@@ -48,7 +48,7 @@ ACTIVE_FULL_CHAPTER_PIPELINES: set[str] = set()
 ACTIVE_FULL_CHAPTER_PIPELINES_LOCK = threading.Lock()
 FULL_CHAPTER_PIPELINE_CONCURRENCY = max(
     1,
-    min(8, int(os.environ.get("BOOK_FULL_CHAPTER_PIPELINE_CONCURRENCY", "4") or "4")),
+    min(4, int(os.environ.get("BOOK_FULL_CHAPTER_PIPELINE_CONCURRENCY", "2") or "2")),
 )
 BOOK_SUMMARY_CACHE_TTL_SECONDS = int(os.environ.get("BOOK_SUMMARY_CACHE_TTL_SECONDS", "15"))
 BOOK_SUMMARY_CACHE_LOCK = threading.Lock()
@@ -1429,6 +1429,7 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
         )
 
         initial_ready_count = int(initial_progress["ready_count"])
+        preview_first_ready = first_preview_chapter_ready(book_dir)
         pending: list[dict[str, Any]] = []
         for index, item in enumerate(blueprint, start=1):
             chapter_number_value = int(item.get("number") or index)
@@ -1439,6 +1440,8 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
             )
             min_words = int(item.get("min_words") or 1600)
             max_words = int(item.get("max_words") or max(min_words + 400, 2200))
+            if chapter_number_value == 1 and preview_first_ready and (book_dir / "chapter_1_final.md").exists():
+                continue
             if not force and chapter_meets_generation_target(book_dir, chapter_number_value, min_words):
                 continue
             pending.append(

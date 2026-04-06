@@ -71,7 +71,7 @@ export function PricingCreativeSection({
       features: plans[2].features,
       popular: false,
       accentClassName: "text-muted-foreground",
-      ctaLabel: "Stüdyo'ya Geç",
+      ctaLabel: "Go to Studio",
       ctaHref: "/billing?plan=pro&autostart=1",
     },
   ], []);
