@@ -87,7 +87,7 @@ export function GenerateStep({
             {languageLabel(draft.language)}
           </span>
           <span className="rounded-full border border-border/60 bg-card/80 px-2.5 py-1 text-xs text-muted-foreground">
-            {draft.outline.length} bölüm
+            {draft.outline.length} chapter
           </span>
           <span className="rounded-full border border-border/60 bg-card/80 px-2.5 py-1 text-xs text-muted-foreground">
             {draft.imprint || draft.logoText || "Book Generator"}
@@ -116,7 +116,7 @@ export function GenerateStep({
           onClick={onStartGenerate}
           className="w-full text-base font-semibold h-12 rounded-xl"
         >
-          {appShell ? "Ön İzlemeyi Oluştur" : "Hesabını Oluştur ve Ön İzlemeyi Başlat"}
+          {appShell ? "Preview Generate" : "Hesabını Generate ve Preview Başlat"}
         </Button>
         <div className="flex justify-center">
           <button
@@ -134,7 +134,7 @@ export function GenerateStep({
 
       <p className="text-xs text-muted-foreground/50 text-center">
         {appShell
-          ? "Önce ön izlemeyi gör · Tam kitabı sonra aç"
+          ? "Önce previewyi gör · Tam kitabı sonra aç"
           : "No payment required · Book is saved to your account · Appears in your library when ready"}
       </p>
     </div>

@@ -21,7 +21,7 @@ const BOOK_TYPE_DESCRIPTIONS: Record<FunnelBookType, string> = {
   is: "Uzmanlık, danışmanlık veya marka otoritesi için güçlü kurgu.",
   egitim: "Öğretici, örnekli ve daha sistemli anlatım.",
   cocuk: "Daha sıcak, ritimli ve sade anlatım düzeni.",
-  diger: "Özel konu veya hibrit kurgular için esnek alan.",
+  diger: "Özel topic veya hibrit kurgular için esnek alan.",
 };
 
 export function TopicStep({
@@ -37,7 +37,7 @@ export function TopicStep({
   onError: (msg: string) => void;
 }) {
   const topicPlaceholder = isTurkishLanguage(draft.language)
-    ? "Kitabının konusunu yaz... Örn: Yapay zeka ile içerik üretimi, Dijital pazarlama rehberi..."
+    ? "Kitabının topicsunu yaz... Örn: Yapay zeka ile içerik üretimi, Dijital pazarlama rehberi..."
     : "Write your book topic... e.g. AI-assisted content creation, practical digital marketing playbook...";
   const audiencePlaceholder = isTurkishLanguage(draft.language)
     ? "örnek: yeni başlayan oyuncular ve ebeveynler"
@@ -77,7 +77,7 @@ export function TopicStep({
           htmlFor="topic"
           className="text-base sm:text-lg font-bold text-foreground"
         >
-          Kitabının konusu ne?
+          Kitabının topicsu ne?
         </label>
         <Textarea
           id="topic"
@@ -90,7 +90,7 @@ export function TopicStep({
           className="resize-none text-lg sm:text-xl leading-8 placeholder:text-lg placeholder:text-muted-foreground/50 min-h-[200px] sm:min-h-[240px] px-5 py-4 rounded-2xl border-2 border-border/70 bg-background shadow-sm focus-visible:border-primary/40 focus-visible:shadow-md focus-visible:ring-primary/20 transition-all duration-200"
         />
         <p className="text-sm text-muted-foreground bg-muted/50 rounded-xl px-4 py-2.5">
-          💡 Konuyu net yazdığında başlık önerileri ve bölüm planı otomatik gelir.
+          💡 Topicyu net yazdığında başlık önerileri ve chapter planı otomatik gelir.
         </p>
       </div>
 

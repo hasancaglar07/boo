@@ -302,7 +302,7 @@ export default function PricingPage() {
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/start/topic?plan=tek-kitap"
+              href="/start/topic?plan=single-book"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90"
             >
               Start Free Preview

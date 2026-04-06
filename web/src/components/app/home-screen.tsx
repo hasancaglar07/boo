@@ -237,7 +237,7 @@ export function HomeScreen() {
   const totalExports = books.reduce((total, book) => total + Number(book.status?.export_count || 0), 0);
   const totalResearch = books.reduce((total, book) => total + Number(book.status?.research_count || 0), 0);
   const readableName = displayName(viewer?.name, viewer?.email);
-  const hasNamedProfile = Boolean(viewer?.name && viewer.name !== "Book Creator");
+  const hasNamedProfilee = Boolean(viewer?.name && viewer.name !== "Book Creator");
   const hasGoal = Boolean(viewer?.goal?.trim());
   const latestActivity = latestBook?.status?.updated_at || latestBook?.status?.started_at || "";
   const newBookHref =
@@ -246,7 +246,7 @@ export function HomeScreen() {
       : "/app/new/topic";
 
   const onboardingActions: OnboardingAction[] = [];
-  if (viewer && !hasNamedProfile) {
+  if (viewer && !hasNamedProfilee) {
     onboardingActions.push({
       icon: User2,
       label: "Complete your name",
@@ -366,7 +366,7 @@ export function HomeScreen() {
           description: "Return to your most recent book preview",
           run: () => latestBook && router.push(`/app/book/${encodeURIComponent(latestBook.slug)}/preview`),
         },
-        { label: "Profile settings", description: "Manage name and writing goal", run: () => router.push("/app/settings/profile") },
+        { label: "Profilee settings", description: "Manage name and writing goal", run: () => router.push("/app/settings/profile") },
       ]}
     >
       {backendUnavailable ? (
@@ -410,7 +410,7 @@ export function HomeScreen() {
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {viewer.usage.reason === "monthly_quota_reached"
                     ? "You have reached your monthly book quota. Upgrade your plan or wait for the next cycle."
-                    : "Mevcut planın ilk kitap preview’ını kullandı. Yeni kitap için planlardan birini seç."}
+                    : "Mevcut planın ilk book preview’ını kullandı. Yeni book için planlardan birini seç."}
                 </p>
                 <div className="mt-3">
                   <Button
@@ -424,7 +424,7 @@ export function HomeScreen() {
                       router.push("/app/settings/billing?intent=start-book");
                     }}
                   >
-                    Planları gör
+                    Plansı gör
                   </Button>
                 </div>
               </div>
@@ -475,7 +475,7 @@ export function HomeScreen() {
               ) : null}
 
               <Button size="lg" variant="ghost" className="min-h-[48px]" onClick={() => router.push("/app/settings/profile")}>
-                Profili aç
+                Profilei aç
               </Button>
             </div>
           </CardContent>
@@ -485,7 +485,7 @@ export function HomeScreen() {
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { label: "Book", value: books.length, icon: BookOpen },
-              { label: "Çıktı", value: compactNumber(totalExports), icon: Upload },
+              { label: "Output", value: compactNumber(totalExports), icon: Upload },
               { label: "Araştırma", value: compactNumber(totalResearch), icon: FileText },
               { label: "Plan", value: currentPlanLabel, small: true, icon: Target },
             ].map(({ label, value, small, icon: Icon }) => (
@@ -514,15 +514,15 @@ export function HomeScreen() {
                   <DollarSign className="size-4 text-primary" aria-hidden />
                 </div>
                 <h3 className="text-sm font-bold text-foreground">
-                  Affiliate Linkin — %30 Komisyon
+                  Your Affiliate Link — %30 Commission
                 </h3>
               </div>
               <p className="text-xs leading-5 text-muted-foreground">
-                Bu linki paylaş. Linkinden üye olan ve ödeme yapan herkesten %30 komisyon kazanırsın.
+                Bu linki paylaş. Linkinden üye olan ve payment yapan herkesten %30 commission kazanırsın.
               </p>
               <div className="flex items-center gap-2 rounded-[14px] border border-border/60 bg-muted/40 px-3 py-2.5">
                 <span className="flex-1 truncate font-mono text-xs text-muted-foreground">
-                  {affiliateData ? affiliateData.referralUrl : "Yükleniyor..."}
+                  {affiliateData ? affiliateData.referralUrl : "Loading..."}
                 </span>
               </div>
               <Button
@@ -533,7 +533,7 @@ export function HomeScreen() {
                 {affiliateCopied ? (
                   <>
                     <CheckCircle2 className="mr-1.5 size-4" />
-                    Kopyalandı!
+                    Copied!
                   </>
                 ) : (
                   <>
@@ -561,7 +561,7 @@ export function HomeScreen() {
                 </Button>
               </div>
               <p className="text-center text-[10px] leading-4 text-muted-foreground/70">
-                Sınır yok • Minimum ödeme $50 • Aylık ödeme
+                No limit • Minimum payment $50 • Aylık payment
               </p>
             </CardContent>
           </Card>
@@ -715,11 +715,11 @@ export function HomeScreen() {
                   <div className="mb-3 flex flex-wrap gap-2" aria-label="Book details">
                     <Badge className="border-border/50">
                       <Layers className="mr-1 size-3" aria-hidden="true" />
-                      {book.status?.chapter_count || book.chapter_count || 0} bölüm
+                      {book.status?.chapter_count || book.chapter_count || 0} chapter
                     </Badge>
                     <Badge className="border-border/50">
                       <Upload className="mr-1 size-3" aria-hidden="true" />
-                      {book.status?.export_count || 0} çıktı
+                      {book.status?.export_count || 0} output
                     </Badge>
                     {book.status?.product_ready ? (
                       <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
@@ -743,9 +743,9 @@ export function HomeScreen() {
                       size="sm"
                       className="min-h-[40px] flex-1 sm:flex-auto"
                       onClick={() => router.push(`/app/book/${encodeURIComponent(book.slug)}/preview`)}
-                      aria-label={`${book.title} - Önizleme`}
+                      aria-label={`${book.title} - Preview`}
                     >
-                      Önizleme
+                      Preview
                     </Button>
                     <Button
                       size="sm"
@@ -798,7 +798,7 @@ export function HomeScreen() {
                   İlk kitabın için alan hazır
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Hesabın açık. Şimdi ilk üretim akışını başlat, önizleme üret ve bu ekranı gerçek kütüphanene dönüştür.
+                  Hesabın açık. Şimdi ilk üretim akışını başlat, preview üret ve bu ekranı gerçek kütüphanene dönüştür.
                 </p>
                 <ul className="mt-6 space-y-2 text-left text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
@@ -807,7 +807,7 @@ export function HomeScreen() {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
-                    Dakikalar içinde önizleme
+                    Dakikalar içinde preview
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />

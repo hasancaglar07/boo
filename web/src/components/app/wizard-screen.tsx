@@ -37,8 +37,8 @@ const questions = [
   },
   {
     key: "topic",
-    title: "Konu ne?",
-    stepLabel: "Konu",
+    title: "Topic ne?",
+    stepLabel: "Topic",
     placeholder: "örnek: practical prompting for small teams",
   },
   {
@@ -283,7 +283,7 @@ export function WizardScreen() {
                 setIndex((v) => Math.max(0, v - 1));
               }}
             >
-              Geri
+              Back
             </Button>
             <Button onClick={goNext} disabled={creating}>
               {creating ? (
@@ -294,7 +294,7 @@ export function WizardScreen() {
               ) : isLastStep ? (
                 "Kitabı hazırla"
               ) : (
-                "Devam"
+                "Continue"
               )}
             </Button>
           </div>

@@ -66,8 +66,8 @@ const PLAN_HIGHLIGHT_ID = "creator"; // "En Popüler" badge gösterilecek plan
 
 const COMPARISON_FEATURES = [
   { label: "Book Production", starter: "10 books/mo", creator: "30 books/mo", pro: "80 books/mo" },
-  { label: "AI Kapak Hakkı", starter: "20 kapak/ay", creator: "60 kapak/ay", pro: "200 kapak/ay" },
-  { label: "AI Bölüm Üretimi", starter: true, creator: true, pro: true },
+  { label: "AI Cover Hakkı", starter: "20 cover/ay", creator: "60 cover/ay", pro: "200 cover/ay" },
+  { label: "AI Chapter Üretimi", starter: true, creator: true, pro: true },
   { label: "Çıkış Formatları", starter: "EPUB + PDF", creator: "EPUB + PDF + HTML", pro: "EPUB + PDF + HTML + MD" },
   { label: "Araştırma Merkezi", starter: false, creator: true, pro: true },
   { label: "KDP Pazar Analizi", starter: false, creator: true, pro: true },
@@ -174,7 +174,7 @@ export function BillingScreen() {
       : null;
 
     if (!response?.ok || !payload?.url) {
-      setCheckoutError(payload?.error || "Ödeme başlatılamadı. Lütfen tekrar dene.");
+      setCheckoutError(payload?.error || "Payment başlatılamadı. Lütfen tekrar dene.");
       autoStartHandledRef.current = false;
       setSubmitting(false);
       return;
@@ -221,7 +221,7 @@ export function BillingScreen() {
     checkoutHandledRef.current = queryKey;
 
     if (checkoutStatus === "cancelled") {
-      setCheckoutNotice("Ödeme iptal edildi.");
+      setCheckoutNotice("Payment iptal edildi.");
       setCheckoutNoticeTone("warning");
       setPendingPlanId(null);
       setSubmitting(false);
@@ -236,7 +236,7 @@ export function BillingScreen() {
       return;
     }
 
-    setCheckoutNotice("Ödeme doğrulanıyor...");
+    setCheckoutNotice("Payment doğrulanıyor...");
     setCheckoutNoticeTone("info");
     setSubmitting(true);
 
@@ -261,7 +261,7 @@ export function BillingScreen() {
       }
 
       if (!payload?.ok) {
-        setCheckoutNotice(payload?.error || "Ödeme doğrulanamadı.");
+        setCheckoutNotice(payload?.error || "Payment doğrulanamadı.");
         setCheckoutNoticeTone("warning");
         setSubmitting(false);
         clearCheckoutQueryParams();
@@ -302,7 +302,7 @@ export function BillingScreen() {
   /* ---- render ---- */
   if (backendUnavailable) {
     return (
-      <AppFrame current="billing" title="Planlar" books={[]}>
+      <AppFrame current="billing" title="Plans" books={[]}>
         <BackendUnavailableState />
       </AppFrame>
     );
@@ -314,7 +314,7 @@ export function BillingScreen() {
       : null;
 
   return (
-    <AppFrame current="billing" title="Planlar" books={books}>
+    <AppFrame current="billing" title="Plans" books={books}>
       <div className="mx-auto max-w-5xl space-y-8 px-4 py-6 md:py-10">
 
         {/* ── Compact Hero ────────────────────────────────────────── */}
@@ -413,7 +413,7 @@ export function BillingScreen() {
                       el?.scrollIntoView({ behavior: "smooth" });
                     }}
                   >
-                    Planları Gör
+                    Plansı Gör
                     <ArrowRight className="ml-1 size-3" />
                   </button>
                 </div>
@@ -426,7 +426,7 @@ export function BillingScreen() {
         <div id="pricing-section" className="billing-animate-in-4">
           <div className="mb-6 text-center">
             <h2 className="font-serif text-2xl font-semibold tracking-tight">
-              Senin İçin En İyi Planı Seç
+              Senin İçin En İyi Select Plan
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Tüm planlar KDP uyumlu formatta. İstediğin zaman iptal et.
@@ -549,7 +549,7 @@ export function BillingScreen() {
                         )}
                         onClick={() => handleSelectPlan(plan.id)}
                       >
-                        {planId === "premium" ? "Yükselt" : "Planı Seç"}
+                        {planId === "premium" ? "Upgrade" : "Select Plan"}
                         <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-0.5" />
                       </Button>
                     )}
@@ -585,7 +585,7 @@ export function BillingScreen() {
                   <tr className="border-b border-border/60 bg-muted/30">
                     <th className="p-3 text-left font-medium text-muted-foreground">Özellik</th>
                     <th className="p-3 text-center font-medium">Temel</th>
-                    <th className="p-3 text-center font-medium text-primary">Yazar</th>
+                    <th className="p-3 text-center font-medium text-primary">Author</th>
                     <th className="p-3 text-center font-medium">Stüdyo</th>
                   </tr>
                 </thead>
@@ -643,7 +643,7 @@ export function BillingScreen() {
             </div>
             <div className="flex items-center gap-2">
               <Lock className="size-4 text-primary" />
-              <span>SSL ile Güvenli Ödeme</span>
+              <span>SSL ile Güvenli Payment</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="size-4 text-emerald-600 dark:text-emerald-400" />
@@ -715,9 +715,9 @@ export function BillingScreen() {
                 <div className="flex items-start gap-2.5">
                   <Shield className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                   <div className="text-xs">
-                    <p className="font-semibold text-foreground">Güvenli Ödeme</p>
+                    <p className="font-semibold text-foreground">Güvenli Payment</p>
                     <p className="text-muted-foreground">
-                      SSL korumalı ödeme. Memnun kalmazsan 14 gün içinde tam iade.
+                      SSL korumalı payment. Memnun kalmazsan 14 gün içinde tam iade.
                     </p>
                   </div>
                 </div>
@@ -743,7 +743,7 @@ export function BillingScreen() {
                 autoStartHandledRef.current = false;
               }}
             >
-              İptal
+              Cancel
             </Button>
             <Button
               variant="primary"
@@ -759,7 +759,7 @@ export function BillingScreen() {
               ) : (
                 <>
                   <Lock className="mr-2 size-4" />
-                  Ödemeye Geç
+                  Paymentye Geç
                 </>
               )}
             </Button>

@@ -6,7 +6,7 @@ export const runtime = "edge";
 export function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const title = searchParams.get("title") ?? "Book Generator";
-  const description = searchParams.get("description") ?? "AI ile kitap üretin";
+  const description = searchParams.get("description") ?? "Produce books with AI";
 
   return new ImageResponse(
     (

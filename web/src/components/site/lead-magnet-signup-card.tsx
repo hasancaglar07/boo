@@ -122,7 +122,7 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
                 <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
                   <div className="space-y-2">
                     <label htmlFor="lead-magnet-email" className="text-sm font-medium text-foreground">
-                      E-posta
+                      Email
                     </label>
                     <Input
                       id="lead-magnet-email"

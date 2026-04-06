@@ -31,11 +31,11 @@ import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM, REFUND_GU
 import { cn } from "@/lib/utils";
 
 const WHAT_YOU_GET = [
-  { icon: FileText, text: "Tüm bölümler — kilitli içerik yok" },
+  { icon: FileText, text: "Tüm chapterler — kilitli içerik yok" },
   { icon: Download, text: "PDF indir, Amazon KDP'ye hazır" },
   { icon: BookOpen, text: "EPUB output — for e-book stores" },
   { icon: Zap, text: "Tam çalışma alanı ve düzenleme araçları" },
-  { icon: Shield, text: "Kapak, arka kapak ve tüm varlıklar" },
+  { icon: Shield, text: "Cover, arka cover ve tüm varlıklar" },
   { icon: CheckCircle2, text: `${KDP_GUARANTEE_CLAIM} + ${REFUND_GUARANTEE_CLAIM}` },
 ];
 
@@ -60,7 +60,7 @@ const PLAN_COMPARE = [
     features: [
       "1 book — full access",
       "PDF + EPUB export",
-      "Kapak ve arka kapak",
+      "Cover ve arka cover",
       "30 gün iade",
     ],
     cta: "$4 ile Bu Kitabı Aç",
@@ -79,10 +79,10 @@ const PLAN_COMPARE = [
     features: [
       "10 books/month",
       "EPUB + PDF export",
-      "Kapak üretimi",
-      "Bölüm editörü",
+      "Cover üretimi",
+      "Chapter editörü",
     ],
-    cta: "$19/ay ile Üretime Devam Et",
+    cta: "$19/ay ile Üretime Continue Et",
     ctaVariant: "outline" as const,
   },
 ];
@@ -126,7 +126,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
   const currentBook = books.find((b) => b.slug === slug) ?? null;
   const mockupBrand =
     currentBook?.branding_mark || currentBook?.publisher || "Book Generator";
-  const mockupLabel = currentBook?.cover_brief || "Ödeme sonrası tam ürün açılır";
+  const mockupLabel = currentBook?.cover_brief || "Payment sonrası tam ürün açılır";
 
   const handleBuy = useCallback(async (planId: string) => {
     trackEvent("paywall_full_unlock_clicked", { slug, plan: planId, source: "upgrade_screen" });
@@ -189,10 +189,10 @@ export function UpgradeScreen({ slug }: { slug: string }) {
       title="Kitabını sahiplen"
       books={books}
     >
-      {/* ── Hero: value prop + kitap mockup ────────────────────────────────── */}
+      {/* ── Hero: value prop + book mockup ────────────────────────────────── */}
       <div className="mb-10 grid gap-8 lg:grid-cols-[380px_minmax(0,1fr)] lg:items-start">
 
-        {/* Kitap mockup — sticky sol kolon */}
+        {/* Book mockup — sticky left column */}
         <div className="lg:sticky lg:top-24">
           <Card className="overflow-hidden border-primary/25 bg-gradient-to-b from-primary/8 to-transparent">
             <CardContent className="p-6">
@@ -224,7 +224,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3">
                   <p className="text-xs font-semibold text-muted-foreground text-center">
-                    {NO_API_COST_CLAIM}. Kapağı ve preview&apos;i gördükten sonra <strong className="text-foreground">ödeme kararı</strong> verirsin
+                    {NO_API_COST_CLAIM}. Kapağı ve preview&apos;i gördükten sonra <strong className="text-foreground">payment kararı</strong> verirsin
                   </p>
                 </div>
               </div>
@@ -242,7 +242,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
               <span className="text-primary">tamamını şimdi sahiplen</span>
             </h1>
             <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">
-              Ön izleme hazır. Kalan bölümleri aç, PDF ve EPUB olarak dışa aktar, Amazon KDP&apos;ye yükle. Önce değeri gördün; şimdi tamamını tek seferde açabilirsin.
+              Preview hazır. Kalan chapterleri aç, PDF ve EPUB olarak dışa aktar, Amazon KDP&apos;ye yükle. Önce değeri gördün; şimdi tamamını tek seferde açabilirsin.
             </p>
           </div>
 
@@ -269,7 +269,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
               &quot;AI yazımı kalitesiz olmaz mı?&quot;
             </p>
             <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-              Çalışma alanında her bölümü düzenleyebilir, yeniden üretebilir ve kendi sesinle revize edebilirsin. Sonuç tamamen senin.
+              Çalışma alanında her chapterü düzenleyebilir, yeniden üretebilir ve kendi sesinle revize edebilirsin. Sonuç tamamen senin.
             </p>
           </div>
 
@@ -392,7 +392,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
           className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline transition-colors"
           onClick={() => router.push(`/app/book/${encodeURIComponent(slug)}/preview`)}
         >
-          ← Önizlemeye dön
+          ← Previewye dön
         </button>
       </div>
 

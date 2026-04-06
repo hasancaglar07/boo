@@ -45,7 +45,7 @@ function MockWindow({
 function renderVisual(visual: FeatureVisual) {
   if (visual === "editor") {
     return (
-      <MockWindow title="Bölüm Planı + Taslak">
+      <MockWindow title="Chapter Plan + Outline">
         <div className="space-y-3">
           {[
             ["01", "Okur vaadi", "Belirli bir okur için net sonuç."],

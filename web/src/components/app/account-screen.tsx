@@ -44,7 +44,7 @@ import {
 const PLAN_LABELS: Record<string, string> = {
   free: "Free",
   starter: "Starter",
-  creator: "Yazar",
+  creator: "Author",
   pro: "Stüdyo",
   premium: "Single Book",
 };
@@ -131,12 +131,12 @@ function AffiliateLinkCopy() {
         {copied ? (
           <>
             <CheckCircle2 className="mr-2 size-4" />
-            Kopyalandı!
+            Copied!
           </>
         ) : (
           <>
             <Copy className="mr-2 size-4" />
-            Affiliate Linkini Kopyala
+            Copy Affiliate Link
           </>
         )}
       </Button>
@@ -290,7 +290,7 @@ export function AccountScreen() {
       : null;
 
     if (!response?.ok || !payload?.viewer) {
-      setSaveError(payload?.error || "Profil güncellenemedi.");
+      setSaveError(payload?.error || "Profile güncellenemedi.");
       setSaving(false);
       return;
     }
@@ -298,7 +298,7 @@ export function AccountScreen() {
     persistViewer(payload.viewer);
     setViewer(payload.viewer);
     setDraft(null);
-    setSaveMessage("Profil ayarları kaydedildi.");
+    setSaveMessage("Profile ayarları kaydedildi.");
     setSaving(false);
   }
 
@@ -335,12 +335,12 @@ export function AccountScreen() {
       : null;
 
     if (!response?.ok) {
-      setVerificationMessage(payload?.error || "Doğrulama maili tekrar gönderilemedi.");
+      setVerificationMessage(payload?.error || "Verifyma maili tekrar gönderilemedi.");
       setVerificationSending(false);
       return;
     }
 
-    setVerificationMessage(payload?.message || "Doğrulama maili tekrar gönderildi.");
+    setVerificationMessage(payload?.message || "Verifyma maili tekrar gönderildi.");
     setVerificationSending(false);
     await refreshViewer();
   }
@@ -355,7 +355,7 @@ export function AccountScreen() {
   return (
     <AppFrame
       current="account"
-      title="Profil ayarları"
+      title="Profile ayarları"
       subtitle="Manage your name, writing goal, and account status."
       books={books}
       viewer={viewer}
@@ -375,7 +375,7 @@ export function AccountScreen() {
                   {viewer ? displayName(viewer.name, viewer.email).slice(0, 2).toUpperCase() : "BG"}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-medium text-muted-foreground">Aktif hesap</div>
+                  <div className="text-xs font-medium text-muted-foreground">Active account</div>
                   <div className="truncate text-xl font-semibold text-foreground">
                     {displayName(viewer?.name, viewer?.email)}
                   </div>
@@ -421,7 +421,7 @@ export function AccountScreen() {
                 <div className="flex items-center gap-2">
                   <Upload className="size-3.5 text-muted-foreground/60" />
                   <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                    Çıktılar
+                    Outputs
                   </div>
                 </div>
                 <div className="mt-3 text-3xl font-bold text-foreground">{compactNumber(exports)}</div>
@@ -440,7 +440,7 @@ export function AccountScreen() {
                     <ShieldAlert className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-foreground">E-posta doğrulaması gerekli</div>
+                    <div className="text-sm font-semibold text-foreground">Email doğrulaması gerekli</div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Verify your email for account security, login recovery, and notifications. This step is required only once.
                     </p>
@@ -452,7 +452,7 @@ export function AccountScreen() {
                         onClick={() => void handleResendVerification()}
                         disabled={verificationSending}
                       >
-                        {verificationSending ? "Gönderiliyor..." : "Doğrulama mailini tekrar gönder"}
+                        {verificationSending ? "Sending..." : "Verifyma mailini tekrar gönder"}
                       </Button>
                     </div>
                     {verificationMessage ? (
@@ -470,9 +470,9 @@ export function AccountScreen() {
                     <CheckCircle2 className="size-5" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-semibold text-foreground">E-posta doğrulandı</div>
+                    <div className="text-sm font-semibold text-foreground">Email doğrulandı</div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Hesabın ödeme, dışa aktarma ve tam erişim akışları için hazır.
+                      Hesabın payment, dışa aktarma ve tam erişim akışları için hazır.
                     </p>
                   </div>
                 </div>
@@ -489,7 +489,7 @@ export function AccountScreen() {
                   <User2 className="size-4.5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-foreground">Profil bilgileri</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Profile bilgileri</h2>
                   <p className="text-sm text-muted-foreground">
                     Kütüphane karşılama alanı ve sihirbaz varsayımları bu bilgilerden beslenir.
                   </p>
@@ -498,7 +498,7 @@ export function AccountScreen() {
 
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="profile-name" className="text-sm">Görünen ad</Label>
+                  <Label htmlFor="profile-name" className="text-sm">Display name</Label>
                   <Input
                     id="profile-name"
                     className="min-h-[48px] mt-2"
@@ -510,7 +510,7 @@ export function AccountScreen() {
                 </div>
 
                 <div>
-                  <Label htmlFor="profile-email" className="text-sm">E-posta</Label>
+                  <Label htmlFor="profile-email" className="text-sm">Email</Label>
                   <div className="mt-2 flex min-h-[48px] items-center rounded-[20px] border border-border/60 bg-card px-4 text-[15px] text-muted-foreground">
                     <Mail className="mr-2 size-4 text-muted-foreground/60" />
                     {viewer?.email || "—"}
@@ -579,7 +579,7 @@ export function AccountScreen() {
                         placeholder="örnek: North Peak Press"
                       />
                       <p className="mt-2 text-xs text-muted-foreground">
-                        Hazır logolardan farklı olarak kendi markanı sihirbaz ve kapak önizlemesine otomatik taşır.
+                        Hazır logolardan farklı olarak kendi markanı sihirbaz ve cover previewsine otomatik taşır.
                       </p>
                     </div>
 
@@ -587,7 +587,7 @@ export function AccountScreen() {
                       <div className="flex items-center gap-2">
                         <ImagePlus className="size-3.5 text-muted-foreground/60" />
                         <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                          Önizleme
+                          Preview
                         </div>
                       </div>
                       <div className="mt-3 flex min-h-[88px] items-center justify-center rounded-[18px] border border-border/50 bg-background/80 px-4 py-4">
@@ -639,7 +639,7 @@ export function AccountScreen() {
                     onClick={() => void handleResendVerification()}
                     disabled={verificationSending}
                   >
-                    {verificationSending ? "Gönderiliyor..." : "Doğrulama Mailini Tekrar Gönder"}
+                    {verificationSending ? "Sending..." : "Verifyma Mailini Tekrar Gönder"}
                   </Button>
                 ) : null}
               </div>
@@ -654,7 +654,7 @@ export function AccountScreen() {
                   <DollarSign className="size-4.5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-foreground">Affiliate — %30 Komisyon</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Affiliate — %30 Commission</h2>
                   <p className="text-sm text-muted-foreground">
                     Özel linkini paylaş, her abonelikten %30 kazan.
                   </p>
@@ -663,7 +663,7 @@ export function AccountScreen() {
 
               <div className="mt-5 rounded-[20px] border border-border/50 bg-background/80 p-4">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                  Affiliate Linkin
+                  Your Affiliate Link
                 </div>
                 <AffiliateLinkCopy />
               </div>
@@ -671,20 +671,20 @@ export function AccountScreen() {
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[16px] border border-border/50 bg-background/50 p-3 text-center">
                   <div className="text-2xl font-bold text-primary">%30</div>
-                  <div className="text-xs text-muted-foreground">Komisyon oranı</div>
+                  <div className="text-xs text-muted-foreground">Commission oranı</div>
                 </div>
                 <div className="rounded-[16px] border border-border/50 bg-background/50 p-3 text-center">
                   <div className="text-2xl font-bold text-foreground">$50</div>
-                  <div className="text-xs text-muted-foreground">Min. ödeme</div>
+                  <div className="text-xs text-muted-foreground">Min. payment</div>
                 </div>
                 <div className="rounded-[16px] border border-border/50 bg-background/50 p-3 text-center">
-                  <div className="text-xs font-medium text-muted-foreground">Sınır yok</div>
-                  <div className="text-xs text-muted-foreground">Davet limiti</div>
+                  <div className="text-xs font-medium text-muted-foreground">No limit</div>
+                  <div className="text-xs text-muted-foreground">Invite limiti</div>
                 </div>
               </div>
 
               <div className="mt-4 rounded-[16px] border border-primary/15 bg-primary/5 px-4 py-3 text-xs leading-5 text-muted-foreground">
-                <strong className="text-foreground">Nasıl çalışır?</strong> Affiliate linkini paylaş. Bağlantından üye olan ve ödeme yapan herkesten kalıcı olarak %30 komisyon kazanırsın. Ödemeler aylık PayPal veya banka transferi ile yapılır.
+                <strong className="text-foreground">Nasıl çalışır?</strong> Affiliate linkini paylaş. Bağlantından üye olan ve payment yapan herkesten kalıcı olarak %30 commission kazanırsın. Paymentler aylık PayPal veya banka transferi ile yapılır.
               </div>
             </CardContent>
           </Card>
@@ -719,11 +719,11 @@ export function AccountScreen() {
                   <div className="flex items-center gap-2">
                     <ShieldAlert className="size-3.5 text-muted-foreground/60" />
                     <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                      Doğrulama
+                      Verifyma
                     </div>
                   </div>
                   <div className="mt-2 text-lg font-semibold text-foreground">
-                    {viewer?.emailVerified ? "Tamam" : "Bekleniyor"}
+                    {viewer?.emailVerified ? "OK" : "Pending"}
                   </div>
                 </div>
                 <div className="rounded-[20px] border border-border/50 bg-background/50 p-4">

@@ -25,7 +25,7 @@ import {
   outlineWordRange,
   saveFunnelDraft,
   savePendingGenerateIntent,
-  suggestedStyleProfile,
+  suggestedStyleProfilee,
   type FunnelDraft,
   type FunnelLanguage,
   type FunnelStep,
@@ -41,9 +41,9 @@ import { pickRandomPublisherLogo } from "@/lib/publisher-logo-library";
 
 const GENERATION_STAGES = [
   "Book showcase is being prepared",
-  "Kapak yönü işleniyor",
-  "İlk okunabilir bölüm yazılıyor",
-  "Ön izleme kütüphaneye bağlanıyor",
+  "Cover yönü işleniyor",
+  "İlk okunabilir chapter yazılıyor",
+  "Preview kütüphaneye bağlanıyor",
 ] as const;
 
 const RANDOM_COVER_BRIEFS = [
@@ -299,7 +299,7 @@ export function GuidedWizardScreen({
   useEffect(() => {
     if (!ready || step !== "style" || autoFillRef.current.style) return;
     autoFillRef.current.style = true;
-    applyRandomStyleProfile(false);
+    applyRandomStyleProfilee(false);
   }, [ready, step]);
 
   useEffect(() => {
@@ -334,7 +334,7 @@ export function GuidedWizardScreen({
 
   async function handleOutlineAi() {
     if (!draft.topic.trim()) {
-      setError("Önce konuyu belirle.");
+      setError("Önce topicyu belirle.");
       router.push(stepHref("topic"));
       return;
     }
@@ -404,8 +404,8 @@ export function GuidedWizardScreen({
     }
   }
 
-  function applyRandomStyleProfile(forceReplace = false) {
-    const style = suggestedStyleProfile(draft);
+  function applyRandomStyleProfilee(forceReplace = false) {
+    const style = suggestedStyleProfilee(draft);
     const preset = pickRandomPublisherLogo();
     const localized = buildRandomStyleCopy(draft);
     updateDraft({
@@ -421,7 +421,7 @@ export function GuidedWizardScreen({
   }
 
   function handleStyleAi() {
-    const style = applyRandomStyleProfile(true);
+    const style = applyRandomStyleProfilee(true);
     setAiLoading("style");
     trackEvent("style_ai_used", {
       tone: style.tone,
@@ -524,7 +524,7 @@ export function GuidedWizardScreen({
 
   if (step === "topic") {
     return wrapInShell({
-      title: "Kitabın konusu ne?",
+      title: "Kitabın topicsu ne?",
       description: "1/5. First select the book language, then write the topic. This selection produces all AI suggestions in the same language.",
       children: <TopicStep draft={draft} onUpdate={updateDraft} onNext={goNext} error={error} onError={setError} />,
     });
@@ -553,8 +553,8 @@ export function GuidedWizardScreen({
 
   if (step === "outline") {
     return wrapInShell({
-      title: "Bölüm planı",
-      description: "3/5. AI ile otomatik oluştur ya da kendin düzenle. Bu adım bittiğinde kitabın omurgası görünür olur.",
+      title: "Chapter planı",
+      description: "3/5. AI ile otomatik generate ya da kendin düzenle. Bu adım bittiğinde kitabın omurgası görünür olur.",
       children: (
         <OutlineStep
           draft={draft}
@@ -574,7 +574,7 @@ export function GuidedWizardScreen({
   if (step === "style") {
     return wrapInShell({
       title: "Dil ve stil",
-      description: "4/5. Bu ekran otomatik doldu. Dili, markayı ve kapağın genel hissini seç; sonraki adımda ön izleme üretimi başlar.",
+      description: "4/5. Bu ekran otomatik doldu. Dili, markayı ve kapağın genel hissini seç; sonraki adımda preview üretimi başlar.",
       children: (
         <StyleStep
           draft={draft}
@@ -592,7 +592,7 @@ export function GuidedWizardScreen({
   }
 
   return wrapInShell({
-    title: "Ön izlemeyi başlat",
+    title: "Previewyi başlat",
     description: appShellEnabled
       ? "5/5. Book showcase is prepared in a single flow. Cover and first readable chapter enter live production in the background."
       : "5/5. To prevent losing the preview, we link it to your account at this stage. The book is saved directly to your library and production continues in the background.",

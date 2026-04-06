@@ -4,13 +4,13 @@ import { languageLabel, bookLengthLabel, type FunnelDraft } from "@/lib/funnel-d
 
 export function SummaryCards({ draft }: { draft: FunnelDraft }) {
   const items = [
-    { label: "Konu", value: draft.topic || "Henüz seçilmedi" },
+    { label: "Topic", value: draft.topic || "Henüz seçilmedi" },
     { label: "Başlık", value: draft.title || "Henüz seçilmedi" },
-    { label: "Yazar", value: draft.authorName || "Henüz girilmedi" },
+    { label: "Author", value: draft.authorName || "Henüz girilmedi" },
     { label: "Branding", value: draft.logoText || draft.imprint || "Henüz girilmedi" },
     { label: "Okur", value: draft.audience || "Henüz seçilmedi" },
     { label: "Dil", value: languageLabel(draft.language) },
-    { label: "Bölümler", value: draft.outline.length ? `${draft.outline.length} bölüm` : "Henüz oluşturulmadu" },
+    { label: "Chapterler", value: draft.outline.length ? `${draft.outline.length} chapter` : "Henüz generateulmadu" },
     { label: "Stil", value: `${languageLabel(draft.language)} • ${bookLengthLabel(draft.bookLength, draft.language)}` },
   ];
 

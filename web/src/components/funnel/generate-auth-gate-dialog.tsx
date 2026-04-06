@@ -55,7 +55,7 @@ export function GenerateAuthGateDialog({
       <DialogContent className="overflow-hidden rounded-[26px] border-[#d8bfac]/60 bg-[linear-gradient(180deg,#fffaf4_0%,#fff7ef_100%)] p-5 shadow-[0_32px_72px_rgba(45,21,10,0.18)] sm:p-6">
         <div className="inline-flex items-center gap-2 rounded-full border border-[#e4d1c1] bg-white/88 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7f5a46]">
           <LockKeyhole className="size-3.5" />
-          Ön İzlemeyi Kaydet
+          Preview Kaydet
         </div>
 
         <h2 id={titleId} className="mt-4 text-2xl font-semibold tracking-tight text-[#2f1f17] sm:text-[30px]">
@@ -65,13 +65,13 @@ export function GenerateAuthGateDialog({
         </h2>
 
         <p id={descriptionId} className="mt-3 text-sm leading-7 text-[#6f5547]">
-          Bu adım ödeme istemez. Ön izleme hazırlanırken kitabının kaybolmaması ve hazır olduğunda kütüphanende görünmesi için hesabını oluşturuyoruz.
+          Bu adım payment istemez. Preview hazırlanırken kitabının kaybolmaması ve hazır olduğunda kütüphanende görünmesi için hesabını generateuyoruz.
         </p>
 
         <div className="mt-5 inline-flex rounded-[16px] border border-[#dcc1ae]/80 bg-white/88 p-1">
           {[
             { value: "register" as const, label: "Create Account" },
-            { value: "login" as const, label: "Giriş Yap" },
+            { value: "login" as const, label: "Log In" },
           ].map((item) => (
             <button
               key={item.value}

@@ -55,15 +55,15 @@ type AppFrameProps = {
 const NAV_ITEMS = [
   { key: "home", href: "/app/library", label: "My Books", icon: Library },
   { key: "new", href: "/app/new/topic", label: "Start Book", icon: Plus },
-  { key: "account", href: "/app/settings/profile", label: "Ayarlar", icon: User2 },
-  { key: "billing", href: "/app/settings/billing", label: "Planlar", icon: CreditCard },
+  { key: "account", href: "/app/settings/profile", label: "Settings", icon: User2 },
+  { key: "billing", href: "/app/settings/billing", label: "Plans", icon: CreditCard },
   { key: "affiliate", href: "/app/affiliate", label: "Affiliate %30", icon: DollarSign },
 ] as const;
 
 const PLAN_LABELS: Record<string, string> = {
   free: "Free",
   starter: "Starter",
-  creator: "Yazar",
+  creator: "Author",
   pro: "Stüdyo",
   premium: "Single Book",
 };
@@ -299,14 +299,14 @@ function SidebarContent({
               className="rounded-full border border-sidebar-border bg-sidebar px-3 py-1 text-xs font-medium text-sidebar-foreground transition-colors hover:bg-sidebar"
               onClick={() => go("/app/settings/profile")}
             >
-              Profil
+              Profile
             </button>
             <button
               type="button"
               className="rounded-full border border-sidebar-border bg-sidebar px-3 py-1 text-xs font-medium text-sidebar-foreground transition-colors hover:bg-sidebar"
               onClick={() => go("/app/settings/billing")}
             >
-              Planlar
+              Plans
             </button>
             {viewer.role !== "USER" ? (
               <button
@@ -324,7 +324,7 @@ function SidebarContent({
                 onClick={() => void onResendVerification?.()}
                 disabled={verificationSending}
               >
-                {verificationSending ? "Gönderiliyor..." : "Doğrula"}
+                {verificationSending ? "Sending..." : "Verify"}
               </button>
             ) : null}
           </div>
@@ -445,12 +445,12 @@ export function AppFrame({
       : null;
 
     if (!response?.ok) {
-      setVerificationMessage(payload?.error || "Doğrulama maili tekrar gönderilemedi.");
+      setVerificationMessage(payload?.error || "Verifyma maili tekrar gönderilemedi.");
       setVerificationSending(false);
       return;
     }
 
-    setVerificationMessage(payload?.message || "Doğrulama maili tekrar gönderildi.");
+    setVerificationMessage(payload?.message || "Verifyma maili tekrar gönderildi.");
     setVerificationSending(false);
     await refreshViewer();
   }
@@ -592,12 +592,12 @@ export function AppFrame({
                           {currentViewer.emailVerified ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                               <CheckCircle2 className="size-3.5" />
-                              Doğrulandı
+                              Verifyndı
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
                               <ShieldCheck className="size-3.5" />
-                              Doğrulama bekleniyor
+                              Verifyma bekleniyor
                             </span>
                           )}
                         </div>
@@ -607,14 +607,14 @@ export function AppFrame({
                     <div className="mt-2 space-y-1">
                       <MenuLink
                         href="/app/settings/profile"
-                        label="Profil ayarları"
+                        label="Profile ayarları"
                         description="Manage your name, writing goal, and account status."
                         onSelect={() => setAccountMenuOpen(false)}
                       />
                       <MenuLink
                         href="/app/settings/billing"
-                        label="Planlar"
-                        description="Paketini, erişim durumunu ve ödeme akışını gör."
+                        label="Plans"
+                        description="Paketini, erişim durumunu ve payment akışını gör."
                         onSelect={() => setAccountMenuOpen(false)}
                       />
                       {currentViewer.role !== "USER" ? (
@@ -667,14 +667,14 @@ export function AppFrame({
                       onClick={() => void handleResendVerification()}
                       disabled={verificationSending}
                     >
-                    {verificationSending ? "Gönderiliyor..." : "Doğrulama mailini tekrar gönder"}
+                    {verificationSending ? "Sending..." : "Verifyma mailini tekrar gönder"}
                     </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => router.push("/app/settings/profile")}
                   >
-                    Profil ayarlarını aç
+                    Profile ayarlarını aç
                   </Button>
                 </div>
               </div>

@@ -140,7 +140,7 @@ export function AffiliateDashboard() {
                 <CheckCircle2 className="mr-1 size-3" />
                 Aktif
               </Badge>
-              <Badge className="border-border/40">%30 Komisyon</Badge>
+              <Badge className="border-border/40">%30 Commission</Badge>
             </div>
 
             <h2 className="mt-5 text-balance text-3xl font-bold leading-tight text-foreground md:text-4xl lg:text-5xl">
@@ -148,7 +148,7 @@ export function AffiliateDashboard() {
             </h2>
 
             <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
-              Kayıt olduğunuz anda affiliate linkiniz otomatik oluştu. Aşağıdaki linki kopyalayıp paylaşarak her ödeme yapan üyeden <strong className="text-foreground">%30 komisyon</strong> kazanabilirsiniz.
+              Kayıt olduğunuz anda affiliate linkiniz otomatik oluştu. Aşağıdaki linki kopyalayıp paylaşarak her payment yapan üyeden <strong className="text-foreground">%30 commission</strong> kazanabilirsiniz.
             </p>
 
             {/* ── Affiliate URL kutusu ── */}
@@ -164,7 +164,7 @@ export function AffiliateDashboard() {
                 >
                   <LinkIcon className="size-4 shrink-0 text-primary/60" />
                   <span className="min-w-0 flex-1 truncate font-mono text-sm text-foreground select-all">
-                    {data?.referralUrl || "Yükleniyor..."}
+                    {data?.referralUrl || "Loading..."}
                   </span>
                   <Copy className="size-4 shrink-0 text-muted-foreground/60" />
                 </div>
@@ -180,7 +180,7 @@ export function AffiliateDashboard() {
                   {copied ? (
                     <>
                       <CheckCircle2 className="mr-1.5 size-4" />
-                      Kopyalandı!
+                      Copied!
                     </>
                   ) : (
                     <>
@@ -232,25 +232,25 @@ export function AffiliateDashboard() {
 
             <div className="mt-5 flex flex-wrap gap-2">
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
-                Komisyon: %30
+                Commission: %30
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
-                Min. ödeme: $50
+                Min. payment: $50
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
-                Aylık ödeme
+                Aylık payment
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
-                Sınır yok
+                No limit
               </div>
             </div>
 
-            {/* ── Ödeme Talebi ── */}
+            {/* ── Payment Talebi ── */}
             {data && (
               <div className="mt-8 rounded-[20px] border border-border/60 bg-card/40 p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <BadgeDollarSign className="size-4 text-emerald-600 dark:text-emerald-400" />
-                  <h3 className="text-sm font-semibold text-foreground">Ödeme Talebi</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Payment Talebi</h3>
                 </div>
                 <div className="flex items-center gap-4 text-sm">
                   <div>
@@ -288,7 +288,7 @@ export function AffiliateDashboard() {
                   }}
                 >
                   <BadgeDollarSign className="mr-1.5 size-4" />
-                  {data.availableBalance >= 50 ? "Request Payout" : `Min. $50 gerekli (Eksik: $${(50 - data.availableBalance).toFixed(2)})`}
+                  {data.availableBalance >= 50 ? "Request Payout" : `Min. $50 required (Remaining: $${(50 - data.availableBalance).toFixed(2)})`}
                 </Button>
               </div>
             )}
@@ -326,13 +326,13 @@ export function AffiliateDashboard() {
             ))}
           </div>
 
-          {/* Komisyon tablosu */}
+          {/* Commission tablosu */}
           <Card className="border-border/60 bg-card/50">
             <CardContent className="p-5">
               <div className="mb-3 flex items-center gap-2">
                 <DollarSign className="size-3.5 text-muted-foreground/60" />
                 <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                  Komisyon Tablosu
+                  Commission Tablosu
                 </div>
               </div>
 
@@ -379,7 +379,7 @@ export function AffiliateDashboard() {
                 {
                   icon: Share2,
                   label: "Paylaş",
-                  description: "Sosyal medya, blog, e-posta veya WhatsApp'tan paylaş.",
+                  description: "Share via social media, blog, email, or WhatsApp.",
                 },
                 {
                   icon: Gift,
@@ -436,14 +436,14 @@ export function AffiliateDashboard() {
             </Card>
           )}
 
-          {/* Ödeme Geçmişi */}
+          {/* Payment Geçmişi */}
           {data && data.payoutRequests.length > 0 && (
             <Card className="border-border/60 bg-card/50">
               <CardContent className="p-5">
                 <div className="mb-3 flex items-center gap-2">
                   <BadgeDollarSign className="size-3.5 text-muted-foreground/60" />
                   <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                    Ödeme Geçmişi
+                    Payment Geçmişi
                   </div>
                 </div>
                 <div className="space-y-2">

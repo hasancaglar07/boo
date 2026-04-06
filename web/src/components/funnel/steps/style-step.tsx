@@ -31,11 +31,11 @@ type StyleTab = "identity" | "cover" | "advanced";
 
 const TAB_CONFIG: Array<{ key: StyleTab; label: string }> = [
   { key: "identity", label: "Kimlik" },
-  { key: "cover", label: "Kapak" },
-  { key: "advanced", label: "Ayarlar" },
+  { key: "cover", label: "Cover" },
+  { key: "advanced", label: "Settings" },
 ];
 
-function getProfilePublisherBrand() {
+function getProfileePublisherBrand() {
   const account = getAccount();
   const planId = getPlan();
   if (planId !== "pro") return null;
@@ -119,7 +119,7 @@ export function StyleStep({
   appShell: boolean;
 }) {
   const logoInputRef = useRef<HTMLInputElement | null>(null);
-  const profileBrand = getProfilePublisherBrand();
+  const profileBrand = getProfileePublisherBrand();
   const [activeTab, setActiveTab] = useState<StyleTab>("identity");
 
   const selectedLogoPreset = useMemo(
@@ -178,7 +178,7 @@ export function StyleStep({
         disabled={aiLoading === "style"}
       >
         <Sparkles className="size-4" />
-        {aiLoading === "style" ? "AI oluşturuyor…" : "AI ile oluştur"}
+        {aiLoading === "style" ? "AI generateuyor…" : "AI ile generate"}
       </Button>
 
       {/* ── Tab: Identity ── */}
@@ -187,7 +187,7 @@ export function StyleStep({
           {/* Author name */}
           <div className="space-y-2">
             <label htmlFor="author-name" className="text-base sm:text-lg font-bold">
-              Yazar adı
+              Author adı
             </label>
             <Input
               id="author-name"
@@ -318,7 +318,7 @@ export function StyleStep({
           {/* Cover brief */}
           <div className="space-y-2">
             <label htmlFor="cover-brief" className="text-base sm:text-lg font-bold">
-              Kapak vurgusu
+              Cover vurgusu
             </label>
             <Input
               id="cover-brief"
@@ -356,7 +356,7 @@ export function StyleStep({
                   })
                 }
               >
-                Profil logosu
+                Profile logosu
               </Button>
             ) : null}
           </div>
@@ -417,7 +417,7 @@ export function StyleStep({
 
           {/* Cover direction */}
           <div className="space-y-3">
-            <div className="text-base sm:text-lg font-bold">Kapak yönü</div>
+            <div className="text-base sm:text-lg font-bold">Cover yönü</div>
             <PillSelector
               options={COVER_DIRECTIONS}
               selected={draft.coverDirection}
@@ -458,4 +458,4 @@ export function StyleStep({
       ) : null}
     </form>
   );
-}
+}

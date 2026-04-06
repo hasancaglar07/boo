@@ -82,22 +82,22 @@ export function ReferralShareDialog({ open, onOpenChange }: ReferralShareDialogP
             <Share2 className="size-3.5" />
             Arkadaşlarını davet et
           </div>
-          <DialogTitle>Affiliate Linkini Paylaş, %30 Komisyon Kazan!</DialogTitle>
+          <DialogTitle>Your Affiliate Linki Paylaş, %30 Commission Kazan!</DialogTitle>
           <DialogDescription>
-            Arkadaşların senin linkinden üye olup ödeme yaparsa, her ödemenin %30'unu komisyon olarak kazanırsın. Davetiye linki zorunludur — üye olmak için senin linkini kullanmalılar.
+            Arkadaşların senin linkinden üye olup payment yaparsa, her paymentnin %30'unu commission olarak kazanırsın. Inviteiye linki zorunludur — üye olmak için senin linkini kullanmalılar.
           </DialogDescription>
         </DialogHeader>
 
         <div className="mt-4 space-y-4">
           <div className="flex items-center gap-2 rounded-[14px] border border-border/60 bg-muted/40 px-3 py-2">
             <span className="flex-1 truncate font-mono text-xs text-muted-foreground">
-              {data ? data.referralUrl : "Yükleniyor..."}
+              {data ? data.referralUrl : "Loading..."}
             </span>
             <Button variant="outline" size="sm" onClick={handleCopy} disabled={!data}>
               {copied ? (
                 <>
                   <Check className="mr-1 size-3.5" />
-                  Kopyalandı
+                  Copied
                 </>
               ) : (
                 <>

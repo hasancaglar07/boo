@@ -8,7 +8,7 @@ export function LiveBookCard({ draft }: { draft: FunnelDraft }) {
     draft.subtitle ||
     "As title, subtitle, and cover direction progress, a clearer book feel emerges here.";
   const displayBrand = draft.logoText || draft.imprint || "Wordmark";
-  const displayAuthor = draft.authorName || "Yazar adı";
+  const displayAuthor = draft.authorName || "Author adı";
 
   return (
     <div className="max-h-[140px] overflow-hidden rounded-xl border border-border/80 bg-[#2a1e16] p-3 text-white">

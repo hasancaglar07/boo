@@ -88,7 +88,7 @@ export function OutlineStep({
         ...draft.outline,
         {
           title: defaultChapterReference(draft.language, nextIndex + 1),
-          summary: isTurkishLanguage(draft.language) ? "Bu bölümün kısa amacı." : "Short purpose of this chapter.",
+          summary: isTurkishLanguage(draft.language) ? "Bu chapterün kısa amacı." : "Short purpose of this chapter.",
           role: "core",
           length: draft.bookLength === "extended" ? "long" : "medium",
         },
@@ -120,7 +120,7 @@ export function OutlineStep({
     >
       {/* ── Word Count Estimate ── */}
       <p className="text-base font-medium text-muted-foreground rounded-xl bg-muted/50 px-4 py-3">
-        📊 ~{formatWordCount(avgWordEstimate)} kelime · {draft.outline.length} bölüm · ~{estimatedPages} sayfa
+        📊 ~{formatWordCount(avgWordEstimate)} kelime · {draft.outline.length} chapter · ~{estimatedPages} sayfa
       </p>
 
       {/* ── Book Length Selector — Horizontal Pill Buttons ── */}
@@ -155,7 +155,7 @@ export function OutlineStep({
       {/* ── Chapter Plan Header ── */}
       <div className="flex items-center justify-between gap-3">
         <label className="text-base sm:text-lg font-bold text-foreground">
-          Bölüm planı
+          Chapter planı
         </label>
         <button
           type="button"
@@ -164,7 +164,7 @@ export function OutlineStep({
           className="inline-flex h-12 items-center gap-2 rounded-2xl bg-primary/8 border border-primary/20 px-5 text-sm sm:text-base font-semibold text-primary hover:bg-primary/15 active:scale-[0.97] transition-all disabled:opacity-50 disabled:pointer-events-none"
         >
           <Sparkles className="size-4" />
-          {aiLoading === "outline" ? "Oluşturuluyor…" : "✨ AI ile Oluştur"}
+          {aiLoading === "outline" ? "Generateuluyor…" : "✨ AI ile Generate"}
         </button>
       </div>
 
@@ -224,7 +224,7 @@ export function OutlineStep({
                         id={`outline-title-${index}`}
                         value={item.title}
                         onChange={(event) => onUpdateOutline(index, { title: event.target.value })}
-                        placeholder="Bölüm başlığı"
+                        placeholder="Chapter başlığı"
                         className="h-11 text-sm px-3 rounded-xl"
                       />
                     </div>
@@ -241,7 +241,7 @@ export function OutlineStep({
                         id={`outline-summary-${index}`}
                         value={item.summary}
                         onChange={(event) => onUpdateOutline(index, { summary: event.target.value })}
-                        placeholder="Bu bölümde ne anlatılacak?"
+                        placeholder="Bu chapterde ne anlatılacak?"
                         rows={3}
                         className="min-h-[80px] text-sm px-3 py-2.5 rounded-xl resize-none leading-relaxed"
                       />
@@ -322,7 +322,7 @@ export function OutlineStep({
         className="w-full h-12 rounded-2xl border border-dashed border-border/60 px-5 text-base font-medium text-muted-foreground hover:border-primary/40 hover:text-primary transition-all"
       >
         <Plus className="size-4 inline-block mr-1.5 -mt-0.5" />
-        Bölüm ekle
+        Chapter ekle
       </button>
 
       {/* ── Error ── */}

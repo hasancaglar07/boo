@@ -63,10 +63,10 @@ export function ReferralBanner() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-sm font-bold text-foreground">
-              Affiliate Linkin — %30 Komisyon
+              Your Affiliate Link — %30 Commission
             </div>
             <div className="text-xs text-muted-foreground">
-              Linkinden üye olan ve ödeme yapan herkesten kalıcı %30 kazan.
+              Linkinden üye olan ve payment yapan herkesten kalıcı %30 kazan.
             </div>
           </div>
           {data.clicks > 0 && (
@@ -91,12 +91,12 @@ export function ReferralBanner() {
           {copied ? (
             <>
               <CheckCircle2 className="mr-2 size-4.5" />
-              Kopyalandı!
+              Copied!
             </>
           ) : (
             <>
               <Copy className="mr-2 size-4" />
-              Affiliate Linkini Kopyala
+              Copy Affiliate Link
             </>
           )}
         </Button>
@@ -125,7 +125,7 @@ export function ReferralBanner() {
 
         {/* Info line */}
         <p className="mt-2.5 text-center text-[10px] leading-4 text-muted-foreground/70">
-          Sınır yok • Min. ödeme $50 • Aylık ödeme
+          No limit • Min. payment $50 • Aylık payment
         </p>
       </CardContent>
     </Card>

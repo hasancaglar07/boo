@@ -93,7 +93,7 @@ export function ContactForm() {
               <Mail className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground">E-posta</h4>
+              <h4 className="font-semibold text-foreground">Email</h4>
               <p className="mt-1 text-sm text-muted-foreground">{PUBLIC_SUPPORT_EMAIL}</p>
             </div>
           </div>
@@ -157,7 +157,7 @@ export function ContactForm() {
 
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-foreground">
-                  E-posta *
+                  Email *
                 </label>
                 <input
                   type="email"

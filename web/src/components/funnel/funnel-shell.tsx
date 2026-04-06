@@ -9,11 +9,11 @@ import { FUNNEL_STEPS, type FunnelStep } from "@/lib/funnel-draft";
 import { cn } from "@/lib/utils";
 
 const STEP_LABELS: Record<FunnelStep, string> = {
-  topic: "Konu",
+  topic: "Topic",
   title: "Başlık",
-  outline: "Bölümler",
+  outline: "Chapterler",
   style: "Stil",
-  generate: "Oluştur",
+  generate: "Generate",
 };
 
 export function FunnelShell({
@@ -50,7 +50,7 @@ export function FunnelShell({
               <span className="relative block h-6 w-[100px] overflow-hidden sm:h-7 sm:w-[120px]">
                 <Image
                   src="/logo.png"
-                  alt="Kitap Oluşturucu"
+                  alt="Book Generateucu"
                   className="h-full w-full object-contain object-left dark:hidden"
                   fill
                   priority
@@ -58,7 +58,7 @@ export function FunnelShell({
                 />
                 <Image
                   src="/dark-logo.png"
-                  alt="Kitap Oluşturucu"
+                  alt="Book Generateucu"
                   className="hidden h-full w-full object-contain object-left dark:block"
                   fill
                   priority
@@ -192,7 +192,7 @@ export function FunnelShell({
           <div className="mx-auto max-w-[640px] px-4 sm:px-6">
             <div className="flex items-center gap-3 h-[72px] sm:h-[76px]">
 
-              {/* Geri */}
+              {/* Back */}
               <button
                 type="button"
                 disabled={activeIndex === 0}
