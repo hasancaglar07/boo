@@ -410,7 +410,7 @@ export function HomeScreen() {
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {viewer.usage.reason === "monthly_quota_reached"
                     ? "You have reached your monthly book quota. Upgrade your plan or wait for the next cycle."
-                    : "Mevcut planın ilk book preview’ını kullandı. Yeni book için planlardan birini seç."}
+: "Current plan has used the first book preview. Choose a plan for a new book."}
                 </p>
                 <div className="mt-3">
                   <Button
