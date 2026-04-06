@@ -12,11 +12,11 @@ export interface Cta4Props {
 }
 
 const defaultItems = [
-  "5 soruluk hızlı başlangıç sihirbazı",
+  "5-question quick start wizard",
   "EPUB önce, PDF sonra",
   "Cover and metadata flow",
   "Editable chapter structure",
-  "AI destekli araştırma katmanı",
+  "AI-powered research layer",
 ] as const;
 
 export function Cta4({
@@ -40,7 +40,7 @@ export function Cta4({
                 {/* Guarantee badge */}
                 <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#f0a27f]/30 bg-[#f0a27f]/10 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#f0a27f]">
                   <ShieldCheck className="size-3.5" />
-                  %100 KDP onay garantisi
+                  %100 KDP approval guarantee
                 </div>
 
                 <h2 className="mb-3 text-balance text-3xl font-semibold tracking-tight text-white md:text-4xl">
@@ -56,7 +56,7 @@ export function Cta4({
                 </Button>
 
                 <p className="mt-3 text-xs text-stone-400">
-                  Kredi kartı gerekmez · {NO_API_COST_CLAIM}
+                  No credit card required · {NO_API_COST_CLAIM}
                 </p>
 
                 {/* Social proof row */}
@@ -64,7 +64,7 @@ export function Cta4({
                   {[
                     KDP_LIVE_BOOKS_CLAIM,
                     FULL_TRUST_CLAIM,
-                    "Önce preview, sonra ödeme",
+                    "Preview first, pay later",
                     "$4 unlock for a single book",
                   ].map((item) => (
                     <span

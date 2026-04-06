@@ -69,7 +69,7 @@ function renderVisual(visual: FeatureVisual) {
     return (
       <div className="relative flex h-full items-end justify-center overflow-hidden rounded-[22px] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_10%,transparent),transparent)] px-4 pb-3 pt-8">
         {[
-          ["Komut Sistemleri", "amber", "Maya Brooks"],
+          ["Command Systems", "amber", "Maya Brooks"],
           ["Research Notes", "zinc", "David Hale"],
           ["Road to Publication", "orange", "Ayla Kent"],
         ].map(([title, tone, author], index) => (
@@ -136,11 +136,11 @@ function renderVisual(visual: FeatureVisual) {
           ["EPUB", "Primary delivery format"],
           ["PDF", "Fixed layout"],
           ["Book details", "Author, ISBN, publisher"],
-          ["Arşiv", "Zaman damgalı çıktı klasörü"],
+          ["Archive", "Timestamped output folder"],
         ].map(([title, text]) => (
           <div key={title} className="rounded-2xl border border-border/80 bg-card p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              {title === "Arşiv" ? (
+              {title === "Archive" ? (
                 <FileArchive className="size-4 text-primary" />
               ) : title === "Book information" ? (
                 <SquareStack className="size-4 text-primary" />

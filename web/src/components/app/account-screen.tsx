@@ -43,18 +43,18 @@ function buildChecklistItems(
   return [
     {
       id: "account_created",
-      label: "Hesap oluştur",
-      description: "E-posta ile kayıt oldun",
+      label: "Create account",
+      description: "Signed up with email",
       icon: <User className="size-4" />,
       completed: true, // always true if viewing this page
     },
     {
       id: "profile_name",
-      label: "İsim ekle",
-      description: hasName ? account.name : "Profiline gerçek adını ekle",
+      label: "Add name",
+      description: hasName ? account.name : "Add your real name to your profile",
       icon: <User className="size-4" />,
       completed: hasName,
-      action: hasName ? undefined : { label: "Düzenle", href: "/app/settings/profile" },
+      action: hasName ? undefined : { label: "Edit", href: "/app/settings/profile" },
     },
     {
       id: "set_goal",
@@ -67,7 +67,7 @@ function buildChecklistItems(
     {
       id: "first_book",
       label: "İlk kitabı oluştur",
-      description: hasBook ? `${books.length} kitap oluşturdun` : "Wizard ile ilk kitabını yaz",
+      description: hasBook ? `${books.length} books created` : "Wizard ile ilk kitabını yaz",
       icon: <BookOpen className="size-4" />,
       completed: hasBook,
       action: hasBook ? undefined : { label: "Başla", href: "/app/new" },
@@ -78,7 +78,7 @@ function buildChecklistItems(
       description: "AI ile kitap kapağı oluştur",
       icon: <ImageIcon className="size-4" />,
       completed: hasBook, // proxy: if they have a book they've seen cover step
-      action: hasBook ? undefined : { label: "Kitap Oluştur", href: "/app/new" },
+      action: hasBook ? undefined : { label: "Create Book", href: "/app/new" },
     },
     {
       id: "first_export",
@@ -165,7 +165,7 @@ function CelebrationBanner({ onDismiss }: { onDismiss: () => void }) {
         <div className="flex-1">
           <p className="text-base font-bold text-foreground">Profilin %100 tamamlandı!</p>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Harika iş! Tüm adımları tamamladın. Artık kitap yazma yolculuğuna tam hazırsın.
+            Great job! All steps completed. You are now fully ready for your book writing journey.
           </p>
           <div className="mt-3 flex gap-2">
             <Button size="sm" onClick={() => void 0}>
@@ -380,7 +380,7 @@ export function AccountScreen() {
               <div className="mt-3 text-xl font-medium text-foreground">{account.name}</div>
             ) : (
               <div className="mt-3">
-                <EmptyStateMessage label="İsim eklenmemiş." actionLabel="Ekle" href="/app/settings/profile" />
+                <EmptyStateMessage label="Add namenmemiş." actionLabel="Ekle" href="/app/settings/profile" />
               </div>
             )}
           </CardContent>

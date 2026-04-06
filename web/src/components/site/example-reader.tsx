@@ -57,7 +57,7 @@ function ExportButton({
         {label}
       </div>
       <div className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
-        Çıktıyı aç <Download className="size-3.5 transition group-hover:translate-y-0.5" />
+        Open output <Download className="size-3.5 transition group-hover:translate-y-0.5" />
       </div>
     </a>
   );
@@ -319,7 +319,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
               <div className="sticky top-24 space-y-5">
                 <div className="rounded-[28px] border border-border/80 bg-background p-5 shadow-sm">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    İçindekiler
+                    Table of Contents
                   </div>
                   <div className="mt-4 space-y-2" dir={item.direction}>
                     {item.chaptersContent.map((chapter) => (
@@ -347,7 +347,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
                     Exact Outputs
                   </div>
                   <div className="mt-4 space-y-3">
-                    <ExportButton asset={item.exports.html} label="Birebir HTML'i aç" slug={item.slug} format="html" />
+                    <ExportButton asset={item.exports.html} label="Full HTML Openç" slug={item.slug} format="html" />
                     <ExportButton asset={item.exports.pdf} label="PDF'i görüntüle" slug={item.slug} format="pdf" />
                     <ExportButton asset={item.exports.epub} label="Download EPUB" slug={item.slug} format="epub" />
                   </div>

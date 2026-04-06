@@ -141,7 +141,7 @@ export function OnboardingChecklist() {
                 Now continue with the full book and export features.
               </p>
               <Button size="sm" className="mt-3" onClick={handleGetStarted}>
-                Premium&apos;a Geç
+                Upgrade to Premium&apos;a Geç
               </Button>
             </div>
           </div>

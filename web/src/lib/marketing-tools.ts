@@ -1,4 +1,4 @@
-﻿import {
+import {
   evaluateBookIdea,
   mapValidatorIntentToBookType,
   mapValidatorLanguageToFunnelLanguage,
@@ -746,7 +746,7 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
     },
     {
       key: "audience",
-      label: "Kitle sinyali",
+      label: "Audience signal",
       score: clamp(42 + wordsBonus(audience, 6, 6) + regexBonus(`${subtitle} ${audience}`, AUDIENCE_PATTERN, 12), 34, 95),
       summary: "The clearer the title's call to action, the more correct clicks increase.",
     },
@@ -1427,18 +1427,18 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
       },
       {
         icon: "target",
-        title: "Kitle sinyali",
+        title: "Audience signal",
         description: "Doğru okuru çağırıp çağırmadığını hızlıca okursun.",
       },
     ],
     fields: [
       { name: "title", label: "Başlık", type: "input", placeholder: "Örn. Silent Offers", minLength: 3, required: true },
       { name: "subtitle", label: "Subtitle", type: "textarea", placeholder: "Örn. How boutique consultants turn trust into inbound pipeline without daily content chaos", minLength: 8, required: true },
-      { name: "audience", label: "Hedef okur", type: "input", placeholder: "Örn. danışmanlar, creator'lar, KDP okurları", minLength: 6, required: true },
+      { name: "audience", label: "Target reader", type: "input", placeholder: "Örn. danışmanlar, creator'lar, KDP okurları", minLength: 6, required: true },
       { name: "goal", label: "Başlık hangi sonucu satmalı?", type: "input", placeholder: "Örn. lead, authority, satış veya net bir dönüşüm", minLength: 8, required: true },
       {
         name: "intent",
-        label: "Kitap tipi",
+        label: "Book type",
         type: "select",
         required: true,
         options: [

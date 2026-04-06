@@ -288,7 +288,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
 
                   <Button size="lg" className="w-full gap-2" onClick={handleAnalyze} isLoading={analysisState === "analyzing"}>
                     <Sparkles className="size-4" />
-                    Analizi Çalıştır
+                    Run Analysis
                   </Button>
 
                   <p className="text-center text-xs leading-6 text-muted-foreground">
@@ -308,7 +308,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
               <p className="editorial-eyebrow">Instant Report</p>
               <h2 className="editorial-title mt-4 text-foreground">Don't just score. See why the angle works.</h2>
               <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground">
-                This tool doesn't just give a numerical score. It clearly shows how clear your idea is, where it weakens, and which format works better. gösterir.
+                This tool doesn't just give a numerical score. It clearly shows how clear your idea is, where it weakens, and which format works better.
               </p>
             </div>
 
@@ -323,7 +323,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                 ) : analysisState === "analyzing" ? (
                   <div className="rounded-[24px] border border-primary/20 bg-primary/5 p-8">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Analyzing</p>
-                    <h3 className="mt-4 font-serif text-3xl font-semibold text-foreground">Tool sinyalleri toparlanıyor...</h3>
+                    <h3 className="mt-4 font-serif text-3xl font-semibold text-foreground">Collecting tool signals...</h3>
                     <div className="mt-6 space-y-3">
                       {["Calculating core score", "Preparing format suggestion", "Opening full report sections"].map((item, index) => (
                         <div key={item} className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -373,7 +373,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
 
                       <Card className="border border-border/80 bg-background/70">
                         <CardContent className="p-6">
-                          <p className="text-sm font-semibold text-foreground">Ne sıkılaştırılmalı?</p>
+                          <p className="text-sm font-semibold text-foreground">What needs tightening?</p>
                           <ul className="mt-4 space-y-3">
                             {result.risks.map((risk) => (
                               <li key={risk} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">
@@ -410,7 +410,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                           <div>
                             <div className="flex items-center gap-2 text-primary">
                               <Mail className="size-4" />
-                              <p className="text-sm font-semibold">Tam raporu aç</p>
+                              <p className="text-sm font-semibold">Open full report</p>
                             </div>
                             <h3 className="mt-3 font-serif text-3xl font-semibold text-foreground">{activeTool.gateTitle}</h3>
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">{activeTool.gateDescription}</p>

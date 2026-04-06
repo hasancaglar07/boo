@@ -516,7 +516,9 @@ export function WorkspaceScreen({
                           }).catch((error) => addToast(error instanceof Error ? error.message : "Cover generation failed.", "error"))
                         }
                       >
-                        <Sparkles className="mr-2 size-4Regenerate Cover"} onChange={(e) => updateDraft({ description: e.target.value })} />
+                        <Sparkles className="mr-2 size-4" />
+                        Regenerate Cover
+                      </Button>
                 </div>
                 <div>
                   <Label>Author biography</Label>
