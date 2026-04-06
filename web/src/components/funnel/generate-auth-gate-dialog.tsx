@@ -59,13 +59,13 @@ export function GenerateAuthGateDialog({
         </div>
 
         <h2 id={titleId} className="mt-4 text-2xl font-semibold tracking-tight text-[#2f1f17] sm:text-[30px]">
-          Hazırlanan kitabı
+          The prepared book
           <br />
-          hesabına kaydedelim
+          let's save it to your account
         </h2>
 
         <p id={descriptionId} className="mt-3 text-sm leading-7 text-[#6f5547]">
-          Bu adım payment istemez. Preview hazırlanırken kitabının kaybolmaması ve hazır olduğunda kütüphanende görünmesi için hesabını generateuyoruz.
+          This step doesn't require payment. We're creating your account so your book doesn't get lost during preview generation and appears in your library when ready.
         </p>
 
         <div className="mt-5 inline-flex rounded-[16px] border border-[#dcc1ae]/80 bg-white/88 p-1">
@@ -116,7 +116,7 @@ export function GenerateAuthGateDialog({
             disabled={busy}
             onClick={() => onOpenChange(false)}
           >
-            Vazgeç
+            Cancel
           </Button>
         </div>
       </DialogContent>

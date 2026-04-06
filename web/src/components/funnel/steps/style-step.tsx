@@ -48,11 +48,11 @@ function getProfileePublisherBrand() {
 function readImageAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Logo dosyası okunamadı."));
+    reader.onerror = () => reject(new Error("Logo file could not be read."));
     reader.onload = () => {
       const result = String(reader.result || "");
       if (!result.startsWith("data:image/")) {
-        reject(new Error("Geçerli bir görsel yüklenemedi."));
+        reject(new Error("A valid image could not be loaded."));
         return;
       }
       resolve(result);
@@ -129,18 +129,18 @@ export function StyleStep({
 
   async function handleLogoUpload(file: File) {
     if (!file.type.startsWith("image/")) {
-      onError("Yalnızca görsel dosyası yükleyebilirsin.");
+      onError("Only image files can be uploaded.");
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      onError("Logo dosyası 2 MB'den küçük olmalı.");
+      onError("Logo file must be smaller than 2 MB.");
       return;
     }
     try {
       const dataUrl = await readImageAsDataUrl(file);
       onUpdate({ logoUrl: dataUrl });
     } catch (cause) {
-      onError(cause instanceof Error ? cause.message : "Logo yüklenemedi.");
+      onError(cause instanceof Error ? cause.message : "Logo could not be uploaded.");
     }
   }
 
@@ -187,13 +187,13 @@ export function StyleStep({
           {/* Author name */}
           <div className="space-y-2">
             <label htmlFor="author-name" className="text-base sm:text-lg font-bold">
-              Author adı
+              Author Name
             </label>
             <Input
               id="author-name"
               value={draft.authorName}
               onChange={(event) => onUpdate({ authorName: event.target.value })}
-              placeholder="örnek: İhsan Yılmaz"
+              placeholder="e.g.: John Smith"
               className="h-14 text-base rounded-2xl px-5"
             />
           </div>
@@ -201,13 +201,13 @@ export function StyleStep({
           {/* Publisher name */}
           <div className="space-y-2">
             <label htmlFor="imprint" className="text-base sm:text-lg font-bold">
-              Yayınevi adı
+              Publisher Name
             </label>
             <Input
               id="imprint"
               value={draft.imprint}
               onChange={(event) => onUpdate({ imprint: event.target.value })}
-              placeholder="örnek: Kuzey Işık Yayınları"
+              placeholder="e.g.: North Light Publishing"
               className="h-14 text-base rounded-2xl px-5"
             />
           </div>
@@ -221,14 +221,14 @@ export function StyleStep({
               id="logo-text"
               value={draft.logoText}
               onChange={(event) => onUpdate({ logoText: event.target.value })}
-              placeholder="örnek: İY Atölye"
+              placeholder="e.g.: JL Studio"
               className="h-14 text-base rounded-2xl px-5"
             />
           </div>
 
           {/* Logo upload */}
           <div className="space-y-2">
-            <div className="text-base sm:text-lg font-bold">Logo yükle</div>
+            <div className="text-base sm:text-lg font-bold">Upload Logo</div>
             <input
               ref={logoInputRef}
               type="file"
@@ -244,11 +244,11 @@ export function StyleStep({
               <div className="relative rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-4">
                 <div className="flex items-center gap-4">
                   <div className="flex size-16 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-white p-2">
-                    <img src={draft.logoUrl} alt="Yüklenen logo" className="max-h-12 max-w-full object-contain" />
+                    <img src={draft.logoUrl} alt="Uploaded logo" className="max-h-12 max-w-full object-contain" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-foreground">Logo yüklendi ✓</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">Değiştirmek için tıkla</div>
+                    <div className="text-sm font-semibold text-foreground">Logo uploaded ✓</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">Click to change</div>
                   </div>
                   <button
                     type="button"
@@ -268,7 +268,7 @@ export function StyleStep({
                 <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
                   <ImagePlus className="size-5 text-primary" />
                 </div>
-                <div className="text-sm font-semibold text-foreground">Logo yüklemek için tıkla</div>
+                <div className="text-sm font-semibold text-foreground">Click to upload logo</div>
                 <div className="text-xs text-muted-foreground">PNG, JPG, WebP veya SVG · Maks 2 MB</div>
               </button>
             )}
@@ -276,14 +276,14 @@ export function StyleStep({
           {/* Author bio */}
           <div className="space-y-2">
             <label htmlFor="author-bio" className="text-base sm:text-lg font-bold">
-              Kısa biyografi
+              Short Bio
             </label>
             <Textarea
               id="author-bio"
               rows={4}
               value={draft.authorBio}
               onChange={(event) => onUpdate({ authorBio: event.target.value })}
-              placeholder="örnek: Oyun rehberleri ve yapay zeka destekli yayıncılık üzerine çalışan bağımsız yazar."
+              placeholder="e.g.: Independent author working on game guides and AI-powered publishing."
               className="min-h-[140px] text-base rounded-2xl px-5 py-4 resize-none leading-7"
             />
           </div>
@@ -324,7 +324,7 @@ export function StyleStep({
               id="cover-brief"
               value={draft.coverBrief}
               onChange={(event) => onUpdate({ coverBrief: event.target.value })}
-              placeholder="örnek: Güçlen • Kur • İlerle"
+              placeholder="e.g.: Build • Strengthen • Advance"
               className="h-14 text-base rounded-2xl px-5"
             />
           </div>
@@ -363,7 +363,7 @@ export function StyleStep({
 
           {/* Logo preset grid */}
           <div className="space-y-3">
-            <div className="text-base sm:text-lg font-bold">Logo kütüphanesi</div>
+            <div className="text-base sm:text-lg font-bold">Logo Library</div>
             <div className="max-h-[320px] overflow-y-auto overscroll-contain rounded-2xl border border-border/50 bg-background/40 p-2">
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {PUBLISHER_LOGO_PRESETS.map((preset) => {
@@ -417,7 +417,7 @@ export function StyleStep({
 
           {/* Cover direction */}
           <div className="space-y-3">
-            <div className="text-base sm:text-lg font-bold">Cover yönü</div>
+            <div className="text-base sm:text-lg font-bold">Cover Direction</div>
             <PillSelector
               options={COVER_DIRECTIONS}
               selected={draft.coverDirection}

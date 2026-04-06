@@ -17,11 +17,11 @@ import { ChoiceGrid } from "@/components/funnel/shared/choice-grid";
 const BOOK_TYPES: FunnelBookType[] = ["rehber", "is", "egitim", "cocuk", "diger"];
 
 const BOOK_TYPE_DESCRIPTIONS: Record<FunnelBookType, string> = {
-  rehber: "Adım adım öğreten, net ve uygulanabilir akış.",
-  is: "Uzmanlık, danışmanlık veya marka otoritesi için güçlü kurgu.",
-  egitim: "Öğretici, örnekli ve daha sistemli anlatım.",
-  cocuk: "Daha sıcak, ritimli ve sade anlatım düzeni.",
-  diger: "Özel topic veya hibrit kurgular için esnek alan.",
+  guide: "Step-by-step, clear and actionable flow.",
+  business: "Strong narrative for expertise, consulting, or brand authority.",
+  education: "Instructive, example-based and more systematic approach.",
+  children: "Warmer, rhythmic and simpler narrative style.",
+  other: "Flexible space for custom topics or hybrid narratives.",
 };
 
 export function TopicStep({
@@ -37,10 +37,10 @@ export function TopicStep({
   onError: (msg: string) => void;
 }) {
   const topicPlaceholder = isTurkishLanguage(draft.language)
-    ? "Kitabının topicsunu yaz... Örn: Yapay zeka ile içerik üretimi, Dijital pazarlama rehberi..."
+    ? "Write your book topic... E.g.: AI content generation, Digital marketing guide..."
     : "Write your book topic... e.g. AI-assisted content creation, practical digital marketing playbook...";
   const audiencePlaceholder = isTurkishLanguage(draft.language)
-    ? "örnek: yeni başlayan oyuncular ve ebeveynler"
+    ? "e.g.: beginner players and parents"
     : "example: first-time founders and content creators";
 
   return (
@@ -77,7 +77,7 @@ export function TopicStep({
           htmlFor="topic"
           className="text-base sm:text-lg font-bold text-foreground"
         >
-          Kitabının topicsu ne?
+          What is your book about?
         </label>
         <Textarea
           id="topic"
@@ -90,7 +90,7 @@ export function TopicStep({
           className="resize-none text-lg sm:text-xl leading-8 placeholder:text-lg placeholder:text-muted-foreground/50 min-h-[200px] sm:min-h-[240px] px-5 py-4 rounded-2xl border-2 border-border/70 bg-background shadow-sm focus-visible:border-primary/40 focus-visible:shadow-md focus-visible:ring-primary/20 transition-all duration-200"
         />
         <p className="text-sm text-muted-foreground bg-muted/50 rounded-xl px-4 py-2.5">
-          💡 Topicyu net yazdığında başlık önerileri ve chapter planı otomatik gelir.
+          💡 When you write a clear topic, title suggestions and chapter plan are generated automatically.
         </p>
       </div>
 
@@ -136,17 +136,17 @@ export function TopicStep({
               topic:
                 draft.topic ||
                 (isTurkishLanguage(draft.language)
-                  ? "uzmanlığını kitaba dönüştürmek isteyen danışmanlar için authority book rehberi"
+                  ? "an authority book guide for consultants who want to turn their expertise into a book"
                   : "authority book playbook for consultants who want to turn expertise into a book"),
               audience:
                 draft.audience ||
                 (isTurkishLanguage(draft.language)
-                  ? "koçlar, danışmanlar ve course creator'lar"
+                  ? "coaches, consultants, and course creators"
                   : "coaches, consultants, and course creators"),
             })
           }
         >
-          Örnek Doldur
+          Fill Example
         </button>
       </div>
 

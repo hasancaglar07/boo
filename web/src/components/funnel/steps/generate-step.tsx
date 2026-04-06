@@ -116,7 +116,7 @@ export function GenerateStep({
           onClick={onStartGenerate}
           className="w-full text-base font-semibold h-12 rounded-xl"
         >
-          {appShell ? "Preview Generate" : "Hesabını Generate ve Preview Başlat"}
+          {appShell ? "Preview Generate" : "Create Your Account and Start Preview"}
         </Button>
         <div className="flex justify-center">
           <button
@@ -127,14 +127,14 @@ export function GenerateStep({
               router.push(stepHref("topic"));
             }}
           >
-            Baştan başla
+            Start Over
           </button>
         </div>
       </div>
 
       <p className="text-xs text-muted-foreground/50 text-center">
         {appShell
-          ? "Önce previewyi gör · Tam kitabı sonra aç"
+          ? "See the preview first · Unlock the full book later"
           : "No payment required · Book is saved to your account · Appears in your library when ready"}
       </p>
     </div>

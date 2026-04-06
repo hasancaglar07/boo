@@ -46,7 +46,7 @@ export function TitleStep({
             htmlFor="title"
             className="text-base sm:text-lg font-bold text-foreground"
           >
-            Başlık
+            Title
           </label>
           <button
             type="button"
@@ -56,14 +56,14 @@ export function TitleStep({
           >
             ✨
             <Sparkles className="size-3.5" />
-            {aiLoading === "title" ? "Öneriliyor…" : "AI Öner"}
+            {aiLoading === "title" ? "Suggesting…" : "AI Suggest"}
           </button>
         </div>
         <Input
           id="title"
           value={draft.title}
           onChange={(event) => onUpdate({ title: event.target.value })}
-          placeholder="Kitabının başlığını yaz..."
+          placeholder="Write your book title..."
           className="h-14 sm:h-16 text-lg sm:text-xl font-semibold rounded-2xl px-5"
           autoFocus
         />
@@ -73,7 +73,7 @@ export function TitleStep({
       {titleOptions.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">
-            AI Önerileri
+            AI Suggestions
           </p>
           <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-none">
             {titleOptions.map((option) => {
@@ -121,9 +121,9 @@ export function TitleStep({
             htmlFor="subtitle"
             className="text-base sm:text-lg font-bold text-foreground"
           >
-            Alt başlık{" "}
+            Subtitle{" "}
             <span className="font-normal text-muted-foreground/60">
-              (isteğe bağlı)
+              (optional)
             </span>
           </label>
           <button
@@ -134,14 +134,14 @@ export function TitleStep({
           >
             ✨
             <Sparkles className="size-3.5" />
-            Öneri Al
+            Get Suggestions
           </button>
         </div>
         <Textarea
           id="subtitle"
           value={draft.subtitle}
           onChange={(event) => onUpdate({ subtitle: event.target.value })}
-          placeholder="Alt başlık ekle (isteğe bağlı)..."
+          placeholder="Alt başlık ekle (optional)..."
           rows={3}
           className="min-h-[120px] text-base sm:text-lg font-medium rounded-2xl px-5 py-4 resize-none"
         />

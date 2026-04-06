@@ -9,8 +9,8 @@ import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 const FAST_STAGES = [
-  { id: "cover" as const, label: "Cover taslağı", durationMs: 2000, emoji: "🎨" },
-  { id: "chapter" as const, label: "İlk chapter", durationMs: 3000, emoji: "✍️" },
+  { id: "cover" as const, label: "Cover draft", durationMs: 2000, emoji: "🎨" },
+  { id: "chapter" as const, label: "First chapter", durationMs: 3000, emoji: "✍️" },
 ];
 
 type FastStageId = "cover" | "chapter";
@@ -167,15 +167,15 @@ export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoad
         <div className="flex flex-col items-center gap-1 text-center">
           <p className="text-lg font-medium text-foreground leading-tight">
             {done
-              ? "Preview hazır!"
+              ? "Preview is ready!"
               : !canNavigate
-                ? "Kitabın kaydediliyor…"
-                : "Kitabının previewsi hazırlanıyor…"}
+                ? "Your book is being saved…"
+                : "Your book preview is being generated…"}
           </p>
           <p className="text-sm text-muted-foreground">
             {done
-              ? "Açılıyor…"
-              : `Aşama ${completedStages.length + 1} / ${FAST_STAGES.length}`}
+              ? "Opening…"
+              : `Step ${completedStages.length + 1} / ${FAST_STAGES.length}`}
           </p>
         </div>
 

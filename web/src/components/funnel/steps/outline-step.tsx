@@ -88,7 +88,7 @@ export function OutlineStep({
         ...draft.outline,
         {
           title: defaultChapterReference(draft.language, nextIndex + 1),
-          summary: isTurkishLanguage(draft.language) ? "Bu chapterün kısa amacı." : "Short purpose of this chapter.",
+          summary: isTurkishLanguage(draft.language) ? "Brief purpose of this chapter." : "Short purpose of this chapter.",
           role: "core",
           length: draft.bookLength === "extended" ? "long" : "medium",
         },
@@ -155,7 +155,7 @@ export function OutlineStep({
       {/* ── Chapter Plan Header ── */}
       <div className="flex items-center justify-between gap-3">
         <label className="text-base sm:text-lg font-bold text-foreground">
-          Chapter planı
+          Chapter Plan
         </label>
         <button
           type="button"
@@ -218,13 +218,13 @@ export function OutlineStep({
                         htmlFor={`outline-title-${index}`}
                         className="text-sm font-bold text-muted-foreground mb-2 block"
                       >
-                        Başlık
+                        Title
                       </label>
                       <Input
                         id={`outline-title-${index}`}
                         value={item.title}
                         onChange={(event) => onUpdateOutline(index, { title: event.target.value })}
-                        placeholder="Chapter başlığı"
+                        placeholder="Chapter title"
                         className="h-11 text-sm px-3 rounded-xl"
                       />
                     </div>
@@ -235,13 +235,13 @@ export function OutlineStep({
                         htmlFor={`outline-summary-${index}`}
                         className="text-sm font-bold text-muted-foreground mb-2 block"
                       >
-                        Özet
+                        Summary
                       </label>
                       <Textarea
                         id={`outline-summary-${index}`}
                         value={item.summary}
                         onChange={(event) => onUpdateOutline(index, { summary: event.target.value })}
-                        placeholder="Bu chapterde ne anlatılacak?"
+                        placeholder="What will be covered in this chapter?"
                         rows={3}
                         className="min-h-[80px] text-sm px-3 py-2.5 rounded-xl resize-none leading-relaxed"
                       />

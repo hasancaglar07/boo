@@ -41,9 +41,9 @@ import { pickRandomPublisherLogo } from "@/lib/publisher-logo-library";
 
 const GENERATION_STAGES = [
   "Book showcase is being prepared",
-  "Cover yönü işleniyor",
-  "İlk okunabilir chapter yazılıyor",
-  "Preview kütüphaneye bağlanıyor",
+  "Cover direction is being processed",
+  "First readable chapter is being written",
+  "Preview is being linked to library",
 ] as const;
 
 const RANDOM_COVER_BRIEFS = [
@@ -55,11 +55,11 @@ const RANDOM_COVER_BRIEFS = [
 
 const STYLE_COPY_BY_LANGUAGE: Partial<Record<FunnelLanguage, { authors: string[]; briefs: string[]; bios: string[] }>> = {
   Turkish: {
-    authors: ["İhsan Yılmaz", "Mina Kara", "Deniz Arın", "Selin Aydın"],
-    briefs: ["Net • Güçlü • Akıcı", "Öğren • Uygula • Büyüt", "Kur • Güçlen • İlerle"],
+    authors: ["John Smith", "Emily Carter", "David Brooks", "Sarah Mitchell"],
+    briefs: ["Clear • Strong • Fluent", "Learn • Apply • Grow", "Build • Strengthen • Advance"],
     bios: [
-      "{topic} üzerine çalışan bağımsız yazar ve içerik tasarımcısı.",
-      "{topic} alanında sade, uygulanabilir ve güçlü anlatılar üretir.",
+      "Independent author and content designer working on {topic}.",
+      "Produces clear, actionable, and strong narratives in the {topic} field.",
       "Designs readable, modern, and result-oriented book workflows.",
     ],
   },
@@ -140,7 +140,7 @@ function styleCopyForLanguage(language: FunnelLanguage) {
 
 function buildRandomStyleCopy(draft: FunnelDraft) {
   const copy = styleCopyForLanguage(draft.language);
-  const topic = draft.topic.trim() || (isTurkishLanguage(draft.language) ? "uzmanlık alanı" : "your topic");
+  const topic = draft.topic.trim() || (isTurkishLanguage(draft.language) ? "your area of expertise" : "your topic");
   return {
     authorName: randomFrom(copy.authors),
     coverBrief: randomFrom(copy.briefs),
@@ -334,7 +334,7 @@ export function GuidedWizardScreen({
 
   async function handleOutlineAi() {
     if (!draft.topic.trim()) {
-      setError("Önce topicyu belirle.");
+      setError("Please specify the topic first.");
       router.push(stepHref("topic"));
       return;
     }
@@ -397,7 +397,7 @@ export function GuidedWizardScreen({
         subtitle: draft.subtitle || localTitleSuggestions(draft)[0]?.subtitle || "",
         outline: fallback,
       });
-      setError(error instanceof Error ? error.message : "AI outline önerileri alınamadı.");
+      setError(error instanceof Error ? error.message : "AI outline suggestions could not be retrieved.");
       trackEvent("outline_ai_used", { fallback: true, count: fallback.length });
     } finally {
       setAiLoading("");
@@ -532,7 +532,7 @@ export function GuidedWizardScreen({
 
   if (step === "title") {
     return wrapInShell({
-      title: "Başlık ve alt başlık",
+      title: "Title and subtitle",
       description: "2/5. Write it yourself or get AI suggestions. When this step is done, the book title and positioning become clear.",
       children: (
         <TitleStep
@@ -553,8 +553,8 @@ export function GuidedWizardScreen({
 
   if (step === "outline") {
     return wrapInShell({
-      title: "Chapter planı",
-      description: "3/5. AI ile otomatik generate ya da kendin düzenle. Bu adım bittiğinde kitabın omurgası görünür olur.",
+      title: "Chapter plan",
+      description: "3/5. Auto-generate with AI or edit manually. When this step is done, your book's skeleton becomes visible.",
       children: (
         <OutlineStep
           draft={draft}
@@ -574,7 +574,7 @@ export function GuidedWizardScreen({
   if (step === "style") {
     return wrapInShell({
       title: "Dil ve stil",
-      description: "4/5. Bu ekran otomatik doldu. Dili, markayı ve kapağın genel hissini seç; sonraki adımda preview üretimi başlar.",
+      description: "4/5. This screen auto-filled. Select the language, brand, and overall feel of the cover; preview generation starts in the next step.",
       children: (
         <StyleStep
           draft={draft}
@@ -592,7 +592,7 @@ export function GuidedWizardScreen({
   }
 
   return wrapInShell({
-    title: "Previewyi başlat",
+    title: "Start Preview",
     description: appShellEnabled
       ? "5/5. Book showcase is prepared in a single flow. Cover and first readable chapter enter live production in the background."
       : "5/5. To prevent losing the preview, we link it to your account at this stage. The book is saved directly to your library and production continues in the background.",

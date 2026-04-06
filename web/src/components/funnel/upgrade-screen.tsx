@@ -31,17 +31,17 @@ import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM, REFUND_GU
 import { cn } from "@/lib/utils";
 
 const WHAT_YOU_GET = [
-  { icon: FileText, text: "Tüm chapterler — kilitli içerik yok" },
-  { icon: Download, text: "PDF indir, Amazon KDP'ye hazır" },
+  { icon: FileText, text: "All chapters — no locked content" },
+  { icon: Download, text: "Download PDF, ready for Amazon KDP" },
   { icon: BookOpen, text: "EPUB output — for e-book stores" },
-  { icon: Zap, text: "Tam çalışma alanı ve düzenleme araçları" },
-  { icon: Shield, text: "Cover, arka cover ve tüm varlıklar" },
+  { icon: Zap, text: "Full workspace and editing tools" },
+  { icon: Shield, text: "Cover, back cover, and all assets" },
   { icon: CheckCircle2, text: `${KDP_GUARANTEE_CLAIM} + ${REFUND_GUARANTEE_CLAIM}` },
 ];
 
 const TRUST_ITEMS = [
   { label: KDP_GUARANTEE_CLAIM, icon: Shield },
-  { label: "Anında erişim", icon: Zap },
+  { label: "Instant access", icon: Zap },
   { label: "Abonelik yok", icon: CheckCircle2 },
   { label: NO_API_COST_CLAIM, icon: BookOpen },
 ];
@@ -53,7 +53,7 @@ const PLAN_COMPARE = [
     price: "$4",
     originalPrice: "$29",
     interval: "tek seferlik",
-    badge: "En iyi başlangıç",
+    badge: "Best start",
     badgeColor: "bg-primary text-primary-foreground",
     highlight: true,
     description: "Full access for this book. Pay once, the files are yours.",
@@ -61,17 +61,17 @@ const PLAN_COMPARE = [
       "1 book — full access",
       "PDF + EPUB export",
       "Cover ve arka cover",
-      "30 gün iade",
+      "30-day refund",
     ],
-    cta: "$4 ile Bu Kitabı Aç",
+    cta: "Unlock This Book for $4",
     ctaVariant: "primary" as const,
   },
   {
     id: "starter",
-    name: "Başlangıç",
+    name: "Starter",
     price: "$19",
     originalPrice: null,
-    interval: "aylık",
+    interval: "monthly",
     badge: "10 books/month",
     badgeColor: "bg-muted text-muted-foreground",
     highlight: false,
@@ -79,10 +79,10 @@ const PLAN_COMPARE = [
     features: [
       "10 books/month",
       "EPUB + PDF export",
-      "Cover üretimi",
-      "Chapter editörü",
+      "Cover generation",
+      "Chapter editor",
     ],
-    cta: "$19/ay ile Üretime Continue Et",
+    cta: "Continue Producing for $19/mo",
     ctaVariant: "outline" as const,
   },
 ];
@@ -126,7 +126,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
   const currentBook = books.find((b) => b.slug === slug) ?? null;
   const mockupBrand =
     currentBook?.branding_mark || currentBook?.publisher || "Book Generator";
-  const mockupLabel = currentBook?.cover_brief || "Payment sonrası tam ürün açılır";
+  const mockupLabel = currentBook?.cover_brief || "Full product unlocks after payment";
 
   const handleBuy = useCallback(async (planId: string) => {
     trackEvent("paywall_full_unlock_clicked", { slug, plan: planId, source: "upgrade_screen" });
@@ -186,7 +186,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
       layout="book"
       current="billing"
       currentBookSlug={slug}
-      title="Kitabını sahiplen"
+      title="Claim Your Book"
       books={books}
     >
       {/* ── Hero: value prop + book mockup ────────────────────────────────── */}
@@ -197,7 +197,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
           <Card className="overflow-hidden border-primary/25 bg-gradient-to-b from-primary/8 to-transparent">
             <CardContent className="p-6">
               <BookMockup
-                title={currentBook?.title || "Kitabın"}
+                title={currentBook?.title || "Your Book"}
                 subtitle={currentBook?.subtitle || ""}
                 author={currentBook?.author || ""}
                 brand={mockupBrand}
@@ -215,7 +215,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
                 size="xl"
               />
 
-              {/* Social proof altında */}
+              {/* Below social proof */}
               <div className="mt-5 space-y-2">
                 <div className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3">
                   <p className="text-xs font-semibold text-muted-foreground text-center">
@@ -224,7 +224,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3">
                   <p className="text-xs font-semibold text-muted-foreground text-center">
-                    {NO_API_COST_CLAIM}. Kapağı ve preview&apos;i gördükten sonra <strong className="text-foreground">payment kararı</strong> verirsin
+                    {NO_API_COST_CLAIM}. After seeing the cover and preview&apos;i gördükten sonra <strong className="text-foreground">payment decision</strong> verirsin
                   </p>
                 </div>
               </div>
@@ -232,24 +232,24 @@ export function UpgradeScreen({ slug }: { slug: string }) {
           </Card>
         </div>
 
-        {/* Sağ: başlık + feature list + pricing */}
+        {/* Right: title + feature list + pricing */}
         <div className="space-y-8">
           {/* Hero copy */}
           <div>
-            <div className="editorial-eyebrow mb-3">Kitabın hazır</div>
+            <div className="editorial-eyebrow mb-3">Your book is ready</div>
             <h1 className="text-4xl font-bold leading-tight text-foreground md:text-5xl xl:text-6xl">
-              $4 ile bu kitabı aç —<br className="hidden sm:block" />
-              <span className="text-primary">tamamını şimdi sahiplen</span>
+              Unlock this book for $4 —<br className="hidden sm:block" />
+              <span className="text-primary">claim the full version now</span>
             </h1>
             <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">
-              Preview hazır. Kalan chapterleri aç, PDF ve EPUB olarak dışa aktar, Amazon KDP&apos;ye yükle. Önce değeri gördün; şimdi tamamını tek seferde açabilirsin.
+              Preview is ready. Unlock remaining chapters, export as PDF and EPUB, upload to Amazon KDP&apos;ye yükle. Önce değeri gördün; şimdi tamamını tek seferde açabilirsin.
             </p>
           </div>
 
           {/* What you get */}
           <div className="rounded-2xl border border-border/70 bg-card p-6">
             <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.15em] text-muted-foreground">
-              Ne alıyorsun?
+              What do you get?
             </h2>
             <div className="grid gap-2.5 sm:grid-cols-2">
               {WHAT_YOU_GET.map(({ icon: Icon, text }) => (
@@ -266,10 +266,10 @@ export function UpgradeScreen({ slug }: { slug: string }) {
           {/* Objection handling */}
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
             <p className="text-sm font-semibold text-foreground">
-              &quot;AI yazımı kalitesiz olmaz mı?&quot;
+              &quot;Isn't AI writing low quality?&quot;
             </p>
             <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-              Çalışma alanında her chapterü düzenleyebilir, yeniden üretebilir ve kendi sesinle revize edebilirsin. Sonuç tamamen senin.
+              In the workspace, you can edit each chapter, regenerate it, and revise it in your own voice. The result is entirely yours.
             </p>
           </div>
 
@@ -280,8 +280,8 @@ export function UpgradeScreen({ slug }: { slug: string }) {
             </h2>
             <div className="space-y-2">
               {[
-                { label: "Serbest yazar ajansı", price: "$500+", strikethrough: true },
-                { label: "Freelance editör", price: "$200+", strikethrough: true },
+                { label: "Freelance agency", price: "$500+", strikethrough: true },
+                { label: "Freelance editor", price: "$200+", strikethrough: true },
                 { label: "Book Generator", price: "$4", strikethrough: false, highlight: true },
               ].map(({ label, price, strikethrough, highlight }) => (
                 <div
@@ -307,7 +307,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
       {/* ── Pricing cards ───────────────────────────────────────────────────── */}
       <div className="mb-10">
         <h2 className="mb-6 text-center text-xl font-bold text-foreground">
-          Plan seç, kitabını al
+          Choose a plan, get your book
         </h2>
         <div className="mx-auto grid max-w-2xl gap-4 sm:grid-cols-2">
           {PLAN_COMPARE.map((plan) => (
@@ -392,7 +392,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
           className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline transition-colors"
           onClick={() => router.push(`/app/book/${encodeURIComponent(slug)}/preview`)}
         >
-          ← Previewye dön
+          ← Back to Preview
         </button>
       </div>
 
@@ -401,7 +401,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-foreground">$4 · Tek seferlik</p>
-            <p className="text-xs text-muted-foreground">30 gün iade · Tam kitabı aç</p>
+            <p className="text-xs text-muted-foreground">30-day refund · Unlock full book</p>
           </div>
           <Button
             size="default"
@@ -409,7 +409,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
             onClick={() => handleBuy("premium")}
           >
             <Sparkles className="mr-1.5 size-3.5" aria-hidden="true" />
-            Kitabı Aç
+            Unlock Book
           </Button>
         </div>
       </div>

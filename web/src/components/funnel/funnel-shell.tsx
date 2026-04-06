@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const STEP_LABELS: Record<FunnelStep, string> = {
   topic: "Topic",
-  title: "Başlık",
+  title: "Title",
   outline: "Chapterler",
   style: "Stil",
   generate: "Generate",
@@ -224,7 +224,7 @@ export function FunnelShell({
                 ))}
               </div>
 
-              {/* İleri */}
+              {/* Next */}
               <button
                 type="submit"
                 form="wizard-form"
