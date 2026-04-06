@@ -14,7 +14,7 @@ export const SUPPORTED_LANGUAGES = [
   { value: "German", label: "Deutsch", description: "Output suited for more technical and systematic German reader expectations." },
   { value: "French", label: "Français", description: "More editorial and fluent French reader rhythm." },
   { value: "Spanish", label: "Español", description: "Strong general language suitable for Latin and European markets." },
-  { value: "Italian", label: "Italiano", description: "Daha akıcı ve editoryal İtalyan anlatı yapısı." },
+  { value: "Italian", label: "Italiano", description: "A more fluent and editorial Italian narrative structure." },
   { value: "Portuguese", label: "Português", description: "Suitable for broad Portuguese market targets." },
   { value: "Dutch", label: "Nederlands", description: "Simple and practical Dutch reader flow." },
   { value: "Polish", label: "Polski", description: "Strong text structure for Central European readers." },
@@ -22,7 +22,7 @@ export const SUPPORTED_LANGUAGES = [
   { value: "Swedish", label: "Svenska", description: "Scandinavian clean tone and smooth chapter transitions." },
   { value: "Danish", label: "Dansk", description: "Short, clear, and accessible Danish reader tone." },
   { value: "Norwegian", label: "Norsk", description: "Readable book flow for the Nordic market." },
-  { value: "Finnish", label: "Suomi", description: "Daha yapısal ve berrak bir Finlandiya okur dili." },
+  { value: "Finnish", label: "Suomi", description: "A more structural and clear Finnish reader language." },
   { value: "Czech", label: "Čeština", description: "Structure suited for the Eastern European market." },
   { value: "Slovak", label: "Slovenčina", description: "Simple and practical flow for Slovak readers." },
   { value: "Hungarian", label: "Magyar", description: "Clear guide structure for Hungarian readership." },
@@ -603,9 +603,9 @@ export function bookLengthDescription(bookLength: FunnelBookLength, language: Fu
       : `The safest nonfiction balance for paid books. Usually around ${range} words.`;
   }
   return bookLength === "compact"
-    ? `Daha hızlı okunan ve odaklı yapı. Genelde ${range} kelime civarı.`
+    ? `A faster-reading and focused structure. Usually around ${range} words.`
     : bookLength === "extended"
-    ? `Daha raf hissi veren, daha örnekli ve daha nefesli yapı. Genelde ${range} kelime civarı.`
+    ? `A more refined feel, more example-rich and more spacious structure. Usually around ${range} words.`
     : `The safest balance for paid non-fiction. Usually around ${range} words.`;
 }
 
@@ -763,7 +763,7 @@ export function depthLabel(depth: FunnelDepth, language: FunnelLanguage) {
   if (!isTurkishLanguage(language)) {
     return depth === "hizli" ? "Fast" : depth === "detayli" ? "Detailed" : "Balanced";
   }
-  return depth === "hizli" ? "Kısa ve hızlı" : depth === "detayli" ? "Daha detaylı" : "Dengeli";
+  return depth === "hizli" ? "Short and fast" : depth === "detayli" ? "More detailed" : "Balanced";
 }
 
 export function coverDirectionLabel(direction: FunnelCoverDirection, language: FunnelLanguage) {

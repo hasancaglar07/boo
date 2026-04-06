@@ -120,13 +120,13 @@ export default function AdminFeatureFlagsPage() {
           className="inline-flex items-center gap-2 rounded-2xl bg-[color:var(--admin-primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
         >
           <Plus className="size-4" />
-          Yeni Flag
+          New Flag
         </button>
       </div>
 
       {showCreate && (
         <form onSubmit={handleCreate} className="admin-panel rounded-[24px] p-5 space-y-4">
-          <div className="text-sm font-semibold text-[color:var(--admin-text)]">Yeni Feature Flag</div>
+          <div className="text-sm font-semibold text-[color:var(--admin-text)]">New Feature Flag</div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-xs font-medium admin-muted">Key *</label>

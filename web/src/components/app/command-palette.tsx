@@ -53,7 +53,7 @@ export function CommandPalette({ actions }: { actions: PaletteAction[] }) {
             <Search className="size-4 text-muted-foreground" />
             <Input
               className="border-0 bg-transparent px-0 focus:bg-transparent"
-              placeholder="Komut ara"
+              placeholder="Search commands"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />

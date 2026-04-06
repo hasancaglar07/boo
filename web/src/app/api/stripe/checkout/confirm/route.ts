@@ -13,7 +13,7 @@ const schema = z.object({
 export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id || !session.user.email) {
-    return NextResponse.json({ ok: false, error: "Oturum gerekli." }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "Session required." }, { status: 401 });
   }
 
   const body = await request.json().catch(() => null);

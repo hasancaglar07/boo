@@ -370,7 +370,7 @@ export const PremiumBookHero = React.forwardRef<
           </motion.div>
         )}
 
-        {/* Badge — Daha minimal ve vurucu */}
+        {/* Badge — More minimal and striking */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -391,7 +391,7 @@ export const PremiumBookHero = React.forwardRef<
           {title}
         </motion.h1>
 
-        {/* Subtitle — daha net kategori + outcome */}
+        {/* Subtitle — clearer category + outcome */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

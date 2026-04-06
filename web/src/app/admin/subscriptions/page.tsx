@@ -143,7 +143,7 @@ export default function AdminSubscriptionsPage() {
       )}
 
       <FilterBar
-        searchPlaceholder="Kullanıcı e-postası veya subscription ID ara"
+        searchPlaceholder="Search user email or subscription ID"
         filters={[
           {
             key: "plan",

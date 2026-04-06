@@ -57,7 +57,7 @@ type CheckoutConfirmPayload = {
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const KDP_GUARANTEE_CLAIM = "KDP Uyumlu Format";
+const KDP_GUARANTEE_CLAIM = "KDP Compatible Format";
 const REFUND_GUARANTEE_CLAIM = "14-Day Money-Back Guarantee";
 
 const ANNUAL_DISCOUNT = 0.2; // 20% discount for annual

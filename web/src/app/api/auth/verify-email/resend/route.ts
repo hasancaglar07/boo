@@ -11,7 +11,7 @@ import { prisma } from "@/lib/prisma";
 export async function POST() {
   const session = await auth();
   if (!session?.user?.id || !session.user.email) {
-    return NextResponse.json({ ok: false, error: "Oturum gerekli." }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "Session required." }, { status: 401 });
   }
 
   const dbUser = await prisma.user.findUnique({

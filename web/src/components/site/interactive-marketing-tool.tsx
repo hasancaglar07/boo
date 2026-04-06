@@ -66,7 +66,7 @@ function fieldError(field: MarketingToolField, value: string) {
   }
 
   if (field.required === false) return "";
-  return value.trim().length >= field.minLength ? "" : `${field.label} alanını biraz daha net yaz.`;
+  return value.trim().length >= field.minLength ? "" : `${field.label} field a bit more clearly.`;
 }
 
 function isValid(fields: MarketingToolField[], values: MarketingToolValues) {

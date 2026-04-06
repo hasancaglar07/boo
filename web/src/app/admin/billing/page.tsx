@@ -206,7 +206,7 @@ export default function AdminBillingPage() {
       </section>
 
       <FilterBar
-        searchPlaceholder="Invoice ID veya user email ara"
+        searchPlaceholder="Search invoice ID or user email"
         filters={[
           {
             key: "status",

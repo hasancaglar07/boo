@@ -150,7 +150,7 @@ export function OnboardingChecklist() {
         <div className="mt-4 rounded-[16px] border border-border/60 bg-background/40 px-3 py-2">
           <p className="text-xs text-muted-foreground">
             {completedCount > 0 ? (
-              <>Harika! {completedCount} adım tamamladın. Devam et!</>
+              <>Great! You completed {completedCount} steps. Keep going!</>
             ) : (
               <>Start the wizard to take your first step.</>
             )}

@@ -124,8 +124,8 @@ export function Features9({
   locationTitle = "Topic and market signals",
   locationDescription = "Keywords, topic clusters, and reader directions visible at a glance.",
   supportTitle = "Support and revision flow",
-  supportDescription = "Email, panel ve not sistemi ile sorun takibi ve düzeltme daha kontrollü ilerler.",
-  uptimeLabel = "Çıktı hazır %99,99",
+  supportDescription = "Issue tracking and resolution progresses more controlled with email, panel, and notes system.",
+  uptimeLabel = "Output ready %99.99",
   activityTitle = "Yazım ve düzenleme ritmi",
   activityDescription = "Outline, chapter writing, and quality editing can be tracked within the same timeline.",
   chartData = defaultChartData,
@@ -194,7 +194,7 @@ export function Features9({
 
               <div>
                 <div className="ml-auto w-4/5 rounded-[20px] bg-primary px-4 py-3 text-sm text-primary-foreground">
-                  Not alindi. Bolumu genisletip yeni EPUB denemesi hazirliyorum.
+                  Note taken. Expanding the chapter and preparing a new EPUB test.
                 </div>
                 <span className="mt-2 block text-right text-xs text-muted-foreground">Simdi</span>
               </div>

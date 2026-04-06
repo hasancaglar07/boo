@@ -243,7 +243,7 @@ function buildRisks(input: BookIdeaValidatorInput, scores: Record<DimensionKey, 
     risks.push("What the reader gains at the end of the book should be sharpened with a stronger outcome statement.");
   }
   if (scores.contentDepth < 68) {
-    risks.push("Mevcut materyal sınırlı olabilir; outline öncesi örnekler, notlar veya vaka seti eklemek iyi olur.");
+    risks.push("Available material may be limited; it would be good to add examples, notes, or case sets before the outline.");
   }
   if (input.intent === "not_sure") {
     risks.push("The usage purpose is unclear; deciding whether it's a lead magnet or authority book strengthens the structure.");

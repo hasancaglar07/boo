@@ -89,7 +89,7 @@ export function FilterBar({
                 type="button"
                 onClick={() => update("q", "")}
                 className="ml-0.5 inline-flex size-4 items-center justify-center rounded-full hover:bg-[color:var(--admin-primary-soft)]"
-                aria-label="Aramayı temizle"
+                aria-label="Clear search"
               >
                 <X className="size-3" />
               </button>
@@ -105,7 +105,7 @@ export function FilterBar({
                 type="button"
                 onClick={() => update(item.key, "")}
                 className="ml-0.5 inline-flex size-4 items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10"
-                aria-label={`${item.label} filtresini kaldır`}
+                aria-label={`${item.label} filter remove`}
               >
                 <X className="size-3" />
               </button>
@@ -116,7 +116,7 @@ export function FilterBar({
             className="text-xs font-semibold text-[color:var(--admin-primary)] underline-offset-4 hover:underline"
             onClick={clearAll}
           >
-            Filtreleri temizle
+            Clear Filters
           </button>
         </div>
       )}

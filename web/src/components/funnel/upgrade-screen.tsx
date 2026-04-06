@@ -60,7 +60,7 @@ const PLAN_COMPARE = [
     features: [
       "1 book — full access",
       "PDF + EPUB export",
-      "Cover ve arka cover",
+      "Cover and back cover",
       "30-day refund",
     ],
     cta: "Unlock This Book for $4",
@@ -242,7 +242,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
               <span className="text-primary">claim the full version now</span>
             </h1>
             <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">
-              Preview is ready. Unlock remaining chapters, export as PDF and EPUB, upload to Amazon KDP&apos;ye yükle. Önce değeri gördün; şimdi tamamını tek seferde açabilirsin.
+              Preview is ready. Unlock remaining chapters, export as PDF and EPUB, upload to Amazon KDP. You've seen the value; now unlock the full tek seferde açabilirsin.
             </p>
           </div>
 

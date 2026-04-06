@@ -322,7 +322,7 @@ export function OutlineStep({
         className="w-full h-12 rounded-2xl border border-dashed border-border/60 px-5 text-base font-medium text-muted-foreground hover:border-primary/40 hover:text-primary transition-all"
       >
         <Plus className="size-4 inline-block mr-1.5 -mt-0.5" />
-        Chapter ekle
+        Add Chapter
       </button>
 
       {/* ── Error ── */}

@@ -8,11 +8,11 @@ const MAX_PAGE_SIZE = 100;
 export async function requireAdminApiAccess() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ ok: false, error: "Admin oturumu gerekli." }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "Admin session required." }, { status: 401 });
   }
 
   if (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ ok: false, error: "Admin yetkisi gerekli." }, { status: 403 });
+    return NextResponse.json({ ok: false, error: "Admin authority required." }, { status: 403 });
   }
 
   return session;

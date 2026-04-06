@@ -185,7 +185,7 @@ export function AffiliateDashboard() {
                   ) : (
                     <>
                       <Copy className="mr-1.5 size-4" />
-                      Linki Kopyala
+                      Copy Link
                     </>
                   )}
                 </Button>
@@ -373,7 +373,7 @@ export function AffiliateDashboard() {
               {[
                 {
                   icon: LinkIcon,
-                  label: "Linkini kopyala",
+                  label: "Copy your link",
                   description: "Copy the special affiliate link above.",
                 },
                 {

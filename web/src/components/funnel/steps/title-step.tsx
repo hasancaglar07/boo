@@ -141,7 +141,7 @@ export function TitleStep({
           id="subtitle"
           value={draft.subtitle}
           onChange={(event) => onUpdate({ subtitle: event.target.value })}
-          placeholder="Alt başlık ekle (optional)..."
+          placeholder="Add subtitle (optional)..."
           rows={3}
           className="min-h-[120px] text-base sm:text-lg font-medium rounded-2xl px-5 py-4 resize-none"
         />

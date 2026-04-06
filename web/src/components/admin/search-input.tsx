@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export function SearchInput({
   queryKey = "q",
-  placeholder = "Ara...",
+  placeholder = "Search...",
   className,
 }: {
   queryKey?: string;
