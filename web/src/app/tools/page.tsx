@@ -25,21 +25,21 @@ const iconMap: Record<ToolIconKey, LucideIcon> = {
 export const metadata: Metadata = buildPageMetadata({
   title: "Free Book Tools | Book Generator",
   description:
-    "Score your idea, generate an outline, test your KDP niche. Prepare your book for publishing with AI-powered free tools.",
+    "Score your idea, extract an outline, test your KDP niche. Prepare your book for publishing with AI-powered free tools.",
   path: "/tools",
   keywords: [
     "free book tools",
     "book idea test",
-    "book outline generator",
+    "book outline creator",
     "KDP niche analysis",
     "book title checker",
   ],
 });
 
 const pillars = [
-  "Score your idea, generate your outline",
-  "Get instant scores and a detailed report delivered to your email",
-  "Jump straight to a book preview from any tool",
+  "Score your idea, extract your outline",
+  "Instant score, detailed report sent to your email",
+  "Jump directly from any tool to book preview",
 ];
 
 export default function ToolsPage() {
@@ -50,10 +50,10 @@ export default function ToolsPage() {
           <div className="mx-auto max-w-3xl text-center">
             <Badge className="mb-4">Free Tools</Badge>
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              <span className="text-primary">Free tools</span> to accelerate your book
+              <span className="text-primary">Free tools</span> that accelerate your book
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
-              Score your idea, generate your outline, test your title. Every tool brings you one step closer to a finished book preview.
+              Score your idea, extract your outline, test your title. Each tool brings you one step closer to your book preview.
             </p>
             <div className="mx-auto mt-8 grid max-w-3xl gap-3 md:grid-cols-3">
               {pillars.map((item) => (
@@ -71,7 +71,7 @@ export default function ToolsPage() {
           <SectionHeading
             badge="Tool Library"
             title="Powerful individually, comprehensive together."
-            description="Every tool works the same way: quick score, clear recommendations, detailed report, and a seamless path to preview."
+            description="Each tool works the same way: quick score, clear recommendations, detailed report, and a seamless path to preview."
           />
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -105,13 +105,13 @@ export default function ToolsPage() {
       </section>
 
       <MarketingCtaSection
-        title="Done exploring? Start writing your book."
-        description="Use the tools to clarify your direction, then move into the preview flow. Decide here, produce in the wizard."
+        title="Stop tinkering with tools, start your book."
+        description="Clarify direction with tools, then move to the preview workflow. The decision is here, production is in the wizard."
         items={[
-          "Go from idea to outline in a single click",
-          "Test KDP and customer angles early on",
-          "Get a detailed report delivered to your email",
-          "Preview → full book → EPUB/PDF pipeline",
+          "Go from idea to outline in one click",
+          "Test KDP and customer angles early",
+          "Detailed report sent to your email",
+          "Preview → full book → EPUB/PDF chain",
         ]}
       />
     </MarketingPage>

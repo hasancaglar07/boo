@@ -12,48 +12,48 @@ import { blogPosts } from "@/lib/marketing-data";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Book Generator Blog | AI Kitap Yazma Rehberleri",
+  title: "Book Generator Blog | AI Book Writing Guides",
   description:
-    "AI ile kitap yazma, KDP hazırlığı, EPUB/PDF yayın adımları ve içerik planlama hakkında pratik rehberleri Book Generator blog sayfasında okuyun.",
+    "Read practical guides on AI book writing, KDP preparation, EPUB/PDF publishing steps, and content planning on the Book Generator blog.",
   path: "/blog",
-  keywords: ["ai kitap yazma blog", "kdp rehberi", "epub pdf yayın"],
+  keywords: ["ai book writing blog", "kdp guide", "epub pdf publishing"],
 });
 
 const blogFeatureItems = [
   {
-    title: "Haklar",
-    description: "Yapay zeka ile üretilen içerikte kontrol, sahiplik ve kullanıcı rolü nasıl konumlanır?",
+    title: "Rights",
+    description: "How control, ownership, and user role are positioned in AI-generated content?",
     icon: <BriefcaseBusiness className="size-4" />,
   },
   {
-    title: "Başlangıç",
-    description: "İlk kitaba başlarken konu, bölüm sayısı ve kapsam nasıl seçilir?",
+    title: "Getting Started",
+    description: "How to choose topic, chapter count, and scope for your first book?",
     icon: <BookOpenText className="size-4" />,
   },
   {
-    title: "Yayın",
-    description: "EPUB, PDF ve platform uyumu gibi teslim sorularına kısa cevaplar.",
+    title: "Publishing",
+    description: "Short answers to delivery questions like EPUB, PDF, and platform compatibility.",
     icon: <FileType2 className="size-4" />,
   },
   {
-    title: "Araştırma",
-    description: "Konu seçimi, anahtar kelime mantığı ve talep doğrulama için basit karar yazıları.",
+    title: "Research",
+    description: "Simple decision articles for topic selection, keyword logic, and demand validation.",
     icon: <SearchCheck className="size-4" />,
   },
   {
-    title: "Komut Yazımı",
-    description: "İngilizce konu özeti, ton, hedef okur ve bölüm planı netliği için pratik yönlendirmeler.",
+    title: "Prompt Writing",
+    description: "Practical tips for English topic summary, tone, target reader, and chapter plan clarity.",
     icon: <KeyRound className="size-4" />,
   },
   {
-    title: "Kapak",
-    description: "Kapağın sadece güzel değil, satışa hizmet eden bir yüz olması için dikkat edilmesi gerekenler.",
+    title: "Cover",
+    description: "What to keep in mind so your cover isn't just pretty but serves sales.",
     icon: <Palette className="size-4" />,
   },
 ] as const;
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("tr-TR", {
+  return new Date(dateStr).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -67,38 +67,38 @@ export default function BlogPage() {
     <MarketingPage>
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
-          <h1 className="sr-only">Book Generator blog yazıları</h1>
+          <h1 className="sr-only">Book Generator blog articles</h1>
           <SectionHeading
             badge="Blog"
-            title="İtiraz kıran, kararı hızlandıran yazılar."
-            description="Bu sayfa haber akışı değil; ilk kez kitap çıkaran birinin aklındaki kritik soruları hızla temizleyen kısa yazılar koleksiyonu."
+            title="Articles that overcome objections and speed up decisions."
+            description="This page is not a news feed; it's a collection of short articles that quickly clear up the critical questions of a first-time book author."
           />
           <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-            Başlangıç için önce{" "}
+            To get started, you can first check{" "}
             <Link href="/how-it-works" className="text-foreground underline-offset-4 hover:underline">
-              nasıl çalıştığını
-            </Link>{" "}
-            inceleyebilir, sonra{" "}
+              how it works
+            </Link>{", "}
+            then clarify your decision with the{" "}
             <Link href="/faq" className="text-foreground underline-offset-4 hover:underline">
-              SSS
+              FAQ
             </Link>{" "}
-            ve{" "}
+            and{" "}
             <Link href="/pricing" className="text-foreground underline-offset-4 hover:underline">
-              fiyatlar
+              pricing
             </Link>{" "}
-            sayfalarıyla kararını netleştirebilirsin.
+            pages.
           </p>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-            Ama asıl netlik çoğu zaman okumaktan değil, kendi konu fikrini sisteme girip önizlemeyi görmekten gelir.
+            But real clarity usually comes not from reading, but from entering your own topic idea and seeing the preview.
           </p>
         </div>
       </section>
 
       <section className="border-b border-border/80">
         <Features4
-          badge="Konular"
-          title="Blogda hangi sorulara cevap var?"
-          description="Haklardan ilk planlamaya, format seçiminden kapak kararına kadar farklı karar eşiklerini hızlandıran kategoriler."
+          badge="Topics"
+          title="What questions does the blog answer?"
+          description="Categories that speed up different decision points — from rights to initial planning, format selection to cover decisions."
           items={blogFeatureItems}
         />
       </section>
@@ -106,9 +106,9 @@ export default function BlogPage() {
       <section className="py-18">
         <div className="shell">
           <SectionHeading
-            badge="Yazilar"
-            title="Tüm yazılar"
-            description="Önce ana itirazları, sonra daha detaylı karar noktalarını ele alan sade içerikler."
+            badge="Articles"
+            title="All articles"
+            description="Straightforward content that addresses the main objections first, then covers more detailed decision points."
           />
 
           {/* Featured post */}
@@ -118,7 +118,7 @@ export default function BlogPage() {
                 <CardContent className="flex h-full flex-col space-y-5">
                   <div className="flex items-center gap-2">
                     <Badge>{featured.category}</Badge>
-                    <span className="text-xs text-muted-foreground/70">Öne Çıkan</span>
+                    <span className="text-xs text-muted-foreground/70">Featured</span>
                   </div>
                   <h2 className="max-w-2xl text-balance font-serif text-4xl font-semibold tracking-tight text-foreground">
                     {featured.title}
@@ -128,10 +128,10 @@ export default function BlogPage() {
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <time dateTime={featured.datePublished}>{formatDate(featured.datePublished)}</time>
                       <span className="size-1 rounded-full bg-border" />
-                      <span>{featured.readTime} okuma</span>
+                      <span>{featured.readTime} read</span>
                     </div>
                     <span className="flex items-center gap-1 text-sm font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                      Oku <ArrowRight className="size-3.5" />
+                      Read <ArrowRight className="size-3.5" />
                     </span>
                   </div>
                 </CardContent>
@@ -187,13 +187,13 @@ export default function BlogPage() {
       </section>
 
       <MarketingCtaSection
-        title="Okuduktan sonra sıradaki en iyi adım kendi önizlemeni görmek."
-        description="Blog kararını hızlandırır ama asıl netlik ancak kendi kitap fikrini sisteme girdiğinde gelir. Önce önizlemeyi gör, sonra kitabı açmaya karar ver."
+        title="After reading, the next best step is to see your own preview."
+        description="The blog speeds up your decision, but real clarity comes when you enter your own book idea into the system. See the preview first, then decide to unlock the full book."
         items={[
-          "Konu ve hedef okur girişi",
-          "Taslak ve bölüm planı oluşturma",
-          "Bölüm üretimi ve düzenleme",
-          "Önce önizleme, sonra tam kitap",
+          "Topic and target reader input",
+          "Outline and chapter plan creation",
+          "Chapter generation and editing",
+          "Preview first, then full book",
         ]}
       />
     </MarketingPage>

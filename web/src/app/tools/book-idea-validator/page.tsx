@@ -5,14 +5,14 @@ import { BookIdeaValidatorTool } from "@/components/site/book-idea-validator-too
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kitap Fikri Değerlendirici | Kitap Oluşturucu",
+  title: "Book Idea Validator | Book Generator",
   description:
-    "Kitap fikrinin ne kadar güçlü olduğunu saniyeler içinde puanla. Hedef okur, vaat ve format açısından analiz al; başlık fikirleri ve mini outline ile devam et.",
+    "Score your book idea's strength in seconds. Get analysis on target reader, promise, and format; continue with title ideas and a mini outline.",
   path: "/tools/book-idea-validator",
   keywords: [
     "book idea validator",
     "book topic validator",
-    "kitap fikri doğrulama",
+    "book idea assessment",
     "authority book idea",
     "lead magnet book idea",
     "book outline starter",

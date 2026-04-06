@@ -52,31 +52,31 @@ const defaultForm: FormState = {
 };
 
 const intentOptions: Array<{ value: BookIdeaIntent; label: string; hint: string }> = [
-  { value: "authority_book", label: "Authority book", hint: "Trust, positioning ve premium algı için." },
-  { value: "lead_magnet", label: "Lead magnet", hint: "E-posta ve danışmanlık talebi üretmek için." },
-  { value: "paid_guide", label: "Paid guide", hint: "Düşük fiyatlı bilgi ürünü olarak satmak için." },
-  { value: "kdp_publish", label: "KDP publish", hint: "Amazon KDP veya marketplace odaklı yayın için." },
-  { value: "not_sure", label: "Henüz emin değilim", hint: "Validator uygun formatı önersin." },
+  { value: "authority_book", label: "Authority book", hint: "For trust, positioning, and premium perception." },
+  { value: "lead_magnet", label: "Lead magnet", hint: "To generate email and consulting inquiries." },
+  { value: "paid_guide", label: "Paid guide", hint: "To sell as a low-priced information product." },
+  { value: "kdp_publish", label: "KDP publish", hint: "For Amazon KDP or marketplace-focused publishing." },
+  { value: "not_sure", label: "Not sure yet", hint: "Let the validator suggest the right format." },
 ];
 
 const languageOptions: Array<{ value: BookIdeaLanguage; label: string }> = [
   { value: "english", label: "English" },
   { value: "turkish", label: "Türkçe" },
-  { value: "multilingual", label: "Çok dilli" },
-  { value: "other", label: "Diğer" },
+  { value: "multilingual", label: "Multilingual" },
+  { value: "other", label: "Other" },
 ];
 
 const materialOptions: Array<{ value: MaterialStatus; label: string }> = [
-  { value: "none", label: "Henüz materyalim yok" },
-  { value: "notes", label: "Dağınık notlarım var" },
-  { value: "content", label: "Blog, ders veya içerik birikimim var" },
-  { value: "framework", label: "Kendi metodum / framework'üm var" },
+  { value: "none", label: "No materials yet" },
+  { value: "notes", label: "I have scattered notes" },
+  { value: "content", label: "I have blog, course, or content material" },
+  { value: "framework", label: "I have my own method / framework" },
 ];
 
 const sampleInputs = [
-  "Freelance tasarımcılar için müşteri kazanma sistemi",
-  "Koçlar için lead magnet kitabı",
-  "Türkçe uzmanlığını İngilizce KDP kitabına dönüştürme",
+  "Client acquisition system for freelance designers",
+  "Lead magnet book for coaches",
+  "Turning your Turkish expertise into an English KDP book",
 ];
 
 export function BookIdeaValidatorTool() {
@@ -123,8 +123,8 @@ export function BookIdeaValidatorTool() {
   function loadSample(topic: string) {
     setForm({
       topic,
-      audience: "Consultants, coaches ve niche operators",
-      goal: "Authority oluşturmak ve daha kaliteli lead kazanmak",
+      audience: "Consultants, coaches, and niche operators",
+      goal: "Build authority and generate higher-quality leads",
       intent: "authority_book",
       language: "english",
       materials: "framework",
@@ -188,7 +188,7 @@ export function BookIdeaValidatorTool() {
 
       const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error || "Rapor gönderilemedi.");
+        throw new Error(payload?.error || "Report could not be sent.");
       }
 
       setReportUnlocked(true);
@@ -204,7 +204,7 @@ export function BookIdeaValidatorTool() {
         intent: form.intent,
       });
     } catch (error) {
-      setReportRequestError(error instanceof Error ? error.message : "Rapor gönderilemedi.");
+      setReportRequestError(error instanceof Error ? error.message : "Report could not be sent.");
     } finally {
       setReportRequestPending(false);
     }
@@ -219,11 +219,11 @@ export function BookIdeaValidatorTool() {
             <div className="max-w-2xl">
               <Badge className="mb-4">Free Tool</Badge>
               <h1 className="editorial-display max-w-[11ch] text-foreground">
-                Kitap fikriniz güçlü mü, yoksa yalnızca iyi duyulan bir başlık mı?
+                Is your book idea strong, or just a good-sounding title?
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground md:text-lg">
-                Konunuzu, hedef okurunuzu ve amacınızı girin. Book Idea Validator; fikrinizin gücünü puanlasın, en
-                doğru kitap açısını önerisin ve sizi tam outline akışına taşısın.
+                Enter your topic, target reader, and goal. Book Idea Validator scores your idea's strength,
+                suggests the best book angle, and guides you straight into the full outline workflow.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -244,21 +244,21 @@ export function BookIdeaValidatorTool() {
                   <CardContent className="p-5">
                     <Target className="size-5 text-primary" />
                     <p className="mt-4 text-sm font-semibold text-foreground">Audience clarity</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Kime yazdığın ne kadar net, hızlıca gör.</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">See at a glance how clear your target reader is.</p>
                   </CardContent>
                 </Card>
                 <Card className="border border-border/70 bg-background/75">
                   <CardContent className="p-5">
                     <Compass className="size-5 text-primary" />
                     <p className="mt-4 text-sm font-semibold text-foreground">Positioning angle</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Genel konu yerine daha güçlü kitabı bul.</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Find a stronger book angle instead of a generic topic.</p>
                   </CardContent>
                 </Card>
                 <Card className="border border-border/70 bg-background/75">
                   <CardContent className="p-5">
                     <TrendingUp className="size-5 text-primary" />
                     <p className="mt-4 text-sm font-semibold text-foreground">Commercial fit</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Lead, authority veya satış katkısını ölç.</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Measure lead, authority, or sales contribution.</p>
                   </CardContent>
                 </Card>
               </div>
@@ -269,7 +269,7 @@ export function BookIdeaValidatorTool() {
                 <div className="mb-6 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-primary">Book Idea Validator</p>
-                    <p className="mt-1 text-sm text-muted-foreground">60 saniyelik kısa analiz ile başla.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Start with a 60-second quick analysis.</p>
                   </div>
                   <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                     MVP
@@ -278,48 +278,48 @@ export function BookIdeaValidatorTool() {
 
                 <div className="space-y-5">
                   <div>
-                    <Label htmlFor="topic">Kitabın konusu nedir?</Label>
+                    <Label htmlFor="topic">What is your book about?</Label>
                     <Textarea
                       id="topic"
                       value={form.topic}
                       onChange={(event) => updateField("topic", event.target.value)}
-                      placeholder="Örn. freelance tasarımcıların referans beklemeden müşteri kazanması"
+                      placeholder="E.g. how freelance designers acquire clients without waiting for referrals"
                       className="min-h-[128px]"
                     />
                     {showValidation && form.topic.trim().length <= 8 ? (
-                      <p className="mt-2 text-sm text-primary">Konuyu biraz daha somut yaz. Tek kelime yerine problem + segment kullan.</p>
+                      <p className="mt-2 text-sm text-primary">Make your topic more specific. Use problem + segment instead of a single word.</p>
                     ) : null}
                   </div>
 
                   <div className="grid gap-5 md:grid-cols-2">
                     <div>
-                      <Label htmlFor="audience">Bu kitabı kim okuyacak?</Label>
+                      <Label htmlFor="audience">Who will read this book?</Label>
                       <Input
                         id="audience"
                         value={form.audience}
                         onChange={(event) => updateField("audience", event.target.value)}
-                        placeholder="Örn. consultants, coaches, course creators"
+                        placeholder="E.g. consultants, coaches, course creators"
                       />
                       {showValidation && form.audience.trim().length <= 5 ? (
-                        <p className="mt-2 text-sm text-primary">Hedef okuru daha net tarif et.</p>
+                        <p className="mt-2 text-sm text-primary">Describe your target reader more clearly.</p>
                       ) : null}
                     </div>
                     <div>
-                      <Label htmlFor="goal">Ana amaç ne?</Label>
+                      <Label htmlFor="goal">What is the main goal?</Label>
                       <Input
                         id="goal"
                         value={form.goal}
                         onChange={(event) => updateField("goal", event.target.value)}
-                        placeholder="Örn. authority oluşturmak ve danışmanlık lead'i üretmek"
+                        placeholder="E.g. build authority and generate consulting leads"
                       />
                       {showValidation && form.goal.trim().length <= 8 ? (
-                        <p className="mt-2 text-sm text-primary">Amaç alanında net bir sonuç yaz.</p>
+                        <p className="mt-2 text-sm text-primary">Write a clear outcome in the goal field.</p>
                       ) : null}
                     </div>
                   </div>
 
                   <div>
-                    <Label>Bu kitabı ne için kullanacaksın?</Label>
+                    <Label>What will you use this book for?</Label>
                     <div className="grid gap-3 md:grid-cols-2">
                       {intentOptions.map((option) => (
                         <button
@@ -341,7 +341,7 @@ export function BookIdeaValidatorTool() {
 
                   <div className="grid gap-5 md:grid-cols-2">
                     <div>
-                      <Label htmlFor="language">Hangi dilde üretmek istiyorsun?</Label>
+                      <Label htmlFor="language">Which language do you want to produce in?</Label>
                       <select
                         id="language"
                         value={form.language}
@@ -356,7 +356,7 @@ export function BookIdeaValidatorTool() {
                       </select>
                     </div>
                     <div>
-                      <Label htmlFor="materials">Elinde hangi materyal var?</Label>
+                      <Label htmlFor="materials">What materials do you have?</Label>
                       <select
                         id="materials"
                         value={form.materials}
@@ -374,11 +374,11 @@ export function BookIdeaValidatorTool() {
 
                   <Button size="lg" className="w-full gap-2" onClick={handleAnalyze} isLoading={analysisState === "analyzing"}>
                     <Sparkles className="size-4" />
-                    Fikri Analiz Et
+                    Analyze Idea
                   </Button>
 
                   <p className="text-center text-xs leading-6 text-muted-foreground">
-                    İlk skor anında açık. Tam rapor için yalnız e-posta ister.
+                    Initial score is free. Full report requires email only.
                   </p>
                 </div>
               </CardContent>
@@ -392,10 +392,10 @@ export function BookIdeaValidatorTool() {
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
               <p className="editorial-eyebrow">Instant Report</p>
-              <h2 className="editorial-title mt-4 text-foreground">Skorla kalma. Neden güçlü ya da zayıf olduğunu da gör.</h2>
+              <h2 className="editorial-title mt-4 text-foreground">Don't stop at the score. See why your idea is strong or weak.</h2>
               <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground">
-                Bu araç yalnız iyi hissettiren bir sayı vermez. Fikrinin kimin için yeterince net olduğunu, vaadinin
-                ne kadar savunulabilir olduğunu ve hangi formatta daha iyi çalışacağını açık şekilde gösterir.
+                This tool doesn't just give you a feel-good number. It clearly shows who your idea is specific enough for,
+                how defensible your promise is, and which format would work best.
               </p>
             </div>
 
@@ -404,21 +404,21 @@ export function BookIdeaValidatorTool() {
                 {analysisState === "idle" ? (
                   <div className="rounded-[24px] border border-dashed border-border/80 bg-muted/30 p-8 text-center">
                     <BookOpen className="mx-auto size-9 text-primary" />
-                    <h3 className="mt-4 text-xl font-semibold text-foreground">İlk rapor burada görünecek</h3>
+                    <h3 className="mt-4 text-xl font-semibold text-foreground">Your first report will appear here</h3>
                     <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-muted-foreground">
-                      Konunu doldur, analiz başlat ve partial score&apos;u anında gör. Tam rapor; title set, mini outline
-                      ve format önerisiyle birlikte açılır.
+                      Fill in your topic, start the analysis, and see the partial score instantly. The full report unlocks
+                      with a title set, mini outline, and format recommendation.
                     </p>
                   </div>
                 ) : analysisState === "analyzing" ? (
                   <div className="rounded-[24px] border border-primary/20 bg-primary/5 p-8">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Analyzing</p>
-                    <h3 className="mt-4 font-serif text-3xl font-semibold text-foreground">Editorial signal aranıyor...</h3>
+                    <h3 className="mt-4 font-serif text-3xl font-semibold text-foreground">Searching for editorial signals...</h3>
                     <div className="mt-6 space-y-3">
                       {[
-                        "Audience clarity ölçülüyor",
-                        "Promise strength puanlanıyor",
-                        "Format ve angle önerisi hazırlanıyor",
+                        "Measuring audience clarity",
+                        "Scoring promise strength",
+                        "Preparing format and angle recommendation",
                       ].map((item, index) => (
                         <div key={item} className="flex items-center gap-3 text-sm text-muted-foreground">
                           <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary" style={{ animationDelay: `${index * 120}ms` }} />
@@ -443,10 +443,10 @@ export function BookIdeaValidatorTool() {
                             Primary recommendation
                           </Badge>
                         </div>
-                        <h3 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Önerilen kitap açısı</h3>
+                        <h3 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Recommended book angle</h3>
                         <p className="mt-3 text-sm leading-7 text-muted-foreground">{result.recommendedAngle}</p>
                         <div className="mt-5 rounded-[20px] border border-border/70 bg-background/70 p-4">
-                          <p className="text-sm font-semibold text-foreground">Net sonraki adım</p>
+                          <p className="text-sm font-semibold text-foreground">Clear next step</p>
                           <p className="mt-2 text-sm leading-7 text-muted-foreground">{result.nextStep}</p>
                         </div>
                       </div>
@@ -455,7 +455,7 @@ export function BookIdeaValidatorTool() {
                     <div className="grid gap-4 md:grid-cols-2">
                       <Card className="border border-border/80 bg-background/70">
                         <CardContent className="p-6">
-                          <p className="text-sm font-semibold text-foreground">Neden güçlü?</p>
+                          <p className="text-sm font-semibold text-foreground">Why is it strong?</p>
                           <ul className="mt-4 space-y-3">
                             {result.strongestPoints.map((point) => (
                               <li key={point} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">
@@ -469,7 +469,7 @@ export function BookIdeaValidatorTool() {
 
                       <Card className="border border-border/80 bg-background/70">
                         <CardContent className="p-6">
-                          <p className="text-sm font-semibold text-foreground">Ne sıkılaştırılmalı?</p>
+                          <p className="text-sm font-semibold text-foreground">What needs tightening?</p>
                           <ul className="mt-4 space-y-3">
                             {result.risks.map((risk) => (
                               <li key={risk} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">
@@ -506,13 +506,13 @@ export function BookIdeaValidatorTool() {
                           <div>
                             <div className="flex items-center gap-2 text-primary">
                               <Mail className="size-4" />
-                              <p className="text-sm font-semibold">Tam raporu aç</p>
+                              <p className="text-sm font-semibold">Unlock full report</p>
                             </div>
                             <h3 className="mt-3 font-serif text-3xl font-semibold text-foreground">
-                              Başlık önerileri ve mini taslak hazır.
+                              Title suggestions and mini outline are ready.
                             </h3>
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-                              Tam rapor; 5 title idea, 8 bölümlük taslak ve daha net format önerisini açar.
+                              The full report unlocks 5 title ideas, an 8-chapter outline, and a sharper format recommendation.
                             </p>
                           </div>
                           <div className="text-sm text-muted-foreground">Email only</div>
@@ -535,12 +535,12 @@ export function BookIdeaValidatorTool() {
                             className="bg-background/90"
                           />
                             <Button onClick={handleUnlockReport} className="gap-2" isLoading={reportRequestPending}>
-                              Tam Raporu Aç
+                              Unlock Full Report
                               <ArrowRight className="size-4" />
                             </Button>
                           </div>
                         {showValidation && !emailValid ? (
-                          <p className="mt-2 text-sm text-primary">Tam rapor için geçerli bir e-posta gir.</p>
+                          <p className="mt-2 text-sm text-primary">Enter a valid email to unlock the full report.</p>
                         ) : null}
                         {reportRequestError ? (
                           <p className="mt-2 text-sm text-primary">{reportRequestError}</p>
@@ -551,9 +551,9 @@ export function BookIdeaValidatorTool() {
                         <Card className="border border-border/80 bg-background/70">
                           <CardContent className="p-6">
                             <div className="mb-4 rounded-[18px] border border-primary/20 bg-primary/8 px-4 py-3 text-sm text-foreground">
-                              Tam rapor <span className="font-semibold">{reportDeliveredTo}</span> adresine gönderildi.
+                              Full report sent to <span className="font-semibold">{reportDeliveredTo}</span>.
                             </div>
-                            <p className="text-sm font-semibold text-foreground">Önerilen başlıklar</p>
+                            <p className="text-sm font-semibold text-foreground">Suggested titles</p>
                             <ul className="mt-4 space-y-3">
                               {result.titleIdeas.map((title) => (
                                 <li key={title} className="rounded-[18px] border border-border/70 bg-background px-4 py-3 text-sm text-foreground">
@@ -566,7 +566,7 @@ export function BookIdeaValidatorTool() {
 
                         <Card className="border border-border/80 bg-background/70">
                           <CardContent className="p-6">
-                            <p className="text-sm font-semibold text-foreground">Mini taslak</p>
+                            <p className="text-sm font-semibold text-foreground">Mini outline</p>
                             <ol className="mt-4 space-y-3">
                               {result.miniOutline.map((item, index) => (
                                 <li key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
@@ -596,17 +596,17 @@ export function BookIdeaValidatorTool() {
               {
                 href: "/blog/how-to-validate-a-nonfiction-book-idea",
                 title: "How to validate a nonfiction book idea",
-                text: "Zayıf fikirle güçlü fikir arasındaki farkı hangi sinyallerle okuyacağını anlatır.",
+                text: "Explains which signals distinguish a weak idea from a strong one.",
               },
               {
                 href: "/blog/authority-book-mu-lead-magnet-book-mu",
-                title: "Authority book mu lead magnet book mu?",
-                text: "Aynı konunun hangi formatta daha iyi çalışacağını karar ağacıyla netleştirir.",
+                title: "Authority book or lead magnet book?",
+                text: "Uses a decision tree to clarify which format works better for the same topic.",
               },
               {
                 href: "/blog/zayif-bir-kitap-fikri-nasil-guclendirilir",
-                title: "Zayıf bir kitap fikri nasıl güçlendirilir?",
-                text: "Geniş, jenerik veya sonuçsuz görünen fikirleri nasıl daraltacağını gösterir.",
+                title: "How to strengthen a weak book idea?",
+                text: "Shows how to narrow down broad, generic, or outcome-less ideas.",
               },
             ].map((item) => (
               <Link key={item.href} href={item.href}>
@@ -626,23 +626,23 @@ export function BookIdeaValidatorTool() {
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">Next Step</p>
                 <h2 className="mt-4 max-w-2xl font-serif text-3xl font-semibold tracking-tight md:text-4xl">
-                  Güçlü fikri şimdi önizleme, taslak ve kapağa taşı.
+                  Turn your strong idea into a preview, outline, and cover now.
                 </h2>
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-white/72">
-                  Validator karar netliği verir. Asıl üretim için Book Generator wizard&apos;ına geçip aynı fikri tam
-                  taslak, özelleştirilmiş kapak ve önizleme akışına sok.
+                  The validator gives you decision clarity. For actual production, move into the Book Generator wizard
+                  and turn the same idea into a full outline, custom cover, and preview workflow.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="min-w-[220px] gap-2" onClick={() => trackEvent("tool_cta_clicked", { tool: "book_idea_validator", destination: "start_topic" })}>
                   <Link href={previewHref}>
-                    Ücretsiz Önizleme Başlat
+                    Start Free Preview
                     <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="min-w-[220px] border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={() => trackEvent("tool_cta_clicked", { tool: "book_idea_validator", destination: "tools_hub" })}>
-                  <Link href="/tools">Diğer Araçları Gör</Link>
+                  <Link href="/tools">See Other Tools</Link>
                 </Button>
               </div>
             </div>
