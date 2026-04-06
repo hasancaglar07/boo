@@ -60,7 +60,7 @@ const FAQS = [
   },
   {
     q: "Is it mandatory for my invitee to use my link?",
-    a: "Yes. The affiliate system requires members to sign up through your special link. Your link carries the ?ref=YOURCODE parameter and is automatically recognized.",zed.",
+    a: "Yes. The affiliate system requires members to sign up through your special link. Your link carries the ?ref=YOURCODE parameter and is automatically recognized.",
   },
 ];
 

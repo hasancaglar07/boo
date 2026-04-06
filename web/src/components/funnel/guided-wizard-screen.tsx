@@ -25,7 +25,7 @@ import {
   outlineWordRange,
   saveFunnelDraft,
   savePendingGenerateIntent,
-  suggestedStyleProfilee,
+  suggestedStyleProfile,
   type FunnelDraft,
   type FunnelLanguage,
   type FunnelStep,
@@ -405,7 +405,7 @@ export function GuidedWizardScreen({
   }
 
   function applyRandomStyleProfilee(forceReplace = false) {
-    const style = suggestedStyleProfilee(draft);
+    const style = suggestedStyleProfile(draft);
     const preset = pickRandomPublisherLogo();
     const localized = buildRandomStyleCopy(draft);
     updateDraft({
