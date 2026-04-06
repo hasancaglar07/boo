@@ -112,7 +112,7 @@ export default function AdminAnalyticsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Analytics & reports</h1>
-        <p className="mt-1 text-sm admin-muted">Funnel, cohort, revenue ve churn görünümü.</p>
+        <p className="mt-1 text-sm admin-muted">Funnel, cohort, revenue, and churn view.</p>
       </div>
 
       <section className="grid gap-4 md:grid-cols-3">
@@ -241,7 +241,7 @@ export default function AdminAnalyticsPage() {
               <div key={item.cohort} className="rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 dark:bg-white/5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-semibold text-[color:var(--admin-text)]">{item.cohort}</div>
-                  <div className="text-xs admin-muted">{item.size} kullanıcı</div>
+                  <div className="text-xs admin-muted">{item.size} users</div>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   {item.retention.map((value, index) => (
@@ -279,7 +279,7 @@ export default function AdminAnalyticsPage() {
       {performance.data?.code === "NOT_CONFIGURED" ? (
         <NotConfiguredCard
           title="Performance metrics not configured"
-          description="p95/p99, worker utilization ve infrastructure-level monitoring bu fazda bağlı değil."
+          description="p95/p99, worker utilization, and infrastructure-level monitoring are not connected in this phase."
         />
       ) : null}
     </div>

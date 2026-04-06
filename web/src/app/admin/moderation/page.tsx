@@ -62,7 +62,7 @@ export default function AdminModerationPage() {
         <div className="text-sm max-w-[200px]">
           <div className="flex gap-3">
             <span>Kalite: <strong>{row.qualityScore ?? "—"}</strong></span>
-            <span>İntihal: <strong>{row.plagiarismScore ?? "—"}</strong></span>
+            <span>Plagiarism: <strong>{row.plagiarismScore ?? "—"}</strong></span>
           </div>
           {row.notes && (
             <div className="mt-1 text-xs admin-muted line-clamp-2">{row.notes}</div>
@@ -113,7 +113,7 @@ export default function AdminModerationPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Content moderation</h1>
-        <p className="mt-1 text-sm admin-muted">Kısmi moderasyon kuyruğu. Kayıt yoksa empty state görünür.</p>
+        <p className="mt-1 text-sm admin-muted">Partial moderation queue. Empty state appears if no records.</p>
       </div>
 
       <FilterBar
@@ -140,8 +140,8 @@ export default function AdminModerationPage() {
         columns={columns}
         getRowId={(row) => row.id}
         loading={loading}
-        emptyTitle="Moderation kaydı yok"
-        emptyMessage="Henüz quality veya plagiarism inceleme kaydı oluşturulmadı."
+        emptyTitle="No moderation records"
+        emptyMessage="No quality or plagiarism review records created yet."
       />
 
       {data ? (

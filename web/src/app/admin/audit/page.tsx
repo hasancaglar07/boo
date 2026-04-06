@@ -82,7 +82,7 @@ export default function AdminAuditPage() {
               className="text-xs text-[color:var(--admin-primary)] hover:underline"
               onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
             >
-              {expandedId === row.id ? "Gizle" : "Göster"}
+              {expandedId === row.id ? "Hide" : "Show"}
             </button>
           ) : (
             <span className="text-xs admin-muted">—</span>
@@ -107,7 +107,7 @@ export default function AdminAuditPage() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Audit log</h1>
-          <p className="mt-1 text-sm admin-muted">Admin, auth ve billing aksiyonlarının tamamı.</p>
+          <p className="mt-1 text-sm admin-muted">All admin, auth, and billing actions.</p>
         </div>
         <button
           type="button"
@@ -126,12 +126,12 @@ export default function AdminAuditPage() {
           className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[color:var(--admin-border)] px-4 text-sm font-semibold text-[color:var(--admin-text)] transition hover:border-[color:var(--admin-primary)]"
         >
           <Download className="size-4" />
-          CSV dışa aktar
+          CSV Export
         </button>
       </div>
 
       <FilterBar
-        searchPlaceholder="Aksiyon, kullanıcı veya entity ara"
+        searchPlaceholder="Search action, user, or entity"
         filters={[
           {
             key: "action",
@@ -153,8 +153,8 @@ export default function AdminAuditPage() {
         columns={columns}
         getRowId={(row) => row.id}
         loading={loading}
-        emptyTitle="Audit kaydı bulunamadı"
-        emptyMessage="Seçili filtrelerde event yok."
+        emptyTitle="No audit records found"
+        emptyMessage="No events in selected filters."
         sort={searchParams.get("sort") || "createdAt"}
         order={(searchParams.get("order") as "asc" | "desc" | null) || "desc"}
         onSort={handleSort}

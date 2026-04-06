@@ -20,8 +20,8 @@ type ReportConfig = {
 const REPORTS: ReportConfig[] = [
   {
     id: "users",
-    title: "Kullanıcı Raporu",
-    description: "Tüm kullanıcılar, plan bilgisi, gelir ve kayıt tarihi.",
+    title: "User Report",
+    description: "All users, plan info, revenue, and registration date.",
     icon: <Users className="size-5" />,
     baseUrl: "/api/admin/reports/users",
     filename: "admin-users.csv",
@@ -30,7 +30,7 @@ const REPORTS: ReportConfig[] = [
         name: "plan",
         label: "Plan",
         options: [
-          { value: "all", label: "Tümü" },
+          { value: "all", label: "All" },
           { value: "free", label: "Free" },
           { value: "starter", label: "Starter" },
           { value: "creator", label: "Creator" },
@@ -41,17 +41,17 @@ const REPORTS: ReportConfig[] = [
         name: "status",
         label: "Durum",
         options: [
-          { value: "all", label: "Tümü" },
+          { value: "all", label: "All" },
           { value: "active", label: "Aktif" },
-          { value: "inactive", label: "İnaktif" },
+          { value: "inactive", label: "Inactive" },
         ],
       },
       {
         name: "role",
         label: "Rol",
         options: [
-          { value: "all", label: "Tümü" },
-          { value: "USER", label: "Kullanıcı" },
+          { value: "all", label: "All" },
+          { value: "USER", label: "User" },
           { value: "ADMIN", label: "Admin" },
         ],
       },
@@ -60,7 +60,7 @@ const REPORTS: ReportConfig[] = [
   {
     id: "revenue",
     title: "Gelir Raporu",
-    description: "Fatura kayıtları, plan ve ödeme durumuna göre filtrelenebilir.",
+    description: "Invoice records, filterable by plan and payment status.",
     icon: <DollarSign className="size-5" />,
     baseUrl: "/api/admin/reports/revenue",
     filename: "admin-revenue.csv",
@@ -69,11 +69,11 @@ const REPORTS: ReportConfig[] = [
         name: "status",
         label: "Durum",
         options: [
-          { value: "all", label: "Tümü" },
-          { value: "paid", label: "Ödendi" },
-          { value: "open", label: "Açık" },
-          { value: "void", label: "İptal" },
-          { value: "refunded", label: "İade" },
+          { value: "all", label: "All" },
+          { value: "paid", label: "Paid" },
+          { value: "open", label: "Open" },
+          { value: "void", label: "Void" },
+          { value: "refunded", label: "Refunded" },
         ],
       },
     ],
@@ -81,7 +81,7 @@ const REPORTS: ReportConfig[] = [
   {
     id: "books",
     title: "Kitap Raporu",
-    description: "Tüm kitap kayıtları, oluşturulma tarihi ve durumları.",
+    description: "All book records, creation date, and statuses.",
     icon: <BookOpen className="size-5" />,
     baseUrl: "/api/admin/reports/books",
     filename: "admin-books.csv",
@@ -90,9 +90,9 @@ const REPORTS: ReportConfig[] = [
         name: "status",
         label: "Durum",
         options: [
-          { value: "all", label: "Tümü" },
+          { value: "all", label: "All" },
           { value: "draft", label: "Taslak" },
-          { value: "published", label: "Yayında" },
+          { value: "published", label: "Published" },
         ],
       },
     ],
@@ -119,7 +119,7 @@ function ReportCard({ report }: { report: ReportConfig }) {
     try {
       const url = buildUrl();
       const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("İndirme başarısız.");
+      if (!res.ok) throw new Error("Download failed.");
       const blob = await res.blob();
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
@@ -171,7 +171,7 @@ function ReportCard({ report }: { report: ReportConfig }) {
         className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[color:var(--admin-primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
       >
         <Download className="size-4" />
-        {downloading ? "İndiriliyor..." : "CSV İndir"}
+        {downloading ? "Downloading..." : "Download CSV"}
       </button>
     </div>
   );
@@ -182,7 +182,7 @@ export default function AdminReportsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Reports</h1>
-        <p className="mt-1 text-sm admin-muted">CSV formatında veri dışa aktarımı.</p>
+        <p className="mt-1 text-sm admin-muted">Data export in CSV format.</p>
       </div>
 
       <div className="admin-panel rounded-[28px] p-5">

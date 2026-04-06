@@ -45,11 +45,11 @@ export default function AdminUsersPage() {
           <div className="mt-1 flex items-center gap-1.5">
             {row.emailVerified ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                <CheckCircle2 className="size-3" /> Doğrulandı
+                <CheckCircle2 className="size-3" /> Verified
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
-                <AlertCircle className="size-3" /> Doğrulanmadı
+                <AlertCircle className="size-3" /> Not Verified
               </span>
             )}
           </div>
@@ -98,7 +98,7 @@ export default function AdminUsersPage() {
         <ActionMenu
           actions={[
             {
-              label: "Detayı aç",
+              label: "Open details",
               onClick: () => router.push(`/admin/users/${row.id}`),
             },
           ]}
@@ -122,18 +122,18 @@ export default function AdminUsersPage() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">User management</h1>
-          <p className="mt-1 text-sm admin-muted">Plan, status ve gelir kırılımıyla kullanıcıları yönet.</p>
+          <p className="mt-1 text-sm admin-muted">Manage users with plan, status, and revenue breakdown.</p>
         </div>
         <Link
           href={`/api/admin/reports/users?${query}`}
           className="inline-flex h-11 items-center justify-center rounded-2xl border border-[color:var(--admin-border)] px-4 text-sm font-semibold text-[color:var(--admin-text)]"
         >
-          CSV dışa aktar
+          CSV Export
         </Link>
       </div>
 
       <FilterBar
-        searchPlaceholder="E-posta, isim veya kullanıcı ID ara"
+        searchPlaceholder="Search email, name, or user ID"
         filters={[
           {
             key: "plan",
@@ -142,7 +142,7 @@ export default function AdminUsersPage() {
               { label: "Free", value: "free" },
               { label: "Starter", value: "starter" },
               { label: "Yazar", value: "creator" },
-              { label: "Stüdyo", value: "pro" },
+              { label: "Studio", value: "pro" },
               { label: "Tek Kitap", value: "premium" },
             ],
           },
@@ -174,7 +174,7 @@ export default function AdminUsersPage() {
         columns={columns}
         getRowId={(row) => row.id}
         loading={loading}
-        emptyTitle="Kullanıcı bulunamadı"
+        emptyTitle="No users found"
         emptyMessage="Filtreleri temizleyip tekrar dene."
         sort={searchParams.get("sort") || "createdAt"}
         order={(searchParams.get("order") as "asc" | "desc" | null) || "desc"}

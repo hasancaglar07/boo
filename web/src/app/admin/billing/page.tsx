@@ -114,7 +114,7 @@ export default function AdminBillingPage() {
           subscription: "Abonelik",
           one_time_book_unlock: "Kitap Kilidi",
           manual_adjustment: "Manuel",
-          refund: "İade",
+          refund: "Refund",
         };
         return (
           <span className={`rounded-full px-2 py-1 text-xs font-semibold ${kindColors[row.kind] || "bg-slate-500/10 text-slate-700"}`}>
@@ -164,13 +164,13 @@ export default function AdminBillingPage() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Billing & invoices</h1>
-          <p className="mt-1 text-sm admin-muted">Internal ledger tabanlı gelir görünümü ve refund/void aksiyonları.</p>
+          <p className="mt-1 text-sm admin-muted">Internal ledger-based revenue view and refund/void actions.</p>
         </div>
         <Link
           href={`/api/admin/reports/revenue?${query}`}
           className="inline-flex h-11 items-center justify-center rounded-2xl border border-[color:var(--admin-border)] px-4 text-sm font-semibold text-[color:var(--admin-text)]"
         >
-          CSV dışa aktar
+          CSV Export
         </Link>
       </div>
 
@@ -226,8 +226,8 @@ export default function AdminBillingPage() {
         columns={columns}
         getRowId={(row) => row.id}
         loading={invoices.loading}
-        emptyTitle="Fatura bulunamadı"
-        emptyMessage="Henüz billing kaydı yok."
+        emptyTitle="No invoices found"
+        emptyMessage="No billing records yet."
         sort={searchParams.get("sort") || "createdAt"}
         order={(searchParams.get("order") as "asc" | "desc" | null) || "desc"}
         onSort={handleSort}

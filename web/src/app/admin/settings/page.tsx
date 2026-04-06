@@ -67,7 +67,7 @@ export default function AdminSettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">System settings</h1>
-        <p className="mt-1 text-sm admin-muted">Canlı feature flags ve backend generation ayarları. Diğer alanlar structured placeholder olarak durur.</p>
+        <p className="mt-1 text-sm admin-muted">Live feature flags and backend generation settings. Other fields remain as structured placeholders.</p>
       </div>
 
       {error ? <div className="text-sm text-rose-600">{error}</div> : null}
@@ -76,7 +76,7 @@ export default function AdminSettingsPage() {
         <div className="admin-panel rounded-[28px] p-6">
           <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Feature flags</div>
           <div className="space-y-3">
-            {loading && !data ? <div className="text-sm admin-muted">Yükleniyor…</div> : null}
+            {loading && !data ? <div className="text-sm admin-muted">Loading…</div> : null}
             {data?.featureFlags.length ? data.featureFlags.map((flag) => (
               <div key={flag.id} className="flex items-center justify-between gap-4 rounded-2xl border border-[color:var(--admin-border)] bg-white/50 px-4 py-4 dark:bg-white/5">
                 <div>
@@ -94,7 +94,7 @@ export default function AdminSettingsPage() {
               </div>
             )) : (
               <div className="rounded-2xl border border-dashed border-[color:var(--admin-border)] px-4 py-6 text-sm admin-muted">
-                Henüz feature flag kaydı yok.
+                No feature flag records yet.
               </div>
             )}
           </div>
@@ -125,7 +125,7 @@ export default function AdminSettingsPage() {
             className="mt-4 rounded-2xl bg-[color:var(--admin-primary)] px-4 py-3 text-sm font-semibold text-white"
             disabled={saving === "backend"}
           >
-            {saving === "backend" ? "Kaydediliyor..." : "Backend ayarlarını kaydet"}
+            {saving === "backend" ? "Saving..." : "Save Backend Settings"}
           </button>
         </div>
       </section>
@@ -133,15 +133,15 @@ export default function AdminSettingsPage() {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <NotConfiguredCard
           title="Pricing editor"
-          description="Plan fiyatları ve limits için admin UI ileride gerçek billing provider veya catalog adapter ile bağlanacak."
+          description="Admin UI for plan pricing and limits will be connected to the real billing provider or catalog adapter in the future."
         />
         <NotConfiguredCard
           title="Email templates"
-          description="Template düzenleme ve test e-mail yüzeyi bu fazda bağlanmadı."
+          description="Template editing and test email surface are not connected in this phase."
         />
         <NotConfiguredCard
           title="API keys & webhooks"
-          description="Key rotation, webhook yönetimi ve gelişmiş rate-limit kuralları structured placeholder olarak bırakıldı."
+          description="Key rotation, webhook management, and advanced rate-limit rules were left as structured placeholders."
         />
       </section>
     </div>

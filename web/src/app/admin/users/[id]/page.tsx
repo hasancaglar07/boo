@@ -115,7 +115,7 @@ export default function AdminUserDetailPage() {
     if (planId === data?.item.currentPlan) return;
     const label = PLAN_LABELS[planId] || planId;
     const confirmed = window.confirm(
-      `Bu kullanıcının planını "${PLAN_LABELS[data?.item.currentPlan || 'free']}" → "${label}" olarak değiştirmek istediğinize emin misiniz?`
+      `Bu kullanıcının planını "${PLAN_LABELS[data?.item.currentPlan || 'free']}" → "${label}" Are you sure you want to change this user's plan to`
     );
     if (!confirmed) return;
     setBusy("plan");
@@ -125,22 +125,22 @@ export default function AdminUserDetailPage() {
         method: "PATCH",
         body: JSON.stringify({ planId, reason: planReason.trim() || undefined }),
       });
-      setPlanSuccess(`Plan başarıyla "${label}" olarak değiştirildi.`);
+      setPlanSuccess(`Plan successfully changed to "${label}" .`);
       setPlanReason("");
       await reload();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Plan değiştirilemedi.");
+      alert(err instanceof Error ? err.message : "Plan could not be changed.");
     } finally {
       setBusy("");
     }
   }
 
   if (loading && !data) {
-    return <div className="admin-panel rounded-[24px] px-6 py-10">Yükleniyor…</div>;
+    return <div className="admin-panel rounded-[24px] px-6 py-10">Loading…</div>;
   }
 
   if (error || !data) {
-    return <div className="admin-panel rounded-[24px] px-6 py-10 text-sm text-rose-600">{error || "Kullanıcı yüklenemedi."}</div>;
+    return <div className="admin-panel rounded-[24px] px-6 py-10 text-sm text-rose-600">{error || "User could not be loaded."}</div>;
   }
 
   return (
@@ -157,11 +157,11 @@ export default function AdminUserDetailPage() {
               <StatusBadge status={data.item.currentStatus} label={data.item.currentStatus} />
               {data.item.emailVerified ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                  <CheckCircle2 className="size-3.5" /> E-posta doğrulandı
+                  <CheckCircle2 className="size-3.5" /> Email verified
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                  <AlertCircle className="size-3.5" /> E-posta doğrulanmadı
+                  <AlertCircle className="size-3.5" /> Email not verified
                 </span>
               )}
             </div>
@@ -185,9 +185,9 @@ export default function AdminUserDetailPage() {
               <div className="mt-2 font-semibold text-[color:var(--admin-text)]">{formatAdminCurrency(data.item.totalRevenue)}</div>
             </div>
             <div className="rounded-[20px] border border-[color:var(--admin-border)] bg-white/50 p-4 dark:bg-white/5">
-              <div className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">Son Giriş</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">Last Login</div>
               <div className="mt-2 font-semibold text-[color:var(--admin-text)]">
-                {data.item.lastLoginAt ? formatAdminDateTime(data.item.lastLoginAt) : "Hiç giriş yapılmadı"}
+                {data.item.lastLoginAt ? formatAdminDateTime(data.item.lastLoginAt) : "Never logged in"}
               </div>
             </div>
           </div>
@@ -209,20 +209,20 @@ export default function AdminUserDetailPage() {
                   onClick={() => void handleResendVerification()}
                   className="rounded-2xl border border-[color:var(--admin-border)] px-4 py-3 text-left text-sm font-semibold text-[color:var(--admin-text)]"
                 >
-                  {busy === "verify" ? "Gönderiliyor..." : "E-posta doğrulamasını tekrar gönder"}
+                  {busy === "verify" ? "Sending..." : "Resend email verification"}
                 </button>
               ) : null}
               <div className="rounded-2xl border border-[color:var(--admin-border)] p-4">
                 <div className="flex items-center gap-2">
                   <Crown className="size-4 text-amber-500" />
-                  <div className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">Plan değiştir</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.14em] admin-muted">Change Plan</div>
                 </div>
                 <div className="mt-2 flex items-center gap-2 text-sm">
                   <span className="rounded-lg bg-[color:var(--admin-border)] px-2.5 py-1 font-medium text-[color:var(--admin-text)]">
                     {PLAN_LABELS[data.item.currentPlan] || data.item.currentPlan}
                   </span>
                   <ArrowRight className="size-4 admin-muted" />
-                  <span className="font-medium admin-muted">hedef plan seç ↓</span>
+                  <span className="font-medium admin-muted">Select target plan ↓</span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(["free", "starter", "creator", "pro", "premium"] as const).map((planId) => {
@@ -257,7 +257,7 @@ export default function AdminUserDetailPage() {
                   </div>
                 )}
                 {busy === "plan" && (
-                  <div className="mt-2 text-xs admin-muted">Plan değiştiriliyor…</div>
+                  <div className="mt-2 text-xs admin-muted">Change Planiliyor…</div>
                 )}
               </div>
               {data.permissions.canChangeRole ? (
@@ -288,7 +288,7 @@ export default function AdminUserDetailPage() {
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
                 rows={4}
-                placeholder="İç not ekle"
+                placeholder="Add internal note"
                 className="w-full rounded-2xl border border-[color:var(--admin-border)] bg-white/60 px-4 py-3 text-sm outline-none dark:bg-white/5"
               />
               <button

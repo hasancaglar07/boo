@@ -51,7 +51,7 @@ export default function AdminFeatureFlagsPage() {
   }
 
   async function handleDelete(key: string) {
-    if (!window.confirm(`"${key}" flagını silmek istediğine emin misin?`)) return;
+    if (!window.confirm(`"${key}" Are you sure you want to delete this flag?`)) return;
     try {
       await adminFetch(`/api/admin/feature-flags/${encodeURIComponent(key)}`, { method: "DELETE" });
       await reload();
@@ -97,7 +97,7 @@ export default function AdminFeatureFlagsPage() {
       setShowCreate(false);
       await reload();
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Oluşturulamadı.");
+      setCreateError(err instanceof Error ? err.message : "Could not be created.");
     } finally {
       setCreating(false);
     }
@@ -112,7 +112,7 @@ export default function AdminFeatureFlagsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Feature Flags</h1>
-          <p className="mt-1 text-sm admin-muted">Özellikleri kod değişikliği yapmadan aç/kapat.</p>
+          <p className="mt-1 text-sm admin-muted">Toggle features on/off without code changes.</p>
         </div>
         <button
           type="button"
@@ -148,11 +148,11 @@ export default function AdminFeatureFlagsPage() {
             </div>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium admin-muted">Açıklama</label>
+            <label className="mb-1.5 block text-xs font-medium admin-muted">Description</label>
             <input
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
-              placeholder="Bu flag ne işe yarıyor?"
+              placeholder="What does this flag do?"
               className="h-10 w-full rounded-xl border border-[color:var(--admin-border)] bg-white/60 px-3 text-sm outline-none focus:border-[color:var(--admin-primary)] dark:bg-white/5"
             />
           </div>
@@ -163,14 +163,14 @@ export default function AdminFeatureFlagsPage() {
               disabled={creating}
               className="inline-flex items-center gap-2 rounded-2xl bg-[color:var(--admin-primary)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
-              {creating ? "Oluşturuluyor..." : "Oluştur"}
+              {creating ? "Creating..." : "Create"}
             </button>
             <button
               type="button"
               onClick={() => { setShowCreate(false); setCreateError(""); }}
               className="inline-flex items-center rounded-2xl border border-[color:var(--admin-border)] px-4 py-2 text-sm admin-muted hover:text-[color:var(--admin-text)]"
             >
-              İptal
+              Cancel
             </button>
           </div>
         </form>
@@ -188,7 +188,7 @@ export default function AdminFeatureFlagsPage() {
         {!loading && !data?.flags.length && (
           <div className="rounded-2xl border border-dashed border-[color:var(--admin-border)] px-6 py-10 text-center">
             <Flag className="mx-auto mb-3 size-8 admin-muted opacity-40" />
-            <p className="text-sm admin-muted">Henüz feature flag yok.</p>
+            <p className="text-sm admin-muted">No feature flags yet.</p>
           </div>
         )}
 
@@ -206,7 +206,7 @@ export default function AdminFeatureFlagsPage() {
                     {flag.description && (
                       <div className="mt-0.5 text-xs admin-muted">{flag.description}</div>
                     )}
-                    <div className="mt-1 text-xs admin-muted">Güncellendi: {formatAdminDateTime(flag.updatedAt)}</div>
+                    <div className="mt-1 text-xs admin-muted">Updated: {formatAdminDateTime(flag.updatedAt)}</div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
@@ -214,14 +214,14 @@ export default function AdminFeatureFlagsPage() {
                       disabled={toggling === flag.key}
                       onClick={() => handleToggle(flag)}
                       className="inline-flex items-center gap-2 rounded-xl border border-[color:var(--admin-border)] px-3 py-2 text-sm transition hover:border-[color:var(--admin-primary)] disabled:opacity-50"
-                      title={flag.enabled ? "Kapat" : "Aç"}
+                      title={flag.enabled ? "Disable" : "Enable"}
                     >
                       {flag.enabled ? (
                         <ToggleRight className="size-5 text-emerald-500" />
                       ) : (
                         <ToggleLeft className="size-5 admin-muted" />
                       )}
-                      <span className="text-xs font-medium">{toggling === flag.key ? "..." : flag.enabled ? "Kapat" : "Aç"}</span>
+                      <span className="text-xs font-medium">{toggling === flag.key ? "..." : flag.enabled ? "Disable" : "Enable"}</span>
                     </button>
                     <button
                       type="button"
@@ -231,7 +231,7 @@ export default function AdminFeatureFlagsPage() {
                         setEditDesc(flag.description || "");
                       }}
                       className="inline-flex size-9 items-center justify-center rounded-xl border border-[color:var(--admin-border)] text-[color:var(--admin-muted)] transition hover:border-[color:var(--admin-primary)] hover:text-[color:var(--admin-primary)]"
-                      title="Düzenle"
+                      title="Edit"
                     >
                       <Pencil className="size-4" />
                     </button>
@@ -248,7 +248,7 @@ export default function AdminFeatureFlagsPage() {
 
                 {editingKey === flag.key && (
                   <form onSubmit={handleEdit} className="mt-3 rounded-2xl border border-[color:var(--admin-primary)]/30 bg-[color:var(--admin-primary-soft)] p-4 space-y-3">
-                    <div className="text-xs font-semibold text-[color:var(--admin-primary)]">Flag düzenle: {flag.key}</div>
+                    <div className="text-xs font-semibold text-[color:var(--admin-primary)]">Edit Flag: {flag.key}</div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
                         <label className="mb-1 block text-xs font-medium admin-muted">Label</label>
@@ -280,7 +280,7 @@ export default function AdminFeatureFlagsPage() {
                         onClick={() => setEditingKey(null)}
                         className="rounded-xl border border-[color:var(--admin-border)] px-3 py-1.5 text-xs admin-muted"
                       >
-                        İptal
+                        Cancel
                       </button>
                     </div>
                   </form>

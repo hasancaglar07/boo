@@ -23,7 +23,7 @@ function computeTrend(
   const curr = Number(series[series.length - 1]?.[key] ?? 0);
   if (prev === 0) return undefined;
   const delta = Math.round(((curr - prev) / prev) * 100);
-  return { value: Math.abs(delta), direction: delta >= 0 ? "up" : "down", label: "önceki döneme göre" };
+  return { value: Math.abs(delta), direction: delta >= 0 ? "up" : "down", label: "vs previous period" };
 }
 
 const revenueChartConfig = {
@@ -66,7 +66,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-3">
         <MetricCard
-          title="Toplam kullanıcı"
+          title="Total Users"
           value={loading || !data ? "—" : formatAdminNumber(data.cards.totalUsers)}
           icon={<Users className="size-5" />}
           sparkline={data?.userGrowth.map((item) => item.users)}
@@ -113,7 +113,7 @@ export default function AdminDashboardPage() {
         <div className="admin-panel rounded-[28px] p-5">
           <div className="mb-4">
             <div className="text-sm font-semibold text-[color:var(--admin-text)]">Revenue trend</div>
-            <p className="mt-1 text-sm admin-muted">Son 30 günün ücretli billing akışı</p>
+            <p className="mt-1 text-sm admin-muted">Last 30 days of paid billing flow</p>
           </div>
           <ChartContainer className="h-[280px] w-full" config={revenueChartConfig}>
             <LineChart data={data?.revenueTrend || []}>
@@ -128,7 +128,7 @@ export default function AdminDashboardPage() {
         <div className="admin-panel rounded-[28px] p-5">
           <div className="mb-4">
             <div className="text-sm font-semibold text-[color:var(--admin-text)]">Plan distribution</div>
-            <p className="mt-1 text-sm admin-muted">Aktif ve free kullanıcı dağılımı</p>
+            <p className="mt-1 text-sm admin-muted">Active and free user distribution</p>
           </div>
           <ChartContainer className="h-[280px] w-full" config={revenueChartConfig}>
             <PieChart>
@@ -155,7 +155,7 @@ export default function AdminDashboardPage() {
           <div className="admin-panel rounded-[28px] p-5">
             <div className="mb-4">
               <div className="text-sm font-semibold text-[color:var(--admin-text)]">New users vs premium conversions</div>
-              <p className="mt-1 text-sm admin-muted">Haftalık signup ve paid akışı</p>
+              <p className="mt-1 text-sm admin-muted">Weekly signup and paid flow</p>
             </div>
             <ChartContainer className="h-[260px] w-full" config={conversionChartConfig}>
               <BarChart data={data?.conversionSeries || []}>
@@ -171,7 +171,7 @@ export default function AdminDashboardPage() {
           <div className="admin-panel rounded-[28px] p-5">
             <div className="mb-4">
               <div className="text-sm font-semibold text-[color:var(--admin-text)]">User growth</div>
-              <p className="mt-1 text-sm admin-muted">Yeni kullanıcı trendi</p>
+              <p className="mt-1 text-sm admin-muted">New user trend</p>
             </div>
             <ChartContainer className="h-[260px] w-full" config={userChartConfig}>
               <AreaChart data={data?.userGrowth || []}>

@@ -65,7 +65,7 @@ export default function AdminReferralsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Referrals</h1>
-        <p className="mt-1 text-sm admin-muted">Referral program istatistikleri ve dönüşüm detayları.</p>
+        <p className="mt-1 text-sm admin-muted">Referral program statistics and conversion details.</p>
       </div>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
@@ -75,25 +75,25 @@ export default function AdminReferralsPage() {
           icon={<Share2 className="size-5" />}
         />
         <MetricCard
-          title="Toplam Tıklanma"
+          title="Total Clicks"
           value={loading || !data ? "—" : formatAdminNumber(data.summary.totalClicks)}
           icon={<MousePointerClick className="size-5" />}
           color="primary"
         />
         <MetricCard
-          title="Dönüşüm"
+          title="Conversion"
           value={loading || !data ? "—" : formatAdminNumber(data.summary.totalConversions)}
           icon={<Users className="size-5" />}
           color="success"
         />
         <MetricCard
-          title="Dönüşüm Oranı"
+          title="Conversion Rate"
           value={loading || !data ? "—" : `%${data.summary.conversionRate}`}
           icon={<Trophy className="size-5" />}
           color="warning"
         />
         <MetricCard
-          title="Ödül Verildi"
+          title="Reward Granted"
           value={loading || !data ? "—" : formatAdminNumber(data.summary.rewardedConversions)}
           icon={<Gift className="size-5" />}
           color="success"
@@ -119,7 +119,7 @@ export default function AdminReferralsPage() {
 
         {!loading && !data?.referrers.length && (
           <div className="rounded-2xl border border-dashed border-[color:var(--admin-border)] px-6 py-10 text-center text-sm admin-muted">
-            Henüz referral kodu yok.
+            No referral codes yet.
           </div>
         )}
 
@@ -128,7 +128,7 @@ export default function AdminReferralsPage() {
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-black/5 dark:border-white/8">
                 <tr>
-                  {["Kullanıcı", "Kod", "Tıklanma", "Dönüşüm", "Toplam Kazanç", "Ödenen", "Bakiye", "Ödül", "Oluşturma", ""].map((h) => (
+                  {["User", "Code", "Clicks", "Conversion", "Total Earnings", "Paid", "Balance", "Reward", "Created", ""].map((h) => (
                     <th key={h} className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] admin-muted whitespace-nowrap">
                       {h}
                     </th>
@@ -205,7 +205,7 @@ export default function AdminReferralsPage() {
                           <div className="grid gap-4 lg:grid-cols-2">
                             {/* Conversions */}
                             <div>
-                              <div className="mb-2 text-xs font-semibold uppercase tracking-widest admin-muted">Son Dönüşümler</div>
+                              <div className="mb-2 text-xs font-semibold uppercase tracking-widest admin-muted">Recent Conversions</div>
                               <div className="space-y-2">
                                 {row.latestConversions.map((c) => (
                                   <div
@@ -220,7 +220,7 @@ export default function AdminReferralsPage() {
                                     </div>
                                     <StatusBadge
                                       status={c.rewardGranted ? "success" : "warning"}
-                                      label={c.rewardGranted ? "Ödül verildi" : "Bekliyor"}
+                                      label={c.rewardGranted ? "Reward granted" : "Pending"}
                                     />
                                   </div>
                                 ))}
@@ -231,11 +231,11 @@ export default function AdminReferralsPage() {
                             <div>
                               <div className="mb-2 text-xs font-semibold uppercase tracking-widest admin-muted">
                                 <Wallet className="inline size-3 mr-1" />
-                                Ödeme Talepleri
+                                Payout Requests
                               </div>
                               <div className="space-y-2">
                                 {row.payoutRequests.length === 0 && (
-                                  <div className="text-xs admin-muted">Henüz talep yok.</div>
+                                  <div className="text-xs admin-muted">No requests yet.</div>
                                 )}
                                 {row.payoutRequests.map((p) => (
                                   <div
@@ -253,7 +253,7 @@ export default function AdminReferralsPage() {
                                     </div>
                                     <StatusBadge
                                       status={p.status === "paid" ? "success" : p.status === "open" || p.status === "draft" ? "warning" : "default"}
-                                      label={p.status === "paid" ? "Ödendi" : p.status === "open" ? "Bekliyor" : p.status === "void" ? "İptal" : p.status}
+                                      label={p.status === "paid" ? "Paid" : p.status === "open" ? "Pending" : p.status === "void" ? "Void" : p.status}
                                     />
                                   </div>
                                 ))}

@@ -77,7 +77,7 @@ export default function AdminBooksPage() {
           <StatusBadge status={row.status} />
           {row.premiumUnlocked && (
             <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:text-indigo-300">
-              <Sparkles className="size-3" /> Premium Açık
+              <Sparkles className="size-3" /> Premium Unlocked
             </span>
           )}
         </div>
@@ -127,7 +127,7 @@ export default function AdminBooksPage() {
         <ActionMenu
           actions={[
             {
-              label: "Detayı aç",
+              label: "Open details",
               onClick: () => router.push(`/admin/books/${encodeURIComponent(row.slug)}`),
             },
           ]}
@@ -140,11 +140,11 @@ export default function AdminBooksPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Book management</h1>
-        <p className="mt-1 text-sm admin-muted">Üretim statüsü, owner bilgisi ve export davranışıyla kitaplar.</p>
+        <p className="mt-1 text-sm admin-muted">Books with production status, owner info, and export behavior.</p>
       </div>
 
       <FilterBar
-        searchPlaceholder="Başlık, slug, yazar veya owner ara"
+        searchPlaceholder="Search title, slug, author, or owner"
         filters={[
           {
             key: "status",
@@ -175,14 +175,14 @@ export default function AdminBooksPage() {
         columns={columns}
         getRowId={(row) => row.slug}
         loading={loading}
-        emptyTitle="Kitap bulunamadı"
-        emptyMessage="Henüz kitap yok veya filtreler fazla dar."
+        emptyTitle="No books found"
+        emptyMessage="No books yet or filters too narrow."
         sort={searchParams.get("sort") || "createdAt"}
         order={(searchParams.get("order") as "asc" | "desc" | null) || "desc"}
         onSort={handleSort}
         bulkActions={[
           {
-            label: "CSV dışa aktar",
+            label: "CSV Export",
             onClick: () => {
               window.location.assign(`/api/admin/reports/books?${query}`);
             },

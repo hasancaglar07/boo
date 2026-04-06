@@ -91,11 +91,11 @@ export default function AdminBookDetailPage() {
   }
 
   if (loading && !data) {
-    return <div className="admin-panel rounded-[24px] px-6 py-10">Yükleniyor…</div>;
+    return <div className="admin-panel rounded-[24px] px-6 py-10">Loading…</div>;
   }
 
   if (error || !data) {
-    return <div className="admin-panel rounded-[24px] px-6 py-10 text-sm text-rose-600">{error || "Kitap yüklenemedi."}</div>;
+    return <div className="admin-panel rounded-[24px] px-6 py-10 text-sm text-rose-600">{error || "Book could not be loaded."}</div>;
   }
 
   return (
@@ -171,7 +171,7 @@ export default function AdminBookDetailPage() {
                 onClick={() => void handleRetry()}
                 disabled={!data.permissions.canRetryPreview || busy === "retry"}
               >
-                {busy === "retry" ? "Başlatılıyor..." : "Preview pipeline yeniden başlat"}
+                {busy === "retry" ? "Starting..." : "Restart Preview Pipeline"}
               </button>
               <button
                 type="button"
@@ -179,7 +179,7 @@ export default function AdminBookDetailPage() {
                 onClick={() => void handleUnlock()}
                 disabled={!data.permissions.canUnlockPremium || busy === "unlock"}
               >
-                {busy === "unlock" ? "Açılıyor..." : "Premium aç"}
+                {busy === "unlock" ? "Opening..." : "Unlock Premium"}
               </button>
             </div>
           </div>
@@ -249,7 +249,7 @@ export default function AdminBookDetailPage() {
               </div>
             )) : (
               <div className="rounded-2xl border border-dashed border-[color:var(--admin-border)] px-4 py-6 text-sm admin-muted">
-                Moderation kaydı yok.
+                No moderation records.
               </div>
             )}
           </div>
@@ -258,7 +258,7 @@ export default function AdminBookDetailPage() {
 
       {/* Notes Section */}
       <section className="admin-panel rounded-[28px] p-6">
-        <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Admin notları</div>
+        <div className="mb-4 text-sm font-semibold text-[color:var(--admin-text)]">Admin Notes</div>
         <div className="space-y-3">
           {data.related.notes.length ? data.related.notes.map((note) => (
             <div key={note.id} className="rounded-2xl border border-[color:var(--admin-border)] bg-white/50 p-4 dark:bg-white/5">
@@ -267,7 +267,7 @@ export default function AdminBookDetailPage() {
             </div>
           )) : (
             <div className="rounded-2xl border border-dashed border-[color:var(--admin-border)] px-4 py-6 text-sm admin-muted">
-              Bu kitap için admin notu yok.
+              No admin notes for this book.
             </div>
           )}
         </div>

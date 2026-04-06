@@ -114,7 +114,7 @@ export default function AdminJobsPage() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Job queue monitor</h1>
-          <p className="mt-1 text-sm admin-muted">Preview ve generation işlerini 10 saniyede bir yeniler.</p>
+          <p className="mt-1 text-sm admin-muted">Refreshes preview and generation jobs every 10 seconds.</p>
         </div>
         <button
           type="button"
@@ -123,7 +123,7 @@ export default function AdminJobsPage() {
           className="inline-flex items-center gap-2 rounded-2xl border border-[color:var(--admin-border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--admin-text)] disabled:opacity-50 transition hover:border-[color:var(--admin-primary)]"
         >
           <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-          {loading ? "Yükleniyor..." : "Yenile"}
+          {loading ? "Loading..." : "Refresh"}
         </button>
       </div>
 
@@ -142,7 +142,7 @@ export default function AdminJobsPage() {
         getRowId={(row) => row.id}
         loading={loading}
         emptyTitle="Aktif job yok"
-        emptyMessage="Şu anda queue boş görünüyor."
+        emptyMessage="The queue appears to be empty right now."
       />
     </div>
   );
