@@ -395,7 +395,7 @@ export function StyleStep({
         <div className="space-y-7">
           {/* Tone */}
           <div className="space-y-3">
-            <div className="text-base sm:text-lg font-bold">Ton</div>
+            <div className="text-base sm:text-lg font-bold">Tone</div>
             <PillSelector
               options={TONES}
               selected={draft.tone}

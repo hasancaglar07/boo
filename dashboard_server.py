@@ -1962,6 +1962,14 @@ def run_preview_pipeline(slug: str) -> None:
                 "preview_completed_at": now_utc_iso() if generation["preview_ready"] else "",
             },
         )
+        if (
+            os.environ.get("BOOK_PREVIEW_AUTO_START_FULL", "1").strip() != "0"
+            and generation.get("preview_ready")
+        ):
+            try:
+                start_full_chapter_pipeline(slug, force=False)
+            except Exception as exc:  # noqa: BLE001
+                append_log(f"Full chapter bootstrap skipped for '{slug}': {exc}")
     except Exception as exc:  # noqa: BLE001
         save_metadata(
             book_dir,
@@ -2008,11 +2016,6 @@ def start_preview_pipeline(slug: str) -> dict[str, Any]:
     )
     worker = threading.Thread(target=run_preview_pipeline, args=(slug,), daemon=True)
     worker.start()
-    if os.environ.get("BOOK_PREVIEW_AUTO_START_FULL", "1").strip() != "0":
-        try:
-            start_full_chapter_pipeline(slug, force=False)
-        except Exception as exc:  # noqa: BLE001
-            append_log(f"Full chapter bootstrap skipped for '{slug}': {exc}")
     return {"ok": True, "started": True, "book": read_book(book_dir), "generation": build_generation_status(book_dir)}
 
 

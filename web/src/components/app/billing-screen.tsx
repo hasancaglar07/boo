@@ -70,9 +70,9 @@ const COMPARISON_FEATURES = [
   { label: "AI Chapter Generation", starter: true, creator: true, pro: true },
   { label: "Export Formats", starter: "EPUB + PDF", creator: "EPUB + PDF + HTML", pro: "EPUB + PDF + HTML + MD" },
   { label: "Research Center", starter: false, creator: true, pro: true },
-  { label: "KDP Pazar Analizi", starter: false, creator: true, pro: true },
+  { label: "KDP Market Analysis", starter: false, creator: true, pro: true },
   { label: "Multi-Language Production", starter: true, creator: true, pro: true },
-  { label: "API & Otomasyon", starter: false, creator: false, pro: true },
+  { label: "API & Automation", starter: false, creator: false, pro: true },
   { label: "Priority Support", starter: false, creator: true, pro: true },
 ];
 
@@ -252,7 +252,7 @@ export function BillingScreen() {
         : null;
 
       if (payload?.alreadyFulfilled) {
-        setCheckoutNotice("Bu plan zaten aktif.");
+        setCheckoutNotice("This plan is already active.");
         setCheckoutNoticeTone("success");
         setSubmitting(false);
         await refreshAuthState();
@@ -584,7 +584,7 @@ export function BillingScreen() {
                 <thead>
                   <tr className="border-b border-border/60 bg-muted/30">
                     <th className="p-3 text-left font-medium text-muted-foreground">Feature</th>
-                    <th className="p-3 text-center font-medium">Temel</th>
+                    <th className="p-3 text-center font-medium">Basic</th>
                     <th className="p-3 text-center font-medium text-primary">Author</th>
                     <th className="p-3 text-center font-medium">Studio</th>
                   </tr>
@@ -669,7 +669,7 @@ export function BillingScreen() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-serif text-xl">
-              {pendingPlan ? pendingPlan.name : "Plan"} Onayı
+              {pendingPlan ? pendingPlan.name : "Plan"} Confirmation
             </DialogTitle>
             <DialogDescription>
               <span className="sr-only">Confirm plan change</span>

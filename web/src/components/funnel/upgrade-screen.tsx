@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ArrowRight,
@@ -52,7 +52,7 @@ const PLAN_COMPARE = [
     name: "Single Book",
     price: "$4",
     originalPrice: "$29",
-    interval: "tek seferlik",
+    interval: "one-time",
     badge: "Best start",
     badgeColor: "bg-primary text-primary-foreground",
     highlight: true,
@@ -242,7 +242,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
               <span className="text-primary">claim the full version now</span>
             </h1>
             <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">
-              Preview is ready. Unlock remaining chapters, export as PDF and EPUB, upload to Amazon KDP. You've seen the value; now unlock the full tek seferde açabilirsin.
+              Preview is ready. Unlock remaining chapters, export as PDF and EPUB, upload to Amazon KDP. You've seen the value; now unlock the full version in a single step.
             </p>
           </div>
 

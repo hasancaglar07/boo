@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChevronDown, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -120,7 +120,7 @@ export function OutlineStep({
     >
       {/* ── Word Count Estimate ── */}
       <p className="text-base font-medium text-muted-foreground rounded-xl bg-muted/50 px-4 py-3">
-        📊 ~{formatWordCount(avgWordEstimate)} kelime · {draft.outline.length} chapter · ~{estimatedPages} sayfa
+        📊 ~{formatWordCount(avgWordEstimate)} words · {draft.outline.length} chapter · ~{estimatedPages} pages
       </p>
 
       {/* ── Book Length Selector — Horizontal Pill Buttons ── */}
@@ -294,7 +294,7 @@ export function OutlineStep({
                     {/* Bottom row: word estimate + delete */}
                     <div className="flex items-center justify-between pt-1">
                       <span className="text-xs text-muted-foreground">
-                        ≈ {formatWordCount(wordRange.min)}–{formatWordCount(wordRange.max)} kelime
+                        ≈ {formatWordCount(wordRange.min)}–{formatWordCount(wordRange.max)} words
                       </span>
                       <Button
                         variant="ghost"

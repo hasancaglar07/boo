@@ -369,7 +369,7 @@ function VisibleSection({
             <div className="rounded-[18px] border border-primary/25 bg-gradient-to-br from-primary/10 to-primary/5 px-5 py-5 text-center">
               <Lock className="mx-auto mb-2 size-5 text-primary" aria-hidden="true" />
               <p className="text-sm font-semibold text-foreground">
-                Devamını okumak için Premium&apos;a geç
+                Upgrade to Premium to continue reading
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 All chapters, PDF, EPUB, and workspace unlock
@@ -433,10 +433,12 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const [books, setBooks] = useState<Book[]>([]);
   const [preview, setPreview] = useState<BookPreview | null>(null);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
+  const [transientBackendIssue, setTransientBackendIssue] = useState(false);
   const trackedRef = useRef(false);
   const bootstrapRequestedRef = useRef(false);
+  const previewSnapshotRef = useRef<BookPreview | null>(null);
 
-  // Stripe başarılı ödeme sonrası auth state güncelle
+  // // Update auth state after successful Stripe payment
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
       void fetch("/api/auth/state").catch(() => null);
@@ -453,12 +455,18 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       setBooks(bookList);
       setPreview(previewPayload);
       setBackendUnavailable(false);
+      setTransientBackendIssue(false);
       if (!trackedRef.current) {
         trackedRef.current = true;
         trackEvent("preview_viewed", { slug });
       }
     } catch (error) {
       if (isBackendUnavailableError(error)) {
+        if (previewSnapshotRef.current) {
+          setTransientBackendIssue(true);
+          setBackendUnavailable(false);
+          return;
+        }
         setBackendUnavailable(true);
         return;
       }
@@ -485,7 +493,12 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   useEffect(() => {
     trackedRef.current = false;
     bootstrapRequestedRef.current = false;
+    previewSnapshotRef.current = null;
   }, [slug]);
+
+  useEffect(() => {
+    previewSnapshotRef.current = preview;
+  }, [preview]);
 
   useEffect(() => {
     const frame = window.setTimeout(() => {
@@ -502,6 +515,10 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       .then(() => hydrate())
       .catch((error) => {
         bootstrapRequestedRef.current = false;
+        if (isBackendUnavailableError(error) && previewSnapshotRef.current) {
+          setTransientBackendIssue(true);
+          return;
+        }
         console.error(error);
       });
   }, [hydrate, preview, slug]);
@@ -635,6 +652,15 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         <span className="text-foreground font-medium truncate max-w-[200px]">{preview.book.title}</span>
       </nav>
 
+      {transientBackendIssue && (
+        <Card className="mb-4 border-amber-500/30 bg-amber-500/10">
+          <CardContent className="p-4 text-sm leading-6 text-amber-900 dark:text-amber-200">
+            Connection to backend is unstable right now. You are seeing the last successful preview snapshot; this page
+            will auto-refresh when the service responds again.
+          </CardContent>
+        </Card>
+      )}
+
       {/* Generation banner — always full width at top */}
       {!generation.product_ready && !premium && (
         <GenerationBanner generation={generation} coverReady={Boolean(coverUrl)} />
@@ -679,7 +705,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
               {!coverUrl && (
                 <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
-                  Cover is being generated in the background üretiliyor. Ready olunca burası güncellenir.
+                  Cover is being generated in the background. This section updates automatically when ready.
                 </p>
               )}
             </CardContent>
@@ -847,11 +873,11 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   </div>
                   <div>
                     <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      İlk okunabilir chapters
+                      First readable chapters
                     </div>
                     <div className="mt-1 text-xl font-semibold text-foreground">Writing</div>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Sayfayı açık bırak — ilk chapters gelince otomatik güncellenir. Genellikle 1–2 dakika sürer.
+                      Keep the page open - it updates automatically when the first chapters arrive. Usually takes 1-2 minutes.
                     </p>
                   </div>
                 </div>
@@ -970,4 +996,4 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       {!premium && <div className="h-20 xl:hidden" />}
     </AppFrame>
   );
-}
+}

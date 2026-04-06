@@ -33,7 +33,7 @@ const BACKEND_ORIGIN =
   "http://127.0.0.1:8765";
 const BACKEND_FETCH_TIMEOUT_MS = 20_000;
 const BACKEND_BOOKS_FETCH_TIMEOUT_MS = 30_000;
-const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = 25_000;
+const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = 45_000;
 const BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS = 45_000;
 const BACKEND_WORKFLOW_FETCH_TIMEOUT_MS = 240_000;
 const BACKEND_UNREACHABLE_LOG_THROTTLE_MS = 5_000;
@@ -87,6 +87,7 @@ function logUpstreamUnavailable(details: {
 function backendCircuitKeyForPath(upstreamPath: string) {
   if (upstreamPath === "/api/settings") return "/api/settings";
   if (upstreamPath === "/api/books") return "/api/books";
+  if (/^\/api\/books\/[^/]+\/preview$/.test(upstreamPath)) return "/api/books/:slug/preview";
   return null;
 }
 
@@ -610,7 +611,9 @@ async function handleBookScopedRoute(
         : {};
       const fullGenerationComplete = Boolean(fullGeneration.complete);
       const fullGenerationStage = String(fullGeneration.stage || "").trim().toLowerCase();
+      const firstPreviewReady = Boolean(generation.first_chapter_ready || generation.preview_ready);
       const shouldBootstrapFullGeneration =
+        firstPreviewReady &&
         !fullGenerationComplete &&
         fullGenerationStage !== "queued" &&
         fullGenerationStage !== "running";
