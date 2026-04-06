@@ -32,7 +32,7 @@ export function PricingCreativeSection({
       popular: false,
       accentClassName: "text-foreground",
       ctaLabel: "$4 ile Bu Kitabı Aç",
-      ctaHref: "/start/topic?plan=tek-kitap",
+      ctaHref: "/start/topic?plan=single-book",
     },
     {
       name: plans[0].name,
@@ -58,7 +58,7 @@ export function PricingCreativeSection({
       features: plans[1].features,
       popular: true,
       accentClassName: "text-primary border-primary bg-primary/10",
-      ctaLabel: "En Mantıklı Plan: Yazar",
+      ctaLabel: "Best Value Plan: Author",
       ctaHref: "/billing?plan=creator&autostart=1",
     },
     {

@@ -16,20 +16,20 @@ type Feature = {
 };
 
 const features: Feature[] = [
-  // Üretim limitleri
-  { id: "kitap-sayisi",   name: "Aylık kitap üretimi",            premium: 1,       starter: 10,      creator: 30,   pro: 80 },
-  { id: "kapak",          name: "Aylık kapak hakkı",              premium: 3,       starter: 20,      creator: 60,   pro: 200 },
+  // Production limits
+  { id: "book-count",   name: "Monthly book production",            premium: 1,       starter: 10,      creator: 30,   pro: 80 },
+  { id: "cover",          name: "Monthly cover allowance",              premium: 3,       starter: 20,      creator: 60,   pro: 200 },
 
-  // Temel üretim
+  // Core production
   { id: "wizard",         name: "5 adımlı yönlendirmeli sihirbaz", premium: true,    starter: true,    creator: true, pro: true },
-  { id: "outline",        name: "Yapay zeka bölüm planı üretimi", premium: true,    starter: true,    creator: true, pro: true },
-  { id: "bolum",          name: "Bölüm yazımı + yeniden üretim",  premium: true,    starter: true,    creator: true, pro: true },
-  { id: "editor",         name: "Bölüm editörü",                  premium: true,    starter: true,    creator: true, pro: true },
+  { id: "outline",        name: "AI chapter outline generation", premium: true,    starter: true,    creator: true, pro: true },
+  { id: "bolum",          name: "Chapter writing + regeneration",  premium: true,    starter: true,    creator: true, pro: true },
+  { id: "editor",         name: "Chapter editor",                  premium: true,    starter: true,    creator: true, pro: true },
   { id: "ton",            name: "Ton ve hedef kitle ayarı",        premium: true,    starter: true,    creator: true, pro: true },
 
-  // Kapak & tasarım
-  { id: "cover-ai",       name: "Yapay zeka kapak üretimi",       premium: true,    starter: true,    creator: true, pro: true },
-  { id: "cover-style",    name: "Kapak stili seçimi (3 tema)",     premium: true,    starter: true,    creator: true, pro: true },
+  // Cover & design
+  { id: "cover-ai",       name: "AI cover generation",       premium: true,    starter: true,    creator: true, pro: true },
+  { id: "cover-style",    name: "Cover style selection (3 themes)",     premium: true,    starter: true,    creator: true, pro: true },
   { id: "cover-custom",   name: "Renk paleti özelleştirme",        premium: true,    starter: true,    creator: true, pro: true },
 
   // Çıktı formatları
@@ -44,43 +44,43 @@ const features: Feature[] = [
   { id: "pazar",          name: "Pazar boşluğu analizi",          premium: false,   starter: false,   creator: true, pro: true },
 
   // Dil & dizi
-  { id: "dil",            name: "Çok dilli üretim",               premium: true,    starter: true,    creator: true, pro: true },
-  { id: "seri",           name: "Seri / toplu üretim",            premium: false,   starter: false,   creator: false, pro: true },
+  { id: "dil",            name: "Multilingual production",               premium: true,    starter: true,    creator: true, pro: true },
+  { id: "seri",           name: "Batch / bulk production",            premium: false,   starter: false,   creator: false, pro: true },
   { id: "ton-profil",     name: "Özelleştirilmiş ton profilleri", premium: false,   starter: false,   creator: false, pro: true },
 
   // Platform
-  { id: "workspace",      name: "Kitap çalışma alanı",            premium: false,   starter: true,    creator: true, pro: true },
-  { id: "api-cost",       name: "Kullanıcı API ücreti ödemez",    premium: true,    starter: true,    creator: true, pro: true },
+  { id: "workspace",      name: "Book workspace",            premium: false,   starter: true,    creator: true, pro: true },
+  { id: "api-cost",       name: "No API cost to user",    premium: true,    starter: true,    creator: true, pro: true },
   { id: "api",            name: "API ve otomasyon erişimi",       premium: false,   starter: false,   creator: false, pro: true },
 
-  // Destek
-  { id: "destek",         name: "E-posta desteği",                premium: true,    starter: true,    creator: true, pro: true },
-  { id: "oncelik",        name: "Öncelikli destek",               premium: false,   starter: false,   creator: true, pro: true },
-  { id: "onboarding",     name: "Özel başlangıç desteği",         premium: false,   starter: false,   creator: false, pro: true },
+  // Support
+  { id: "support",         name: "Email support",                premium: true,    starter: true,    creator: true, pro: true },
+  { id: "priority",        name: "Priority support",               premium: false,   starter: false,   creator: true, pro: true },
+  { id: "onboarding",     name: "Dedicated onboarding support",         premium: false,   starter: false,   creator: false, pro: true },
 ];
 
 const plans = [
   {
     id: "premium",
-    name: "Tek Kitap",
+    name: "Single Book",
     price: 4,
-    description: "1 kitap",
+    description: "1 book",
     popular: false,
     oneTime: true,
   },
   {
     id: "starter",
-    name: "Başlangıç",
+    name: "Starter",
     price: 19,
-    description: "10 kitap / ay",
+    description: "10 books / month",
     popular: false,
     oneTime: false,
   },
   {
     id: "creator",
-    name: "Yazar",
+    name: "Author",
     price: 39,
-    description: "30 kitap / ay",
+    description: "30 books / month",
     popular: true,
     oneTime: false,
   },
@@ -88,7 +88,7 @@ const plans = [
     id: "pro",
     name: "Stüdyo",
     price: 79,
-    description: "80 kitap / ay",
+    description: "80 books / month",
     popular: false,
     oneTime: false,
   },
@@ -101,14 +101,14 @@ export function PricingComparisonTable() {
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-semibold tracking-tight text-foreground">
-              Plan Karşılaştırması
+              Plan Comparison
             </h2>
             <p className="mt-2 text-muted-foreground">
-              Hangi plan sana en uygun? Özellikleri yan yana karşılaştır.
+              Which plan suits you best? Compare features side by side.
             </p>
           </div>
           <div className="rounded-full border border-border/80 bg-card/80 px-4 py-2 text-sm text-muted-foreground">
-            Tüm fiyatlar aylık faturalandırma içindir
+            All prices are for monthly billing
           </div>
         </div>
 
@@ -118,7 +118,7 @@ export function PricingComparisonTable() {
             <thead>
               <tr className="border-b border-border/80">
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
-                  Özellik
+                  Feature
                 </th>
                 {plans.map((plan) => (
                   <th

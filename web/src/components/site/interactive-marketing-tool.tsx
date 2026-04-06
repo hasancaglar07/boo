@@ -62,7 +62,7 @@ function defaultValues(fields: MarketingToolField[]) {
 function fieldError(field: MarketingToolField, value: string) {
   if (field.type === "select") {
     if (field.required === false) return "";
-    return value ? "" : `${field.label} seçilmelidir.`;
+    return value ? "" : `${field.label} must be selected.`;
   }
 
   if (field.required === false) return "";
@@ -306,7 +306,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
               <p className="editorial-eyebrow">Instant Report</p>
-              <h2 className="editorial-title mt-4 text-foreground">Skorla kalma. Açının neden çalıştığını da gör.</h2>
+              <h2 className="editorial-title mt-4 text-foreground">Don't just score. See why the angle works.</h2>
               <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground">
                 Bu araç yalnız sayısal puan vermez. Ne kadar net olduğunu, hangi katmanda zayıfladığını ve hangi formatta daha iyi çalışacağını açık şekilde gösterir.
               </p>
@@ -325,7 +325,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Analyzing</p>
                     <h3 className="mt-4 font-serif text-3xl font-semibold text-foreground">Tool sinyalleri toparlanıyor...</h3>
                     <div className="mt-6 space-y-3">
-                      {["Core score hesaplanıyor", "Format önerisi hazırlanıyor", "Tam rapor bölümleri açılıyor"].map((item, index) => (
+                      {["Calculating core score", "Preparing format suggestion", "Opening full report sections"].map((item, index) => (
                         <div key={item} className="flex items-center gap-3 text-sm text-muted-foreground">
                           <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary" style={{ animationDelay: `${index * 120}ms` }} />
                           {item}
@@ -347,7 +347,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                           <Badge>{result.recommendedFormat}</Badge>
                           <Badge className="border-primary/20 bg-primary/10 text-primary">Primary recommendation</Badge>
                         </div>
-                        <h3 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Önerilen açı</h3>
+                        <h3 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Suggested angle</h3>
                         <p className="mt-3 text-sm leading-7 text-muted-foreground">{result.recommendedAngle}</p>
                         <div className="mt-5 rounded-[20px] border border-border/70 bg-background/70 p-4">
                           <p className="text-sm font-semibold text-foreground">Net sonraki adım</p>
@@ -359,7 +359,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                     <div className="grid gap-4 md:grid-cols-2">
                       <Card className="border border-border/80 bg-background/70">
                         <CardContent className="p-6">
-                          <p className="text-sm font-semibold text-foreground">Neden güçlü?</p>
+                          <p className="text-sm font-semibold text-foreground">Why is it strong?</p>
                           <ul className="mt-4 space-y-3">
                             {result.strongestPoints.map((point) => (
                               <li key={point} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">

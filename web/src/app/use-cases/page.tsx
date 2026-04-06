@@ -10,118 +10,118 @@ import { Badge } from "@/components/ui/badge";
 import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kimler İçin? | Kitap Oluşturucu",
+  title: "Who Is It For? | Book Generator",
   description:
-    "Kitap Oluşturucu'yu kimin kullandığını ve neden tercih ettiğini öğren. Yazarlar, danışmanlar, eğitmenler, kurs üreticileri ve içerik üreticileri için yapay zeka destekli kitap üretim sistemi.",
+    "Discover who uses Book Generator and why. An AI-powered book production system for authors, consultants, instructors, course creators, and content creators.",
   path: "/use-cases",
-  keywords: ["ai kitap üretimi", "danışman kitap yazma", "eğitmen kitap", "course creator kitap", "içerik üretici"],
+  keywords: ["ai book production", "consultant book writing", "instructor book", "course creator book", "content creator"],
 });
 
 const segments = [
   {
     icon: User,
-    badge: "Bireysel Yazarlar",
-    title: "İlk kitabını çıkarmak isteyen yazarlar",
+    badge: "Individual Authors",
+    title: "Authors looking to publish their first book",
     description:
-      "Yazmak istediğin fikir var ama başlamak zor geliyor. Bölüm planı kafanda netleşmiyor, aylar geçiyor. Kitap Oluşturucu konu özetinden bölüm planına, bölüm planından bölüme senin yerine ilerliyor.",
+      "You have an idea you want to write about, but getting started feels hard. The chapter outline isn't coming together in your head, and months keep passing by. Book Generator moves forward for you — from topic summary to chapter outline, from chapter outline to full chapters.",
     benefits: [
-      "Fikrinden taslak bölüm planı 5 dakikada hazır",
-      "Bölüm bölüm üretim — kaybolmadan ilerle",
-      "Her seferinde tutarlı ses tonu",
-      "EPUB ve PDF olarak doğrudan indir",
+      "Draft chapter outline from your idea in 5 minutes",
+      "Chapter-by-chapter production — stay on track without getting lost",
+      "Consistent voice every time",
+      "Download directly as EPUB and PDF",
     ],
-    outcome: "Uzun süredir ertelenen ilk rehber kitap, bölüm yapısı netleştiğinde haftalar içinde taslağa dönebilir.",
-    cta: "Yazara özel başlangıç rehberi",
+    outcome: "A long-postponed first guide book can turn into a draft within weeks once the chapter structure is clarified.",
+    cta: "Getting started guide for authors",
     ctaHref: "/resources",
     color: "bg-blue-50 border-blue-100",
     iconColor: "text-blue-600",
   },
   {
     icon: Briefcase,
-    badge: "Danışmanlar & Koçlar",
-    title: "Uzmanlığını kitaba dönüştürmek isteyen profesyoneller",
+    badge: "Consultants & Coaches",
+    title: "Professionals who want to turn their expertise into a book",
     description:
-      "Yıllarca biriktirdiğin bilgiyi kitap haline getirmek hem güvenilirliğini artırır hem yeni müşteri kapısı açar. Ama zaman yok. Kitap Oluşturucu uzmanlığını yapılandırılmış içeriğe dönüştürür.",
+      "Turning years of accumulated knowledge into a book both boosts your credibility and opens doors to new clients. But there's no time. Book Generator transforms your expertise into structured content.",
     benefits: [
-      "Müşteri çeken kısa tanıtım kitapları",
-      "Marka kimliğine uygun ses tonu",
-      "Metodolojini aktaran chapter yapısı",
-      "Kısa sürede çok sayıda niş kitap",
+      "Short lead-generating promotional books",
+      "Brand-aligned tone of voice",
+      "Chapter structure that conveys your methodology",
+      "Multiple niche books in a short time",
     ],
-    outcome: "Danışmanlık bilgisini kısa authority kitaba çevirmek, hizmete giriş ürünü ve güven yüzeyi olarak kullanılabilir.",
-    cta: "Danışmanlar için rehber",
+    outcome: "Converting consulting knowledge into a short authority book can serve as an entry product and trust builder for your services.",
+    cta: "Guide for consultants",
     ctaHref: "/resources",
     color: "bg-purple-50 border-purple-100",
     iconColor: "text-purple-600",
   },
   {
     icon: GraduationCap,
-    badge: "Eğitmenler & Kurs Üreticileri",
-    title: "Eğitim içeriğini rehber kitaba dönüştüren eğitmenler",
+    badge: "Instructors & Course Creators",
+    title: "Educators who turn teaching content into guide books",
     description:
-      "Hazırladığın ders içerikleri, atölye notları ve kurs modülleri zaten var. Kitap Oluşturucu bunları tutarlı bir rehber kitap yapısına kavuşturur. Amaç akademik format değil; öğrencinin veya müşterinin okuyup uygulayacağı net, yayınlanabilir bir içerik çıkarmaktır.",
+      "You already have course materials, workshop notes, and course modules prepared. Book Generator brings these together into a cohesive guide book structure. The goal isn't an academic format — it's producing clear, publishable content that students or clients can read and apply.",
     benefits: [
-      "Kurs modüllerinden kitap taslağı",
-      "Öğretici ton ve bölüm yapısı",
-      "Bölüm sonu özet ve aksiyon maddeleri",
-      "Müşteri çeken kısa kitap veya ücretli rehber olarak kullanma",
+      "Book draft from course modules",
+      "Instructional tone and chapter structure",
+      "End-of-chapter summaries and action items",
+      "Use as a lead-generating short book or paid guide",
     ],
-    outcome: "Kurs veya workshop içeriği, öğrencinin okuyup uygulayabileceği rehber kitaba daha hızlı dönüşebilir.",
-    cta: "Eğitimciler için başla",
+    outcome: "Course or workshop content can more quickly be transformed into a guide book that students can read and apply.",
+    cta: "Get started for educators",
     ctaHref: "/start/topic",
     color: "bg-green-50 border-green-100",
     iconColor: "text-green-600",
   },
   {
     icon: Globe,
-    badge: "KDP Yayıncılar",
-    title: "Amazon KDP'de çok başlık yayınlayan yayıncılar",
+    badge: "KDP Publishers",
+    title: "Publishers releasing multiple titles on Amazon KDP",
     description:
-      "Aylık birden fazla başlık hedefliyorsun. Elle yazmak bu hızı keser. Kitap Oluşturucu tüm yayın zincirini, yani araştırma, yazım ve çıktı akışını otomatikleştirir.",
+      "You're targeting multiple titles per month. Writing by hand slows you down. Book Generator automates the entire publishing pipeline — research, writing, and output workflow.",
     benefits: [
-      "Aylık çok başlık üretim kapasitesi",
-      "Niş araştırma ve bölüm planı önerisi",
-      "KDP uyumlu EPUB/PDF çıktısı",
-      "Maliyet-çıktı optimizasyonu",
+      "Monthly multi-title production capacity",
+      "Niche research and chapter outline suggestions",
+      "KDP-compliant EPUB/PDF output",
+      "Cost-output optimization",
     ],
-    outcome: "KDP odaklı kullanıcı için aynı akışta araştırma, taslak ve çıktı almak tekrarlı üretim kapasitesini artırır.",
-    cta: "KDP yayıncı planına bak",
+    outcome: "For KDP-focused users, getting research, draft, and output in a single workflow increases repetitive production capacity.",
+    cta: "View KDP publisher plan",
     ctaHref: "/pricing",
     color: "bg-orange-50 border-orange-100",
     iconColor: "text-orange-600",
   },
   {
     icon: Mic,
-    badge: "İçerik Üreticileri",
-    title: "Blog, podcast ve kursunu kitapla büyüten yaratıcılar",
+    badge: "Content Creators",
+    title: "Creators who grow their blog, podcast, and courses into a book",
     description:
-      "Yazdığın içerikler var, podcastin var, kurs materyalin var. Bunları bir araya getirip kitap olarak sunmak yeni bir gelir kapısı açar. Kitap Oluşturucu bu dönüşümü kolaylaştırır.",
+      "You have written content, a podcast, course materials. Bringing them together and presenting them as a book opens up a new revenue stream. Book Generator makes this transformation easy.",
     benefits: [
-      "Mevcut içerikten kitap taslağı",
-      "Okuyucu kitlesine hitap eden dil",
-      "Ek gelir ve müşteri toplama imkânı",
-      "Hızlı güncelleme ve yeni baskı",
+      "Book draft from existing content",
+      "Language that speaks to your reader audience",
+      "Additional income and lead collection opportunity",
+      "Quick updates and new editions",
     ],
-    outcome: "Dağınık blog, podcast veya kurs parçacıkları tek bir kitap kurgusunda toplanıp yeni gelir yüzeyine dönüşebilir.",
-    cta: "İçerik üreticisi olarak başla",
+    outcome: "Scattered blog, podcast, or course fragments can be gathered into a single book narrative and transformed into a new revenue surface.",
+    cta: "Get started as a content creator",
     ctaHref: "/start/topic",
     color: "bg-rose-50 border-rose-100",
     iconColor: "text-rose-600",
   },
   {
     icon: Users,
-    badge: "Kurumlar & Ekipler",
-    title: "Kurumsal bilgiyi yayına dönüştüren ekipler",
+    badge: "Organizations & Teams",
+    title: "Teams that turn institutional knowledge into publications",
     description:
-      "Şirketteki bilgi birikimi çalışanlarda dağınık duruyor. Oryantasyon rehberleri, süreç kitapları, iç eğitim materyalleri — hepsini tutarlı kitap formatına dönüştür.",
+      "Company knowledge is scattered across employees. Orientation guides, process manuals, internal training materials — transform them all into a consistent book format.",
     benefits: [
-      "Şirket içi bilgi aktarımı",
-      "Standart oryantasyon materyali",
-      "Kurum kültürü ve süreç kitapları",
-      "Çok yazar desteği (ekip üretimi)",
+      "Internal company knowledge transfer",
+      "Standardized orientation materials",
+      "Corporate culture and process manuals",
+      "Multi-author support (team production)",
     ],
-    outcome: "Kurum içi bilgi, süreç veya oryantasyon akışı tek kitaba dönüştürüldüğünde tekrar kullanılabilir bir varlığa dahil olur.",
-    cta: "Kurumsal plan için iletişime geç",
+    outcome: "When internal company knowledge, processes, or orientation workflows are converted into a single book, they become a reusable asset.",
+    cta: "Contact us for enterprise plans",
     ctaHref: "/contact",
     color: "bg-teal-50 border-teal-100",
     iconColor: "text-teal-600",
@@ -132,15 +132,15 @@ export default function UseCasesPage() {
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Book Generator Kullanım Senaryoları",
-    description: "Yazarlar, danışmanlar, eğitimciler ve KDP yayıncıları için AI destekli kitap üretimi kullanım senaryoları.",
+    name: "Book Generator Use Cases",
+    description: "AI-powered book production use cases for authors, consultants, educators, and KDP publishers.",
     numberOfItems: segments.length,
     itemListElement: segments.map((seg, i) => ({
       "@type": "ListItem",
       position: i + 1,
       name: seg.title,
       description: seg.description,
-      url: absoluteUrl(`/use-cases#${seg.badge.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, "ve")}`),
+      url: absoluteUrl(`/use-cases#${seg.badge.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, "and")}`),
     })),
   };
 
@@ -150,18 +150,18 @@ export default function UseCasesPage() {
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="mb-4">Kimler Kullanıyor?</Badge>
+            <Badge className="mb-4">Who Uses It?</Badge>
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              Herkes için değil.{" "}
-              <span className="text-primary">Doğru kullanıcı için çok güçlü.</span>
+              Not for everyone.{" "}
+              <span className="text-primary">Incredibly powerful for the right user.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
-              Bireysel yazardan kurumsal ekibe, danışmandan KDP yayıncısına. Kitap Oluşturucu farklı amaçlar için farklı şekillerde çalışır; ama en güçlü olduğu yer yayına hazır bilgi kitabı akışıdır.
+              From individual authors to enterprise teams, consultants to KDP publishers. Book Generator works differently for different purposes — but it's strongest where there's a publish-ready knowledge book workflow.
             </p>
             <div className="mx-auto mt-8 max-w-3xl rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 text-left shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Short answer</p>
               <p className="mt-2 text-sm leading-7 text-foreground">
-                Kitap Oluşturucu; uzmanlar, koçlar, eğitmenler, kurs üreticileri ve KDP yayıncıları için tasarlanmış çok dilli bir yapay zeka destekli kitap üretim sistemidir. Teknik dokümantasyon veya akademik tez üretiminden çok, uzmanlık kitabı, rehber kitap, müşteri çeken kısa kitap ve yayına hazır bilgi kitabı üretiminde güçlüdür.
+                Book Generator is a multilingual AI-powered book production system designed for experts, coaches, instructors, course creators, and KDP publishers. Rather than technical documentation or academic thesis production, it excels at producing expertise books, guide books, lead-generating short books, and publish-ready knowledge books.
               </p>
             </div>
           </div>
@@ -172,9 +172,9 @@ export default function UseCasesPage() {
       <section className="border-b border-border/80 py-16">
         <div className="shell">
           <SectionHeading
-            badge="Kullanım Senaryoları"
-            title="Senin için hangi senaryo?"
-            description="Altı farklı kullanıcı profilinden kendine en yakın olanı bul."
+            badge="Use Cases"
+            title="Which scenario fits you?"
+            description="Find the closest match among six different user profiles."
           />
           <div className="space-y-8">
             {segments.map((segment, i) => {
@@ -220,7 +220,7 @@ export default function UseCasesPage() {
                       <Card className="border-border/60 bg-muted/40">
                         <CardContent className="p-5">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                            Tipik çıktı
+                            Typical outcome
                           </p>
                           <p className="mt-3 text-sm leading-7 text-foreground">{segment.outcome}</p>
                         </CardContent>
@@ -235,13 +235,13 @@ export default function UseCasesPage() {
       </section>
 
       <MarketingCtaSection
-        title="Hangi segmentten olursan ol, ilk adım aynı ve ücretsiz."
-        description="Kredi kartı olmadan önizlemeyi gör. Konu özetini oluştur, bölüm planını gör — bu kitabın gerçekten çıkmaya değer olup olmadığını netleştir. 30 gün iade garantisi."
+        title="No matter which segment you belong to, the first step is the same — and it's free."
+        description="Preview without a credit card. Create your topic summary, see the chapter outline — clarify whether this book is truly worth publishing. 30-day money-back guarantee."
         items={[
-          "5 dakikada ilk konu özeti",
-          "Anında bölüm planı üretimi",
-          "Önce önizleme, sonra tam kitap",
-          "EPUB/PDF çıktısı",
+          "First topic summary in 5 minutes",
+          "Instant chapter outline generation",
+          "Preview first, then the full book",
+          "EPUB/PDF output",
         ]}
       />
       <script

@@ -13,14 +13,14 @@ export function StartEntryActions() {
           href="/start/topic"
           onClick={() => trackEvent("start_page_completion", { path: "start_topic" })}
         >
-          Hemen başla
+          Start now
         </Link>
       </Button>
       <Button variant="outline" size="lg" asChild>
-        <Link href="/examples">Örnek çıktıları incele</Link>
+        <Link href="/examples">Browse example outputs</Link>
       </Button>
       <Button variant="ghost" size="lg" asChild>
-        <Link href="/pricing">Premium planı gör</Link>
+        <Link href="/pricing">View premium plans</Link>
       </Button>
     </div>
   );

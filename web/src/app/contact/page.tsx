@@ -9,11 +9,11 @@ import { supportChannels } from "@/lib/marketing-data";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kitap Oluşturucu İletişim | Destek ve Faturalama",
+  title: "Book Generator Contact | Support and Billing",
   description:
-    "Kitap Oluşturucu destek, teknik yardım, hesap erişimi ve faturalama talepleri için iletişim kanallarını tek sayfada bulun ve hızlı yanıt alın.",
+    "Find Book Generator support, technical help, account access, and billing request channels on a single page and get a quick response.",
   path: "/contact",
-  keywords: ["book generator iletişim", "kitap yazma desteği", "faturalama desteği"],
+  keywords: ["book generator contact", "book writing support", "billing support"],
 });
 
 export default function ContactPage() {
@@ -21,7 +21,7 @@ export default function ContactPage() {
     <MarketingPage>
       <ContactPageHero />
 
-      {/* Destek kanalları şeridi */}
+      {/* Support channels strip */}
       <section className="border-b border-border/80 bg-accent/20 py-8">
         <div className="shell grid gap-4 md:grid-cols-3">
           {supportChannels.map((channel) => (
@@ -36,13 +36,13 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Form + başlık */}
+      {/* Form + heading */}
       <section className="shell py-12">
         <div className="mb-8 grid gap-4 md:grid-cols-3">
           {[
-            { title: "Genel yanıt süresi", text: "Çoğu mesajı aynı iş günü içinde yanıtlamayı hedefliyoruz." },
-            { title: "En hızlı çözüm için", text: "Kitap slug’ı, önizleme linki veya ekran görüntüsü paylaş." },
-            { title: "Konu seçimi önemli", text: "Faturalama, erişim ve teknik destek için doğru konu başlığı seçimi süreci hızlandırır." },
+            { title: "General response time", text: "We aim to respond to most messages within the same business day." },
+            { title: "For fastest resolution", text: "Share your book slug, preview link, or screenshot." },
+            { title: "Subject selection matters", text: "Choosing the right subject for billing, access, and technical support speeds up the process." },
           ].map(({ title, text }) => (
             <Card key={title}>
               <CardContent className="space-y-2">
@@ -53,12 +53,12 @@ export default function ContactPage() {
           ))}
         </div>
         <div className="mb-8">
-          <Badge>İletişim</Badge>
+          <Badge>Contact</Badge>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-            Takıldığın yeri yaz. Hızlıca çözelim.
+            Tell us where you're stuck. We'll sort it out quickly.
           </h1>
           <p className="mt-2 text-sm leading-7 text-muted-foreground">
-            Konu başlığını net yaz, doğru ekip daha hızlı yanıt versin.
+            Be specific with your subject so the right team can respond faster.
           </p>
         </div>
         <ContactForm />

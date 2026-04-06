@@ -10,11 +10,11 @@ export function HomeBlogPreviewSection() {
     <section className="border-b border-border/80 py-18">
       <div className="shell">
         <SectionHeading
-          badge="Kitap Yazma Rehberi"
-          title="Yapay Zeka ile Kitap Yazma Rehberi: İlk Kitabını Çıkarmadan Önce Oku"
-          description="AI kitap oluşturucu ile ilk kitabını hazırlama sürecinde en çok sorulan sorulara kısa ve net cevaplar."
+          badge="Book Writing Guide"
+          title="AI Book Writing Guide: Read This Before Publishing Your First Book"
+          description="Quick and clear answers to the most frequently asked questions about preparing your first book with an AI book creator."
           actionHref="/blog"
-          actionLabel="Tüm yazılar"
+          actionLabel="View all posts"
         />
 
         <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -40,7 +40,7 @@ export function HomeBlogPreviewSection() {
               <p className="mt-2 flex-1 text-sm leading-7 text-muted-foreground">{post.summary}</p>
 
               <div className="mt-4 flex items-center gap-1 text-xs font-medium text-primary">
-                Oku
+                Read
                 <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
               </div>
             </a>

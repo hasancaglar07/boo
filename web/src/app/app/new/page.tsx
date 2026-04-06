@@ -5,8 +5,8 @@ import { requireBookStartAccess } from "@/lib/auth/server-access";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Yeni Kitap Sihirbazı | Book Generator",
-  description: "Book Generator yeni kitap sihirbazı ile fikrini kısa adımlarda kitaba dönüştür.",
+  title: "New Book Wizard | Book Generator",
+  description: "Turn your idea into a book in a few simple steps with the Book Generator new book wizard.",
   path: "/app/new",
   noIndex: true,
 });

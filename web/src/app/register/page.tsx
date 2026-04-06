@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kayıt Ol | Book Generator",
-  description: "Eski kayıt URL'i. Yeni akış için /signup kullanılır.",
+  title: "Sign Up | Book Generator",
+  description: "Legacy registration URL. Use /signup for the new flow.",
   path: "/register",
   noIndex: true,
 });

@@ -47,12 +47,12 @@ export function ContactForm() {
 
       const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error || "Mesaj gönderilemedi.");
+        throw new Error(payload?.error || "Message could not be sent.");
       }
 
       setFormState("success");
       setFeedbackMessage(
-        `Mesajın alındı. ${contactSubjectLabel((formData.subject || "other") as ContactSubject)} konusunda sana email üzerinden döneceğiz.`,
+        `Message received. We will get back to you via email regarding ${contactSubjectLabel((formData.subject || "other") as ContactSubject)}.`,
       );
       setFormData({ name: "", email: "", subject: "", message: "", website: "" });
     } catch (error) {
@@ -83,7 +83,7 @@ export function ContactForm() {
         <div>
           <h3 className="text-2xl font-semibold text-foreground">İletişim Bilgileri</h3>
           <p className="mt-2 text-muted-foreground">
-            Sorularınız mı var? Bizimle iletişime geçin, en kısa sürede size yardımcı olalım.
+            Have questions? Contact us and we'll help you as soon as possible.
           </p>
         </div>
 
@@ -104,7 +104,7 @@ export function ContactForm() {
             </div>
             <div>
               <h4 className="font-semibold text-foreground">Yanıt süresi</h4>
-              <p className="mt-1 text-sm text-muted-foreground">Çoğu mesaj aynı iş günü içinde yanıtlanır</p>
+              <p className="mt-1 text-sm text-muted-foreground">Most messages are answered within the same business day</p>
             </div>
           </div>
         </div>
@@ -113,9 +113,9 @@ export function ContactForm() {
           <CardContent className="p-6">
             <h4 className="mb-2 font-semibold text-foreground">Hızlı notlar</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• Konu başlığı net olsun</li>
-              <li>• Faturalama / erişim / teknik desteği doğru seçin</li>
-              <li>• Kitap slug’ını veya önizleme linkini ekleyin</li>
+              <li>• Keep the subject clear</li>
+              <li>• Select the correct billing / access / technical support</li>
+              <li>• Include the book slug or preview link</li>
               <li>• Gerekirse ekran görüntüsü paylaşın</li>
             </ul>
           </CardContent>
@@ -175,7 +175,7 @@ export function ContactForm() {
 
             <div className="space-y-2">
               <label htmlFor="subject" className="text-sm font-medium text-foreground">
-                Konu *
+                Subject *
               </label>
               <select
                 id="subject"
@@ -185,7 +185,7 @@ export function ContactForm() {
                 required
                 className="w-full rounded-xl border border-border/80 bg-background px-4 py-3 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
               >
-                <option value="">Konu seçin</option>
+                <option value="">Select a subject</option>
                 {CONTACT_SUBJECT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -196,7 +196,7 @@ export function ContactForm() {
 
             <div className="space-y-2">
               <label htmlFor="message" className="text-sm font-medium text-foreground">
-                Mesaj *
+                Message *
               </label>
               <textarea
                 id="message"
@@ -207,7 +207,7 @@ export function ContactForm() {
                 rows={5}
                 minLength={10}
                 className="w-full rounded-xl border border-border/80 bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-                placeholder="Mesajınızı buraya yazın..."
+                placeholder="Write your message here..."
               />
             </div>
 
@@ -232,13 +232,13 @@ export function ContactForm() {
               {formState === "idle" && (
                 <>
                   <Send className="mr-2 h-4 w-4" />
-                  Mesaj Gönder
+                  Send Message
                 </>
               )}
             </Button>
 
             <p className="text-xs leading-6 text-muted-foreground">
-              Mesajının kopyası email adresine gider. Gerekirse destek ekibine ek bağlam paylaşabilirsin.
+              A copy of your message will be sent to your email. You can share additional context with the support team if needed.
             </p>
 
             {formState === "success" && feedbackMessage ? (

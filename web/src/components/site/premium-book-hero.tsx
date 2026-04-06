@@ -15,7 +15,7 @@ import {
   KDP_LIVE_BOOKS_CLAIM,
 } from "@/lib/site-claims";
 
-// Terracotta marka paletine uyumlu kitap tonları
+// Book tones compatible with terracotta brand palette
 type PremiumBookCover = {
   id: number;
   title: string;
@@ -94,7 +94,7 @@ const premiumBooks: PremiumBookCover[] = [
     scale: 1.0,
     zIndex: 16,
   }),
-  // Ekstra kitaplar - sol orta-üst
+  // Extra books - left mid-upper
   premiumBook("parent-friendly-stem-at-home", {
     id: 7,
     rotation: -18,
@@ -102,7 +102,7 @@ const premiumBooks: PremiumBookCover[] = [
     scale: 0.85,
     zIndex: 11,
   }),
-  // Ekstra kitaplar - sağ orta-alt
+  // Extra books - right mid-lower
   premiumBook("clarte-calme-execution", {
     id: 8,
     rotation: 14,
@@ -284,13 +284,13 @@ export const PremiumBookHero = React.forwardRef<
   {
     className,
     title = "15 Dakikada Kitabını Hazırla",
-    subtitle = "Fikrini yaz, yapay zeka bölümlerini oluştursun, EPUB ve PDF olarak al",
-    ctaText = "İlk Kitabını Ücretsiz Başlat →",
+    subtitle = "Write your idea, AI generates the chapters, receive as EPUB and PDF",
+    ctaText = "Start Your First Book Free →",
     ctaHref = "/start/topic",
-    badge = "Ücretsiz Önizleme",
-    trustNote = `Önce ücretsiz önizleme gör. Kredi kartı gerekmez; beğenirsen tam kitabı aç. · ${FULL_TRUST_CLAIM}`,
-    socialProof = { count: "1000+ KDP kitabı yayınlandı", rating: "Kindle uyumlu EPUB çıktı" },
-    secondaryCtaText = "Örnekleri Gör",
+    badge = "Free Preview",
+    trustNote = `See a free preview first. No credit card required; open the full book if you like it. · ${FULL_TRUST_CLAIM}`,
+    socialProof = { count: "1000+ KDP books published", rating: "Kindle-compatible EPUB output" },
+    secondaryCtaText = "See Examples",
     secondaryCtaHref = "/examples",
     ...props
   },

@@ -94,8 +94,8 @@ function bonusDeadlineLabel(iso?: string | null) {
   const diff = new Date(iso).getTime() - Date.now();
   if (diff <= 0) return "";
   const days = Math.ceil(diff / (24 * 60 * 60 * 1000));
-  if (days <= 1) return "Bugün bitiyor";
-  return `${days} gün kaldı`;
+  if (days <= 1) return "Ends today";
+  return `${days} days left`;
 }
 
 function formatRemainingDuration(seconds: number) {
@@ -982,6 +982,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const previewReadyTrackedRef = useRef(false);
   const coverLabRequestedRef = useRef(false);
   const hydrateInFlightRef = useRef(false);
+  const hasLoadedPreviewRef = useRef(false);
 
   // Stripe başarılı ödeme sonrası auth state güncelle
   useEffect(() => {
@@ -1012,6 +1013,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     try {
       const previewPayload = await loadBookPreview(slug);
       setPreview(previewPayload);
+      hasLoadedPreviewRef.current = true;
       setBackendUnavailable(false);
       if (!trackedRef.current) {
         trackedRef.current = true;
@@ -1019,7 +1021,9 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       }
     } catch (error) {
       if (isBackendUnavailableError(error)) {
-        setBackendUnavailable(true);
+        if (!hasLoadedPreviewRef.current) {
+          setBackendUnavailable(true);
+        }
         return;
       }
       console.error(error);
@@ -1066,8 +1070,10 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     }
     previewReadyTrackedRef.current = false;
     coverLabRequestedRef.current = false;
+    hasLoadedPreviewRef.current = false;
     setBootstrapRetryNonce(0);
     setCoverTargetCount(1);
+    setBackendUnavailable(false);
   }, [slug]);
 
   useEffect(

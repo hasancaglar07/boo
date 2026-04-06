@@ -46,8 +46,8 @@ type WorkspaceTab = (typeof tabOptions)[number];
 const TAB_LABELS: Record<WorkspaceTab, string> = {
   home: "Genel",
   book: "Kitap",
-  writing: "Content",
-  research: "Research",
+  writing: "İçerik",
+  research: "Araştırma",
   publish: "Yayın",
 };
 
@@ -79,15 +79,15 @@ function coverPickerSummary(book: Book | null) {
   const genre = coverGenreLabel(book?.cover_genre);
   const variantCount = Array.isArray(book?.cover_variants) ? book.cover_variants.length : 0;
   if (variantCount <= 1) {
-    return "The system first generates 1 front + 1 back cover concept. If you don't like it, you can get an alternative set with AI regenerate.";
+    return "Sistem önce 1 ön + 1 arka kapak konsepti üretir. Beğenmezsen AI ile yeniden üret ile alternatif set alabilirsin.";
   }
   if (book?.cover_text_strategy === "hybrid-ai-text") {
-    return `This book operates in hybrid cover mode. The system generates 2 AI text suggestions: Signature tries the full title layout directly from the model, Minimal tries a simpler typography, and Exact always uses our error-free studio layout.`;
+    return `Bu kitap hibrit kapak modunda çalışır. Sistem 2 AI text önerisi üretir: Signature tam başlık düzenini doğrudan modelden dener, Minimal daha sade bir tipografi dener, Exact ise her zaman bizim hatasız studio yerleşimimizdir.`;
   }
   if (branch === "children") {
-    return `This book operates in the ${genre.toLowerCase()} line. The system generates more cheerful Storyworld, more educational Learning Adventure, and softer Bedtime Calm suggestions; the variant you choose is reflected directly in the export and sales surface.`;
+    return `Bu kitap ${genre.toLowerCase()} hattında çalışır. Sistem daha neşeli Storyworld, daha öğretici Learning Adventure ve daha yumuşak Bedtime Calm önerileri üretir; seçtiğin varyant export ve satış yüzeyine aynen yansır.`;
   }
-  return `This book operates in the ${genre.toLowerCase()} line. The system suggests 3 covers based on the genre: one more directly commercial, one more premium/editorial, and one that reads warmer or more modern depending on the sub-topic. The variant you choose is reflected directly in the export and sales surface.`;
+  return `Bu kitap ${genre.toLowerCase()} hattında çalışır. Sistem türe göre 3 kapak önerir; biri daha direkt ticari, biri daha premium/editorial, biri de alt konuya göre daha sıcak veya daha modern okunur. Seçtiğin varyant export ve satış yüzeyine aynen yansır.`;
 }
 
 function coverRenderModeLabel(mode?: string) {
@@ -109,7 +109,7 @@ function coverValidationSummary(variant: CoverVariant) {
   const validation = variant.text_validation;
   if (!validation) return "";
   if (variant.render_mode === "studio-exact-fallback") {
-    return "AI text was attempted but did not pass the verification threshold; studio exact is used as a safe fallback.";
+    return "AI text denendi ama doğrulama eşiğini geçmedi; studio exact ile güvenli fallback kullanılıyor.";
   }
   if (variant.render_mode === "ai-signature" || variant.render_mode === "ai-minimal") {
     if (validation.valid) {

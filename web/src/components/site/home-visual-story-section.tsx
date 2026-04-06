@@ -19,29 +19,29 @@ import { cn } from "@/lib/utils";
 const storySteps = [
   {
     step: "1",
-    badge: "Konu Özeti",
-    title: "Fikrini gir. Sistem kitap yönünü kursun.",
+    badge: "Topic Brief",
+    title: "Enter your idea. Let the system build the book direction.",
     description:
-      "Kitap türü, konu, hedef okur ve dil tercihini yaz. Sistem başlık, alt başlık ve ilk omurgayı tek ekranda önerir.",
-    bullets: ["Türkçe arayüz", "İngilizce çıktı", "Başlık + açıklama"],
+      "Write your book type, topic, target reader, and language preference. The system proposes a title, subtitle, and initial outline on a single screen.",
+    bullets: ["Localized interface", "English output", "Title + description"],
     mock: "brief",
   },
   {
     step: "2",
-    badge: "Bölüm Planı",
-    title: "Taslağı gör. Bölüm sırasını netleştir.",
+    badge: "Chapter Plan",
+    title: "Review the outline. Clarify the chapter order.",
     description:
-      "Daha yazıya geçmeden önce bölüm akışını, okuyucu vaadini ve araştırma sinyallerini aynı yerde kontrol et.",
-    bullets: ["Bölüm yapısı", "Anahtar kelime yönü", "Düzenlenebilir taslak"],
+      "Before writing begins, review the chapter flow, reader promise, and research signals — all in one place.",
+    bullets: ["Chapter structure", "Keyword direction", "Editable outline"],
     mock: "outline",
   },
   {
     step: "3",
-    badge: "Yayın",
-    title: "İçeriği üret. Kapağı ekle. EPUB al.",
+    badge: "Publish",
+    title: "Generate content. Add a cover. Get the EPUB.",
     description:
-      "Bölümler sırayla oluşur, kapak akışı eklenir ve yayın klasörüne ilk teslim dosyaların düşer.",
-    bullets: ["Kapak akışı", "EPUB + PDF", "Çıktı klasörü"],
+      "Chapters are created in sequence, the cover flow is added, and the first delivery files land in your publish folder.",
+    bullets: ["Cover flow", "EPUB + PDF", "Output folder"],
     mock: "publish",
   },
 ] as const;
@@ -72,13 +72,13 @@ function MockFrame({
 
 function BriefMock() {
   return (
-    <MockFrame title="Yeni kitap">
+    <MockFrame title="New book">
       <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="space-y-3">
           {[
-            ["Kitap türü", "Pratik rehber"],
-            ["Konu", "E-mail ile danışmanlık satmak"],
-            ["Hedef okur", "Freelance tasarımcılar"],
+            ["Book type", "Practical guide"],
+            ["Topic", "Selling consulting via email"],
+            ["Target reader", "Freelance designers"],
           ].map(([label, value]) => (
             <div
               key={label}
@@ -92,7 +92,7 @@ function BriefMock() {
           ))}
 
           <div className="flex flex-wrap gap-2">
-            {["İngilizce", "6 bölüm", "Kısa tanıtım kitabı değil"].map((chip) => (
+            {["English", "6 chapters", "Not a short promo book"].map((chip) => (
               <span
                 key={chip}
                 className="rounded-full border border-border bg-accent/60 px-3 py-1 text-xs text-accent-foreground"
@@ -110,20 +110,20 @@ function BriefMock() {
         >
           <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-primary/80">
             <Sparkles className="size-4" />
-            AI önerisi
+            AI suggestion
           </div>
           <h3 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
             Inbox to Income
           </h3>
           <p className="mt-2 text-sm leading-7 text-muted-foreground">
-            E-mail üzerinden uzmanlığını nasıl konumlandıracağını gösteren, sade ve satışa dönük bir rehber.
+            A clean, sales-driven guide on how to position your expertise via email.
           </p>
           <div className="mt-5 grid gap-2 sm:grid-cols-2">
             {[
-              "Başlık + alt başlık",
-              "Kitap açıklaması",
-              "İlk bölüm planı",
-              "Bölüm sırası",
+              "Title + subtitle",
+              "Book description",
+              "First chapter plan",
+              "Chapter order",
             ].map((item) => (
               <div
                 key={item}
@@ -141,16 +141,16 @@ function BriefMock() {
 
 function OutlineMock() {
   return (
-      <MockFrame title="Bölüm planı + araştırma">
+      <MockFrame title="Chapter plan + research">
       <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="space-y-2">
           {[
-            "01. Problem ve vaat",
-            "02. Konumlandırma",
-            "03. Teklif yapısı",
-            "04. Örnek akış",
-            "05. İtirazlar",
-            "06. Sonraki adım",
+            "01. Problem and promise",
+            "02. Positioning",
+            "03. Offer structure",
+            "04. Example flow",
+            "05. Objections",
+            "06. Next step",
           ].map((chapter, index) => (
             <div
               key={chapter}
@@ -170,13 +170,13 @@ function OutlineMock() {
           <div className="rounded-[26px] border border-border/80 bg-background/95 p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <BookOpenText className="size-4 text-primary" />
-              Bölüm 2: Konumlandırma
+              Chapter 2: Positioning
             </div>
             <div className="mt-4 space-y-2">
               {[
-                "Kim için yazıldığı ilk sayfada netleşir.",
-                "Hızlı sonuç vaadi tek cümlede kurulur.",
-                "Teklif öncesi güven inşa eden bölüm iskeleti hazırlanır.",
+                "Who it's written for becomes clear on the first page.",
+                "The quick-result promise is established in a single sentence.",
+                "A chapter skeleton that builds trust before the offer is prepared.",
               ].map((line) => (
                 <div
                   key={line}
@@ -192,7 +192,7 @@ function OutlineMock() {
             <div className="rounded-2xl border border-border/80 bg-card/80 p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <SearchCheck className="size-4 text-primary" />
-                Anahtar kelime yönü
+                Keyword direction
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {["email sales", "consulting offer", "client system"].map((chip) => (
@@ -208,10 +208,10 @@ function OutlineMock() {
             <div className="rounded-2xl border border-border/80 bg-card/80 p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <Languages className="size-4 text-primary" />
-                Çıktı dili
+                Output language
               </div>
               <div className="mt-3 text-xs leading-6 text-muted-foreground">
-                Panel Türkçe kalır. Kitap içeriği İngilizce olarak ilerler.
+                The dashboard stays localized. Book content progresses in English.
               </div>
             </div>
           </div>
@@ -223,13 +223,13 @@ function OutlineMock() {
 
 function PublishMock() {
   return (
-    <MockFrame title="Yayına Hazırla">
+    <MockFrame title="Prepare for Publishing">
       <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="flex items-end justify-center gap-3 rounded-[28px] border border-border/80 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_8%,transparent),transparent_80%)] px-4 py-6">
           {[
-            ["Üretim Özeti", "amber", "KDP"],
-            ["E-posta İçin Kitap", "zinc", "EPUB"],
-            ["Yayın Notları", "orange", "PDF"],
+            ["Production Summary", "amber", "KDP"],
+            ["Book for Email", "zinc", "EPUB"],
+            ["Publish Notes", "orange", "PDF"],
           ].map(([title, tone, badge], index) => (
             <motion.div
               key={title}
@@ -252,13 +252,13 @@ function PublishMock() {
           <div className="rounded-2xl border border-border/80 bg-background/95 p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <FileOutput className="size-4 text-primary" />
-              Çıktı durumu
+              Output status
             </div>
             <div className="mt-4 space-y-3">
               {[
-                ["EPUB", "Hazır"],
-                ["PDF", "Sırada"],
-                ["Kapak dosyaları", "Hazır"],
+                ["EPUB", "Ready"],
+                ["PDF", "In queue"],
+                ["Cover files", "Ready"],
               ].map(([label, status]) => (
                 <div key={label} className="flex items-center justify-between rounded-2xl border border-border/70 bg-card/80 px-4 py-3">
                   <span className="text-sm text-foreground">{label}</span>
@@ -275,19 +275,19 @@ function PublishMock() {
             <div className="rounded-2xl border border-border/80 bg-card/80 p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <ImagePlus className="size-4 text-primary" />
-                Kapak akışı
+                Cover flow
               </div>
               <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                Ön kapak, arka kapak ve çıktı klasörü tek kitap altında toplanır.
+                Front cover, back cover, and output folder are all organized under a single book.
               </p>
             </div>
             <div className="rounded-2xl border border-border/80 bg-card/80 p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <LayoutTemplate className="size-4 text-primary" />
-                Teslim dosyaları
+                Delivery files
               </div>
               <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                Zaman damgalı klasör ile hangi çıktının ne zaman alındığı nettir.
+                A timestamped folder makes it clear which output was generated and when.
               </p>
             </div>
           </div>
@@ -308,12 +308,12 @@ export function HomeVisualStorySection() {
     <section className="border-b border-border/80 py-20 md:py-24">
       <div className="shell">
         <div className="mx-auto max-w-3xl text-center">
-          <Badge>3 adım</Badge>
+          <Badge>3 steps</Badge>
           <h2 className="mt-4 text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-            Fikrini yaz. Taslağı gör. Kitabını yayımla.
+            Write your idea. Review the outline. Publish your book.
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-8 text-muted-foreground">
-            Buradaki amaç çok ekran göstermek değil. Doğru sırayı göstermek. Kullanıcı ne zaman ne yapacağını tek bakışta anlar.
+            The goal here isn't to show many screens. It's to show the right order. The user understands what to do and when at a single glance.
           </p>
         </div>
 

@@ -14,21 +14,21 @@ import {
 
 const overviewItems = [
   {
-    title: "Boş sayfada kalmak yok",
+    title: "No more staring at a blank page",
     description:
-      "Konu, hedef okur ve vaadi tek konu özetinde topla. Sistem başlık, bölüm omurgası ve yayın yönünü saniyeler içinde önerir.",
+      "Combine your topic, target reader, and promise into a single brief. The system suggests a title, chapter outline, and publishing direction in seconds.",
     icon: SearchCheck,
   },
   {
-    title: "Dağınık araç zinciri yok",
+    title: "No scattered toolchain",
     description:
-      "Konu özeti → bölüm planı → bölüm yazımı → kapak → çıktı. Her adım birbirine bağlı, hiçbiri ayrı bir araçta kaybolmuyor.",
+      "Topic brief → chapter plan → chapter writing → cover → output. Every step is connected; nothing gets lost in a separate tool.",
     icon: MessageSquareText,
   },
   {
-    title: "Hazır yayın dosyan elinizde",
+    title: "Your ready-to-publish file is in hand",
     description:
-      "Amaç sonsuz taslak üretmek değil: ilk EPUB ve teslim klasörünü güvenle eline almak. Sistem bunu önce hedefler.",
+      "The goal isn't endless drafts: it's getting your first EPUB and delivery folder with confidence. The system prioritizes this from the start.",
     icon: FileOutput,
   },
 ] as const;
@@ -93,13 +93,13 @@ export function HomeProductOverviewSection() {
           <div className="grid gap-4 lg:grid-cols-[260px_1fr_220px]">
             <div className="space-y-3 rounded-[28px] border border-white/8 bg-black/18 p-4">
               <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400">
-                Girdi
+                Input
               </div>
               {[
-                ["Kitap tipi", "Pratik rehber"],
-                ["Konu", "Email ile müşteri alma"],
-                ["Okur", "Solo danışmanlar"],
-                ["Dil", "İngilizce"],
+                ["Book type", "Practical guide"],
+                ["Topic", "Getting clients via email"],
+                ["Reader", "Solo consultants"],
+                ["Language", "English"],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3">
                   <div className="text-[11px] uppercase tracking-[0.15em] text-stone-500">{label}</div>
@@ -116,9 +116,9 @@ export function HomeProductOverviewSection() {
                   <span className="h-2.5 w-2.5 rounded-full bg-white/10" />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <BoardPill active>Konu</BoardPill>
-                  <BoardPill>Taslak</BoardPill>
-                  <BoardPill>Yayın</BoardPill>
+                  <BoardPill active>Topic</BoardPill>
+                  <BoardPill>Draft</BoardPill>
+                  <BoardPill>Publish</BoardPill>
                 </div>
               </div>
 
@@ -126,21 +126,21 @@ export function HomeProductOverviewSection() {
                 <div className="rounded-[26px] border border-white/8 bg-white/4 p-5">
                   <div className="flex items-center gap-2 text-sm font-medium text-white">
                     <Sparkles className="size-4 text-[#f0a27f]" />
-                    Yapay zeka kitap yönü
+                    AI book direction
                   </div>
                   <h3 className="mt-4 text-3xl font-semibold tracking-tight text-white">
                     Inbox to Income
                   </h3>
                   <p className="mt-3 max-w-lg text-sm leading-7 text-stone-300">
-                    Freelance danışmanların email üzerinden güven inşa edip ilk düşük fiyatlı bilgi ürününü nasıl sattığını anlatan sade rehber.
+                    A straightforward guide on how freelance consultants build trust via email and sell their first low-priced info product.
                   </p>
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
                     {[
-                      "Başlık + alt başlık",
-                      "Açıklama",
-                      "Bölüm omurgası",
-                      "İlk satış açısı",
+                      "Title + subtitle",
+                      "Description",
+                      "Chapter outline",
+                      "Initial sales angle",
                     ].map((item) => (
                       <div
                         key={item}
@@ -154,11 +154,11 @@ export function HomeProductOverviewSection() {
 
                 <div className="space-y-3">
                   {[
-                    "01. Problem ve vaat",
-                    "02. Konumlandırma",
-                    "03. Teklif yapısı",
-                    "04. Email akışı",
-                    "05. Son çağrı",
+                    "01. Problem and promise",
+                    "02. Positioning",
+                    "03. Offer structure",
+                    "04. Email flow",
+                    "05. Final call",
                   ].map((line, index) => (
                     <div
                       key={line}
@@ -175,10 +175,10 @@ export function HomeProductOverviewSection() {
                   <div className="rounded-[24px] border border-white/8 bg-[#161310] p-4">
                     <div className="flex items-center gap-2 text-sm font-medium text-white">
                       <Bot className="size-4 text-[#f0a27f]" />
-                      Sistem notu
+                      System note
                     </div>
                     <p className="mt-3 text-sm leading-7 text-stone-300">
-                      Aynı konu özeti ile kitap açıklaması, bölüm yapısı ve yazım sırası birlikte kurulur.
+                      The book description, chapter structure, and writing order are built together from the same topic brief.
                     </p>
                   </div>
                 </div>
@@ -189,10 +189,10 @@ export function HomeProductOverviewSection() {
               <div className="rounded-[28px] border border-white/8 bg-white/4 p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-white">
                   <CheckCircle2 className="size-4 text-[#f0a27f]" />
-                  Ne alırsın
+                  What you get
                 </div>
                 <div className="mt-4 space-y-2">
-                  {["Taslak", "Bölüm içerikleri", "Kapak akışı", "EPUB çıktısı"].map((item) => (
+                  {["Draft", "Chapter content", "Cover flow", "EPUB output"].map((item) => (
                     <div
                       key={item}
                       className="rounded-2xl border border-white/8 bg-black/16 px-3 py-2 text-xs text-stone-300"
@@ -206,10 +206,10 @@ export function HomeProductOverviewSection() {
               <div className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(240,162,127,0.12),rgba(240,162,127,0.02))] p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-white">
                   <BookOpenText className="size-4 text-[#f0a27f]" />
-                  Ana mantık
+                  Core logic
                 </div>
                 <p className="mt-3 text-sm leading-7 text-stone-300">
-                  Önce yön, sonra yazı, sonra teslim. Home bunu doğrudan göstermeli.
+                  Direction first, then writing, then delivery. The homepage should show this directly.
                 </p>
               </div>
             </div>
@@ -221,7 +221,7 @@ export function HomeProductOverviewSection() {
             href="/start/topic"
             className="inline-flex items-center gap-2 rounded-full border border-[#f0a27f]/40 bg-[#f0a27f]/10 px-6 py-3 text-sm font-medium text-[#ffd8c7] transition-colors hover:bg-[#f0a27f]/18"
           >
-            <span>İlk kitabını başlat</span>
+            <span>Start your first book</span>
             <ArrowRight className="size-4" />
           </a>
         </div>

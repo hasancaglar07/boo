@@ -12,123 +12,123 @@ import { featuredLeadMagnet } from "@/lib/lead-magnets";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Ücretsiz Kaynaklar | Kitap Oluşturucu",
+  title: "Free Resources | Book Generator",
   description:
-    "Yapay zeka ile kitap yazmak için pratik rehberler, kontrol listeleri ve şablonlar. Kitap yazma sürecini hızlandıracak ücretsiz kaynakları inceleyin.",
+    "Practical guides, checklists, and templates for writing books with AI. Explore free resources to accelerate your book writing process.",
   path: "/resources",
-  keywords: ["ücretsiz kitap yazma rehberi", "epub şablonu", "kitap bölüm planı şablonu", "ai kitap kontrol listesi"],
+  keywords: ["free book writing guide", "epub template", "book chapter plan template", "ai book checklist"],
 });
 
 const resources = [
   {
     icon: FileText,
     badge: "Email Starter Pack",
-    title: "AI ile Kitap Yazma Başlangıç Paketi",
+    title: "AI Book Writing Starter Pack",
     description:
-      "Boş sayfaya düşmeden ilk kitabını başlatmak için kısa rehber, kalite filtresi ve yayın öncesi kontrol notları. Email ile gelir, sonra doğrudan wizard akışına taşır.",
+      "A short guide, quality filter, and pre-publish check notes to start your first book without staring at a blank page. Delivered via email, then routes directly into the wizard flow.",
     highlights: [
-      "Konu özeti oluşturma teknikleri",
-      "Bölüm planı nasıl kurulur",
-      "Bölüm üretiminde dikkat edilecekler",
-      "EPUB/PDF teslim zinciri",
+      "Topic summary creation techniques",
+      "How to set up a chapter plan",
+      "What to watch during chapter generation",
+      "EPUB/PDF delivery pipeline",
     ],
-    cta: "Sihirbazda adım adım uygula",
+    cta: "Apply step by step in the wizard",
     href: "/start/topic",
     featured: true,
   },
   {
     icon: Sparkles,
     badge: "Tool Library",
-    title: "Ücretsiz Kitap Araçları",
+    title: "Free Book Tools",
     description:
-      "Kitap fikrini puanla, outline çıkar, KDP nişini test et, müşteri çeken açı bul ve başlığını sıkılaştır. Tüm ücretsiz interactive tool'ları tek merkezde gör.",
+      "Score your book idea, generate an outline, test your KDP niche, find a customer-attracting angle, and refine your title. Browse all free interactive tools in one place.",
     highlights: [
-      "6 farklı interactive tool",
-      "Kısmi açık skor + email ile tam rapor",
-      "Start funnel'a giden CTA zinciri",
-      "Validator, outline, KDP ve title araçları",
+      "6 different interactive tools",
+      "Partial free score + full report via email",
+      "CTA chain leading to start funnel",
+      "Validator, outline, KDP, and title tools",
     ],
-    cta: "Tool Hub'ı Aç",
+    cta: "Open Tool Hub",
     href: "/tools",
     featured: false,
   },
   {
     icon: CheckCircle2,
     badge: "Checklist",
-    title: "Kitap Yayın Öncesi Kontrol Listesi",
+    title: "Pre-Publish Book Checklist",
     description:
-      "Amazon KDP veya başka bir platformda yayınlamadan önce kontrol etmen gereken 30 maddelik kapsamlı liste. Wizard ile ürettiğin kitabı yayına hazır hale getir.",
+      "A comprehensive 30-item checklist to review before publishing on Amazon KDP or any other platform. Get your wizard-generated book publish-ready.",
     highlights: [
-      "Metadata ve açıklama kontrolleri",
-      "Kapak tasarımı standartları",
-      "EPUB validasyon adımları",
-      "KDP yükleme gereksinimleri",
+      "Metadata and description checks",
+      "Cover design standards",
+      "EPUB validation steps",
+      "KDP upload requirements",
     ],
-    cta: "Kitabını oluştur ve kontrol et",
+    cta: "Create and check your book",
     href: "/start/topic",
     featured: false,
   },
   {
     icon: Search,
-    badge: "Şablon",
-    title: "Niş Araştırma Çalışma Sayfası",
+    badge: "Template",
+    title: "Niche Research Worksheet",
     description:
-      "Kitabın için doğru niş ve hedef kitleyi bulmak üzere tasarlanmış doldurulabilir çalışma sayfası. Wizard'da kullanmak için referans olarak sakla.",
+      "A fillable worksheet designed to help you find the right niche and target audience for your book. Keep it as a reference to use in the wizard.",
     highlights: [
-      "Hedef okur profili şablonu",
-      "Rekabet analizi tablosu",
-      "Anahtar kelime araştırma çerçevesi",
-      "Fiyatlama ve pazar notları",
+      "Target reader profile template",
+      "Competition analysis table",
+      "Keyword research framework",
+      "Pricing and market notes",
     ],
-    cta: "Wizard'da nişini tanımla",
+    cta: "Define your niche in the wizard",
     href: "/start/topic",
     featured: false,
   },
   {
     icon: BookOpen,
-    badge: "Rehber",
-    title: "Kitap Oluşturucu Hızlı Başlangıç (15 dk)",
+    badge: "Guide",
+    title: "Book Generator Quick Start (15 min)",
     description:
-      "Platforma ilk girişten ilk kitabın üretimine kadar tüm süreci anlatan adım adım rehber. Sihirbazı doldurma, bölüm planı onayı ve çıktı almak için.",
+      "A step-by-step guide covering the entire process from your first login to generating your first book. Fill in the wizard, approve the chapter plan, and get your output.",
     highlights: [
-      "Sihirbazı doldurmak",
-      "Bölüm planı onayı ve düzenleme",
-      "Bölüm üretme ve kaydetme",
-      "Çıktı ve indirme adımları",
+      "Filling in the wizard",
+      "Chapter plan approval and editing",
+      "Chapter generation and saving",
+      "Output and download steps",
     ],
-    cta: "Rehberi uygula — şimdi başla",
+    cta: "Apply the guide — start now",
     href: "/start/topic",
     featured: false,
   },
   {
     icon: Lightbulb,
-    badge: "Fikir Listesi",
-    title: "100 Karlı Kitap Fikri Listesi",
+    badge: "Idea List",
+    title: "100 Profitable Book Ideas List",
     description:
-      "Amazon KDP'de iyi satan niş kategorilerde araştırılmış 100 kitap fikri. Her fikir için hedef kitle ve tahmini değerlendirme notu. Kendi konunu seçmek için ilham al.",
+      "100 book ideas researched across best-selling niche categories on Amazon KDP. Each idea includes target audience and estimated evaluation notes. Get inspired to choose your own topic.",
     highlights: [
-      "10 farklı kategoride 100 fikir",
-      "Her fikir için hedef kitle notu",
-      "Rekabet seviyesi değerlendirmesi",
-      "Fiyat aralığı önerileri",
+      "100 ideas across 10 categories",
+      "Target audience notes for each idea",
+      "Competition level assessment",
+      "Price range suggestions",
     ],
-    cta: "Bir fikir seç ve başlat",
+    cta: "Pick an idea and get started",
     href: "/start/topic",
     featured: false,
   },
   {
     icon: Download,
     badge: "KDP Toolkit",
-    title: "KDP Başlangıç Toolkit",
+    title: "KDP Starter Toolkit",
     description:
-      "Amazon KDP'de ilk kitabını yayınlamak için ihtiyaç duyduğun şablon ve rehberleri tek akışta kullanan başlangıç yolu. Kitap oluşturucuyla KDP için optimize et.",
+      "A starter path that combines the templates and guides you need to publish your first book on Amazon KDP in one streamlined flow. Optimize for KDP with Book Generator.",
     highlights: [
-      "Kitap açıklaması şablonu",
-      "Kategori seçim rehberi",
-      "Fiyatlama stratejisi notu",
-      "Yayın başlangıç kontrol listesi",
+      "Book description template",
+      "Category selection guide",
+      "Pricing strategy notes",
+      "Publishing starter checklist",
     ],
-    cta: "KDP kitabını şimdi oluştur",
+    cta: "Create your KDP book now",
     href: "/start/topic",
     featured: false,
   },
@@ -141,13 +141,13 @@ export default function ResourcesPage() {
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="mb-4">Ücretsiz Kaynaklar</Badge>
+            <Badge className="mb-4">Free Resources</Badge>
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              Kitap kararını hızlandıracak{" "}
-              <span className="text-primary">ücretsiz kaynaklar</span>
+              Free resources to accelerate{" "}
+              <span className="text-primary">your book decision</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
-              Rehberler, şablonlar, kontrol listeleri ve eğitimler. Amaç sadece okumak değil; seni daha hızlı şekilde önizleme, bölüm planı ve gerçek kitap akışına taşımak.
+              Guides, templates, checklists, and tutorials. The goal isn't just reading — it's moving you faster into previewing, chapter planning, and the real book flow.
             </p>
           </div>
         </div>
@@ -164,9 +164,9 @@ export default function ResourcesPage() {
       <section className="border-b border-border/80 py-16">
         <div className="shell">
           <SectionHeading
-            badge="Tüm Kaynaklar"
-            title="Süreci kolaylaştıran araçlar."
-            description="Rehberden şablona, kontrol listesinden video eğitime kadar her aşama için hazırlanmış kaynaklar."
+            badge="All Resources"
+            title="Tools that simplify the process."
+            description="Resources prepared for every stage, from guides to templates, checklists to video tutorials."
           />
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -211,30 +211,30 @@ export default function ResourcesPage() {
       {/* Cross-links */}
       <section className="border-b border-border/80 py-10">
         <div className="shell flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-          <span>Daha fazla içerik arıyorsan:</span>
+          <span>Looking for more content:</span>
           <Link href="/tools" className="font-medium text-foreground underline-offset-4 hover:underline">
-            Araçlar → Interactive tool library
+            Tools → Interactive tool library
           </Link>
           <Link href="/blog" className="font-medium text-foreground underline-offset-4 hover:underline">
-            Blog → Yazarlık ve yapay zeka rehberleri
+            Blog → Writing and AI guides
           </Link>
           <Link href="/faq" className="font-medium text-foreground underline-offset-4 hover:underline">
-            SSS → Sık sorulan sorular
+            FAQ → Frequently asked questions
           </Link>
           <Link href="/how-it-works" className="font-medium text-foreground underline-offset-4 hover:underline">
-            Nasıl Çalışır → Adım adım süreç
+            How It Works → Step-by-step process
           </Link>
         </div>
       </section>
 
       <MarketingCtaSection
-        title="Okumak yerine kendi kitabını başlat."
-        description="Rehberleri inceledin, şablonları gördün. Şimdi aynı mantığı kendi konu özetinle test et: önce önizlemeyi gör, sonra devam etmeye karar ver. 30 gün iade garantisi."
+        title="Start your own book instead of just reading."
+        description="You've explored the guides and seen the templates. Now test the same logic with your own topic summary: preview first, then decide whether to continue. 30-day money-back guarantee."
         items={[
-          "Sihirbaz ile hızlı başlangıç",
-          "Bölüm planı + bölüm üretimi",
-          "Önce önizleme, sonra tam kitap",
-          "EPUB ve PDF çıktısı",
+          "Quick start with the wizard",
+          "Chapter plan + chapter generation",
+          "Preview first, then full book",
+          "EPUB and PDF output",
         ]}
       />
     </MarketingPage>

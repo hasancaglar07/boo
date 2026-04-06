@@ -22,12 +22,12 @@ export function HomeBookGallerySection() {
     <section className="border-b border-border/80 py-20">
       <div className="shell">
         <div className="mx-auto max-w-2xl text-center">
-          <Badge>Gerçek kitap vitrini</Badge>
+          <Badge>Real Book Showcase</Badge>
           <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-            Fikir mockup’ı değil, üretilmiş gerçek kapaklar dönüyor.
+            Not mockup ideas — these are real, produced covers spinning in the gallery.
           </h2>
           <p className="mt-4 text-base leading-8 text-muted-foreground">
-            Buradaki tüm kitaplar gerçek example output’larından geliyor. Aynı kapak hattı, aynı export zinciri ve aynı kitap üretim akışı site içinde tekrar kullanılıyor.
+            Every book here comes from actual example outputs. The same cover pipeline, same export chain, and same book production workflow is reused throughout the site.
           </p>
         </div>
 

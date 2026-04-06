@@ -10,7 +10,7 @@ const MOTIVATION_FACTS = [
   `📚 ${KDP_LIVE_BOOKS_CLAIM}`,
   `🛡️ ${KDP_GUARANTEE_CLAIM}`,
   "🧭 First, you'll see the chapter plan and cover",
-  "🌍 Turkish panel, multilingual book output",
+  "🌍 Multilingual interface, multilingual book output",
   "🖼️ There are 30 real showcase books on the display",
   "📦 Open EPUB and PDF with full access",
   `⚙️ ${NO_API_COST_CLAIM}`,
@@ -53,7 +53,7 @@ export default function RootLoading() {
         <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-muted border-t-primary" />
         <h1 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">Page is being prepared</h1>
         <p className="mt-3 text-sm leading-7 text-muted-foreground">
-          İThere may be a brief wait while content loads.
+          There may be a brief wait while content loads.
         </p>
 
         {/* Motivational Fact */}

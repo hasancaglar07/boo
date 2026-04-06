@@ -12,7 +12,7 @@ export async function generateMetadata({
   const { slug } = await params;
   return buildPageMetadata({
     title: `${slug} Workspace | Book Generator`,
-    description: "Kitabın tam çalışma alanı.",
+    description: "The full workspace for your book.",
     path: `/app/book/${slug}/workspace`,
     noIndex: true,
   });

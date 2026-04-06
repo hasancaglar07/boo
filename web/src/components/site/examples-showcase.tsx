@@ -26,14 +26,14 @@ import { cn } from "@/lib/utils";
 const pipeline = [
   {
     step: "01",
-    title: "Konu Özeti",
-    description: "Konu, hedef okur ve dil seçimi. 5 soruluk sihirbaz.",
+    title: "Topic Summary",
+    description: "Topic, target reader, and language selection. 5-question wizard.",
     icon: Sparkles,
   },
   {
     step: "02",
     title: "Bölüm Planı",
-    description: "Bölüm mimarisi ve kitap vaadi. Onaydan sonra devam.",
+    description: "Chapter architecture and book promise. Continue after approval.",
     icon: Layers,
   },
   {
@@ -44,8 +44,8 @@ const pipeline = [
   },
   {
     step: "04",
-    title: "Kapak",
-    description: "API ile üretilen ön kapak ve teslim yüzeyi.",
+    title: "Cover",
+    description: "AI-generated front cover and delivery surface.",
     icon: BookOpen,
   },
   {
@@ -138,7 +138,7 @@ function BookCover({
                 backgroundColor: "rgba(0,0,0,0.28)",
               }}
             >
-                  YAPAY ZEKA KAPAK
+                  AI COVER
             </div>
           </>
         ) : (
@@ -386,7 +386,7 @@ function OutlineModal({
               <div className="mb-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Yazar
+                    Author
                   </div>
                   <div className="mt-2 text-sm font-semibold text-foreground">{item.author}</div>
                   {item.authorBio ? (
@@ -547,7 +547,7 @@ function OutlineModal({
                 onClose();
               }}
             >
-              Buna Benzer Kitap Başlat <ArrowRight className="size-4" />
+              Start a Similar Book <ArrowRight className="size-4" />
             </Link>
           </div>
         </div>
@@ -745,7 +745,7 @@ export function ExamplesShowcase({
                     className="mt-2 inline-flex w-full items-center justify-center gap-1 text-xs font-medium text-primary hover:underline"
                     onClick={() => trackEvent("examples_start_similar_clicked", { slug: item.slug, location: "grid_card" })}
                   >
-                    Buna Benzer Kitap Başlat <ArrowRight className="size-3" />
+                    Start a Similar Book <ArrowRight className="size-3" />
                   </Link>
                 </div>
               </div>
@@ -765,15 +765,15 @@ export function ExamplesShowcase({
       <section className="border-b border-border/80 bg-accent/20 py-16">
         <div className="shell mx-auto max-w-2xl text-center">
           <SectionHeading
-            badge="Kendi konunu dene"
+            badge="Try your own topic"
             title="Hangi kitabı yazmak istiyorsun?"
-            description="Konunu yaz, aynı akışla kendi taslağını oluştur. Kredi kartı gerekmez."
+            description="Enter your topic, create your own draft with the same workflow. No credit card required."
             align="center"
           />
           <div className="mt-6 flex gap-2">
             <input
               type="text"
-              placeholder="örn: Freelance fiyatlandırma rehberi..."
+              placeholder="e.g.: Freelance pricing guide..."
               value={topic}
               onChange={(event) => setTopic(event.target.value)}
               onKeyDown={(event) => {

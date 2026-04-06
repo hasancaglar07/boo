@@ -173,7 +173,7 @@ export default function FaqPage() {
         description="Write your topic idea, see the outline, and try the first EPUB workflow. Make your decision inside the product, not on a landing page. 30-day refund guarantee, no credit card required."
         items={[
           "Clear guidance from the first workflow",
-          "Turkish panel, English content",
+          "AI-assisted chapter planning and output system",
           "Chapter planning and output system",
           "Preview first, then full book",
         ]}

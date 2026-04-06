@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       publishedTime: post.datePublished,
       modifiedTime: post.dateModified,
       section: post.category,
-      tags: [post.category, "AI kitap yazma", "Book Generator"],
+      tags: [post.category, "AI book writing", "Book Generator"],
       images: [{ url: buildOgImageUrl(post.title, post.summary), width: 1200, height: 630, alt: post.title }],
     },
     twitter: {
@@ -77,7 +77,7 @@ function toSectionId(title: string) {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("tr-TR", {
+  return new Date(dateStr).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -109,14 +109,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     "@type": "Article",
     headline: post.title,
     description: post.summary,
-    inLanguage: "tr-TR",
+    inLanguage: "en-US",
     mainEntityOfPage: postUrl,
     url: postUrl,
     datePublished: post.datePublished,
     dateModified: post.dateModified,
     author: {
       "@type": "Person",
-      name: "Book Generator Ekibi",
+      name: "Book Generator Team",
       url: absoluteUrl("/about"),
     },
     publisher: {
@@ -137,7 +137,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       {
         "@type": "ListItem",
         position: 1,
-        name: "Anasayfa",
+        name: "Home",
         item: absoluteUrl("/"),
       },
       {
@@ -162,7 +162,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-1.5 text-sm text-muted-foreground">
           <Link href="/" className="transition-colors hover:text-foreground">
-            Anasayfa
+            Home
           </Link>
           <ChevronRight className="size-3.5 shrink-0" />
           <Link href="/blog" className="transition-colors hover:text-foreground">
@@ -195,7 +195,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <span className="size-1 rounded-full bg-border" />
                 <span className="flex items-center gap-1.5">
                   <Clock className="size-3.5 shrink-0" />
-                  {post.readTime} okuma
+                  {post.readTime} min read
                 </span>
               </div>
               <div className="mt-6 rounded-[20px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-5 py-4">
@@ -214,7 +214,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <div className="rounded-[20px] border border-border/70 bg-card/80 px-5 py-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Yayın notu</p>
                   <p className="mt-2 text-sm leading-7 text-foreground">Kitap Oluşturucu editör ekibi tarafından hazırlanıp gözden geçirildi.</p>
-                  <p className="mt-2 text-xs leading-6 text-muted-foreground">Amaç hukuki veya profesyonel tavsiye vermek değil; publishing kararlarını daha net almanı sağlamaktır.</p>
+                  <p className="mt-2 text-xs leading-6 text-muted-foreground">The purpose is not to provide legal or professional advice, but to help you make clearer publishing decisions.</p>
                 </div>
               </div>
             </header>

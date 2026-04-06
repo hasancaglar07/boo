@@ -18,7 +18,7 @@ const COMMISSIONS = [
 const STEPS = [
   {
     icon: Users,
-    title: "Ücretsiz üye ol",
+    title: "Sign up for free",
     desc: "BookGenerator.net'e kaydol. Hesabın otomatik olarak bir affiliate linki alır — ek başvuru gerekmez.",
   },
   {
@@ -36,23 +36,23 @@ const STEPS = [
 const FAQS = [
   {
     q: "Başvuru yapmam gerekiyor mu?",
-    a: "Hayır! Kayıt olduğunuz anda affiliate linkiniz otomatik oluşur. Profil ayarlarınızdan veya /affiliate sayfasından hemen erişebilirsiniz.",
+    a: "No! Your affiliate link is automatically created as soon as you register. Profil ayarlarınızdan veya /affiliate sayfasından hemen erişebilirsiniz.",
   },
   {
     q: "Komisyon oranı nedir?",
-    a: "Her aktif abonelik ödemesinden %30 komisyon kazanırsınız. Bu, abonelik aktif olduğu sürece her ay tekrar eder.",
+    a: "You earn a 30% commission from every active subscription payment. This repeats every month as long as the subscription is active.",
   },
   {
     q: "Premium plan ($4) komisyon kapsamında mı?",
-    a: "Hayır. Affiliate komisyonları yalnızca aylık abonelik planları için geçerlidir (Starter, Creator, Pro).",
+    a: "No. Affiliate commissions only apply to monthly subscription plans (Starter, Creator, Pro).",
   },
   {
-    q: "Ödeme nasıl yapılır?",
+    q: "How are payments made?",
     a: "PayPal veya banka transferi ile ödeme yapılır. Minimum ödeme eşiği $50'dır. Ödemeler her ay düzenlenir.",
   },
   {
     q: "Komisyon ne zaman onaylanır?",
-    a: "30 günlük iade süresi dolduktan sonra komisyon onaylanır ve bakiyenize eklenir.",
+    a: "After the 30-day refund period expires, the commission is approved and added to your balance.",
   },
   {
     q: "Kaç kişiyi davet edebilirim?",
@@ -60,7 +60,7 @@ const FAQS = [
   },
   {
     q: "Davet ettiğim kişinin linkimi kullanması zorunlu mu?",
-    a: "Evet. Affiliate sistemi, üyelerin sizin özel linkinizle kayıt olmasını gerektirir. Linkiniz ?ref=KODUNUZ parametresini taşır ve otomatik tanınır.",
+    a: "Evet. The affiliate system requires members to sign up through your special link. Linkiniz ?ref=KODUNUZ parametresini taşır ve otomatik tanınır.",
   },
 ];
 
@@ -90,14 +90,14 @@ function LoggedInAffiliateCard() {
   function handleWhatsApp() {
     if (!data) return;
     trackEvent("affiliate_whatsapp_clicked", { source: "affiliate_page_loggedin" });
-    const text = `BookGenerator.net ile dakikalar içinde profesyonel kitap yaz! ${data.referralUrl}`;
+    const text = `Write a professional book in minutes with BookGenerator.net! ${data.referralUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }
 
   function handleTwitter() {
     if (!data) return;
     trackEvent("affiliate_twitter_clicked", { source: "affiliate_page_loggedin" });
-    const text = `AI ile dakikalar içinde kitap yazdım 🚀 BookGenerator.net'i dene:`;
+    const text = `I wrote a book in minutes with AI 🚀 Try BookGenerator.net:`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(data.referralUrl)}`, "_blank");
   }
 
@@ -208,7 +208,7 @@ export function AffiliatePage() {
 
   return (
     <div className="flex flex-col">
-      {/* Giriş yapmış kullanıcıya direkt URL göster */}
+      {/* Show direct URL to logged-in user */}
       {isLoggedIn === true && <LoggedInAffiliateCard />}
 
       {/* Hero */}
@@ -261,11 +261,11 @@ export function AffiliatePage() {
                   <Button asChild size="lg" className="px-8">
                     <Link href="/register">
                       <Users className="mr-2 size-4" />
-                      Ücretsiz Kaydol
+                      Sign Up Free
                     </Link>
                   </Button>
                   <Button asChild size="lg" variant="outline" className="px-8">
-                    <a href="#nasil-calisir">Nasıl Çalışır?</a>
+                    <a href="#nasil-calisir">How It Works?</a>
                   </Button>
                 </>
               )}
@@ -278,7 +278,7 @@ export function AffiliatePage() {
       <section id="nasil-calisir" className="border-b border-border/80 py-18">
         <div className="shell">
           <SectionHeading
-            badge="Nasıl Çalışır?"
+            badge="How It Works?"
             title="3 Adımda %30 Komisyon Kazan"
             description="Kayıt ol, linkini paylaş, kazanç otomatik hesaplansın. Ek araç veya başvuru gerekmez."
             align="center"
@@ -344,7 +344,7 @@ export function AffiliatePage() {
               </table>
             </div>
             <div className="border-t border-border/40 bg-muted/30 px-5 py-3 text-xs text-muted-foreground">
-              Premium ($4 tek seferlik) komisyon kapsamı dışındadır. 30 günlük iade süresi sonrası onaylanır.
+              Premium ($4 one-time) is outside commission scope. Approved after the 30-day refund period.
             </div>
           </div>
         </div>
@@ -373,11 +373,11 @@ export function AffiliatePage() {
       <section className="py-18 text-center">
         <div className="shell max-w-xl">
           <SectionHeading
-            title={isLoggedIn === true ? "Affiliate Paneline Git" : "Hemen Başla"}
+            title={isLoggedIn === true ? "Go to Affiliate Panel" : "Start Now"}
             description={
               isLoggedIn === true
                 ? "Detaylı affiliate panelinden linkini kopyalayabilir ve komisyon takibi yapabilirsin."
-                : "Kaydol, affiliate linkini al ve paylaşmaya başla. Her ödeme yapan üyeden kalıcı %30 komisyon kazan."
+                : "Sign up, get your affiliate link, and start sharing. Earn a permanent 30% commission from every paying member."
             }
             align="center"
           />
@@ -395,7 +395,7 @@ export function AffiliatePage() {
                 <Button asChild size="lg" className="px-8">
                   <Link href="/register">
                     <Users className="mr-2 size-4" />
-                    Ücretsiz Kaydol
+                    Sign Up Free
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="px-8">

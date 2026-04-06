@@ -4,8 +4,8 @@ import { ContinueAuthScreen } from "@/components/funnel/continue-auth-screen";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Giriş ve Devam Et | Book Generator",
-  description: "Kitap önizlemene geri dönmek için oturumunu aç.",
+  title: "Sign In and Continue | Book Generator",
+  description: "Sign in to return to your book preview.",
   path: "/login/continue",
   noIndex: true,
 });

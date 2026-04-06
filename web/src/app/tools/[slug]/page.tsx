@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
 
   if (!tool) {
     return buildPageMetadata({
-      title: "Araç Bulunamadı | Kitap Oluşturucu",
-      description: "İstenen araç bulunamadı.",
+      title: "Tool Not Found | Book Generator",
+      description: "The requested tool was not found.",
       path: `/tools/${slug}`,
       noIndex: true,
     });

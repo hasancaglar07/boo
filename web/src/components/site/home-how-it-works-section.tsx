@@ -8,9 +8,9 @@ export function HomeHowItWorksSection() {
     <section className="border-b border-border/80 py-18">
       <div className="shell">
         <SectionHeading
-          badge="Yapay Zeka ile Kitap Yazma Süreci"
-          title="Yapay Zeka ile Kitap Yazma: 5 Adımda Yayına Hazır EPUB ve PDF"
-          description="Konudan EPUB çıktısına kadar her adım tek akışta. Taslak, kapak ve KDP uyumlu çıktı için ayrı araçlara gerek yok."
+          badge="AI Book Writing Process"
+          title="AI Book Writing: Publication-Ready EPUB and PDF in 5 Steps"
+          description="From topic to EPUB output, every step in a single workflow. No need for separate tools for drafts, covers, and KDP-compliant output."
         />
 
         <div className="relative mt-12">
@@ -48,7 +48,7 @@ export function HomeHowItWorksSection() {
             href="/start/topic"
             className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/8 px-6 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/14"
           >
-            Sihirbazı Başlat — Ücretsiz Önizleme Oluştur
+            Start the Wizard — Create a Free Preview
             <ArrowRight className="h-4 w-4" />
           </a>
         </div>

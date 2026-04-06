@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { AffiliatePage } from "@/components/site/affiliate-page";
 
 export const metadata: Metadata = {
-  title: "Affiliate Programı — Kitap Oluşturucu",
+  title: "Affiliate Program — Book Generator",
   description:
-    "Kitap Oluşturucu affiliate programına katıl. Her abonelikten 3 ay boyunca %30 komisyon kazan.",
+    "Join the Book Generator affiliate program. Earn 30% commission for 3 months on every subscription you refer.",
 };
 
 export default function AffiliatePageRoute() {

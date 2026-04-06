@@ -42,14 +42,14 @@ export function HomeFloatingIconsHero() {
   return (
     <FloatingIconsHero
       className="border-b border-border/80"
-      badge="AI Destekli Kitap Yazma"
-      title="Uzmanlığını kitaba çevir. İlk EPUB'ını bu hafta al."
-      subtitle="Danışmanlar, eğitmenler ve içerik üreticileri için: Konunu gir, bölüm planını onayla, bölümleri üret, kapağı ekle, yayın dosyan hazır olsun."
-      ctaText="İlk kitabını başlat"
+      badge="AI-Powered Book Writing"
+      title="Turn your expertise into a book. Get your first EPUB this week."
+      subtitle="For consultants, instructors, and content creators: Enter your topic, approve the chapter outline, generate chapters, add a cover, and your publication file is ready."
+      ctaText="Start your first book"
       ctaHref="/start/topic"
-      secondaryCtaText="Örnek Çıktıları Gör"
+      secondaryCtaText="View Sample Outputs"
       secondaryCtaHref="/examples"
-      trustNote={`Kredi kartı gerekmez · Önce önizleme gör · ${NO_API_COST_CLAIM} · ${KDP_GUARANTEE_CLAIM}`}
+      trustNote={`No credit card required · Preview first · ${NO_API_COST_CLAIM} · ${KDP_GUARANTEE_CLAIM}`}
       socialProof={{ count: NO_API_COST_CLAIM, rating: KDP_LIVE_BOOKS_CLAIM }}
       assets={heroCovers}
     />

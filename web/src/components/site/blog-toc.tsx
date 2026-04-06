@@ -33,9 +33,9 @@ export function BlogToc({ items }: { items: TocItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <nav aria-label="İçindekiler" className="sticky top-24">
+    <nav aria-label="Table of Contents" className="sticky top-24">
       <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
-        İçindekiler
+        Table of Contents
       </p>
       <ol className="space-y-0.5 border-l border-border">
         {items.map(({ id, title }) => (

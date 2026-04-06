@@ -5,8 +5,8 @@ import { auth } from "@/auth";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Faturalama | Kitap Oluşturucu",
-  description: "Eski faturalama URL'i. Yeni yol /app/settings/billing.",
+  title: "Billing | Book Generator",
+  description: "Billing redirect page. Redirecting to /app/settings/billing.",
   path: "/billing",
   noIndex: true,
 });

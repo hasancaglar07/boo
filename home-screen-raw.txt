@@ -226,7 +226,7 @@ export function HomeScreen() {
   function shareTwitter() {
     if (!affiliateData) return;
     trackEvent("affiliate_twitter_clicked", { source: "home_card" });
-    const text = `I wrote a book in minutes with AI ğŸš€ Try BookGenerator.net:`;
+    const text = `I wrote a book in minutes with AI ?? Try BookGenerator.net:`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(affiliateData.referralUrl)}`, "_blank");
   }
 
@@ -405,12 +405,12 @@ export function HomeScreen() {
             {viewer?.usage?.canStartBook === false ? (
               <div className="mt-4 max-w-2xl rounded-[20px] border border-primary/20 bg-primary/5 px-4 py-4">
                 <div className="text-sm font-semibold text-foreground">
-                  Yeni kitap slotun ÅŸu an kapalÄ±
+                  Yeni kitap slotun Ÿu an kapal
                 </div>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {viewer.usage.reason === "monthly_quota_reached"
-                    ? "AylÄ±k kitap kotana ulaÅŸtÄ±n. Yeni Ã¼retim iÃ§in planÄ±nÄ± yÃ¼kselt ya da yeni dÃ¶nemi bekle."
-                    : "Mevcut planÄ±n ilk kitap previewâ€™Ä±nÄ± kullandÄ±. Yeni kitap iÃ§in planlardan birini seÃ§."}
+                    ? "Aylk kitap kotana ulaŸtn. Yeni retim i‡in plann ykselt ya da yeni d”nemi bekle."
+                    : "Mevcut plann ilk kitap preview'n kulland. Yeni kitap i‡in planlardan birini se‡."}
                 </p>
                 <div className="mt-3">
                   <Button
@@ -424,7 +424,7 @@ export function HomeScreen() {
                       router.push("/app/settings/billing?intent=start-book");
                     }}
                   >
-                    PlanlarÄ± gÃ¶r
+                    Planlar g”r
                   </Button>
                 </div>
               </div>
@@ -438,10 +438,10 @@ export function HomeScreen() {
                 {books.length} kitap
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
-                {viewer?.emailVerified ? "Email doÄŸrulandÄ±" : "Email doÄŸrulanmadÄ±"}
+                {viewer?.emailVerified ? "Email do§ruland" : "Email do§rulanmad"}
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
-                {latestActivity ? `Son hareket: ${formatDate(latestActivity)}` : "HenÃ¼z aktivite yok"}
+                {latestActivity ? `Son hareket: ${formatDate(latestActivity)}` : "Henz aktivite yok"}
               </div>
             </div>
 
@@ -457,7 +457,7 @@ export function HomeScreen() {
                   )
                 }
               >
-                {latestBook ? "Previewâ€™a dÃ¶n" : "Ä°lk kitabÄ±nÄ± baÅŸlat"}
+                {latestBook ? "Preview'a d”n" : "˜lk kitabn baŸlat"}
                 <ArrowRight className="ml-2 size-4" aria-hidden="true" />
               </Button>
 
@@ -470,12 +470,12 @@ export function HomeScreen() {
                     router.push(`/app/book/${encodeURIComponent(latestBook.slug)}/workspace?tab=writing`)
                   }
                 >
-                  DÃ¼zenle
+                  Dzenle
                 </Button>
               ) : null}
 
               <Button size="lg" variant="ghost" className="min-h-[48px]" onClick={() => router.push("/app/settings/profile")}>
-                Profili aÃ§
+                Profili a‡
               </Button>
             </div>
           </CardContent>
@@ -485,8 +485,8 @@ export function HomeScreen() {
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { label: "Kitap", value: books.length, icon: BookOpen },
-              { label: "Ã‡Ä±ktÄ±", value: compactNumber(totalExports), icon: Upload },
-              { label: "AraÅŸtÄ±rma", value: compactNumber(totalResearch), icon: FileText },
+              { label: "€kt", value: compactNumber(totalExports), icon: Upload },
+              { label: "AraŸtrma", value: compactNumber(totalResearch), icon: FileText },
               { label: "Plan", value: currentPlanLabel, small: true, icon: Target },
             ].map(({ label, value, small, icon: Icon }) => (
               <div
@@ -514,15 +514,15 @@ export function HomeScreen() {
                   <DollarSign className="size-4 text-primary" aria-hidden />
                 </div>
                 <h3 className="text-sm font-bold text-foreground">
-                  Affiliate Linkin â€” %30 Komisyon
+                  Affiliate Linkin - %30 Komisyon
                 </h3>
               </div>
               <p className="text-xs leading-5 text-muted-foreground">
-                Bu linki paylaÅŸ. Linkinden Ã¼ye olan ve Ã¶deme yapan herkesten %30 komisyon kazanÄ±rsÄ±n.
+                Bu linki paylaŸ. Linkinden ye olan ve ”deme yapan herkesten %30 komisyon kazanrsn.
               </p>
               <div className="flex items-center gap-2 rounded-[14px] border border-border/60 bg-muted/40 px-3 py-2.5">
                 <span className="flex-1 truncate font-mono text-xs text-muted-foreground">
-                  {affiliateData ? affiliateData.referralUrl : "YÃ¼kleniyor..."}
+                  {affiliateData ? affiliateData.referralUrl : "Ykleniyor..."}
                 </span>
               </div>
               <Button
@@ -533,7 +533,7 @@ export function HomeScreen() {
                 {affiliateCopied ? (
                   <>
                     <CheckCircle2 className="mr-1.5 size-4" />
-                    KopyalandÄ±!
+                    Kopyaland!
                   </>
                 ) : (
                   <>
@@ -561,7 +561,7 @@ export function HomeScreen() {
                 </Button>
               </div>
               <p className="text-center text-[10px] leading-4 text-muted-foreground/70">
-                SÄ±nÄ±r yok â€¢ Minimum Ã¶deme $50 â€¢ AylÄ±k Ã¶deme
+                Snr yok  Minimum ”deme $50  Aylk ”deme
               </p>
             </CardContent>
           </Card>
@@ -570,11 +570,11 @@ export function HomeScreen() {
             <CardContent className="space-y-2 p-5">
               <div className="mb-3 flex items-center justify-between">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                  {onboardingActions.length ? "SÄ±radaki adÄ±mlar" : "HÄ±zlÄ± iÅŸlemler"}
+                  {onboardingActions.length ? "Sradaki admlar" : "Hzl iŸlemler"}
                 </div>
                 {onboardingActions.length ? (
                   <span className="text-xs font-medium text-muted-foreground">
-                    {onboardingActions.length} aÃ§Ä±k adÄ±m
+                    {onboardingActions.length} a‡k adm
                   </span>
                 ) : null}
               </div>
@@ -582,14 +582,14 @@ export function HomeScreen() {
               {(onboardingActions.length ? onboardingActions.slice(0, 4) : [
                 {
                   icon: BookOpen,
-                  label: "Yeni kitap baÅŸlat",
-                  description: "KÄ±sa sihirbaz ile yeni Ã¼retim akÄ±ÅŸÄ±nÄ± baÅŸlat.",
+                  label: "Yeni kitap baŸlat",
+                  description: "Ksa sihirbaz ile yeni retim akŸn baŸlat.",
                   run: () => router.push(newBookHref),
                 },
                 {
                   icon: FileText,
-                  label: "Metin akÄ±ÅŸÄ±na dÃ¶n",
-                  description: "Son kitabÄ±nÄ±n yazÄ±m sekmesine geri dÃ¶n.",
+                  label: "Metin akŸna d”n",
+                  description: "Son kitabnn yazm sekmesine geri d”n.",
                   run: () =>
                     router.push(
                       latestBook
@@ -599,8 +599,8 @@ export function HomeScreen() {
                 },
                 {
                   icon: Upload,
-                  label: "YayÄ±na hazÄ±rla",
-                  description: "Export ve publish hazÄ±rlÄ±k ekranÄ±nÄ± aÃ§.",
+                  label: "Yayna hazrla",
+                  description: "Export ve publish hazrlk ekrann a‡.",
                   run: () =>
                     router.push(
                       latestBook
@@ -628,9 +628,9 @@ export function HomeScreen() {
         </div>
       </div>
 
-      <section className="mt-10 home-anim-in home-d6" aria-label="KitaplÄ±k">
+      <section className="mt-10 home-anim-in home-d6" aria-label="Kitaplk">
         <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-foreground">KitaplarÄ±n</h2>
+          <h2 className="text-xl font-semibold text-foreground">Kitaplarn</h2>
           <Link href={newBookHref}>
             <Button variant="outline" size="sm" className="min-h-[44px]">
               <Sparkles className="mr-1.5 size-3.5" aria-hidden="true" />
@@ -655,7 +655,7 @@ export function HomeScreen() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  aria-label="AramayÄ± temizle"
+                  aria-label="Aramay temizle"
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <X className="size-4" aria-hidden="true" />
@@ -667,7 +667,7 @@ export function HomeScreen() {
             <div className="relative">
               <button
                 onClick={() => setSortOpen((v) => !v)}
-                aria-label="SÄ±ralama seÃ§"
+                aria-label="Sralama se‡"
                 aria-expanded={sortOpen}
                 className="flex min-h-[44px] items-center gap-2 rounded-[18px] border border-input bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
               >
@@ -676,7 +676,7 @@ export function HomeScreen() {
                 <ChevronDown className={`size-3.5 text-muted-foreground transition-transform ${sortOpen ? "rotate-180" : ""}`} aria-hidden="true" />
               </button>
               {sortOpen && (
-                <div className="home-anim-in absolute right-0 top-full z-30 mt-2 min-w-[200px] rounded-[16px] border border-border bg-card p-2 shadow-lg" role="listbox" aria-label="SÄ±ralama seÃ§enekleri">
+                <div className="home-anim-in absolute right-0 top-full z-30 mt-2 min-w-[200px] rounded-[16px] border border-border bg-card p-2 shadow-lg" role="listbox" aria-label="Sralama se‡enekleri">
                   {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([key, label]) => (
                     <button
                       key={key}
@@ -708,23 +708,23 @@ export function HomeScreen() {
                       {book.title}
                     </h3>
                     <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                      {book.subtitle || book.description || "Preview ve tam kitap akÄ±ÅŸÄ± hazÄ±r."}
+                      {book.subtitle || book.description || "Preview ve tam kitap akŸ hazr."}
                     </p>
                   </div>
 
-                  <div className="mb-3 flex flex-wrap gap-2" aria-label="Kitap detaylarÄ±">
+                  <div className="mb-3 flex flex-wrap gap-2" aria-label="Kitap detaylar">
                     <Badge className="border-border/50">
                       <Layers className="mr-1 size-3" aria-hidden="true" />
-                      {book.status?.chapter_count || book.chapter_count || 0} bÃ¶lÃ¼m
+                      {book.status?.chapter_count || book.chapter_count || 0} b”lm
                     </Badge>
                     <Badge className="border-border/50">
                       <Upload className="mr-1 size-3" aria-hidden="true" />
-                      {book.status?.export_count || 0} Ã§Ä±ktÄ±
+                      {book.status?.export_count || 0} ‡kt
                     </Badge>
                     {book.status?.product_ready ? (
                       <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
                         <CheckCircle2 className="mr-1 size-3" aria-hidden="true" />
-                        Tam eriÅŸim
+                        Tam eriŸim
                       </Badge>
                     ) : null}
                   </div>
@@ -743,9 +743,9 @@ export function HomeScreen() {
                       size="sm"
                       className="min-h-[40px] flex-1 sm:flex-auto"
                       onClick={() => router.push(`/app/book/${encodeURIComponent(book.slug)}/preview`)}
-                      aria-label={`${book.title} - Ã–nizleme`}
+                      aria-label={`${book.title} - ™nizleme`}
                     >
-                      Ã–nizleme
+                      ™nizleme
                     </Button>
                     <Button
                       size="sm"
@@ -754,9 +754,9 @@ export function HomeScreen() {
                       onClick={() =>
                         router.push(`/app/book/${encodeURIComponent(book.slug)}/workspace?tab=writing`)
                       }
-                      aria-label={`${book.title} - DÃ¼zenle`}
+                      aria-label={`${book.title} - Dzenle`}
                     >
-                      DÃ¼zenle
+                      Dzenle
                     </Button>
                   </div>
                 </CardContent>
@@ -771,10 +771,10 @@ export function HomeScreen() {
                   <Search className="size-6 text-primary" aria-hidden="true" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">
-                  SonuÃ§ bulunamadÄ±
+                  Sonu‡ bulunamad
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  &ldquo;{debouncedSearch}&rdquo; ile eÅŸleÅŸen kitap yok. FarklÄ± bir terim dene.
+                  &ldquo;{debouncedSearch}&rdquo; ile eŸleŸen kitap yok. Farkl bir terim dene.
                 </p>
                 <Button
                   variant="outline"
@@ -782,7 +782,7 @@ export function HomeScreen() {
                   className="mt-4 min-h-[40px]"
                   onClick={() => setSearchQuery("")}
                 >
-                  AramayÄ± temizle
+                  Aramay temizle
                 </Button>
               </div>
             </CardContent>
@@ -795,28 +795,28 @@ export function HomeScreen() {
                   <BookOpen className="size-8 text-primary" aria-hidden="true" />
                 </div>
                 <h3 className="text-2xl font-semibold text-foreground">
-                  Ä°lk kitabÄ±n iÃ§in alan hazÄ±r
+                  ˜lk kitabn i‡in alan hazr
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  HesabÄ±n aÃ§Ä±k. Åimdi ilk Ã¼retim akÄ±ÅŸÄ±nÄ± baÅŸlat, Ã¶nizleme Ã¼ret ve bu ekranÄ± gerÃ§ek kÃ¼tÃ¼phanene dÃ¶nÃ¼ÅŸtÃ¼r.
+                  Hesabn a‡k. imdi ilk retim akŸn baŸlat, ”nizleme ret ve bu ekran ger‡ek ktphanene d”nŸtr.
                 </p>
                 <ul className="mt-6 space-y-2 text-left text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
-                    AI destekli 5 adÄ±mlÄ± sihirbaz
+                    AI destekli 5 adml sihirbaz
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
-                    Dakikalar iÃ§inde Ã¶nizleme
+                    Dakikalar i‡inde ”nizleme
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
-                    PDF, EPUB ve daha fazlasÄ±
+                    PDF, EPUB ve daha fazlas
                   </li>
                 </ul>
                 <div className="mt-8 flex justify-center">
                   <Button size="lg" className="min-h-[48px]" onClick={() => router.push(newBookHref)}>
-                    Hemen baÅŸla
+                    Hemen baŸla
                     <ArrowRight className="ml-2 size-4" aria-hidden="true" />
                   </Button>
                 </div>
@@ -828,3 +828,4 @@ export function HomeScreen() {
     </AppFrame>
   );
 }
+

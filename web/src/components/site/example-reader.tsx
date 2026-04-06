@@ -39,7 +39,7 @@ function ExportButton({
           <Icon className="size-4" />
           {label}
         </div>
-        <div className="mt-2 text-xs text-muted-foreground">Bu kitap için henüz hazır değil.</div>
+        <div className="mt-2 text-xs text-muted-foreground">Not ready yet for this book.</div>
       </div>
     );
   }
@@ -88,8 +88,8 @@ function ReaderCta({
             Kendi Sürümünü Yaz
           </div>
           <p className="mt-2 text-sm leading-7 text-foreground/82">
-            Bu yapı sana yayına hazır görünüyorsa kendi konunla başla ve aynı akışı üret:
-            bölüm planı, bölümler, kapak ve çıktılar.
+            If this structure looks publish-ready to you, start with your own topic and produce the same workflow:
+            chapter plan, chapters, cover, and outputs.
           </p>
           <Link
             href="/start/topic"
@@ -349,7 +349,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
                   <div className="mt-4 space-y-3">
                     <ExportButton asset={item.exports.html} label="Birebir HTML'i aç" slug={item.slug} format="html" />
                     <ExportButton asset={item.exports.pdf} label="PDF'i görüntüle" slug={item.slug} format="pdf" />
-                    <ExportButton asset={item.exports.epub} label="EPUB'u indir" slug={item.slug} format="epub" />
+                    <ExportButton asset={item.exports.epub} label="Download EPUB" slug={item.slug} format="epub" />
                   </div>
                 </div>
 

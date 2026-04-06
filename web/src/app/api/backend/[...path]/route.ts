@@ -32,8 +32,9 @@ const BACKEND_ORIGIN =
   process.env.NEXT_PUBLIC_DASHBOARD_ORIGIN ||
   "http://127.0.0.1:8765";
 const BACKEND_FETCH_TIMEOUT_MS = 20_000;
-const BACKEND_BOOKS_FETCH_TIMEOUT_MS = 10_000;
-const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = 15_000;
+const BACKEND_BOOKS_FETCH_TIMEOUT_MS = 30_000;
+const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = 25_000;
+const BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS = 45_000;
 const BACKEND_WORKFLOW_FETCH_TIMEOUT_MS = 240_000;
 const BACKEND_UNREACHABLE_LOG_THROTTLE_MS = 5_000;
 const BACKEND_UNAVAILABLE_BACKOFF_MS = 5_000;
@@ -266,12 +267,17 @@ async function forwardToBackend(
   const url = new URL(upstreamPath, BACKEND_ORIGIN);
   url.search = request.nextUrl.search;
 
-  const isPreviewPath = /^\/api\/books\/[^/]+\/preview(?:-bootstrap)?$/.test(upstreamPath);
+  const isPreviewPath = /^\/api\/books\/[^/]+\/preview$/.test(upstreamPath);
+  const isPreviewBootstrapPath = /^\/api\/books\/[^/]+\/preview-bootstrap$/.test(upstreamPath);
   const isFullBootstrapPath = /^\/api\/books\/[^/]+\/full-bootstrap$/.test(upstreamPath);
   const timeoutMs =
     upstreamPath === "/api/books" && request.method === "GET"
       ? BACKEND_BOOKS_FETCH_TIMEOUT_MS
-      : isPreviewPath || isFullBootstrapPath
+      : isPreviewBootstrapPath && request.method === "POST"
+        ? BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS
+      : isPreviewPath && request.method === "GET"
+        ? BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS
+      : isFullBootstrapPath
         ? BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS
       : upstreamPath === "/api/workflows" && request.method === "POST"
         ? BACKEND_WORKFLOW_FETCH_TIMEOUT_MS

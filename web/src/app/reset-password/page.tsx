@@ -6,8 +6,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Şifre Sıfırla | Kitap Oluşturucu",
-  description: "Kitap Oluşturucu hesabının şifresini güvenli şekilde sıfırla.",
+  title: "Reset Password | Book Generator",
+  description: "Reset your Book Generator account password securely.",
   path: "/reset-password",
   noIndex: true,
 });

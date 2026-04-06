@@ -22,8 +22,8 @@ export async function generateMetadata(
 
   if (!item) {
     return buildPageMetadata({
-      title: "Örnek Kitap Bulunamadı | Book Generator",
-      description: "İstenen örnek kitap bulunamadı.",
+      title: "Example Book Not Found | Book Generator",
+      description: "The requested example book was not found.",
       path: `/examples/${slug}`,
       noIndex: true,
     });
@@ -31,7 +31,7 @@ export async function generateMetadata(
 
   const ogImage = absoluteUrl(item.coverImages.primaryUrl || item.coverImages.fallbackUrl || siteConfig.defaultOgImage);
   return buildPageMetadata({
-    title: `${item.title} | Örnek Kitap`,
+    title: `${item.title} | Example Book`,
     description: item.summary || item.subtitle,
     path: `/examples/${slug}`,
     keywords: [item.title, item.category, item.language, ...item.tags.slice(0, 5), "book generator example reader"],
@@ -82,13 +82,13 @@ export default async function ExampleReaderPage(
       {
         "@type": "ListItem",
         position: 1,
-        name: "Anasayfa",
+        name: "Home",
         item: absoluteUrl("/"),
       },
       {
         "@type": "ListItem",
         position: 2,
-        name: "Örnekler",
+        name: "Examples",
         item: absoluteUrl("/examples"),
       },
       {

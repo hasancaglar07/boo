@@ -5,8 +5,8 @@ import { requireAuthenticatedUser } from "@/lib/auth/server-access";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Faturalama | Book Generator",
-  description: "Planını ve premium erişimini yönet.",
+  title: "Billing | Book Generator",
+  description: "Manage your plan and premium access.",
   path: "/app/settings/billing",
   noIndex: true,
 });

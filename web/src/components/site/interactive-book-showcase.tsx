@@ -186,14 +186,14 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
         >
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm">
             <BookOpen className="h-3.5 w-3.5 text-primary" />
-            Gerçek Kitaplar, Gerçek Kapaklar
+            Real Books, Real Covers
           </div>
           <h2 className="mt-8 text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-            Yapay Zeka ile Oluşturulmuş{" "}
-            <span className="text-primary">Gerçek Kitap Örnekleri</span>
+            AI-Generated{" "}
+            <span className="text-primary">Real Book Examples</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-8 text-muted-foreground">
-            Her biri konu özetinden taslağa, taslaktan EPUB ve PDF akışına geçti. Aynı sürece kendi kitabını bu hafta başlayabilirsin.
+            Each went from topic summary to draft, from draft to EPUB and PDF workflow. You can start your own book this week with the same process.
           </p>
         </motion.div>
 
@@ -470,14 +470,14 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
           className="mt-14 text-center"
         >
           <p className="text-base leading-8 text-muted-foreground">
-            Gerçek kapakları, gerçek kitap bilgileri ve gerçek EPUB ile PDF çıktı dosyalarıyla{" "}
-            <span className="font-semibold text-foreground">KDP uyumlu yayına hazır kitapları</span>{" "}
+            With real covers, real book details, and real EPUB and PDF output files,{" "}
+            <span className="font-semibold text-foreground">KDP-compliant publication-ready books</span>{" "}
             inceliyorsun. Aynı akışla kendi kitabını bu hafta çıkarabilirsin.
           </p>
           <Button asChild size="lg" className="mt-6 shadow-xl">
             <a href="/start/topic" className="inline-flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
-              Ücretsiz Kitap Önizlemesini Başlat
+              Start Free Book Preview
             </a>
           </Button>
         </motion.div>

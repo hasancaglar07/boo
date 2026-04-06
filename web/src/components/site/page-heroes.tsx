@@ -119,7 +119,7 @@ export const AboutPageHero = React.forwardRef<
       <div className="absolute inset-0 grid-overlay opacity-40" />
       <div className="hero-glow" />
 
-      {/* Dekoratif kitap kartları */}
+      {/* Decorative book cards */}
       <FloatingBookAccent
         gradient="linear-gradient(135deg,#c96442,#8e4a30)"
         className="left-[6%] top-[18%] h-28 w-20"
@@ -149,7 +149,7 @@ export const AboutPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <Lightbulb className="h-3.5 w-3.5 text-primary" />
-          Hakkında
+          About
         </motion.div>
 
         <motion.h1
@@ -159,7 +159,7 @@ export const AboutPageHero = React.forwardRef<
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
           Daha fazla panel değil,{" "}
-          <span className="text-primary">daha fazla biten kitap.</span>
+          <span className="text-primary">more completed books.</span>
         </motion.h1>
 
         <motion.p
@@ -233,7 +233,7 @@ export const PricingPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <Award className="h-3.5 w-3.5 text-primary" />
-          Fiyatlar
+          Pricing
         </motion.div>
 
         <motion.h1
@@ -252,10 +252,10 @@ export const PricingPageHero = React.forwardRef<
           transition={{ delay: 0.2, duration: 0.6 }}
           className="mx-auto mt-3 max-w-xl text-pretty text-sm leading-7 text-muted-foreground md:text-base"
         >
-          Taslağını ücretsiz gör, tam kitap $4. Abonelik yok, 30 gün iade garantili.
+          See your draft for free, full book $4. No subscription, 30-day refund guarantee.
         </motion.p>
 
-        {/* Ghostwriter anchor karşılaştırması */}
+        {/* Ghostwriter anchor comparison */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -264,12 +264,12 @@ export const PricingPageHero = React.forwardRef<
         >
           <div className="text-center">
             <p className="font-semibold text-muted-foreground line-through">$500–$5,000</p>
-            <p className="text-[11px] text-muted-foreground/60">Ajans / hayalet yazar</p>
+            <p className="text-[11px] text-muted-foreground/60">Agency / ghostwriter</p>
           </div>
           <div className="h-7 w-px bg-border" />
           <div className="text-center">
             <p className="text-lg font-bold text-primary">$4</p>
-            <p className="text-[11px] text-muted-foreground/60">Kitap Oluşturucu</p>
+            <p className="text-[11px] text-muted-foreground/60">Book Creator</p>
           </div>
         </motion.div>
 
@@ -368,7 +368,7 @@ export const ExamplesPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <BookOpen className="h-3.5 w-3.5 text-primary" />
-          Örnekler
+          Examples
         </motion.div>
 
         <motion.h1
@@ -387,7 +387,7 @@ export const ExamplesPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Gerçek konulardan üretilmiş kitap başlıkları, taslak yapıları ve EPUB çıktı örnekleri.
+          Book titles, draft structures, and EPUB output examples generated from real topics.
         </motion.p>
 
         {/* Example Cards */}
@@ -449,10 +449,10 @@ export const HowItWorksPageHero = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & HowItWorksPageHeroProps
 >(({ className, ...props }, ref) => {
   const steps = [
-    { number: "01", title: "Konu", icon: FileText, description: "Konu ve hedef okur" },
-    { number: "02", title: "Taslak", icon: Settings, description: "Bölüm mimarisi" },
-    { number: "03", title: "Üretim", icon: Sparkles, description: "Bölüm yazımı" },
-    { number: "04", title: "Kapak", icon: BookOpen, description: "Görsel akış" },
+    { number: "01", title: "Topic", icon: FileText, description: "Topic and target reader" },
+    { number: "02", title: "Draft", icon: Settings, description: "Chapter architecture" },
+    { number: "03", title: "Production", icon: Sparkles, description: "Chapter writing" },
+    { number: "04", title: "Cover", icon: BookOpen, description: "Visual workflow" },
     { number: "05", title: "Çıktı", icon: Download, description: "EPUB + PDF" },
   ];
 
@@ -487,7 +487,7 @@ export const HowItWorksPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <Zap className="h-3.5 w-3.5 text-primary" />
-          Nasıl Çalışır
+          How It Works
         </motion.div>
 
         <motion.h1
@@ -497,7 +497,7 @@ export const HowItWorksPageHero = React.forwardRef<
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
           Boş sayfadan değil,{" "}
-          <span className="text-primary">yönlendirilmiş bir preview&apos;dan başlarsın.</span>
+          <span className="text-primary">start with a guided preview.</span>
         </motion.h1>
 
         <motion.p
@@ -506,7 +506,7 @@ export const HowItWorksPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Önce konu, sonra outline, sonra preview. Her adımda ne olacağını bilerek ilerlersin.
+          First topic, then outline, then preview. You progress knowing what happens at each step.
         </motion.p>
 
         {/* Steps Timeline */}
@@ -607,7 +607,7 @@ export const FAQPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Ürün ne yapıyor, kimin için uygun, nasıl çalışıyor ve ne alırsın — kısa ve net cevaplar.
+          What the product does, who it's for, how it works, and what you get — short and clear answers.
         </motion.p>
 
         {/* Stats row */}
@@ -646,7 +646,7 @@ export const ContactPageHero = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & ContactPageHeroProps
 >(({ className, ...props }, ref) => {
   const contactMethods = [
-    { icon: MessageCircle, label: "Destek", description: "Kullanım ve teknik sorular" },
+    { icon: MessageCircle, label: "Support", description: "Usage and technical questions" },
     { icon: Clock, label: "1 İş Günü", description: "Ortalama yanıt süresi" },
     { icon: Shield, label: "Güvenli", description: "Verileriniz bizimle güvende" },
   ];
@@ -691,7 +691,7 @@ export const ContactPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-3xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Destek için{" "}
+          For support{" "}
           <span className="text-primary">kısa yol.</span>
         </motion.h1>
 
@@ -701,7 +701,7 @@ export const ContactPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Teknik sorun, hesap, ödeme ya da teslim — hangi konu olursa olsun kısa ve net yaz.
+          Technical issues, account, payment, or delivery — whatever the topic, write briefly and clearly.
         </motion.p>
 
         {/* Contact Method Pills */}

@@ -6,20 +6,20 @@ import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/
 
 const proofCards = [
   {
-    title: "Gerçek KDP yayın kanıtı",
-    text: `Ürün yalnızca demo değil. ${KDP_LIVE_BOOKS_CLAIM} kitap Amazon KDP'de yayında ve yayınlama sisteminin gerçekten çalıştığını kanıtlıyor.`,
+    title: "Real KDP publishing proof",
+    text: `This is not just a demo. ${KDP_LIVE_BOOKS_CLAIM} books are live on Amazon KDP, proving the publishing system actually works.`,
   },
   {
-    title: "Vaadi değil, çıktıyı gör",
-    text: "30'dan fazla çok dilli kitap vitrininde ürünün gerçekten ne ürettiğini gör: gerçek kapaklar, gerçek bölümler, gerçek EPUB dosyaları.",
+    title: "See the output, not the promise",
+    text: "Explore over 30 multilingual books in the showcase to see what the product actually generates: real covers, real chapters, real EPUB files.",
   },
   {
-    title: "Garanti net ve şeffaf",
-    text: `Kullanıcı ödeme öncesi kapağı, bölüm planını ve önizlemeyi görüp karar veriyor. Üstelik kitaplar ${KDP_GUARANTEE_CLAIM} ile sunuluyor.`,
+    title: "Clear and transparent guarantee",
+    text: `Users see the cover, chapter plan, and preview before paying and make an informed decision. Plus, books are backed by ${KDP_GUARANTEE_CLAIM}.`,
   },
   {
-    title: "Ek API veya abonelik faturası yok",
-    text: `Sihirbaz, önizleme, yükseltme ve dışa aktarma zinciri aynı ürün içinde. ${NO_API_COST_CLAIM.toLowerCase()} ve dağınık araç ihtiyacı yok.`,
+    title: "No extra API or subscription bills",
+    text: `The wizard, preview, upgrade, and export chain are all within the same product. ${NO_API_COST_CLAIM.toLowerCase()} — no need for scattered tools.`,
   },
 ] as const;
 
@@ -28,9 +28,9 @@ export function HomeTestimonialsSection() {
     <section className="border-b border-border/80 bg-background py-20">
       <div className="shell">
         <SectionHeading
-          badge="Kullanıcı Yorumları ve Kanıtlar"
-          title="AI Kitap Oluşturucu Gerçekten Çalışıyor mu? İşte Kanıtlar"
-          description="Yayınlanmış kitaplar, gerçek kapaklar ve KDP kanıtları. Kullanıcı deneyimi ve güvenilirlik hakkında merak edilenler."
+          badge="User Reviews and Proof"
+          title="Does the AI Book Generator Really Work? Here's the Proof"
+          description="Published books, real covers, and KDP evidence. Everything you need to know about user experience and reliability."
           align="center"
         />
 

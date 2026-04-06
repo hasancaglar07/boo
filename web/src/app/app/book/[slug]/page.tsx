@@ -11,7 +11,7 @@ export async function generateMetadata({
   const { slug } = await params;
   return buildPageMetadata({
     title: `${slug} | Book Generator Workspace`,
-    description: "Book Generator kitap çalışma alanı.",
+    description: "Book Generator book workspace.",
     path: `/app/book/${slug}`,
     noIndex: true,
   });

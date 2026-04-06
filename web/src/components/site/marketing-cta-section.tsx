@@ -1,8 +1,8 @@
 import { Cta4 } from "@/components/ui/cta-4";
 
 export function MarketingCtaSection({
-  title = "İlk kitabını çıkarmak için tek net başlangıç.",
-  description = "Konu fikrinden ilk yayınlanabilir dosyaya kadar seni gereksiz panel yorgunluğuna sokmadan ilerleyen bir kitap sistemi.",
+  title = "The single clear starting point for publishing your first book.",
+  description = "A book system that takes you from topic idea to first publishable file without unnecessary dashboard fatigue.",
   items,
 }: {
   title?: string;
@@ -13,7 +13,7 @@ export function MarketingCtaSection({
     <Cta4
       title={title}
       description={description}
-      buttonText="Ücretsiz Önizlemeyi Başlat"
+      buttonText="Start Your Free Preview"
       buttonUrl="/start/topic"
       items={items}
     />

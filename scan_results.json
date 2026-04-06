@@ -1,27 +1,15 @@
 [
   {
     "file": "web/src/lib/marketing-tools.ts",
-    "lines": 223
+    "lines": 152
   },
   {
     "file": "web/src/components/app/workspace-screen.tsx",
-    "lines": 108
+    "lines": 115
   },
   {
     "file": "web/src/components/funnel/book-preview-screen.tsx",
-    "lines": 91
-  },
-  {
-    "file": "web/src/app/how-it-works/page.tsx",
-    "lines": 81
-  },
-  {
-    "file": "web/src/components/app/home-screen.tsx",
-    "lines": 75
-  },
-  {
-    "file": "web/src/app/use-cases/page.tsx",
-    "lines": 71
+    "lines": 92
   },
   {
     "file": "web/src/app/resources/page.tsx",
@@ -30,18 +18,6 @@
   {
     "file": "web/src/components/site/book-idea-validator-tool.tsx",
     "lines": 65
-  },
-  {
-    "file": "web/src/app/pricing/page.tsx",
-    "lines": 59
-  },
-  {
-    "file": "web/src/app/examples/page.tsx",
-    "lines": 58
-  },
-  {
-    "file": "web/src/app/compare/page.tsx",
-    "lines": 57
   },
   {
     "file": "web/src/components/app/account-screen.tsx",
@@ -56,20 +32,16 @@
     "lines": 52
   },
   {
-    "file": "web/src/components/site/home-visual-story-section.tsx",
-    "lines": 50
+    "file": "web/src/components/app/affiliate-dashboard.tsx",
+    "lines": 46
   },
   {
-    "file": "web/src/components/app/affiliate-dashboard.tsx",
+    "file": "web/src/components/app/home-screen.tsx",
     "lines": 46
   },
   {
     "file": "web/src/components/site/examples-showcase.tsx",
     "lines": 46
-  },
-  {
-    "file": "web/src/app/page.tsx",
-    "lines": 42
   },
   {
     "file": "web/src/components/app/billing-screen.tsx",
@@ -96,10 +68,6 @@
     "lines": 32
   },
   {
-    "file": "web/src/components/site/home-workspace-showcase-section.tsx",
-    "lines": 30
-  },
-  {
     "file": "web/src/app/blog/page.tsx",
     "lines": 29
   },
@@ -113,10 +81,6 @@
   },
   {
     "file": "web/src/components/forms/reset-password-form.tsx",
-    "lines": 26
-  },
-  {
-    "file": "web/src/components/site/home-product-overview-section.tsx",
     "lines": 26
   },
   {
@@ -172,10 +136,6 @@
     "lines": 15
   },
   {
-    "file": "web/src/app/refund-policy/page.tsx",
-    "lines": 15
-  },
-  {
     "file": "web/src/components/onboarding/onboarding-checklist.tsx",
     "lines": 15
   },
@@ -196,19 +156,7 @@
     "lines": 12
   },
   {
-    "file": "web/src/app/start/page.tsx",
-    "lines": 12
-  },
-  {
-    "file": "web/src/app/contact/page.tsx",
-    "lines": 11
-  },
-  {
     "file": "web/src/components/site/example-reader.tsx",
-    "lines": 11
-  },
-  {
-    "file": "web/src/components/site/home-testimonials-section.tsx",
     "lines": 11
   },
   {
@@ -226,14 +174,6 @@
   {
     "file": "web/src/components/onboarding/quick-start-guide.tsx",
     "lines": 10
-  },
-  {
-    "file": "web/src/app/privacy/page.tsx",
-    "lines": 9
-  },
-  {
-    "file": "web/src/app/terms/page.tsx",
-    "lines": 9
   },
   {
     "file": "web/src/components/app/referral-share-dialog.tsx",
@@ -284,10 +224,6 @@
     "lines": 7
   },
   {
-    "file": "web/src/app/signup/page.tsx",
-    "lines": 7
-  },
-  {
     "file": "web/src/components/funnel/funnel-shell.tsx",
     "lines": 7
   },
@@ -328,19 +264,11 @@
     "lines": 6
   },
   {
-    "file": "web/src/app/layout.tsx",
-    "lines": 5
-  },
-  {
     "file": "web/src/app/admin/billing/page.tsx",
     "lines": 5
   },
   {
     "file": "web/src/app/admin/subscriptions/page.tsx",
-    "lines": 5
-  },
-  {
-    "file": "web/src/app/api/account/profile/route.ts",
     "lines": 5
   },
   {
@@ -353,10 +281,6 @@
   },
   {
     "file": "web/src/components/app/backend-unavailable-state.tsx",
-    "lines": 5
-  },
-  {
-    "file": "web/src/components/site/home-floating-icons-hero.tsx",
     "lines": 5
   },
   {
@@ -384,10 +308,6 @@
     "lines": 4
   },
   {
-    "file": "web/src/components/site/home-how-it-works-section.tsx",
-    "lines": 4
-  },
-  {
     "file": "web/src/components/site/pricing-creative-section.tsx",
     "lines": 4
   },
@@ -397,10 +317,6 @@
   },
   {
     "file": "web/src/app/admin/jobs/page.tsx",
-    "lines": 3
-  },
-  {
-    "file": "web/src/app/api/admin/billing/invoices/[id]/route.ts",
     "lines": 3
   },
   {
@@ -433,18 +349,6 @@
   },
   {
     "file": "web/src/components/funnel/shared/live-book-card.tsx",
-    "lines": 3
-  },
-  {
-    "file": "web/src/components/site/home-blog-preview-section.tsx",
-    "lines": 3
-  },
-  {
-    "file": "web/src/components/site/home-book-gallery-section.tsx",
-    "lines": 3
-  },
-  {
-    "file": "web/src/components/site/home-logo-cloud-section.tsx",
     "lines": 3
   },
   {
@@ -488,26 +392,6 @@
     "lines": 2
   },
   {
-    "file": "web/src/app/app/library/page.tsx",
-    "lines": 2
-  },
-  {
-    "file": "web/src/app/app/new/page.tsx",
-    "lines": 2
-  },
-  {
-    "file": "web/src/app/app/new/generate/page.tsx",
-    "lines": 2
-  },
-  {
-    "file": "web/src/app/app/new/outline/page.tsx",
-    "lines": 2
-  },
-  {
-    "file": "web/src/app/app/new/title/page.tsx",
-    "lines": 2
-  },
-  {
     "file": "web/src/app/app/settings/profile/page.tsx",
     "lines": 2
   },
@@ -524,18 +408,6 @@
     "lines": 2
   },
   {
-    "file": "web/src/app/start/generate/page.tsx",
-    "lines": 2
-  },
-  {
-    "file": "web/src/app/start/outline/page.tsx",
-    "lines": 2
-  },
-  {
-    "file": "web/src/app/start/title/page.tsx",
-    "lines": 2
-  },
-  {
     "file": "web/src/app/tools/[slug]/page.tsx",
     "lines": 2
   },
@@ -549,14 +421,6 @@
   },
   {
     "file": "web/src/components/site/blog-toc.tsx",
-    "lines": 2
-  },
-  {
-    "file": "web/src/components/site/mobile-nav.tsx",
-    "lines": 2
-  },
-  {
-    "file": "web/src/components/site/site-header.tsx",
     "lines": 2
   },
   {
@@ -584,15 +448,7 @@
     "lines": 1
   },
   {
-    "file": "web/src/app/api/admin/books/[slug]/retry/route.ts",
-    "lines": 1
-  },
-  {
     "file": "web/src/app/api/admin/feature-flags/[key]/route.ts",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/api/admin/moderation/[id]/approve/route.ts",
     "lines": 1
   },
   {
@@ -624,55 +480,11 @@
     "lines": 1
   },
   {
-    "file": "web/src/app/app/page.tsx",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/app/affiliate/page.tsx",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/app/book/[slug]/page.tsx",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/app/book/[slug]/preview/page.tsx",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/app/book/[slug]/upgrade/page.tsx",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/app/book/[slug]/workspace/page.tsx",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/app/new/style/page.tsx",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/app/new/topic/page.tsx",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/app/settings/billing/page.tsx",
-    "lines": 1
-  },
-  {
     "file": "web/src/app/billing/page.tsx",
     "lines": 1
   },
   {
     "file": "web/src/app/signup/continue/page.tsx",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/start/style/page.tsx",
-    "lines": 1
-  },
-  {
-    "file": "web/src/app/start/topic/page.tsx",
     "lines": 1
   },
   {
@@ -697,6 +509,10 @@
   },
   {
     "file": "web/src/components/forms/login-logo.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src/components/site/mobile-nav.tsx",
     "lines": 1
   },
   {
