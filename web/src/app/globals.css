@@ -1343,6 +1343,7 @@ html.theme-transitioning *::after {
 .billing-animate-in-3 { animation-delay: 0.25s; }
 .billing-animate-in-4 { animation-delay: 0.35s; }
 .billing-animate-in-5 { animation-delay: 0.50s; }
+.billing-animate-in-6 { animation-delay: 0.60s; }
 
 .billing-card-glow {
   animation: billing-glow 3s ease-in-out infinite;
@@ -1441,4 +1442,69 @@ html.theme-transitioning *::after {
   .billing-card-popular::before {
     animation: none !important;
   }
+}
+
+/* ── Home Screen Book Card Animations ─────────────────────── */
+@keyframes home-fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.home-animate-in {
+  animation: home-fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-animate-in-1 { animation-delay: 0.05s; }
+.home-animate-in-2 { animation-delay: 0.1s; }
+.home-animate-in-3 { animation-delay: 0.15s; }
+.home-animate-in-4 { animation-delay: 0.2s; }
+.home-animate-in-5 { animation-delay: 0.25s; }
+.home-animate-in-6 { animation-delay: 0.3s; }
+.home-animate-in-7 { animation-delay: 0.35s; }
+.home-animate-in-8 { animation-delay: 0.4s; }
+.home-animate-in-9 { animation-delay: 0.45s; }
+
+.home-book-card {
+  animation: home-fade-in-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-search-glow:focus-within {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent),
+              0 4px 16px color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.home-sort-dropdown {
+  animation: home-fade-in-up 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-animate-in,
+  .home-book-card,
+  .home-sort-dropdown {
+    animation: none !important;
+  }
+}
+
+/* ── Home Screen Animations ─────────────────────────────────── */
+@keyframes home-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.home-anim-in,
+.home-animate-in { animation: home-fade-up 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+.home-d1, .home-animate-in-1 { animation-delay:.05s }
+.home-d2, .home-animate-in-2 { animation-delay:.1s }
+.home-d3, .home-animate-in-3 { animation-delay:.15s }
+.home-d4, .home-animate-in-4 { animation-delay:.2s }
+.home-d5, .home-animate-in-5 { animation-delay:.25s }
+.home-d6, .home-animate-in-6 { animation-delay:.3s }
+.home-d7, .home-animate-in-7 { animation-delay:.35s }
+.home-d8, .home-animate-in-8 { animation-delay:.4s }
+.home-d9, .home-animate-in-9 { animation-delay:.45s }
+.home-search-glow:focus-within {
+  box-shadow: 0 0 0 3px color-mix(in srgb,var(--primary) 15%,transparent),
+              0 4px 16px color-mix(in srgb,var(--primary) 8%,transparent);
+}
+@media (prefers-reduced-motion:reduce) {
+  .home-anim-in,.home-animate-in,.home-book-card { animation:none!important }
 }

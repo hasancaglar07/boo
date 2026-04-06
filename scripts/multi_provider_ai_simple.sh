@@ -197,7 +197,7 @@ call_codefast_anthropic_provider() {
     fi
 
     if mark_limit_if_needed "$provider_id" "$http_code" "$response"; then
-        echo "⚠️ $(codefast_provider_label "$provider_id") daily limit or rate limit hit" >&2
+        echo "⚠️ $(codefast_provider_label "$provider_id") upstream rate/limit response detected" >&2
     else
         echo "❌ $(codefast_provider_label "$provider_id") error: $(extract_error_message "$response")" >&2
     fi
@@ -239,29 +239,39 @@ smart_api_call() {
     local task_type="${3:-general}"
     local temperature
     local max_tokens
+    local max_retries
     local model_name
     local result
+    local attempt
+    local retry_delay
 
     temperature="$(sanitize_temperature "${4:-0.7}")"
     max_tokens="$(sanitize_max_tokens "${5:-4096}")"
+    max_retries="${6:-2}"
+    if ! [[ "$max_retries" =~ ^[0-9]+$ ]] || [ "$max_retries" -lt 1 ]; then
+        max_retries=1
+    fi
+    retry_delay=1
 
     if ! codefast_has_api_key; then
         echo "No CODEFAST_API_KEY configured" >&2
         return 1
     fi
 
-    if codefast_provider_is_exhausted "glm-main"; then
-        echo "Skipping GLM-5.1 - daily limit reached" >&2
-        return 1
-    fi
-
     model_name="$(codefast_text_provider_model "glm-main" "$task_type")"
-    echo "Using GLM-5.1 (model: ${model_name})" >&2
-    if result="$(call_text_provider "glm-main" "$model_name" "$prompt" "$system_prompt" "$temperature" "$max_tokens" 1 2> >(cat >&2))"; then
-        printf '%s\n' "$result"
-        return 0
-    fi
-    echo "GLM-5.1 request failed" >&2
+    for ((attempt = 1; attempt <= max_retries; attempt += 1)); do
+        echo "Using GLM-5.1 (model: ${model_name}) [attempt ${attempt}/${max_retries}]" >&2
+        if result="$(call_text_provider "glm-main" "$model_name" "$prompt" "$system_prompt" "$temperature" "$max_tokens" "$max_retries" 2> >(cat >&2))"; then
+            printf '%s\n' "$result"
+            return 0
+        fi
+        if [ "$attempt" -lt "$max_retries" ]; then
+            sleep "$retry_delay"
+            retry_delay=$((retry_delay * 2))
+        fi
+    done
+
+    echo "GLM-5.1 request failed after ${max_retries} attempts" >&2
     return 1
 }
 
@@ -475,6 +485,8 @@ show_provider_status() {
         echo -e "${RED}❌${RESET} ${label} - missing API key"
     elif codefast_provider_is_exhausted "glm-main"; then
         echo -e "${YELLOW}⏳${RESET} ${label} - exhausted (${used}/${limit}) ${reason}"
+    elif [ "$limit" -le 0 ]; then
+        echo -e "${GREEN}✅${RESET} ${label} - used ${used}, local quota gate disabled"
     else
         echo -e "${GREEN}✅${RESET} ${label} - used ${used}/${limit}, remaining ${remaining}"
     fi
@@ -494,7 +506,7 @@ test_all_providers() {
     if ! codefast_has_api_key; then
         echo "Skipping glm-main: no API key"
     elif codefast_provider_is_exhausted "glm-main"; then
-        echo "Skipping glm-main: marked as exhausted for today"
+        echo "Skipping glm-main: locally marked unavailable (quota gate enabled)"
     else
         model_name="$(codefast_text_provider_model "glm-main" "general")"
         printf 'Testing glm-main (%s): ' "$model_name"
@@ -516,7 +528,7 @@ estimate_book_cost() {
     echo "   Words per chapter: $words_per_chapter"
     echo "   Total words: $((num_chapters * words_per_chapter))"
     echo ""
-    echo "   Primary usage comes from daily request quotas, not token-priced billing."
+    echo "   Requests go directly to GLM-5.1 (no local daily quota gate by default)."
     echo "   Active: GLM-5.1"
 }
 

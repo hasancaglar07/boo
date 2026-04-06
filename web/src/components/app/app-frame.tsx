@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   User2,
   X,
+  DollarSign,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -36,7 +37,7 @@ import { cn } from "@/lib/utils";
 type AppFrameProps = {
   title: string;
   subtitle?: string;
-  current: "home" | "new" | "account" | "billing" | "workspace" | "preview";
+  current: "home" | "new" | "account" | "billing" | "workspace" | "preview" | "affiliate";
   layout?: "default" | "book";
   currentBookSlug?: string;
   books?: Book[];
@@ -56,6 +57,7 @@ const NAV_ITEMS = [
   { key: "new", href: "/app/new/topic", label: "Kitap Başlat", icon: Plus },
   { key: "account", href: "/app/settings/profile", label: "Ayarlar", icon: User2 },
   { key: "billing", href: "/app/settings/billing", label: "Planlar", icon: CreditCard },
+  { key: "affiliate", href: "/app/affiliate", label: "Affiliate %30", icon: DollarSign },
 ] as const;
 
 const PLAN_LABELS: Record<string, string> = {

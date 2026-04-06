@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { trackEvent } from "@/lib/analytics";
-import { loadSettings, providerLooksReady, runWorkflow } from "@/lib/dashboard-api";
+import { runWorkflow } from "@/lib/dashboard-api";
 import {
   bookTypeLabel,
   isTurkishLanguage,
@@ -24,7 +24,6 @@ export function useTitleAi(
   step: string,
   updateDraft: (changes: Partial<FunnelDraft>) => void,
   setError: (msg: string) => void,
-  stepHref: (step: "topic" | "title" | "outline" | "style" | "generate") => string,
 ) {
   const [titleOptions, setTitleOptions] = useState<TitleOption[]>([]);
   const [aiLoading, setAiLoading] = useState<"" | "title">("");
@@ -38,25 +37,29 @@ export function useTitleAi(
 
     setAiLoading("title");
     try {
-      const settings = await loadSettings().catch(() => null);
       let suggestions = localTitleSuggestions(draft);
 
-      if (settings && providerLooksReady(settings)) {
-        const response = await runWorkflow({
-          action: "topic_suggest",
-          topic: draft.topic,
-          audience: draft.audience || defaultAudience(draft.language),
-          category: bookTypeLabel(draft.bookType),
-          language: draft.language,
-        });
-        const generatedPayload = response.generated as { titles?: Array<Record<string, unknown>> } | undefined;
-        const generated = Array.isArray(generatedPayload?.titles) ? generatedPayload.titles : [];
-        if (generated.length) {
-          suggestions = generated.map((item) => ({
-            title: String(item.title || "").trim(),
-            subtitle: String(item.subtitle || "").trim(),
-          }));
-        }
+      const response = await runWorkflow({
+        action: "topic_suggest",
+        topic: draft.topic,
+        audience: draft.audience || defaultAudience(draft.language),
+        category: bookTypeLabel(draft.bookType),
+        language: draft.language,
+      });
+      if (response.ok === false) {
+        const message =
+          (typeof response.output === "string" && response.output.trim()) ||
+          "AI title suggestions failed.";
+        throw new Error(message.split("\n").find(Boolean) || message);
+      }
+
+      const generatedPayload = response.generated as { titles?: Array<Record<string, unknown>> } | undefined;
+      const generated = Array.isArray(generatedPayload?.titles) ? generatedPayload.titles : [];
+      if (generated.length) {
+        suggestions = generated.map((item) => ({
+          title: String(item.title || "").trim(),
+          subtitle: String(item.subtitle || "").trim(),
+        }));
       }
 
       setTitleOptions(suggestions.filter((item) => item.title));
@@ -64,12 +67,13 @@ export function useTitleAi(
         updateDraft({ title: suggestions[0].title, subtitle: suggestions[0].subtitle });
       }
       trackEvent("title_ai_used", { language: draft.language });
-    } catch {
+    } catch (error) {
       const suggestions = localTitleSuggestions(draft);
       setTitleOptions(suggestions);
       if (suggestions[0] && (forceReplace || !draft.title.trim())) {
         updateDraft({ title: suggestions[0].title, subtitle: suggestions[0].subtitle });
       }
+      setError(error instanceof Error ? error.message : "AI başlık önerileri alınamadı.");
       trackEvent("title_ai_used", { fallback: true });
     } finally {
       setAiLoading("");

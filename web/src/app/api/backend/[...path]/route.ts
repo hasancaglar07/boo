@@ -1,4 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import path from "node:path";
 
 import { auth } from "@/auth";
 import { GUEST_GENERATE_RATE_LIMIT } from "@/lib/auth/constants";
@@ -6,6 +9,7 @@ import { audit } from "@/lib/auth/audit";
 import {
   assignBookOwner,
   attachGuestCookie,
+  backfillLegacyBookOwnership,
   canAccessBookPreview,
   canAccessFullBook,
   claimGuestBooksForUser,
@@ -29,8 +33,13 @@ const BACKEND_ORIGIN =
   "http://127.0.0.1:8765";
 const BACKEND_FETCH_TIMEOUT_MS = 60_000;
 const BACKEND_BOOKS_FETCH_TIMEOUT_MS = 45_000;
+const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = 130_000;
+const BACKEND_WORKFLOW_FETCH_TIMEOUT_MS = 240_000;
 const BACKEND_UNREACHABLE_LOG_THROTTLE_MS = 5_000;
 const BACKEND_UNAVAILABLE_BACKOFF_MS = 5_000;
+const BACKEND_AUTO_START_COOLDOWN_MS = 15_000;
+const BACKEND_RECOVERY_RETRY_TIMEOUT_MS = 8_000;
+const BACKEND_AUTO_START_ENABLED = process.env.BOOK_AUTO_START_DASHBOARD !== "0";
 
 const IMAGE_FILE_PATTERN = /\.(png|jpe?g|webp|gif|svg|ico)$/i;
 
@@ -48,6 +57,8 @@ class BackendUnavailableError extends Error {
 declare global {
   var __backendLastUnreachableLogAt: number | undefined;
   var __backendUnavailableUntilByPath: Record<string, number> | undefined;
+  var __backendLastStartAttemptAt: number | undefined;
+  var __backendStartInFlight: Promise<boolean> | undefined;
 }
 
 function isBackendUnavailableLike(error: unknown) {
@@ -74,7 +85,7 @@ function logUpstreamUnavailable(details: {
 
 function backendCircuitKeyForPath(upstreamPath: string) {
   if (upstreamPath === "/api/settings") return "/api/settings";
-  if (upstreamPath === "/api/books" || upstreamPath.startsWith("/api/books/")) return "/api/books";
+  if (upstreamPath === "/api/books") return "/api/books";
   return null;
 }
 
@@ -98,6 +109,110 @@ function shouldShortCircuitBackend(pathKey: string | null) {
   if (!cache) return false;
   const until = cache[pathKey] || 0;
   return Date.now() < until;
+}
+
+function backendLooksLocal() {
+  try {
+    const url = new URL(BACKEND_ORIGIN);
+    return url.hostname === "127.0.0.1" || url.hostname === "localhost" || url.hostname === "::1";
+  } catch {
+    return false;
+  }
+}
+
+function resolveDashboardStartScript() {
+  const cwd = process.cwd();
+  const candidates = [
+    path.resolve(cwd, "../start-dashboard.sh"),
+    path.resolve(cwd, "../../start-dashboard.sh"),
+    path.resolve(cwd, "start-dashboard.sh"),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+async function maybeStartLocalDashboard() {
+  if (!BACKEND_AUTO_START_ENABLED || !backendLooksLocal()) {
+    return false;
+  }
+  if (globalThis.__backendStartInFlight) {
+    return globalThis.__backendStartInFlight;
+  }
+  const now = Date.now();
+  const last = globalThis.__backendLastStartAttemptAt || 0;
+  if (now - last < BACKEND_AUTO_START_COOLDOWN_MS) {
+    return false;
+  }
+
+  const startScript = resolveDashboardStartScript();
+  if (!startScript) {
+    return false;
+  }
+
+  globalThis.__backendLastStartAttemptAt = now;
+
+  const attempt = new Promise<boolean>((resolve) => {
+    const child = spawn("bash", [startScript, "start"], {
+      stdio: "ignore",
+    });
+    let settled = false;
+    const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      resolve(ok);
+    };
+    const timer = setTimeout(() => finish(false), 12000);
+    child.once("error", () => {
+      clearTimeout(timer);
+      finish(false);
+    });
+    child.once("exit", (code) => {
+      clearTimeout(timer);
+      finish(code === 0);
+    });
+  }).finally(() => {
+    globalThis.__backendStartInFlight = undefined;
+  });
+
+  globalThis.__backendStartInFlight = attempt;
+  return attempt;
+}
+
+async function retryUpstreamAfterRecovery(input: {
+  request: NextRequest;
+  url: URL;
+  headers: Headers;
+  body: ArrayBuffer | null;
+  timeoutMs: number;
+}) {
+  const started = await maybeStartLocalDashboard();
+  if (!started) return null;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, Math.min(input.timeoutMs, BACKEND_RECOVERY_RETRY_TIMEOUT_MS));
+  try {
+    return await fetch(input.url, {
+      method: input.request.method,
+      headers: new Headers(input.headers),
+      body:
+        input.request.method === "GET" || input.request.method === "HEAD" || !input.body || input.body.byteLength === 0
+          ? undefined
+          : input.body,
+      cache: "no-store",
+      redirect: "manual",
+      signal: controller.signal,
+    });
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function jsonError(status: number, error: string, code?: string) {
@@ -154,7 +269,11 @@ async function forwardToBackend(
   const timeoutMs =
     upstreamPath === "/api/books" && request.method === "GET"
       ? BACKEND_BOOKS_FETCH_TIMEOUT_MS
-      : BACKEND_FETCH_TIMEOUT_MS;
+      : /^\/api\/books\/[^/]+\/preview(?:-bootstrap)?$/.test(upstreamPath) && request.method === "GET"
+        ? BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS
+      : upstreamPath === "/api/workflows" && request.method === "POST"
+        ? BACKEND_WORKFLOW_FETCH_TIMEOUT_MS
+        : BACKEND_FETCH_TIMEOUT_MS;
   const circuitPathKey = request.method === "GET" ? backendCircuitKeyForPath(upstreamPath) : null;
 
   if (shouldShortCircuitBackend(circuitPathKey)) {
@@ -182,6 +301,18 @@ async function forwardToBackend(
     clearBackendUnavailable(circuitPathKey);
     return response;
   } catch (error) {
+    const recovered = await retryUpstreamAfterRecovery({
+      request,
+      url,
+      headers,
+      body,
+      timeoutMs,
+    });
+    if (recovered) {
+      clearBackendUnavailable(circuitPathKey);
+      return recovered;
+    }
+
     const reason =
       error instanceof Error
         ? `${error.name}: ${error.message}`
@@ -283,8 +414,9 @@ async function handleBooksIndex(
   userId: string | null,
   guestIdentityId: string | null,
 ) {
-  const ownedSlugs = await getOwnedBookSlugs(viewerFromIds(userId, guestIdentityId));
-  if (ownedSlugs.size === 0) {
+  const viewer = viewerFromIds(userId, guestIdentityId);
+  let ownedSlugs = await getOwnedBookSlugs(viewer);
+  if (!userId && ownedSlugs.size === 0) {
     return NextResponse.json({ books: [] });
   }
 
@@ -292,10 +424,29 @@ async function handleBooksIndex(
   const payload = (await response.json().catch(() => ({ books: [] }))) as {
     books?: Array<Record<string, unknown>>;
   };
+  const upstreamBooks = payload.books || [];
+
+  if (userId && upstreamBooks.length > 0 && ownedSlugs.size < upstreamBooks.length) {
+    try {
+      const claimedCount = await backfillLegacyBookOwnership({
+        userId,
+        candidateSlugs: upstreamBooks.map((book) => String(book.slug || "").trim()),
+      });
+      if (claimedCount > 0) {
+        ownedSlugs = await getOwnedBookSlugs(viewer);
+      }
+    } catch (error) {
+      console.error("[api/backend] legacy book backfill failed", { userId, error });
+    }
+  }
+
+  if (ownedSlugs.size === 0) {
+    return NextResponse.json({ books: [] }, { status: response.status });
+  }
 
   return NextResponse.json(
     {
-      books: (payload.books || []).filter((book) => ownedSlugs.has(String(book.slug || ""))),
+      books: upstreamBooks.filter((book) => ownedSlugs.has(String(book.slug || ""))),
     },
     { status: response.status },
   );

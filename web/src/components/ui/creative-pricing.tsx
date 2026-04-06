@@ -27,9 +27,9 @@ export interface PricingTier {
 }
 
 function CreativePricing({
-  tag = "Basit fiyatlar",
-  title = "İlk kitabın için doğru planı seç",
-  description = "Küçük başla, üretim arttıkça yükselt. Her planın amacı ve sınırı net.",
+  tag = "Simple pricing",
+  title = "Choose the right plan for your first book",
+  description = "Start small, upgrade as your production grows. Every plan's purpose and limits are clear.",
   tiers,
   billingCycle = "monthly",
 }: {
@@ -81,7 +81,7 @@ function CreativePricing({
             <div className="group relative rounded-[26px] p-6 md:p-7">
               {tier.popular ? (
                 <div className="absolute -right-2 -top-2 rotate-6 rounded-full border-2 border-foreground bg-primary px-3 py-1 text-xs font-semibold tracking-wide text-primary-foreground shadow-sm">
-                  En çok seçilen
+                  Most popular
                 </div>
               ) : null}
 
@@ -108,7 +108,7 @@ function CreativePricing({
                   {billingCycle === "annual" && tier.annualPrice ? tier.annualPrice : tier.price}
                 </span>
                 <span className="ml-1 text-sm text-muted-foreground">
-                  /{billingCycle === "annual" && tier.annualInterval ? tier.annualInterval : (tier.interval ?? "ay")}
+                  /{billingCycle === "annual" && tier.annualInterval ? tier.annualInterval : (tier.interval ?? "month")}
                 </span>
                 {tier.perUnit ? (
                   <p className="mt-1 text-xs text-muted-foreground/70">{tier.perUnit}</p>
@@ -120,7 +120,7 @@ function CreativePricing({
                 ) : null}
               </div>
 
-              {/* Özellikleri karar anında hızlı taranabilir tutuyoruz. */}
+              {/* Features are kept scannable for quick decision-making. */}
               <div className="mb-7 space-y-3">
                 {tier.features.map((feature) => (
                   <div key={feature} className="flex items-start gap-3">
@@ -153,7 +153,7 @@ function CreativePricing({
                     })
                   }
                 >
-                  {tier.ctaLabel || "Planı seç"}
+                  {tier.ctaLabel || "Select plan"}
                 </Link>
               </Button>
             </div>

@@ -36,6 +36,11 @@ BOOK_GENERATOR_ENV_FILES = (
 HOST = os.environ.get("BOOK_DASHBOARD_HOST", "127.0.0.1")
 PORT = int(os.environ.get("BOOK_DASHBOARD_PORT", "8765"))
 PREVIEW_PIPELINE_MIN_WORDS = 900
+PREVIEW_PRIMARY_CHAPTER_WORD_LIMIT = int(os.environ.get("BOOK_PREVIEW_PRIMARY_CHAPTER_WORD_LIMIT", "1400"))
+PREVIEW_SECONDARY_CHAPTER_WORD_LIMIT = int(os.environ.get("BOOK_PREVIEW_SECONDARY_CHAPTER_WORD_LIMIT", "220"))
+PREVIEW_SKIP_NONPRIMARY_DURING_FULL_GENERATION = (
+    os.environ.get("BOOK_PREVIEW_SKIP_NONPRIMARY_DURING_FULL_GENERATION", "1").strip() != "0"
+)
 ACTIVE_PREVIEW_PIPELINES: set[str] = set()
 ACTIVE_PREVIEW_PIPELINES_LOCK = threading.Lock()
 ACTIVE_FULL_CHAPTER_PIPELINES: set[str] = set()
@@ -593,8 +598,12 @@ def read_settings() -> dict[str, Any]:
 
 def public_settings(settings: dict[str, Any] | None = None) -> dict[str, Any]:
     settings = (settings or read_settings()).copy()
+    shared_key_available = bool(resolve_shared_ai_key(settings, merge_book_generator_local_env(os.environ.copy())))
     for key in SECRET_SETTING_KEYS:
-        settings[f"has_{key}"] = bool(str(settings.get(key, "") or "").strip())
+        has_value = bool(str(settings.get(key, "") or "").strip())
+        if key == "CODEFAST_API_KEY" and shared_key_available:
+            has_value = True
+        settings[f"has_{key}"] = has_value
         settings[key] = ""
     return settings
 
@@ -1865,8 +1874,44 @@ def merge_book_generator_local_env(env: dict[str, str]) -> dict[str, str]:
     return merged
 
 
+def default_book_generator_env_prefix(env: dict[str, str]) -> Path:
+    configured = str(env.get("BOOK_GENERATOR_ENV_PREFIX") or "").strip()
+    if configured:
+        return Path(configured)
+    mamba_root = str(env.get("MAMBA_ROOT_PREFIX") or "").strip() or str(Path.home() / ".local/share/micromamba")
+    env_name = str(env.get("BOOK_GENERATOR_ENV_NAME") or "").strip() or "book-generator"
+    return Path(mamba_root) / "envs" / env_name
+
+
+def prepend_unique_path_entries(current_path: str, new_entries: list[str]) -> str:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for raw_entry in [*new_entries, *str(current_path or "").split(os.pathsep)]:
+        entry = str(raw_entry or "").strip()
+        if not entry:
+            continue
+        normalized = os.path.normcase(entry)
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        ordered.append(entry)
+    return os.pathsep.join(ordered)
+
+
 def command_env(settings: dict[str, Any] | None = None, overrides: dict[str, str] | None = None) -> dict[str, str]:
     env = merge_book_generator_local_env(os.environ.copy())
+    env.setdefault("BOOK_GENERATOR_ROOT", str(ROOT_DIR))
+    env_prefix = default_book_generator_env_prefix(env)
+    env["BOOK_GENERATOR_ENV_PREFIX"] = str(env_prefix)
+    preferred_path_entries: list[str] = []
+    env_bin = env_prefix / "bin"
+    scripts_dir = ROOT_DIR / "scripts"
+    if env_bin.exists():
+        preferred_path_entries.append(str(env_bin))
+    if scripts_dir.exists():
+        preferred_path_entries.append(str(scripts_dir))
+    env["PATH"] = prepend_unique_path_entries(str(env.get("PATH") or ""), preferred_path_entries)
+
     settings = settings or read_settings()
     shared_key = resolve_shared_ai_key(settings, env)
 
@@ -1887,6 +1932,12 @@ def command_env(settings: dict[str, Any] | None = None, overrides: dict[str, str
         for key, value in overrides.items():
             env[key] = value
     return env
+
+
+def tool_exists(tool: str, env: dict[str, str] | None = None) -> bool:
+    selected_env = env if env is not None else command_env()
+    tool_path = str(selected_env.get("PATH") or "")
+    return shutil.which(tool, path=tool_path) is not None
 
 
 def normalize_windows_path_prefix(value: str) -> str:
@@ -1973,6 +2024,13 @@ def detect_bash_path_style(force_refresh: bool = False) -> str:
     with BASH_PATH_STYLE_LOCK:
         if BASH_PATH_STYLE_CACHE and not force_refresh:
             return BASH_PATH_STYLE_CACHE
+
+    # Non-Windows environments should always use `/mnt/<drive>/...` style for
+    # Windows-mounted workspace paths.
+    if os.name != "nt":
+        with BASH_PATH_STYLE_LOCK:
+            BASH_PATH_STYLE_CACHE = "wsl"
+        return "wsl"
 
     style = "msys"
     bash_binary = str(shutil.which("bash") or "").strip().lower().replace("\\", "/")
@@ -2304,10 +2362,137 @@ def collect_chapters(book_dir: Path) -> list[dict[str, Any]]:
     return chapters
 
 
+def read_chapter_heading_and_excerpt(
+    chapter_path: Path,
+    *,
+    word_limit: int | None = None,
+) -> tuple[str, str]:
+    heading = ""
+    lines: list[str] = []
+    remaining_words = max(0, int(word_limit or 0)) if word_limit is not None else None
+    found_heading = False
+    try:
+        with chapter_path.open("r", encoding="utf-8", errors="replace") as handle:
+            for raw_line in handle:
+                line = raw_line.rstrip("\n")
+                if not found_heading:
+                    if line.startswith("# "):
+                        heading = line[2:].strip()
+                        found_heading = True
+                    continue
+
+                if remaining_words is None:
+                    lines.append(line)
+                    continue
+
+                if remaining_words <= 0:
+                    break
+
+                words = re.findall(r"\S+", line)
+                if not words:
+                    lines.append(line)
+                    continue
+
+                if len(words) <= remaining_words:
+                    lines.append(line)
+                    remaining_words -= len(words)
+                    continue
+
+                lines.append(" ".join(words[:remaining_words]).strip() + "…")
+                remaining_words = 0
+                break
+    except OSError:
+        return "", ""
+
+    return heading, "\n".join(lines).strip()
+
+
+def collect_chapters_preview(
+    book_dir: Path,
+    metadata: dict[str, Any] | None = None,
+    *,
+    avoid_non_primary_content: bool = False,
+) -> list[dict[str, Any]]:
+    metadata = metadata or read_metadata(book_dir)
+    language = infer_book_language(book_dir, metadata)
+
+    plan_by_number: dict[int, str] = {}
+    for item in normalize_chapter_plan(metadata.get("chapter_plan")):
+        try:
+            number = int(item.get("number") or 0)
+        except (TypeError, ValueError):
+            number = 0
+        if number <= 0:
+            continue
+        plan_by_number[number] = str(item.get("title") or "").strip()
+
+    chapter_paths = sorted(book_dir.glob("chapter_*_final.md"), key=chapter_number)
+    path_by_number = {chapter_number(path): path for path in chapter_paths}
+
+    numbers = sorted(set(path_by_number.keys()) | set(plan_by_number.keys()))
+    max_known_number = numbers[-1] if numbers else 0
+    try:
+        target_count = int(metadata.get("full_generation_target_count") or 0)
+    except (TypeError, ValueError):
+        target_count = 0
+    if target_count > max_known_number:
+        numbers.extend(range(max_known_number + 1, target_count + 1))
+
+    chapters: list[dict[str, Any]] = []
+    for number in numbers:
+        chapter_path = path_by_number.get(number)
+        heading = ""
+        content = ""
+
+        if chapter_path and (number == 1 or not avoid_non_primary_content):
+            word_limit = (
+                PREVIEW_PRIMARY_CHAPTER_WORD_LIMIT
+                if number == 1
+                else PREVIEW_SECONDARY_CHAPTER_WORD_LIMIT
+            )
+            heading, content = read_chapter_heading_and_excerpt(
+                chapter_path,
+                word_limit=word_limit,
+            )
+
+        plan_title = plan_by_number.get(number, "")
+        normalized_plan_title = normalize_structural_heading(plan_title, language, number)
+        chapter_title = strip_chapter_heading(heading)
+        chapter_title = normalize_structural_heading(
+            chapter_title or normalized_plan_title,
+            language,
+            number,
+        )
+
+        if chapter_path:
+            filename = chapter_path.name
+            relative_path = relative_to_root(chapter_path)
+            url = workspace_url(chapter_path)
+        else:
+            filename = f"chapter_{number}_final.md"
+            synthetic_path = book_dir / filename
+            relative_path = relative_to_root(synthetic_path)
+            url = workspace_url(synthetic_path)
+
+        chapters.append(
+            {
+                "number": number,
+                "title": chapter_title,
+                "content": content,
+                "filename": filename,
+                "relative_path": relative_path,
+                "url": url,
+            }
+        )
+
+    return chapters
+
+
 def build_capabilities() -> dict[str, Any]:
-    pandoc_ok = shutil.which("pandoc") is not None
-    pdf_engine_ok = any(shutil.which(tool) for tool in ("tectonic", "xelatex", "pdflatex"))
-    calibre_ok = shutil.which("ebook-convert") is not None
+    env = command_env()
+    pandoc_ok = tool_exists("pandoc", env)
+    pdf_engine_ok = any(tool_exists(tool, env) for tool in ("tectonic", "xelatex", "pdflatex"))
+    calibre_ok = tool_exists("ebook-convert", env)
     return {
         "all": {"available": pandoc_ok, "reason": "" if pandoc_ok else "pandoc missing"},
         "epub": {"available": pandoc_ok, "reason": "" if pandoc_ok else "pandoc missing"},
@@ -2421,11 +2606,24 @@ def read_book_preview_payload(book_dir: Path) -> dict[str, Any]:
         "back_cover_image": back_cover_image,
     }
     language = infer_book_language(book_dir, metadata, [title, subtitle, metadata.get("description", "")])
-    chapters = collect_chapters(book_dir)
     root_index = book_root_index(book_dir)
     root_entries = set(root_index.keys())
     generation = build_generation_status(book_dir, effective_metadata)
     full_generation = build_full_generation_status(book_dir, effective_metadata)
+    full_stage = str(full_generation.get("stage") or "").strip().lower()
+    full_active = bool(full_generation.get("active"))
+    full_complete = bool(full_generation.get("complete"))
+    avoid_non_primary_content = (
+        PREVIEW_SKIP_NONPRIMARY_DURING_FULL_GENERATION
+        and not full_complete
+        and (full_active or full_stage in {"queued", "running"})
+    )
+    chapters = collect_chapters_preview(
+        book_dir,
+        effective_metadata,
+        avoid_non_primary_content=avoid_non_primary_content,
+    )
+    chapter_count = summary_chapter_count(book_dir, root_entries=root_entries)
 
     return {
         "slug": book_dir.name,
@@ -2449,7 +2647,7 @@ def read_book_preview_payload(book_dir: Path) -> dict[str, Any]:
             default=1,
         ),
         "status": {
-            "chapter_count": len(chapters),
+            "chapter_count": chapter_count,
             "chapter_target_count": full_generation["target_count"],
             "chapter_ready_count": full_generation["ready_count"],
             "chapters_complete": full_generation["complete"],
@@ -3462,7 +3660,7 @@ def preflight_for_build(format_name: str) -> dict[str, Any]:
     capability = capabilities[format_name]
     primary_ok = bool(capability["available"])
     fallback_ok = format_name in LIGHTWEIGHT_BUILD_FORMATS
-    if format_name == "all" and not shutil.which("ebook-convert"):
+    if format_name == "all" and not tool_exists("ebook-convert"):
         warnings.append("ebook-convert missing: mobi/azw3 conversions may be unavailable in all-in-one builds.")
     reason = str(capability["reason"] or "")
     if not primary_ok and fallback_ok:
@@ -3608,6 +3806,13 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     cover_image = normalized_cover_image
     back_cover_image = normalized_back_cover_image
 
+    front_cover_path = (book_dir / cover_image).resolve() if cover_image else None
+    back_cover_path = (book_dir / back_cover_image).resolve() if back_cover_image else None
+    if front_cover_path and not front_cover_path.exists():
+        front_cover_path = None
+    if back_cover_path and not back_cover_path.exists():
+        back_cover_path = None
+
     command = bash_command(
         ROOT_DIR / "compile_book.sh",
         book_dir,
@@ -3618,12 +3823,14 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
         "--publisher",
         publisher,
     )
-    if generate_cover:
+    # Prefer stable, already-generated cover assets during build.
+    # Auto-generation stays available when no usable cover exists yet.
+    if front_cover_path:
+        command.extend(["--cover", maybe_bash_path_arg(front_cover_path)])
+    elif generate_cover:
         command.append("--generate-cover")
-    elif cover_image:
-        command.extend(["--cover", maybe_bash_path_arg(book_dir / cover_image)])
-    if back_cover_image:
-        command.extend(["--backcover", maybe_bash_path_arg(book_dir / back_cover_image)])
+    if back_cover_path:
+        command.extend(["--backcover", maybe_bash_path_arg(back_cover_path)])
     if isbn:
         command.extend(["--isbn", isbn])
     if year:
@@ -3631,9 +3838,24 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     if fast:
         command.append("--fast")
 
+    used_cover_generation_retry = False
     before = file_snapshot(book_dir)
     result = run_process(command, cwd=ROOT_DIR, env=command_env())
+    if result.returncode != 0 and "--generate-cover" in command:
+        retry_command = [part for part in command if part != "--generate-cover"]
+        retry_result = run_process(retry_command, cwd=ROOT_DIR, env=command_env())
+        if retry_result.returncode == 0:
+            result = retry_result
+            used_cover_generation_retry = True
     sync_extra_files(book_dir)
+    if used_cover_generation_retry:
+        preflight = {
+            **preflight,
+            "warnings": [
+                *list(preflight.get("warnings") or []),
+                "Auto cover generation failed; build succeeded using the existing/static cover path.",
+            ],
+        }
     if result.returncode != 0 and format_name in LIGHTWEIGHT_BUILD_FORMATS:
         fallback_warning = "Primary build command failed; lightweight fallback export was used."
         fallback_preflight = {
@@ -3682,10 +3904,19 @@ def run_dashboard_action(
     env = command_env(overrides=env_overrides)
     script_path = ROOT_DIR / "dashboard_actions.sh"
     base_style = detect_bash_path_style()
-    style_candidates = [base_style] + [style for style in ("wsl", "msys") if style != base_style]
+    style_candidates = [base_style]
+    if os.name == "nt":
+        # Prefer WSL path flavor first on Windows; fall back to MSYS.
+        style_candidates = ["wsl", "msys"]
 
     best_result: subprocess.CompletedProcess[str] | None = None
-    best_style = base_style
+
+    def result_rank(candidate: subprocess.CompletedProcess[str]) -> tuple[int, int]:
+        # Prefer results where the script actually ran (non 126/127), then
+        # prefer the richer stderr/stdout payload for diagnostics.
+        ran_script = 0 if candidate.returncode in {126, 127} else 1
+        payload_len = len((candidate.stdout or "") + (candidate.stderr or ""))
+        return (ran_script, payload_len)
 
     for style in style_candidates:
         set_bash_path_style(style)
@@ -3701,9 +3932,8 @@ def run_dashboard_action(
                 append_log(f"Recovered dashboard action using bash style '{style}'.")
             set_bash_path_style(style)
             return result
-        if best_result is None or len((result.stdout or "") + (result.stderr or "")) > len((best_result.stdout or "") + (best_result.stderr or "")):
+        if best_result is None or result_rank(result) > result_rank(best_result):
             best_result = result
-            best_style = style
 
         # Windows hosts may fail direct script execution even when bash is healthy.
         # Retry with `bash -lc` command form before moving to the next style.
@@ -3721,11 +3951,12 @@ def run_dashboard_action(
                 append_log(f"Recovered dashboard action with bash -lc using style '{style}'.")
                 set_bash_path_style(style)
                 return shell_retry
-            if len((shell_retry.stdout or "") + (shell_retry.stderr or "")) > len((best_result.stdout or "") + (best_result.stderr or "")):
+            if result_rank(shell_retry) > result_rank(best_result):
                 best_result = shell_retry
-                best_style = style
 
-    set_bash_path_style(best_style)
+    # Keep the original style after total failure to avoid caching a broken path
+    # flavor selected only by verbose error output.
+    set_bash_path_style(base_style)
     if best_result is not None:
         return best_result
     return subprocess.CompletedProcess(
@@ -3748,7 +3979,7 @@ def run_python_script_with_fallback(
 
     if os.name == "nt":
         base_style = detect_bash_path_style()
-        style_candidates = [base_style] + [style for style in ("wsl", "msys") if style != base_style]
+        style_candidates = ["wsl", "msys"]
         for style in style_candidates:
             set_bash_path_style(style)
             wsl_parts = ["python3", to_bash_path(script_abs)]
@@ -3878,6 +4109,7 @@ def save_book_file(slug: str, relative_path: str, content: str) -> dict[str, Any
 
 def preflight_for_workflow(action: str, slug: str | None = None) -> dict[str, Any]:
     settings = read_settings()
+    env = command_env(settings=settings)
     python_launcher = detect_python_launcher()
     warnings: list[str] = []
     missing: list[str] = []
@@ -3910,18 +4142,18 @@ def preflight_for_workflow(action: str, slug: str | None = None) -> dict[str, An
                 ok = False
                 missing.append("No research result found yet. Run KDP analysis, keyword research, or topic finder first.")
 
-    if action == "cover_local" and not any(shutil.which(tool) for tool in ("magick", "convert")):
+    if action == "cover_local" and not any(tool_exists(tool, env) for tool in ("magick", "convert")):
         ok = False
         missing.append("ImageMagick is missing.")
 
     if action == "cover_script":
-        if not shutil.which("jq"):
+        if not tool_exists("jq", env):
             ok = False
             missing.append("jq is missing.")
         if not python_launcher:
             ok = False
             missing.append("Python runtime is missing.")
-        if not shutil.which("playwright"):
+        if not tool_exists("playwright", env):
             warnings.append("playwright command not found. The script may install it on first run.")
 
     if action == "cover_variants_generate":
@@ -3936,18 +4168,18 @@ def preflight_for_workflow(action: str, slug: str | None = None) -> dict[str, An
             if not python_launcher:
                 ok = False
                 missing.append("Python runtime is missing.")
-            if not shutil.which("node"):
+            if not tool_exists("node", env):
                 ok = False
                 missing.append("node is missing.")
         if os.name == "nt" and not (wsl_cover_bridge or wsl_binary_present or python_launcher):
             ok = False
             missing.append("WSL bridge or Python runtime is required for cover variants generation.")
 
-    if action == "topic_finder" and not shutil.which("xmllint"):
+    if action == "topic_finder" and not tool_exists("xmllint", env):
         ok = False
         missing.append("xmllint is missing.")
 
-    if action == "keyword_research" and not shutil.which("jq"):
+    if action == "keyword_research" and not tool_exists("jq", env):
         ok = False
         missing.append("jq is missing.")
 

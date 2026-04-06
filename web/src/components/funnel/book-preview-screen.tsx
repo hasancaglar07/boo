@@ -934,11 +934,15 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [coverGenerating, setCoverGenerating] = useState(false);
   const [coverTargetCount, setCoverTargetCount] = useState(1);
+  const [bootstrapRetryNonce, setBootstrapRetryNonce] = useState(0);
   const [selectingVariantId, setSelectingVariantId] = useState("");
   const trackedRef = useRef(false);
   const bootstrapRequestedRef = useRef(false);
+  const bootstrapRetryCountRef = useRef(0);
+  const bootstrapRetryTimerRef = useRef<number | null>(null);
   const previewReadyTrackedRef = useRef(false);
   const coverLabRequestedRef = useRef(false);
+  const hydrateInFlightRef = useRef(false);
 
   // Stripe başarılı ödeme sonrası auth state güncelle
   useEffect(() => {
@@ -964,6 +968,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   }, [searchParams, router, slug]);
 
   const hydrate = useCallback(async () => {
+    if (hydrateInFlightRef.current) return;
+    hydrateInFlightRef.current = true;
     try {
       const previewPayload = await loadBookPreview(slug);
       setPreview(previewPayload);
@@ -988,6 +994,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         return;
       }
       console.error(error);
+    } finally {
+      hydrateInFlightRef.current = false;
     }
   }, [slug]);
 
@@ -1010,10 +1018,26 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   useEffect(() => {
     trackedRef.current = false;
     bootstrapRequestedRef.current = false;
+    bootstrapRetryCountRef.current = 0;
+    if (bootstrapRetryTimerRef.current !== null) {
+      window.clearTimeout(bootstrapRetryTimerRef.current);
+      bootstrapRetryTimerRef.current = null;
+    }
     previewReadyTrackedRef.current = false;
     coverLabRequestedRef.current = false;
+    setBootstrapRetryNonce(0);
     setCoverTargetCount(1);
   }, [slug]);
+
+  useEffect(
+    () => () => {
+      if (bootstrapRetryTimerRef.current !== null) {
+        window.clearTimeout(bootstrapRetryTimerRef.current);
+        bootstrapRetryTimerRef.current = null;
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     const slots = Number(preview?.coverLab?.slots || 0);
@@ -1035,16 +1059,44 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   }, [hydrate]);
 
   useEffect(() => {
+    if (!backendUnavailable) return;
+    const retryTimer = window.setTimeout(() => {
+      void hydrate();
+    }, 2000);
+    return () => window.clearTimeout(retryTimer);
+  }, [backendUnavailable, hydrate]);
+
+  useEffect(() => {
     if (!preview || bootstrapRequestedRef.current) return;
     if (preview.generation.product_ready) return;
     bootstrapRequestedRef.current = true;
     void startBookPreviewPipeline(slug)
-      .then(() => hydrate())
+      .then(() => {
+        bootstrapRetryCountRef.current = 0;
+        if (bootstrapRetryTimerRef.current !== null) {
+          window.clearTimeout(bootstrapRetryTimerRef.current);
+          bootstrapRetryTimerRef.current = null;
+        }
+        return hydrate();
+      })
       .catch((error) => {
         bootstrapRequestedRef.current = false;
-        console.error(error);
+        if (!isBackendUnavailableError(error)) {
+          console.error(error);
+        }
+        bootstrapRetryCountRef.current += 1;
+        const retryDelayMs = Math.min(
+          15000,
+          (isBackendUnavailableError(error) ? 1500 : 2500) * bootstrapRetryCountRef.current,
+        );
+        if (bootstrapRetryTimerRef.current !== null) {
+          window.clearTimeout(bootstrapRetryTimerRef.current);
+        }
+        bootstrapRetryTimerRef.current = window.setTimeout(() => {
+          setBootstrapRetryNonce((value) => value + 1);
+        }, retryDelayMs);
       });
-  }, [hydrate, preview, slug]);
+  }, [bootstrapRetryNonce, hydrate, preview, slug]);
 
   useEffect(() => {
     if (!preview) return;

@@ -363,6 +363,12 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, tim
   }
 }
 
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 async function api<T>(path: string, options: ApiOptions = {}) {
   const headers = new Headers(options.headers || {});
   let body = options.body;
@@ -469,15 +475,29 @@ export async function saveBook(payload: Partial<Book>) {
 }
 
 export async function startBookPreviewPipeline(slug: string) {
-  const result = await api<{ ok: boolean; started: boolean; book: Book; generation: BookStatus }>(
-    `/api/books/${encodeURIComponent(slug)}/preview-bootstrap`,
-    {
-      method: "POST",
-      json: {},
-    },
-  );
-  clearBooksCache();
-  return result;
+  const path = `/api/books/${encodeURIComponent(slug)}/preview-bootstrap`;
+  const retryDelays = [700, 1500, 3000];
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= retryDelays.length; attempt += 1) {
+    try {
+      const result = await api<{ ok: boolean; started: boolean; book: Book; generation: BookStatus }>(path, {
+        method: "POST",
+        json: {},
+      });
+      clearBooksCache();
+      return result;
+    } catch (error) {
+      lastError = error;
+      const canRetry = isBackendUnavailableError(error) && attempt < retryDelays.length;
+      if (!canRetry) {
+        throw error;
+      }
+      await wait(retryDelays[attempt]);
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new BackendUnavailableError();
 }
 
 export async function selectBookCoverVariant(slug: string, variantId: string) {

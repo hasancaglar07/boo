@@ -14,8 +14,6 @@ import {
   createFallbackBookPayload,
   isBackendUnavailableError,
   loadBooks,
-  loadSettings,
-  providerLooksReady,
   runWorkflow,
   saveBook,
   type Book,
@@ -152,31 +150,28 @@ export function WizardScreen() {
     });
 
     try {
-      const settings = await loadSettings();
-      let book: Book;
-      if (providerLooksReady(settings)) {
-        const response = await runWorkflow({
-          action: "outline_generate",
-          slug: payload.slug,
-          topic: answers.topic,
-          title: payload.title,
-          subtitle: payload.subtitle,
-          language: payload.language,
-          author: payload.author,
-          publisher: payload.publisher,
-          description: payload.description,
-          genre: answers.type === "is" ? "business" : answers.type === "rehber" ? "guide" : "non-fiction",
-          audience: answers.audience,
-          style: answers.depth === "hizli" ? "clear and concise" : answers.depth === "detayli" ? "detailed and example-driven" : "clear and practical",
-          tone: answers.type === "cocuk" ? "warm" : "professional",
-          year: payload.year,
-        });
-        book = response.book as Book;
-      } else {
-        book = await saveBook(payload);
+      const response = await runWorkflow({
+        action: "outline_generate",
+        slug: payload.slug,
+        topic: answers.topic,
+        title: payload.title,
+        subtitle: payload.subtitle,
+        language: payload.language,
+        author: payload.author,
+        publisher: payload.publisher,
+        description: payload.description,
+        genre: answers.type === "is" ? "business" : answers.type === "rehber" ? "guide" : "non-fiction",
+        audience: answers.audience,
+        style: answers.depth === "hizli" ? "clear and concise" : answers.depth === "detayli" ? "detailed and example-driven" : "clear and practical",
+        tone: answers.type === "cocuk" ? "warm" : "professional",
+        year: payload.year,
+      });
+      const book = response.book as Book | undefined;
+      if (!book?.slug) {
+        throw new Error("Outline generation did not return a valid book.");
       }
       removeWizardState("draft");
-      trackEvent("wizard_completed", { slug: book.slug, provider_ready: providerLooksReady(settings) });
+      trackEvent("wizard_completed", { slug: book.slug, provider_ready: true });
       router.push(`/app/book/${encodeURIComponent(book.slug)}?tab=book`);
     } catch {
       const book = await saveBook(payload);

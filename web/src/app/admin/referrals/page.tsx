@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState } from "react";
-import { Share2, Gift, MousePointerClick, Users, Trophy, ChevronDown, ChevronUp } from "lucide-react";
+import { Share2, Gift, MousePointerClick, Users, Trophy, ChevronDown, ChevronUp, DollarSign, Wallet } from "lucide-react";
 
 import { MetricCard } from "@/components/admin/metric-card";
 import { StatusBadge } from "@/components/admin/status-badge";
@@ -16,6 +16,15 @@ type ConversionRow = {
   rewardGranted: boolean;
 };
 
+type PayoutRow = {
+  id: string;
+  amount: number;
+  status: string;
+  date: string;
+  description: string;
+  metadata: { method?: string; email?: string } | null;
+};
+
 type ReferrerRow = {
   id: string;
   code: string;
@@ -23,8 +32,13 @@ type ReferrerRow = {
   conversions: number;
   rewardsGranted: number;
   createdAt: string;
+  totalCommission: number;
+  paidOut: number;
+  pendingPayout: number;
+  balance: number;
   user: { id: string; name: string | null; email: string };
   latestConversions: ConversionRow[];
+  payoutRequests: PayoutRow[];
 };
 
 type ReferralPayload = {
@@ -34,6 +48,7 @@ type ReferralPayload = {
     totalConversions: number;
     rewardedConversions: number;
     conversionRate: number;
+    totalCommissionPaid: number;
   };
   referrers: ReferrerRow[];
 };
@@ -53,7 +68,7 @@ export default function AdminReferralsPage() {
         <p className="mt-1 text-sm admin-muted">Referral program istatistikleri ve dönüşüm detayları.</p>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <MetricCard
           title="Toplam Kod"
           value={loading || !data ? "—" : formatAdminNumber(data.summary.totalCodes)}
@@ -83,6 +98,12 @@ export default function AdminReferralsPage() {
           icon={<Gift className="size-5" />}
           color="success"
         />
+        <MetricCard
+          title="Toplam Komisyon"
+          value={loading || !data ? "—" : `$${data.summary.totalCommissionPaid.toFixed(2)}`}
+          icon={<DollarSign className="size-5" />}
+          color="primary"
+        />
       </section>
 
       <div className="admin-panel rounded-[28px] p-5">
@@ -107,7 +128,7 @@ export default function AdminReferralsPage() {
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-black/5 dark:border-white/8">
                 <tr>
-                  {["Kullanıcı", "Kod", "Tıklanma", "Dönüşüm", "Ödül", "Oluşturma", ""].map((h) => (
+                  {["Kullanıcı", "Kod", "Tıklanma", "Dönüşüm", "Toplam Kazanç", "Ödenen", "Bakiye", "Ödül", "Oluşturma", ""].map((h) => (
                     <th key={h} className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] admin-muted whitespace-nowrap">
                       {h}
                     </th>
@@ -140,6 +161,19 @@ export default function AdminReferralsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top">
+                        <span className="font-semibold text-[color:var(--admin-primary)]">
+                          ${row.totalCommission.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 align-top">
+                        <span className="text-[color:var(--admin-text)]">${row.paidOut.toFixed(2)}</span>
+                      </td>
+                      <td className="px-4 py-4 align-top">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          ${row.balance.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 align-top">
                         {row.rewardsGranted > 0 ? (
                           <StatusBadge status="success" label={`${row.rewardsGranted} verildi`} />
                         ) : (
@@ -150,7 +184,7 @@ export default function AdminReferralsPage() {
                         {formatAdminDate(row.createdAt)}
                       </td>
                       <td className="px-4 py-4 align-top">
-                        {row.latestConversions.length > 0 && (
+                        {(row.latestConversions.length > 0 || row.payoutRequests.length > 0) && (
                           <button
                             type="button"
                             className="inline-flex items-center gap-1 text-xs text-[color:var(--admin-primary)] hover:underline"
@@ -159,7 +193,7 @@ export default function AdminReferralsPage() {
                             {expanded === row.id ? (
                               <><ChevronUp className="size-3.5" />Gizle</>
                             ) : (
-                              <><ChevronDown className="size-3.5" />Dönüşümler</>
+                              <><ChevronDown className="size-3.5" />Detaylar</>
                             )}
                           </button>
                         )}
@@ -167,26 +201,64 @@ export default function AdminReferralsPage() {
                     </tr>
                     {expanded === row.id && (
                       <tr>
-                        <td colSpan={7} className="bg-black/2 dark:bg-white/3 px-4 py-3">
-                          <div className="mb-2 text-xs font-semibold uppercase tracking-widest admin-muted">Son Dönüşümler</div>
-                          <div className="space-y-2">
-                            {row.latestConversions.map((c) => (
-                              <div
-                                key={c.newUserId}
-                                className="flex items-center justify-between rounded-2xl border border-[color:var(--admin-border)] bg-white/60 px-4 py-2 text-sm dark:bg-white/5"
-                              >
-                                <div>
-                                  <div className="font-medium text-[color:var(--admin-text)]">
-                                    {c.newUserName || c.newUserEmail || c.newUserId}
+                        <td colSpan={10} className="bg-black/2 dark:bg-white/3 px-4 py-3">
+                          <div className="grid gap-4 lg:grid-cols-2">
+                            {/* Conversions */}
+                            <div>
+                              <div className="mb-2 text-xs font-semibold uppercase tracking-widest admin-muted">Son Dönüşümler</div>
+                              <div className="space-y-2">
+                                {row.latestConversions.map((c) => (
+                                  <div
+                                    key={c.newUserId}
+                                    className="flex items-center justify-between rounded-2xl border border-[color:var(--admin-border)] bg-white/60 px-4 py-2 text-sm dark:bg-white/5"
+                                  >
+                                    <div>
+                                      <div className="font-medium text-[color:var(--admin-text)]">
+                                        {c.newUserName || c.newUserEmail || c.newUserId}
+                                      </div>
+                                      <div className="text-xs admin-muted">{formatAdminDate(c.convertedAt)}</div>
+                                    </div>
+                                    <StatusBadge
+                                      status={c.rewardGranted ? "success" : "warning"}
+                                      label={c.rewardGranted ? "Ödül verildi" : "Bekliyor"}
+                                    />
                                   </div>
-                                  <div className="text-xs admin-muted">{formatAdminDate(c.convertedAt)}</div>
-                                </div>
-                                <StatusBadge
-                                  status={c.rewardGranted ? "success" : "warning"}
-                                  label={c.rewardGranted ? "Ödül verildi" : "Bekliyor"}
-                                />
+                                ))}
                               </div>
-                            ))}
+                            </div>
+
+                            {/* Payout requests */}
+                            <div>
+                              <div className="mb-2 text-xs font-semibold uppercase tracking-widest admin-muted">
+                                <Wallet className="inline size-3 mr-1" />
+                                Ödeme Talepleri
+                              </div>
+                              <div className="space-y-2">
+                                {row.payoutRequests.length === 0 && (
+                                  <div className="text-xs admin-muted">Henüz talep yok.</div>
+                                )}
+                                {row.payoutRequests.map((p) => (
+                                  <div
+                                    key={p.id}
+                                    className="flex items-center justify-between rounded-2xl border border-[color:var(--admin-border)] bg-white/60 px-4 py-2 text-sm dark:bg-white/5"
+                                  >
+                                    <div>
+                                      <div className="font-medium text-[color:var(--admin-text)]">
+                                        ${p.amount.toFixed(2)}
+                                      </div>
+                                      <div className="text-xs admin-muted">
+                                        {p.metadata?.method || "—"} · {p.metadata?.email || "—"}
+                                      </div>
+                                      <div className="text-xs admin-muted">{formatAdminDate(p.date)}</div>
+                                    </div>
+                                    <StatusBadge
+                                      status={p.status === "paid" ? "success" : p.status === "open" || p.status === "draft" ? "warning" : "default"}
+                                      label={p.status === "paid" ? "Ödendi" : p.status === "open" ? "Bekliyor" : p.status === "void" ? "İptal" : p.status}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         </td>
                       </tr>

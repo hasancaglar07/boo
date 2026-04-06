@@ -1,0 +1,746 @@
+[
+  {
+    "file": "web/src\\lib\\marketing-tools.ts",
+    "lines": 399
+  },
+  {
+    "file": "web/src\\components\\app\\workspace-screen.tsx",
+    "lines": 108
+  },
+  {
+    "file": "web/src\\components\\funnel\\book-preview-screen.tsx",
+    "lines": 91
+  },
+  {
+    "file": "web/src\\app\\how-it-works\\page.tsx",
+    "lines": 81
+  },
+  {
+    "file": "web/src\\components\\app\\home-screen.tsx",
+    "lines": 75
+  },
+  {
+    "file": "web/src\\app\\use-cases\\page.tsx",
+    "lines": 71
+  },
+  {
+    "file": "web/src\\app\\resources\\page.tsx",
+    "lines": 67
+  },
+  {
+    "file": "web/src\\components\\site\\book-idea-validator-tool.tsx",
+    "lines": 65
+  },
+  {
+    "file": "web/src\\app\\pricing\\page.tsx",
+    "lines": 59
+  },
+  {
+    "file": "web/src\\app\\examples\\page.tsx",
+    "lines": 58
+  },
+  {
+    "file": "web/src\\app\\compare\\page.tsx",
+    "lines": 57
+  },
+  {
+    "file": "web/src\\components\\app\\account-screen.tsx",
+    "lines": 57
+  },
+  {
+    "file": "web/src\\components\\site\\affiliate-page.tsx",
+    "lines": 54
+  },
+  {
+    "file": "web/src\\lib\\marketing-data.ts",
+    "lines": 52
+  },
+  {
+    "file": "web/src\\components\\site\\home-visual-story-section.tsx",
+    "lines": 50
+  },
+  {
+    "file": "web/src\\components\\app\\affiliate-dashboard.tsx",
+    "lines": 46
+  },
+  {
+    "file": "web/src\\components\\site\\examples-showcase.tsx",
+    "lines": 46
+  },
+  {
+    "file": "web/src\\app\\page.tsx",
+    "lines": 42
+  },
+  {
+    "file": "web/src\\components\\app\\billing-screen.tsx",
+    "lines": 42
+  },
+  {
+    "file": "web/src\\components\\forms\\auth-form.tsx",
+    "lines": 41
+  },
+  {
+    "file": "web/src\\components\\funnel\\upgrade-screen.tsx",
+    "lines": 38
+  },
+  {
+    "file": "web/src\\components\\site\\pricing-comparison-table.tsx",
+    "lines": 37
+  },
+  {
+    "file": "web/src\\components\\site\\page-heroes.tsx",
+    "lines": 35
+  },
+  {
+    "file": "web/src\\components\\funnel\\continue-auth-screen.tsx",
+    "lines": 32
+  },
+  {
+    "file": "web/src\\components\\site\\home-workspace-showcase-section.tsx",
+    "lines": 30
+  },
+  {
+    "file": "web/src\\app\\blog\\page.tsx",
+    "lines": 29
+  },
+  {
+    "file": "web/src\\components\\app\\app-frame.tsx",
+    "lines": 27
+  },
+  {
+    "file": "web/src\\components\\forms\\reset-password-form.tsx",
+    "lines": 26
+  },
+  {
+    "file": "web/src\\components\\site\\home-product-overview-section.tsx",
+    "lines": 26
+  },
+  {
+    "file": "web/src\\components\\site\\site-footer.tsx",
+    "lines": 26
+  },
+  {
+    "file": "web/src\\components\\funnel\\guided-wizard-screen.tsx",
+    "lines": 25
+  },
+  {
+    "file": "web/src\\app\\blog\\[slug]\\page.tsx",
+    "lines": 21
+  },
+  {
+    "file": "web/src\\app\\tools\\page.tsx",
+    "lines": 21
+  },
+  {
+    "file": "web/src\\components\\funnel\\steps\\style-step.tsx",
+    "lines": 21
+  },
+  {
+    "file": "web/src\\components\\site\\premium-book-hero.tsx",
+    "lines": 20
+  },
+  {
+    "file": "web/src\\components\\ui\\features-11.tsx",
+    "lines": 20
+  },
+  {
+    "file": "web/src\\lib\\funnel-draft.ts",
+    "lines": 20
+  },
+  {
+    "file": "web/src\\app\\admin\\reports\\page.tsx",
+    "lines": 19
+  },
+  {
+    "file": "web/src\\components\\site\\contact-form.tsx",
+    "lines": 19
+  },
+  {
+    "file": "web/src\\components\\site\\interactive-marketing-tool.tsx",
+    "lines": 19
+  },
+  {
+    "file": "web/src\\components\\app\\wizard-screen.tsx",
+    "lines": 18
+  },
+  {
+    "file": "web/src\\app\\admin\\feature-flags\\page.tsx",
+    "lines": 15
+  },
+  {
+    "file": "web/src\\app\\api\\backend\\[...path]\\route.ts",
+    "lines": 15
+  },
+  {
+    "file": "web/src\\app\\refund-policy\\page.tsx",
+    "lines": 15
+  },
+  {
+    "file": "web/src\\components\\onboarding\\onboarding-checklist.tsx",
+    "lines": 15
+  },
+  {
+    "file": "web/src\\components\\site\\interactive-book-showcase.tsx",
+    "lines": 15
+  },
+  {
+    "file": "web/src\\app\\admin\\users\\[id]\\page.tsx",
+    "lines": 14
+  },
+  {
+    "file": "web/src\\components\\funnel\\steps\\topic-step.tsx",
+    "lines": 13
+  },
+  {
+    "file": "web/src\\app\\admin\\referrals\\page.tsx",
+    "lines": 12
+  },
+  {
+    "file": "web/src\\app\\start\\page.tsx",
+    "lines": 12
+  },
+  {
+    "file": "web/src\\app\\contact\\page.tsx",
+    "lines": 11
+  },
+  {
+    "file": "web/src\\components\\site\\example-reader.tsx",
+    "lines": 11
+  },
+  {
+    "file": "web/src\\components\\site\\home-testimonials-section.tsx",
+    "lines": 11
+  },
+  {
+    "file": "web/src\\components\\ui\\cta-4.tsx",
+    "lines": 11
+  },
+  {
+    "file": "web/src\\lib\\dashboard-api.ts",
+    "lines": 11
+  },
+  {
+    "file": "web/src\\components\\funnel\\steps\\outline-step.tsx",
+    "lines": 10
+  },
+  {
+    "file": "web/src\\components\\onboarding\\quick-start-guide.tsx",
+    "lines": 10
+  },
+  {
+    "file": "web/src\\components\\site\\mobile-nav.tsx",
+    "lines": 10
+  },
+  {
+    "file": "web/src\\app\\loading.tsx",
+    "lines": 9
+  },
+  {
+    "file": "web/src\\app\\privacy\\page.tsx",
+    "lines": 9
+  },
+  {
+    "file": "web/src\\app\\terms\\page.tsx",
+    "lines": 9
+  },
+  {
+    "file": "web/src\\components\\app\\referral-share-dialog.tsx",
+    "lines": 9
+  },
+  {
+    "file": "web/src\\components\\funnel\\hooks\\use-funnel-draft.ts",
+    "lines": 9
+  },
+  {
+    "file": "web/src\\components\\site\\start-option-cards.tsx",
+    "lines": 9
+  },
+  {
+    "file": "web/src\\app\\admin\\users\\page.tsx",
+    "lines": 8
+  },
+  {
+    "file": "web/src\\app\\login\\page.tsx",
+    "lines": 8
+  },
+  {
+    "file": "web/src\\components\\funnel\\generate-auth-gate-dialog.tsx",
+    "lines": 8
+  },
+  {
+    "file": "web/src\\components\\funnel\\generate-loading-screen.tsx",
+    "lines": 8
+  },
+  {
+    "file": "web/src\\components\\funnel\\steps\\title-step.tsx",
+    "lines": 8
+  },
+  {
+    "file": "web/src\\components\\ui\\features-9.tsx",
+    "lines": 8
+  },
+  {
+    "file": "web/src\\auth.ts",
+    "lines": 7
+  },
+  {
+    "file": "web/src\\app\\admin\\books\\page.tsx",
+    "lines": 7
+  },
+  {
+    "file": "web/src\\app\\admin\\books\\[slug]\\page.tsx",
+    "lines": 7
+  },
+  {
+    "file": "web/src\\app\\admin\\settings\\page.tsx",
+    "lines": 7
+  },
+  {
+    "file": "web/src\\app\\signup\\page.tsx",
+    "lines": 7
+  },
+  {
+    "file": "web/src\\components\\funnel\\funnel-shell.tsx",
+    "lines": 7
+  },
+  {
+    "file": "web/src\\components\\funnel\\steps\\generate-step.tsx",
+    "lines": 7
+  },
+  {
+    "file": "web/src\\components\\site\\home-pricing-testimonials.tsx",
+    "lines": 7
+  },
+  {
+    "file": "web/src\\components\\site\\site-header.tsx",
+    "lines": 7
+  },
+  {
+    "file": "web/src\\app\\admin\\page.tsx",
+    "lines": 6
+  },
+  {
+    "file": "web/src\\app\\admin\\audit\\page.tsx",
+    "lines": 6
+  },
+  {
+    "file": "web/src\\app\\api\\stripe\\webhook\\route.ts",
+    "lines": 6
+  },
+  {
+    "file": "web/src\\components\\app\\referral-banner.tsx",
+    "lines": 6
+  },
+  {
+    "file": "web/src\\components\\funnel\\shared\\summary-cards.tsx",
+    "lines": 6
+  },
+  {
+    "file": "web/src\\components\\site\\lead-magnet-signup-card.tsx",
+    "lines": 6
+  },
+  {
+    "file": "web/src\\lib\\book-idea-validator.ts",
+    "lines": 6
+  },
+  {
+    "file": "web/src\\app\\layout.tsx",
+    "lines": 5
+  },
+  {
+    "file": "web/src\\app\\admin\\billing\\page.tsx",
+    "lines": 5
+  },
+  {
+    "file": "web/src\\app\\admin\\subscriptions\\page.tsx",
+    "lines": 5
+  },
+  {
+    "file": "web/src\\app\\api\\account\\profile\\route.ts",
+    "lines": 5
+  },
+  {
+    "file": "web/src\\app\\api\\stripe\\checkout\\route.ts",
+    "lines": 5
+  },
+  {
+    "file": "web/src\\app\\api\\tools\\[tool]\\report\\route.ts",
+    "lines": 5
+  },
+  {
+    "file": "web/src\\components\\app\\backend-unavailable-state.tsx",
+    "lines": 5
+  },
+  {
+    "file": "web/src\\components\\site\\home-floating-icons-hero.tsx",
+    "lines": 5
+  },
+  {
+    "file": "web/src\\lib\\admin\\queries.ts",
+    "lines": 5
+  },
+  {
+    "file": "web/src\\app\\global-error.tsx",
+    "lines": 4
+  },
+  {
+    "file": "web/src\\app\\not-found.tsx",
+    "lines": 4
+  },
+  {
+    "file": "web/src\\app\\admin\\moderation\\page.tsx",
+    "lines": 4
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\users\\[id]\\verification\\route.ts",
+    "lines": 4
+  },
+  {
+    "file": "web/src\\app\\api\\auth\\verify-email\\resend\\route.ts",
+    "lines": 4
+  },
+  {
+    "file": "web/src\\app\\examples\\[slug]\\page.tsx",
+    "lines": 4
+  },
+  {
+    "file": "web/src\\components\\admin\\admin-shell.tsx",
+    "lines": 4
+  },
+  {
+    "file": "web/src\\components\\site\\home-how-it-works-section.tsx",
+    "lines": 4
+  },
+  {
+    "file": "web/src\\components\\site\\pricing-creative-section.tsx",
+    "lines": 4
+  },
+  {
+    "file": "web/src\\app\\error.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\app\\admin\\analytics\\page.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\app\\admin\\jobs\\page.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\billing\\invoices\\[id]\\route.ts",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\users\\[id]\\plan\\route.ts",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\app\\api\\books\\[slug]\\cover-variant\\select\\route.ts",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\app\\api\\referral\\payout-request\\route.ts",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\app\\api\\resources\\lead-magnet\\route.ts",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\app\\tools\\book-idea-validator\\page.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\components\\admin\\filter-bar.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\components\\admin\\pagination.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\components\\funnel\\shared\\live-book-card.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\components\\site\\home-blog-preview-section.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\components\\site\\home-book-gallery-section.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\components\\site\\home-logo-cloud-section.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\components\\site\\marketing-cta-section.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\components\\site\\start-entry-actions.tsx",
+    "lines": 3
+  },
+  {
+    "file": "web/src\\app\\affiliate\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\users\\[id]\\role\\route.ts",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\api\\auth\\password-reset\\confirm\\route.ts",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\api\\auth\\password-reset\\request\\route.ts",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\api\\auth\\register\\route.ts",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\api\\contact\\route.ts",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\api\\events\\route.ts",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\api\\tools\\book-idea-validator\\report\\route.ts",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\app\\library\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\app\\new\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\app\\new\\generate\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\app\\new\\outline\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\app\\new\\title\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\app\\settings\\profile\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\login\\continue\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\register\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\reset-password\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\start\\generate\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\start\\outline\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\start\\title\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\tools\\[slug]\\page.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\components\\admin\\bulk-actions.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\components\\funnel\\hooks\\use-title-ai.ts",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\components\\site\\blog-toc.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\components\\ui\\cybernetic-bento-grid.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\lib\\examples-data.ts",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\lib\\auth\\data.ts",
+    "lines": 2
+  },
+  {
+    "file": "web/src\\app\\account\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\books\\[slug]\\route.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\books\\[slug]\\retry\\route.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\feature-flags\\[key]\\route.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\moderation\\[id]\\approve\\route.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\settings\\route.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\subscriptions\\[id]\\route.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\users\\[id]\\route.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\admin\\users\\[id]\\notes\\route.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\examples\\assets\\[slug]\\[...assetPath]\\route.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\og\\route.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\api\\stripe\\checkout\\confirm\\route.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\app\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\app\\affiliate\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\app\\book\\[slug]\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\app\\book\\[slug]\\preview\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\app\\book\\[slug]\\upgrade\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\app\\book\\[slug]\\workspace\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\app\\new\\style\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\app\\new\\topic\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\app\\settings\\billing\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\billing\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\signup\\continue\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\start\\style\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\app\\start\\topic\\page.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\components\\theme-toggle.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\components\\admin\\activity-feed.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\components\\app\\command-palette.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\components\\app\\cookie-consent.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\components\\books\\book-mockup.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\components\\forms\\login-logo.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\components\\ui\\button.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\components\\ui\\circular-gallery.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\components\\ui\\features-4.tsx",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\lib\\analytics.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\lib\\preview-auth.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\lib\\auth\\constants.ts",
+    "lines": 1
+  },
+  {
+    "file": "web/src\\lib\\auth\\mailer.ts",
+    "lines": 1
+  }
+]

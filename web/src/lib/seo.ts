@@ -76,13 +76,13 @@ function normalizeSiteUrl(raw?: string) {
 }
 
 export const siteConfig = {
-  name: "Kitap Olusturucu",
-  alternateName: "Yapay Zeka ile Kitap Yazma Araci",
+  name: "Book Generator",
+  alternateName: "AI Book Writing Tool",
   description:
-    "Yapay zeka destekli kitap olusturma platformu. Fikrinizi 5 soruda yayina hazir kitaba, kapaga ve EPUB/PDF ciktisina donusturun.",
+    "AI-powered book generation platform. Turn your idea into a publication-ready book, cover, and EPUB/PDF output in 5 questions.",
   siteUrl: normalizeSiteUrl(resolveRawSiteUrl()),
-  locale: "tr_TR",
-  defaultTitle: "Kitap Olusturucu - Yapay Zeka ile Kitap Yaz",
+  locale: "en_US",
+  defaultTitle: "Book Generator - Write Books with AI",
   defaultOgImage: "/logo-tight.png",
 };
 
@@ -110,7 +110,7 @@ export function buildPageMetadata({
     alternates: {
       canonical,
       languages: {
-        "tr-TR": canonical,
+        "en-US": canonical,
       },
     },
     robots: {
@@ -136,7 +136,7 @@ export function buildPageMetadata({
           url: ogImage,
           width: 1200,
           height: 630,
-          alt: `${siteConfig.name} kapak görseli`,
+          alt: `${siteConfig.name} cover image`,
         },
       ],
     },
@@ -148,7 +148,7 @@ export function buildPageMetadata({
     },
     other: {
       "ai-content-type": "saas-product",
-      "ai-locale": "tr-TR",
+      "ai-locale": "en-US",
       "ai-topic": "ai-book-generation",
       "ai-product-name": siteConfig.name,
     },

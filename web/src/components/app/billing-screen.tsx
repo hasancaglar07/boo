@@ -1,7 +1,20 @@
-"use client";
+﻿"use client";
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { Check, Shield, Zap, Star, Sparkles, Lock, ArrowRight, Clock } from "lucide-react";
+import {
+  Check,
+  Shield,
+  Zap,
+  Star,
+  Sparkles,
+  Lock,
+  ArrowRight,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  Crown,
+  TrendingUp,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -24,7 +37,12 @@ import { plans, premiumPlan } from "@/lib/marketing-data";
 import { getPlan, syncPreviewAuthState, type PreviewPlan, type PreviewUsage } from "@/lib/preview-auth";
 import { cn, formatDate } from "@/lib/utils";
 
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+
 type CheckoutNoticeTone = "info" | "success" | "warning";
+type BillingPeriod = "monthly" | "annual";
 
 type CheckoutConfirmPayload = {
   ok?: boolean;
@@ -35,13 +53,38 @@ type CheckoutConfirmPayload = {
   error?: string;
 };
 
+/* ------------------------------------------------------------------ */
+/*  Constants                                                          */
+/* ------------------------------------------------------------------ */
+
 const KDP_GUARANTEE_CLAIM = "KDP Uyumlu Format";
 const REFUND_GUARANTEE_CLAIM = "14 Gün Para İade Garantisi";
+
+const ANNUAL_DISCOUNT = 0.2; // 20% discount for annual
+
+const PLAN_HIGHLIGHT_ID = "creator"; // "En Popüler" badge gösterilecek plan
+
+const COMPARISON_FEATURES = [
+  { label: "Kitap Üretimi", starter: "10 kitap/ay", creator: "30 kitap/ay", pro: "80 kitap/ay" },
+  { label: "AI Kapak Hakkı", starter: "20 kapak/ay", creator: "60 kapak/ay", pro: "200 kapak/ay" },
+  { label: "AI Bölüm Üretimi", starter: true, creator: true, pro: true },
+  { label: "Çıkış Formatları", starter: "EPUB + PDF", creator: "EPUB + PDF + HTML", pro: "EPUB + PDF + HTML + MD" },
+  { label: "Araştırma Merkezi", starter: false, creator: true, pro: true },
+  { label: "KDP Pazar Analizi", starter: false, creator: true, pro: true },
+  { label: "Çok Dilli Üretim", starter: true, creator: true, pro: true },
+  { label: "API & Otomasyon", starter: false, creator: false, pro: true },
+  { label: "Öncelikli Destek", starter: false, creator: true, pro: true },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
 
 export function BillingScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  /* state ---------------------------------------------------------- */
   const [books, setBooks] = useState<Book[]>([]);
   const [planId, setPlanId] = useState<PreviewPlan>(() => getPlan());
   const [usage, setUsage] = useState<PreviewUsage | null>(null);
@@ -51,17 +94,21 @@ export function BillingScreen() {
   const [checkoutNotice, setCheckoutNotice] = useState("");
   const [checkoutNoticeTone, setCheckoutNoticeTone] = useState<CheckoutNoticeTone>("info");
   const [submitting, setSubmitting] = useState(false);
-  const [showComparison, setShowComparison] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
+  const [comparisonOpen, setComparisonOpen] = useState(true);
 
+  /* query params --------------------------------------------------- */
   const returnBook = searchParams.get("book") || "";
   const selectedPlanFromQuery = searchParams.get("plan");
   const autoStartCheckout = searchParams.get("autostart") === "1";
   const checkoutStatus = searchParams.get("checkout");
   const checkoutSessionId = searchParams.get("session_id") || "";
 
+  /* refs ----------------------------------------------------------- */
   const autoStartHandledRef = useRef(false);
   const checkoutHandledRef = useRef("");
 
+  /* derived -------------------------------------------------------- */
   const availablePlans = useMemo(
     () => (returnBook ? [premiumPlan, ...plans] : plans),
     [returnBook],
@@ -69,6 +116,7 @@ export function BillingScreen() {
   const pendingPlan = availablePlans.find((plan) => plan.id === pendingPlanId);
   const activePlan = availablePlans.find((plan) => plan.id === planId);
 
+  /* hooks ---------------------------------------------------------- */
   const refreshBooks = useCallback(async () => {
     try {
       const loaded = await loadBooks();
@@ -136,6 +184,8 @@ export function BillingScreen() {
     window.location.assign(payload.url);
   }, [pendingPlanId, returnBook]);
 
+  /* effects -------------------------------------------------------- */
+
   useEffect(() => {
     void refreshBooks();
     void refreshAuthState();
@@ -201,32 +251,28 @@ export function BillingScreen() {
         ? ((await response.json().catch(() => null)) as CheckoutConfirmPayload | null)
         : null;
 
-      if (response?.ok && payload?.ok) {
-        if (payload.planId) {
-          setPlanId(payload.planId as PreviewPlan);
-        }
-        if (payload.usage) {
-          setUsage(payload.usage);
-        } else {
-          await refreshAuthState();
-        }
-
-        await refreshBooks();
-        setCheckoutNotice("Ödeme tamamlandı. Planın ve kullanım kotan güncellendi.");
+      if (payload?.alreadyFulfilled) {
+        setCheckoutNotice("Bu plan zaten aktif.");
         setCheckoutNoticeTone("success");
-        trackEvent("checkout_completed", {
-          source: "billing_return",
-          already_fulfilled: Boolean(payload.alreadyFulfilled),
-          plan: payload.planId || null,
-        });
-      } else {
-        setCheckoutNotice(payload?.error || "Ödeme doğrulanamadı. Lütfen tekrar dene.");
-        setCheckoutNoticeTone("warning");
+        setSubmitting(false);
+        await refreshAuthState();
+        clearCheckoutQueryParams();
+        return;
       }
 
-      setPendingPlanId(null);
+      if (!payload?.ok) {
+        setCheckoutNotice(payload?.error || "Ödeme doğrulanamadı.");
+        setCheckoutNoticeTone("warning");
+        setSubmitting(false);
+        clearCheckoutQueryParams();
+        return;
+      }
+
+      trackEvent("checkout_completed", { plan: payload.planId || null });
+      setCheckoutNotice("Planın başarıyla aktifleştirildi!");
+      setCheckoutNoticeTone("success");
       setSubmitting(false);
-      autoStartHandledRef.current = false;
+      await refreshAuthState();
       clearCheckoutQueryParams();
     })();
   }, [
@@ -234,286 +280,279 @@ export function BillingScreen() {
     checkoutStatus,
     clearCheckoutQueryParams,
     refreshAuthState,
-    refreshBooks,
+    searchParams,
   ]);
+
+  /* helpers -------------------------------------------------------- */
+
+  const handleSelectPlan = useCallback(
+    (id: string) => {
+      setCheckoutError("");
+      setPendingPlanId(id as PreviewPlan);
+      trackEvent("pricing_cta_click", { plan: id, period: billingPeriod });
+    },
+    [billingPeriod],
+  );
+
+  const handleTogglePeriod = useCallback((period: BillingPeriod) => {
+    setBillingPeriod(period);
+    trackEvent("pricing_cta_click", { period });
+  }, []);
+
+  /* ---- render ---- */
+  if (backendUnavailable) {
+    return (
+      <AppFrame current="billing" title="Planlar" books={[]}>
+        <BackendUnavailableState />
+      </AppFrame>
+    );
+  }
+
+  const usagePercent =
+    usage && typeof usage.limit === "number" && usage.limit > 0
+      ? Math.min(100, Math.round((usage.usedBooks / usage.limit) * 100))
+      : null;
 
   return (
     <AppFrame current="billing" title="Planlar" books={books}>
-      {backendUnavailable ? (
-        <div className="mx-auto mb-6 max-w-6xl">
-          <BackendUnavailableState onRetry={() => void refreshBooks()} />
-        </div>
-      ) : null}
+      <div className="mx-auto max-w-5xl space-y-8 px-4 py-6 md:py-10">
 
-      <div className="mx-auto max-w-6xl">
-        {/* Hero Section */}
-        <div className="mb-12 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm">
-            <Sparkles className="size-4 text-primary" />
-            <span className="font-medium text-primary">Kitap Üretiminin Geleceği</span>
-          </div>
-
-          <h1 className="editorial-title mb-4">
-            Kitap Ustası<span className="text-primary">.</span>
-          </h1>
-
-          <p className="editorial-copy mx-auto mb-8">
-            AI destekli kitap üretimi ile fikirlerini saniyeler içinde yayınlanmaya hazır kitaplara dönüştür.
-            Sevdiğin yazma özgürlüğünü, modern AI gücüyle birleştir.
-          </p>
-
-          {/* Trust Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-            <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card/80 px-4 py-2 shadow-sm">
-              <Shield className="size-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-muted-foreground">{KDP_GUARANTEE_CLAIM}</span>
+        {/* ── Compact Hero ────────────────────────────────────────── */}
+        <div className="billing-animate-in-1">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="editorial-eyebrow mb-1">Faturalama</p>
+              <h1 className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
+                Planını Yönet
+              </h1>
             </div>
-            <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card/80 px-4 py-2 shadow-sm">
-              <Lock className="size-4 text-primary" />
-              <span className="text-muted-foreground">{REFUND_GUARANTEE_CLAIM}</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card/80 px-4 py-2 shadow-sm">
-              <Zap className="size-4 text-amber-500" />
-              <span className="text-muted-foreground">Anında Teslimat</span>
-            </div>
+            {activePlan && (
+              <Badge
+                className="inline-flex w-fit gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-sm text-primary"
+              >
+                <Crown className="size-3.5" />
+                {activePlan.name}
+              </Badge>
+            )}
           </div>
         </div>
 
-        {/* Current Usage Card */}
-        {usage ? (
-          <div className="mb-10 billing-animate-in-1">
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-card">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="mb-3 flex items-center gap-2">
-                      <div className="rounded-lg bg-primary/10 p-2">
-                        <Star className="size-5 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-semibold">
-                        {availablePlans.find((item) => item.id === planId)?.name || planId} Planı
-                      </h3>
-                      <Badge className="ml-2 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
-                        Aktif
-                      </Badge>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <div className="text-sm text-muted-foreground">Kalan Kitap Hakkı</div>
-                        <div className="text-2xl font-bold tabular-nums text-foreground">
-                          {usage.limit === null ? (
-                            "Sınırsız"
-                          ) : (
-                            <>
-                              <span className="text-primary">{usage.remainingBooks}</span>
-                              <span className="text-muted-foreground">/{usage.limit}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      {usage.resetAt ? (
-                        <div>
-                          <div className="text-sm text-muted-foreground">Yenilenme Tarihi</div>
-                          <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                            <Clock className="size-4 text-primary" />
-                            {formatDate(usage.resetAt)}
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
+        {/* ── Checkout Notice ─────────────────────────────────────── */}
+        {checkoutNotice && (
+          <div
+            className={cn(
+              "billing-animate-in-2 rounded-xl border p-4 text-sm",
+              checkoutNoticeTone === "success" &&
+                "border-emerald-500/20 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300",
+              checkoutNoticeTone === "warning" &&
+                "border-amber-500/20 bg-amber-500/5 text-amber-700 dark:text-amber-300",
+              checkoutNoticeTone === "info" &&
+                "border-primary/20 bg-primary/5 text-primary",
+            )}
+          >
+            {checkoutNotice}
+          </div>
+        )}
+
+        {/* ── Return-book notice ─────────────────────────────────── */}
+        {returnBook && (
+          <div className="billing-animate-in-2 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+            <div className="flex items-center gap-2">
+              <Sparkles className="size-4 text-primary" />
+              <span>
+                <strong>{returnBook}</strong> kitabın için premium erişim alıyorsun.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* ── Usage Card with Progress ───────────────────────────── */}
+        {usage && (
+          <Card className="billing-animate-in-3 border-border/60 bg-card/80">
+            <CardContent className="p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="size-4 text-primary" />
+                  <span className="text-sm font-medium">Kullanımın</span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        ) : null}
+                <span className="text-sm text-muted-foreground">
+                  {usage.usedBooks} / {usage.limit === null ? "∞" : usage.limit}{" "}
+                  {usage.limit !== null && "kitap"}
+                </span>
+              </div>
 
-        {/* Checkout Notice */}
-        {checkoutNotice ? (
-          <div className="mb-8 billing-animate-in-2">
-            <Card
+              {/* progress bar */}
+              {usagePercent !== null && (
+                <div className="mb-3 h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-700 ease-out",
+                      usagePercent >= 90
+                        ? "bg-destructive"
+                        : usagePercent >= 60
+                          ? "bg-amber-500"
+                          : "bg-primary",
+                    )}
+                    style={{ width: `${usagePercent}%` }}
+                  />
+                </div>
+              )}
+
+              {usagePercent !== null && usagePercent >= 80 && (
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    {usagePercent >= 90
+                      ? "Limitine yaklaştın! Planını yükselt."
+                      : "Planını yükselterek daha fazla kitap üretebilirsin."}
+                  </p>
+                  <button
+                    type="button"
+                    className="inline-flex h-auto items-center p-0 text-xs text-primary hover:underline"
+                    onClick={() => {
+                      const el = document.getElementById("pricing-section");
+                      el?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    Planları Gör
+                    <ArrowRight className="ml-1 size-3" />
+                  </button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Pricing Section ─────────────────────────────────── */}
+        <div id="pricing-section" className="billing-animate-in-4">
+          <div className="mb-6 text-center">
+            <h2 className="font-serif text-2xl font-semibold tracking-tight">
+              Senin İçin En İyi Planı Seç
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Tüm planlar KDP uyumlu formatta. İstediğin zaman iptal et.
+            </p>
+          </div>
+
+          {/* Annual / Monthly Toggle */}
+          <div className="mb-8 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => handleTogglePeriod("monthly")}
               className={cn(
-                "border-2",
-                checkoutNoticeTone === "success" && "border-emerald-500/30 bg-emerald-500/5",
-                checkoutNoticeTone === "warning" && "border-amber-500/30 bg-amber-500/5",
-                checkoutNoticeTone === "info" && "border-border/60 bg-card/80",
+                "rounded-lg px-4 py-2 text-sm font-medium transition-all",
+                billingPeriod === "monthly"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <CardContent className="flex items-center gap-3 p-5">
-                {checkoutNoticeTone === "success" && (
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                    <Check className="size-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                )}
-                {checkoutNoticeTone === "warning" && (
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
-                    <Clock className="size-5 text-amber-600 dark:text-amber-400" />
-                  </div>
-                )}
-                {checkoutNoticeTone === "info" && (
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                    <Clock className="size-5 text-primary animate-spin" />
-                  </div>
-                )}
-                <p className={cn(
-                  "text-base",
-                  checkoutNoticeTone === "success" && "text-emerald-700 dark:text-emerald-300",
-                  checkoutNoticeTone === "warning" && "text-amber-700 dark:text-amber-300",
-                  checkoutNoticeTone === "info" && "text-muted-foreground",
-                )}>
-                  {checkoutNotice}
-                </p>
-              </CardContent>
-            </Card>
+              Aylık
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTogglePeriod("annual")}
+              className={cn(
+                "relative rounded-lg px-4 py-2 text-sm font-medium transition-all",
+                billingPeriod === "annual"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Yıllık
+              <span className="ml-1.5 inline-flex rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                %20 İndirim
+              </span>
+            </button>
           </div>
-        ) : null}
 
-        {/* Return Book Notice */}
-        {returnBook ? (
-          <div className="mb-8 billing-animate-in-3">
-            <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-card">
-              <CardContent className="flex items-center gap-4 p-5">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/20">
-                  <Sparkles className="size-5 text-primary" />
-                </div>
-                <div>
-                  <div className="font-semibold text-foreground">
-                    Ödeme tamamlandığında tam erişim açılacak
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    &quot;{returnBook}&quot; kitabın için tüm bölümler ve dışa aktarma seçenekleri kullanılabilir olacak.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ) : null}
-
-        {/* Pricing Cards */}
-        <div className="mb-12">
-          <div className="grid gap-6 md:grid-cols-3">
-            {availablePlans.map((plan, index) => {
-              const isActive = plan.id === planId;
-              const isPopular = plan.badge !== null;
-              const isPending = plan.id === pendingPlanId;
+          {/* Plan Cards Grid */}
+          <div className="grid gap-5 md:grid-cols-3">
+            {availablePlans.map((plan) => {
+              const isHighlight = plan.id === PLAN_HIGHLIGHT_ID;
+              const isActive = planId === plan.id;
+              const isPopular = plan.id === "creator";
+              const displayPrice =
+                billingPeriod === "annual" && "annualMonthlyPrice" in plan && plan.annualMonthlyPrice
+                  ? plan.annualMonthlyPrice
+                  : plan.price;
 
               return (
                 <Card
                   key={plan.id}
                   className={cn(
                     "group relative flex flex-col transition-all duration-300",
-                    "border-border/60 bg-card/80",
-                    "hover:-translate-y-1 hover:shadow-lg",
-                    isPopular && "billing-card-popular",
-                    isActive
-                      ? "border-primary/50 shadow-xl shadow-primary/10 ring-2 ring-primary/20"
-                      : "hover:border-primary/30",
-                    isPending && "ring-2 ring-primary/40",
-                    `billing-animate-in billing-animate-in-${(index + 1) % 5}`,
+                    isHighlight
+                      ? "border-primary/50 bg-card shadow-lg shadow-primary/10 ring-2 ring-primary/20 md:scale-105 md:z-10"
+                      : "border-border/60 bg-card/80 hover:border-primary/30 hover:shadow-md",
+                    isActive && "ring-2 ring-emerald-500/30",
                   )}
                 >
-                  {/* Popular Badge */}
-                  {isPopular && !isActive && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 billing-badge-bounce">
-                      <span className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold tracking-wide text-primary-foreground shadow-lg">
-                        {plan.badge}
+                  {/* "En Popüler" Badge */}
+                  {isPopular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md">
+                        <Star className="size-3" />
+                        En Popüler
                       </span>
                     </div>
                   )}
 
-                  {/* Active Badge */}
-                  {isActive && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <span className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-bold tracking-wide text-white shadow-lg">
-                        Aktif Planın
-                      </span>
-                    </div>
-                  )}
-
-                  <CardContent className="flex flex-1 flex-col p-7">
-                    {/* Plan Name & Label */}
-                    <div className="mb-6">
-                      <Badge
-                        className={cn(
-                          "mb-3 font-medium",
-                          isPopular ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        {plan.label}
-                      </Badge>
-                      <h3 className="font-serif text-2xl font-bold text-foreground">
-                        {plan.name}
-                      </h3>
-                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                        {plan.description}
-                      </p>
+                  <CardContent className="flex flex-1 flex-col p-6">
+                    {/* Plan Header */}
+                    <div className="mb-4">
+                      <h3 className="font-serif text-lg font-semibold">{plan.name}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">{plan.description}</p>
                     </div>
 
                     {/* Price */}
-                    <div className="mb-6">
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-6xl font-bold tabular-nums text-foreground tracking-tight">
-                          {plan.price}
+                    <div className="mb-5">
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-serif text-3xl font-bold tracking-tight">
+                          {displayPrice}
                         </span>
-                        <span className="text-lg text-muted-foreground">{plan.interval}</span>
+                        {plan.interval && (
+                          <span className="text-sm text-muted-foreground">
+                            /{billingPeriod === "annual" ? "ay (yıllık)" : plan.interval}
+                          </span>
+                        )}
                       </div>
-                      {plan.perUnit && (
-                        <div className="mt-2 text-sm text-muted-foreground">
-                          <span className="font-semibold text-primary">{plan.perUnit}</span>
-                        </div>
-                      )}
-                      {"annualMonthlyPrice" in plan && plan.annualMonthlyPrice && (
-                        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                          <Zap className="size-3" />
-                          Yıllık: {plan.annualMonthlyPrice}/ay
-                        </div>
-                      )}
+                      {billingPeriod === "annual" &&
+                        "annualMonthlyPrice" in plan &&
+                        plan.annualMonthlyPrice && (
+                          <p className="mt-1 text-xs text-muted-foreground line-through">
+                            {plan.price}/{plan.interval}
+                          </p>
+                        )}
                     </div>
 
                     {/* Features */}
-                    <ul className="mb-8 flex-1 space-y-3">
-                      {plan.features.map((feature) => (
-                        <li
-                          key={feature}
-                          className="flex items-start gap-3 text-sm leading-relaxed text-foreground"
-                        >
-                          <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                            <Check className="size-3.5 text-primary" />
-                          </div>
-                          <span>{feature}</span>
+                    <ul className="mb-6 flex-1 space-y-2.5">
+                      {plan.features.slice(0, 6).map((feat, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <Check className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                          <span>{feat}</span>
                         </li>
                       ))}
                     </ul>
 
                     {/* CTA Button */}
-                    <Button
-                      className={cn(
-                        "relative overflow-hidden w-full min-h-[52px] text-base font-semibold transition-all duration-300",
-                        isActive && "bg-muted hover:bg-muted/80",
-                      )}
-                      variant={isActive ? "secondary" : "primary"}
-                      size="lg"
-                      disabled={isActive}
-                      onClick={() => {
-                        if (isActive) return;
-                        setCheckoutError("");
-                        setPendingPlanId(plan.id as PreviewPlan);
-                      }}
-                    >
-                      {isActive ? (
-                        <>
-                          <Check className="mr-2 size-5" />
-                          Şu anki planın
-                        </>
-                      ) : isPending ? (
-                        "Seçildi..."
-                      ) : (
-                        <>
-                          {plan.name} Planını Seç
-                          <ArrowRight className="ml-2 size-5 transition-transform group-hover:translate-x-1" />
-                        </>
-                      )}
-                    </Button>
+                    {isActive ? (
+                      <Button variant="outline" className="w-full" disabled>
+                        <Check className="mr-2 size-4" />
+                        Aktif Planın
+                      </Button>
+                    ) : (
+                      <Button
+                        variant={isHighlight ? "primary" : "secondary"}
+                        className={cn(
+                          "w-full transition-all duration-200",
+                          isHighlight && "shadow-md hover:shadow-lg",
+                        )}
+                        onClick={() => handleSelectPlan(plan.id)}
+                      >
+                        {planId === "premium" ? "Yükselt" : "Planı Seç"}
+                        <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-0.5" />
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -521,181 +560,101 @@ export function BillingScreen() {
           </div>
         </div>
 
-        {/* Comparison Toggle */}
-        <div className="mb-8 text-center">
+        {/* ── Comparison Table ─────────────────────────────────── */}
+        <div className="billing-animate-in-5 mt-10">
           <button
-            onClick={() => setShowComparison(!showComparison)}
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+            type="button"
+            className="flex w-full items-center justify-between rounded-xl border border-border/60 bg-card/80 p-4 text-left transition-all hover:bg-card"
+            onClick={() => setComparisonOpen(!comparisonOpen)}
           >
-            {showComparison ? "Gizle" : "Tüm Planları Karşılaştır"}
-            <ArrowRight className={cn("size-4 transition-transform", showComparison ? "rotate-90" : "")} />
+            <div className="flex items-center gap-2">
+              <Zap className="size-4 text-primary" />
+              <span className="font-serif text-lg font-semibold">Plan Karşılaştırma</span>
+            </div>
+            {comparisonOpen ? (
+              <ChevronUp className="size-5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="size-5 text-muted-foreground" />
+            )}
           </button>
-        </div>
 
-        {/* Feature Comparison */}
-        {showComparison && (
-          <div className="mb-12 billing-animate-in-5 overflow-hidden rounded-2xl border border-border/60 bg-card/80">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[600px]">
+          {comparisonOpen && (
+            <div className="mt-2 overflow-x-auto rounded-xl border border-border/60 bg-card/80">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border/60">
-                    <th className="p-4 text-left font-semibold text-foreground">
-                      Özellikler
-                    </th>
-                    {availablePlans.map((plan) => (
-                      <th
-                        key={plan.id}
-                        className={cn(
-                          "p-4 text-center font-semibold",
-                          plan.id === planId && "bg-primary/5",
-                        )}
-                      >
-                        {plan.name}
-                      </th>
-                    ))}
+                  <tr className="border-b border-border/60 bg-muted/30">
+                    <th className="p-3 text-left font-medium text-muted-foreground">Özellik</th>
+                    <th className="p-3 text-center font-medium">Temel</th>
+                    <th className="p-3 text-center font-medium text-primary">Yazar</th>
+                    <th className="p-3 text-center font-medium">Stüdyo</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    "Aylık Kitap Üretimi",
-                    "AI Kapak Üretimi",
-                    "EPUB + PDF Çıktısı",
-                    "Çok Dilli Desteği",
-                    "Sihirbaz ile Hızlı Taslak",
-                    "Bölüm Editörü",
-                    "Kitap Çalışma Alanı",
-                    "Standart Email Desteği",
-                  ].map((feature, idx) => (
-                    <tr
-                      key={feature}
-                      className={cn(
-                        "border-b border-border/40 transition-colors",
-                        idx % 2 === 0 && "bg-muted/20",
-                        "hover:bg-primary/5",
-                      )}
-                    >
-                      <td className="p-4 text-sm text-foreground">{feature}</td>
-                      {availablePlans.map((plan) => {
-                        const hasFeature = plan.features.some((f) => f.includes(feature.split(" ")[0]));
-                        return (
-                          <td
-                            key={plan.id}
-                            className={cn(
-                              "p-4 text-center transition-colors",
-                              plan.id === planId && "bg-primary/5",
-                            )}
-                          >
-                            {hasFeature ? (
-                              <div className="flex justify-center">
-                                <Check className="size-5 text-emerald-600 dark:text-emerald-400" />
-                              </div>
-                            ) : (
-                              <div className="text-muted-foreground">—</div>
-                            )}
-                          </td>
-                        );
-                      })}
+                  {COMPARISON_FEATURES.map((row, i) => (
+                    <tr key={i} className="border-b border-border/40 last:border-0">
+                      <td className="p-3 text-muted-foreground">{row.label}</td>
+                      <td className="p-3 text-center">
+                        {typeof row.starter === "boolean" ? (
+                          row.starter ? (
+                            <Check className="mx-auto size-4 text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <span className="text-muted-foreground/40">—</span>
+                          )
+                        ) : (
+                          row.starter
+                        )}
+                      </td>
+                      <td className="p-3 text-center font-medium">
+                        {typeof row.creator === "boolean" ? (
+                          row.creator ? (
+                            <Check className="mx-auto size-4 text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <span className="text-muted-foreground/40">—</span>
+                          )
+                        ) : (
+                          row.creator
+                        )}
+                      </td>
+                      <td className="p-3 text-center">
+                        {typeof row.pro === "boolean" ? (
+                          row.pro ? (
+                            <Check className="mx-auto size-4 text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <span className="text-muted-foreground/40">—</span>
+                          )
+                        ) : (
+                          row.pro
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Trust & FAQ Section */}
-        <div className="mb-12 billing-animate-in-5">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card className="border-border/60 bg-card/80">
-              <CardContent className="p-6">
-                <div className="mb-4 flex items-center gap-3">
-                  <Shield className="size-8 text-primary" />
-                  <h3 className="font-serif text-xl font-semibold text-foreground">
-                    Tam Güvendesin
-                  </h3>
-                </div>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <span>14 gün para iade garantisi - memnun kalmazsan, tam para iadesi</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <span>Gizli ücret yok - gördüğün fiyat, ödeyeceğin fiyat</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <span>Abonelikleri istediğin zaman iptal et, sorunsuz</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <span>KDP uyumlu formatlar - Amazon&apos;a yüklemeye hazır</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/60 bg-card/80">
-              <CardContent className="p-6">
-                <div className="mb-4 flex items-center gap-3">
-                  <Zap className="size-8 text-primary" />
-                  <h3 className="font-serif text-xl font-semibold text-foreground">
-                    Neden Biz?
-                  </h3>
-                </div>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <span>Profesyonel yazarlar tarafından tasarlandı</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <span>AI teknolojisi ile insan kalitesinde içerik</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <span>Sürekli iyileştirilen özellikler</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <span>Dedike müşteri desteği</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+        {/* ── Trust Strip (simplified) ─────────────────────────── */}
+        <div className="billing-animate-in-6 mt-10">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Shield className="size-4 text-emerald-600 dark:text-emerald-400" />
+              <span>{REFUND_GUARANTEE_CLAIM}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Lock className="size-4 text-primary" />
+              <span>SSL ile Güvenli Ödeme</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="size-4 text-emerald-600 dark:text-emerald-400" />
+              <span>{KDP_GUARANTEE_CLAIM}</span>
+            </div>
           </div>
         </div>
 
-        {/* Bottom CTA */}
-        {!activePlan || activePlan.id === "premium" ? (
-          <div className="mb-8 text-center">
-            <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-card">
-              <CardContent className="p-8">
-                <h3 className="editorial-title mb-4">
-                  Yaratıcılığını<span className="text-primary"> Serbest Bırak</span>
-                </h3>
-                <p className="mx-auto mb-6 max-w-xl text-base text-muted-foreground">
-                  Binlerce yazar gibi sen de Kitap Ustası ile fikirlerini yayınlanmaya hazır kitaplara dönüştürmeye başla.
-                </p>
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="h-14 px-8 text-lg"
-                  onClick={() => {
-                    setCheckoutError("");
-                    setPendingPlanId("creator" as PreviewPlan);
-                  }}
-                >
-                  Şimdi Başla
-                  <ArrowRight className="ml-2 size-5" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        ) : null}
       </div>
 
-      {/* Checkout Dialog */}
+      {/* ── Checkout Dialog ─────────────────────────────────────── */}
       <Dialog
         open={!!pendingPlanId}
         onOpenChange={(open) => {
@@ -707,43 +666,71 @@ export function BillingScreen() {
           }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Plan Değişikliğini Onayla</DialogTitle>
+            <DialogTitle className="font-serif text-xl">
+              {pendingPlan ? pendingPlan.name : "Plan"} Onayı
+            </DialogTitle>
             <DialogDescription>
-              {pendingPlan ? (
-                <>
-                  <span className="font-semibold text-foreground">{pendingPlan.name}</span> planına geçmek istediğinden emin misin?
-                  {"annualMonthlyPrice" in pendingPlan && pendingPlan.annualMonthlyPrice && (
-                    <div className="mt-2 text-sm">
-                      <span className="font-semibold text-primary">{pendingPlan.price}</span> /{pendingPlan.interval}
-                    </div>
-                  )}
-                </>
-              ) : (
-                "Bu plana geçmek istediğinden emin misin?"
-              )}
+              <span className="sr-only">Plan değişikliğini onayla</span>
             </DialogDescription>
           </DialogHeader>
 
-          {/* Trust Notice */}
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-            <div className="flex items-start gap-3">
-              <Shield className="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <div className="text-sm">
-                <div className="font-semibold text-foreground">Güvenli Ödeme</div>
-                <div className="text-muted-foreground">
-                  Ödeme bilgilerin SSL ile korunuyor. Memnun kalmazsan, 14 gün içinde tam para iadesi alabilirsin.
+          {pendingPlan && (
+            <div className="space-y-4">
+              {/* Plan Summary */}
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-serif text-lg font-semibold">{pendingPlan.name}</p>
+                    <p className="text-sm text-muted-foreground">{pendingPlan.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-serif text-xl font-bold text-primary">
+                      {billingPeriod === "annual" && "annualMonthlyPrice" in pendingPlan && pendingPlan.annualMonthlyPrice
+                        ? pendingPlan.annualMonthlyPrice
+                        : pendingPlan.price}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      /{billingPeriod === "annual" ? "ay (yıllık)" : pendingPlan.interval}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mini feature list */}
+                <div className="mt-3 border-t border-border/40 pt-3">
+                  <ul className="space-y-1.5">
+                    {pendingPlan.features.slice(0, 4).map((feat, i) => (
+                      <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Check className="size-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        {feat}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {checkoutError ? (
-            <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
-              <p className="text-sm text-destructive">{checkoutError}</p>
+              {/* Guarantee */}
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
+                <div className="flex items-start gap-2.5">
+                  <Shield className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <div className="text-xs">
+                    <p className="font-semibold text-foreground">Güvenli Ödeme</p>
+                    <p className="text-muted-foreground">
+                      SSL korumalı ödeme. Memnun kalmazsan 14 gün içinde tam iade.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error */}
+              {checkoutError && (
+                <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3">
+                  <p className="text-sm text-destructive">{checkoutError}</p>
+                </div>
+              )}
             </div>
-          ) : null}
+          )}
 
           <DialogFooter className="gap-3">
             <Button
@@ -771,8 +758,8 @@ export function BillingScreen() {
                 </>
               ) : (
                 <>
+                  <Lock className="mr-2 size-4" />
                   Ödemeye Geç
-                  <ArrowRight className="ml-2 size-4" />
                 </>
               )}
             </Button>

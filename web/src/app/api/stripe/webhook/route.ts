@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
-import { grantReferrerReward } from "@/lib/referral";
+import { grantReferrerReward, calculateCommission } from "@/lib/referral";
 import { fulfillStripeCheckoutSession } from "@/lib/stripe/checkout-fulfillment";
 
 export async function POST(request: NextRequest) {
@@ -74,16 +74,24 @@ export async function POST(request: NextRequest) {
         include: { referralCode: true },
       });
       if (conversion && !conversion.rewardGranted) {
-        await grantReferrerReward(prisma, conversion.id, conversion.referralCode.userId);
-        await prisma.auditLog.create({
-          data: {
-            action: "referral_reward_granted",
-            entityType: "user",
-            entityId: conversion.referralCode.userId,
-            actorUserId: fulfillment.userId,
-            metadata: { conversionId: conversion.id },
-          },
-        });
+        // Calculate 30% commission from the checkout session amount
+        const sessionAmountCents = session.amount_total ?? 0;
+        const commissionCents = sessionAmountCents > 0
+          ? calculateCommission(sessionAmountCents)
+          : 0;
+
+        if (commissionCents > 0) {
+          await grantReferrerReward(prisma, conversion.id, conversion.referralCode.userId, commissionCents);
+          await prisma.auditLog.create({
+            data: {
+              action: "referral_reward_granted",
+              entityType: "user",
+              entityId: conversion.referralCode.userId,
+              actorUserId: fulfillment.userId,
+              metadata: { conversionId: conversion.id, commissionCents },
+            },
+          });
+        }
       }
     } catch (referralErr) {
       console.error("Referral reward grant failed (non-critical):", referralErr);

@@ -5,15 +5,25 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
+  ArrowUpDown,
   BookOpen,
   CheckCircle2,
+  ChevronDown,
+  Clock,
+  Copy,
+  DollarSign,
   FileText,
   Layers,
+  LayoutGrid,
+  List,
+  Search,
+  Share2,
   ShieldAlert,
   Sparkles,
   Target,
   Upload,
   User2,
+  X,
 } from "lucide-react";
 
 import { AppFrame } from "@/components/app/app-frame";
@@ -35,6 +45,14 @@ const PLAN_LABELS: Record<string, string> = {
   premium: "Tek Kitap",
 };
 const INITIAL_BOOKS_RETRY_LIMIT = 1;
+
+type SortOption = "recent" | "title" | "chapters";
+
+const SORT_LABELS: Record<SortOption, string> = {
+  recent: "En son düzenlenen",
+  title: "Başlık (A-Z)",
+  chapters: "En çok bölüm",
+};
 
 type OnboardingAction = {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
@@ -62,11 +80,26 @@ export function HomeScreen() {
   const [loadingBooks, setLoadingBooks] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("recent");
+  const [sortOpen, setSortOpen] = useState(false);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
   const gateTrackedRef = useRef(false);
   const backendFailureCountRef = useRef(0);
   const retryTimerRef = useRef<number | null>(null);
   const booksRef = useRef<Book[]>([]);
+
+  const [affiliateData, setAffiliateData] = useState<{ referralUrl: string; clicks: number } | null>(null);
+  const [affiliateCopied, setAffiliateCopied] = useState(false);
+
+  useEffect(() => {
+    if (!ready || !viewer) return;
+    fetch("/api/referral/my-code")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.ok) setAffiliateData({ referralUrl: json.referralUrl, clicks: json.clicks });
+      })
+      .catch(() => null);
+  }, [ready, viewer]);
 
   useEffect(() => {
     booksRef.current = books;
@@ -85,6 +118,21 @@ export function HomeScreen() {
       (book.subtitle || "").toLowerCase().includes(q) ||
       (book.description || "").toLowerCase().includes(q)
     );
+  });
+
+  const sortedBooks = [...filteredBooks].sort((a, b) => {
+    switch (sortBy) {
+      case "title":
+        return a.title.localeCompare(b.title, "tr");
+      case "chapters":
+        return (b.status?.chapter_count || b.chapter_count || 0) - (a.status?.chapter_count || a.chapter_count || 0);
+      case "recent":
+      default: {
+        const aDate = a.status?.updated_at || a.status?.started_at || "";
+        const bDate = b.status?.updated_at || b.status?.started_at || "";
+        return bDate.localeCompare(aDate);
+      }
+    }
   });
 
   useEffect(() => {
@@ -160,6 +208,28 @@ export function HomeScreen() {
     }
   }, [viewer]);
 
+  function copyAffiliateLink() {
+    if (!affiliateData) return;
+    navigator.clipboard.writeText(affiliateData.referralUrl).catch(() => null);
+    setAffiliateCopied(true);
+    trackEvent("affiliate_link_copied", { source: "home_card" });
+    setTimeout(() => setAffiliateCopied(false), 2000);
+  }
+
+  function shareWhatsApp() {
+    if (!affiliateData) return;
+    trackEvent("affiliate_whatsapp_clicked", { source: "home_card" });
+    const text = `BookGenerator.net ile dakikalar içinde profesyonel kitap yaz! ${affiliateData.referralUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  }
+
+  function shareTwitter() {
+    if (!affiliateData) return;
+    trackEvent("affiliate_twitter_clicked", { source: "home_card" });
+    const text = `AI ile dakikalar içinde kitap yazdım 🚀 BookGenerator.net'i dene:`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(affiliateData.referralUrl)}`, "_blank");
+  }
+
   if (!ready) return null;
 
   const latestBook = books[0];
@@ -221,7 +291,7 @@ export function HomeScreen() {
     return (
       <AppFrame current="home" title="Kitaplarım" books={[]} viewer={viewer}>
         {/* Hero skeleton */}
-        <div className="mb-6 rounded-[28px] border border-primary/15 bg-card p-5 md:p-8">
+        <div className="home-animate-in mb-6 rounded-[28px] border border-primary/15 bg-card p-5 md:p-8" role="status" aria-label="Sayfa yükleniyor">
           <div className="flex flex-wrap items-center gap-2">
             <div className="h-6 w-24 animate-pulse rounded-full bg-muted" />
             <div className="h-6 w-28 animate-pulse rounded-full bg-muted" />
@@ -233,7 +303,7 @@ export function HomeScreen() {
         </div>
 
         {/* Stats skeleton */}
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="home-animate-in home-animate-in-2 mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="rounded-2xl border border-border/80 bg-card p-4">
               <div className="h-3 w-14 animate-pulse rounded bg-muted" />
@@ -242,8 +312,22 @@ export function HomeScreen() {
           ))}
         </div>
 
+        {/* Affiliate card skeleton */}
+        <div className="home-animate-in home-animate-in-3 mb-6 rounded-[20px] border border-primary/20 bg-card p-5">
+          <div className="flex items-center gap-2">
+            <div className="size-5 animate-pulse rounded bg-muted" />
+            <div className="h-5 w-48 animate-pulse rounded bg-muted" />
+          </div>
+          <div className="mt-3 h-4 w-full animate-pulse rounded bg-muted" />
+          <div className="mt-2 h-10 w-full animate-pulse rounded-xl bg-muted" />
+          <div className="mt-3 flex gap-2">
+            <div className="h-9 w-24 animate-pulse rounded-xl bg-muted" />
+            <div className="h-9 w-24 animate-pulse rounded-xl bg-muted" />
+          </div>
+        </div>
+
         {/* Book cards skeleton */}
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="home-animate-in home-animate-in-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="rounded-[28px] border border-border/80 bg-card p-5">
               <div className="flex items-start gap-3">
@@ -264,6 +348,7 @@ export function HomeScreen() {
             </div>
           ))}
         </div>
+        <span className="sr-only">İçerik yükleniyor, lütfen bekleyin.</span>
       </AppFrame>
     );
   }
@@ -421,6 +506,66 @@ export function HomeScreen() {
             ))}
           </div>
 
+          {/* Affiliate Link Card */}
+          <Card className="border-primary/20 bg-[radial-gradient(circle_at_top_right,_rgba(188,104,67,0.08),_transparent_60%)]">
+            <CardContent className="space-y-3 p-5">
+              <div className="flex items-center gap-2">
+                <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10">
+                  <DollarSign className="size-4 text-primary" aria-hidden />
+                </div>
+                <h3 className="text-sm font-bold text-foreground">
+                  Affiliate Linkin — %30 Komisyon
+                </h3>
+              </div>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Bu linki paylaş. Linkinden üye olan ve ödeme yapan herkesten %30 komisyon kazanırsın.
+              </p>
+              <div className="flex items-center gap-2 rounded-[14px] border border-border/60 bg-muted/40 px-3 py-2.5">
+                <span className="flex-1 truncate font-mono text-xs text-muted-foreground">
+                  {affiliateData ? affiliateData.referralUrl : "Yükleniyor..."}
+                </span>
+              </div>
+              <Button
+                className="w-full min-h-[44px]"
+                onClick={copyAffiliateLink}
+                disabled={!affiliateData}
+              >
+                {affiliateCopied ? (
+                  <>
+                    <CheckCircle2 className="mr-1.5 size-4" />
+                    Kopyalandı!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-1.5 size-4" />
+                    Kopyala
+                  </>
+                )}
+              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 min-h-[40px]"
+                  onClick={shareWhatsApp}
+                  disabled={!affiliateData}
+                >
+                  WhatsApp
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 min-h-[40px]"
+                  onClick={shareTwitter}
+                  disabled={!affiliateData}
+                >
+                  X (Twitter)
+                </Button>
+              </div>
+              <p className="text-center text-[10px] leading-4 text-muted-foreground/70">
+                Sınır yok • Minimum ödeme $50 • Aylık ödeme
+              </p>
+            </CardContent>
+          </Card>
+
           <Card className="flex-1 border-border/60 bg-card/50">
             <CardContent className="space-y-2 p-5">
               <div className="mb-3 flex items-center justify-between">
@@ -483,7 +628,7 @@ export function HomeScreen() {
         </div>
       </div>
 
-      <section className="mt-10">
+      <section className="mt-10 home-anim-in home-d6" aria-label="Kitaplık">
         <div className="mb-5 flex items-center justify-between gap-4">
           <h2 className="text-xl font-semibold text-foreground">Kitapların</h2>
           <Link href={newBookHref}>
@@ -494,42 +639,111 @@ export function HomeScreen() {
           </Link>
         </div>
 
-        {books.length ? (
+        {books.length > 0 && (
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            {/* Search Bar */}
+            <div className="relative flex-1 home-search-glow rounded-[20px] border border-input bg-card transition-shadow">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Kitap ara..."
+                aria-label="Kitap ara"
+                className="min-h-[44px] w-full rounded-[20px] bg-transparent pl-11 pr-10 text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Aramayı temizle"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setSortOpen((v) => !v)}
+                aria-label="Sıralama seç"
+                aria-expanded={sortOpen}
+                className="flex min-h-[44px] items-center gap-2 rounded-[18px] border border-input bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+              >
+                <ArrowUpDown className="size-4 text-muted-foreground" aria-hidden="true" />
+                {SORT_LABELS[sortBy]}
+                <ChevronDown className={`size-3.5 text-muted-foreground transition-transform ${sortOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+              </button>
+              {sortOpen && (
+                <div className="home-anim-in absolute right-0 top-full z-30 mt-2 min-w-[200px] rounded-[16px] border border-border bg-card p-2 shadow-lg" role="listbox" aria-label="Sıralama seçenekleri">
+                  {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([key, label]) => (
+                    <button
+                      key={key}
+                      role="option"
+                      aria-selected={sortBy === key}
+                      onClick={() => { setSortBy(key); setSortOpen(false); }}
+                      className={`flex w-full items-center gap-2 rounded-[12px] px-3 py-2.5 text-sm transition-colors ${sortBy === key ? "bg-primary/10 font-semibold text-primary" : "text-foreground hover:bg-accent"}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {sortedBooks.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {books.map((book) => (
-              <Card key={book.slug} className="overflow-hidden border-border/60 bg-card/50 transition-all hover:border-primary/30 hover:shadow-[0_4px_16px_rgba(188,104,67,0.08)]">
+            {sortedBooks.map((book, i) => (
+              <Card
+                key={book.slug}
+                className={`home-book-card overflow-hidden border-border/60 bg-card/50 transition-all hover:border-primary/30 hover:shadow-[0_4px_16px_rgba(188,104,67,0.08)]`}
+                style={{ animationDelay: `${i * 0.06}s` }}
+              >
                 <CardContent className="p-5">
-                  <div className="mb-4">
-                    <div className="line-clamp-2 text-base font-semibold text-foreground">
+                  <div className="mb-3">
+                    <h3 className="line-clamp-2 text-base font-semibold text-foreground">
                       {book.title}
-                    </div>
-                    <div className="mt-1.5 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                    </h3>
+                    <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-muted-foreground">
                       {book.subtitle || book.description || "Preview ve tam kitap akışı hazır."}
-                    </div>
+                    </p>
                   </div>
 
-                  <div className="mb-4 flex flex-wrap gap-2">
-                    <Badge  className="border-border/50">
+                  <div className="mb-3 flex flex-wrap gap-2" aria-label="Kitap detayları">
+                    <Badge className="border-border/50">
                       <Layers className="mr-1 size-3" aria-hidden="true" />
                       {book.status?.chapter_count || book.chapter_count || 0} bölüm
                     </Badge>
-                    <Badge  className="border-border/50">
+                    <Badge className="border-border/50">
                       <Upload className="mr-1 size-3" aria-hidden="true" />
                       {book.status?.export_count || 0} çıktı
                     </Badge>
                     {book.status?.product_ready ? (
                       <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
                         <CheckCircle2 className="mr-1 size-3" aria-hidden="true" />
-                        Tam erişim hazır
+                        Tam erişim
                       </Badge>
                     ) : null}
                   </div>
+
+                  {book.status?.updated_at && (
+                    <div className="mb-3 flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                      <Clock className="size-3" aria-hidden="true" />
+                      <time dateTime={book.status.updated_at}>
+                        {formatDate(book.status.updated_at)}
+                      </time>
+                    </div>
+                  )}
 
                   <div className="flex flex-wrap gap-2">
                     <Button
                       size="sm"
                       className="min-h-[40px] flex-1 sm:flex-auto"
                       onClick={() => router.push(`/app/book/${encodeURIComponent(book.slug)}/preview`)}
+                      aria-label={`${book.title} - Önizleme`}
                     >
                       Önizleme
                     </Button>
@@ -540,6 +754,7 @@ export function HomeScreen() {
                       onClick={() =>
                         router.push(`/app/book/${encodeURIComponent(book.slug)}/workspace?tab=writing`)
                       }
+                      aria-label={`${book.title} - Düzenle`}
                     >
                       Düzenle
                     </Button>
@@ -548,6 +763,30 @@ export function HomeScreen() {
               </Card>
             ))}
           </div>
+        ) : books.length > 0 && debouncedSearch ? (
+          <Card className="border-border/60 bg-card/50">
+            <CardContent className="py-12">
+              <div className="mx-auto max-w-sm text-center">
+                <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10">
+                  <Search className="size-6 text-primary" aria-hidden="true" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Sonuç bulunamadı
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  &ldquo;{debouncedSearch}&rdquo; ile eşleşen kitap yok. Farklı bir terim dene.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 min-h-[40px]"
+                  onClick={() => setSearchQuery("")}
+                >
+                  Aramayı temizle
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <Card className="border-border/60 bg-card/50">
             <CardContent className="py-16">
@@ -561,6 +800,20 @@ export function HomeScreen() {
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
                   Hesabın açık. Şimdi ilk üretim akışını başlat, önizleme üret ve bu ekranı gerçek kütüphanene dönüştür.
                 </p>
+                <ul className="mt-6 space-y-2 text-left text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                    AI destekli 5 adımlı sihirbaz
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                    Dakikalar içinde önizleme
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                    PDF, EPUB ve daha fazlası
+                  </li>
+                </ul>
                 <div className="mt-8 flex justify-center">
                   <Button size="lg" className="min-h-[48px]" onClick={() => router.push(newBookHref)}>
                     Hemen başla

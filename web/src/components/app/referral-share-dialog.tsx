@@ -55,14 +55,14 @@ export function ReferralShareDialog({ open, onOpenChange }: ReferralShareDialogP
   function handleWhatsApp() {
     if (!data) return;
     trackEvent("referral_whatsapp_clicked", {});
-    const text = `Kitap Oluşturucu ile dakikalar içinde profesyonel kitap yaz! ${data.referralUrl}`;
+    const text = `BookGenerator.net ile dakikalar içinde profesyonel kitap yaz! Seni davet ediyorum — üye olunca %30 komisyon kazanmamı sağla 😊 ${data.referralUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }
 
   function handleTwitter() {
     if (!data) return;
     trackEvent("referral_twitter_clicked", {});
-    const text = `AI ile dakikalar içinde kitap yazdım 🚀 Kitap Oluşturucu'yu dene:`;
+    const text = `AI ile dakikalar içinde kitap yazdım 🚀 BookGenerator.net'i dene, senin linkinle üye olursan herkes kazanır:`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(data.referralUrl)}`,
       "_blank",
@@ -82,9 +82,9 @@ export function ReferralShareDialog({ open, onOpenChange }: ReferralShareDialogP
             <Share2 className="size-3.5" />
             Arkadaşlarını davet et
           </div>
-          <DialogTitle>Kitabını Paylaş, Ödül Kazan!</DialogTitle>
+          <DialogTitle>Affiliate Linkini Paylaş, %30 Komisyon Kazan!</DialogTitle>
           <DialogDescription>
-            Arkadaşların ödeme yaparsa 1 ücretsiz kitap kredisi kazanırsın. Onlar da %10 indirimle başlar.
+            Arkadaşların senin linkinden üye olup ödeme yaparsa, her ödemenin %30'unu komisyon olarak kazanırsın. Davetiye linki zorunludur — üye olmak için senin linkini kullanmalılar.
           </DialogDescription>
         </DialogHeader>
 

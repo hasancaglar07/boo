@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   BookOpen,
   CheckCircle2,
+  Copy,
+  DollarSign,
   FileText,
   ImagePlus,
   LogOut,
@@ -62,6 +64,108 @@ function readImageAsDataUrl(file: File) {
     reader.onerror = () => reject(new Error("Logo dosyası okunamadı."));
     reader.readAsDataURL(file);
   });
+}
+
+/** Affiliate link kopyalama + paylaşım bileşeni — profile sayfasında hızlı erişim */
+function AffiliateLinkCopy() {
+  const [data, setData] = useState<{ referralUrl: string; clicks: number } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/referral/my-code")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.ok) setData({ referralUrl: json.referralUrl, clicks: json.clicks });
+      })
+      .catch(() => null);
+  }, []);
+
+  function handleCopy() {
+    if (!data) return;
+    navigator.clipboard.writeText(data.referralUrl).catch(() => null);
+    setCopied(true);
+    trackEvent("affiliate_link_copied", { source: "profile" });
+    setTimeout(() => setCopied(false), 2500);
+  }
+
+  function handleWhatsApp() {
+    if (!data) return;
+    trackEvent("affiliate_whatsapp_clicked", { source: "profile" });
+    const text = `BookGenerator.net ile dakikalar içinde profesyonel kitap yaz! ${data.referralUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  }
+
+  function handleTwitter() {
+    if (!data) return;
+    trackEvent("affiliate_twitter_clicked", { source: "profile" });
+    const text = `AI ile dakikalar içinde kitap yazdım 🚀 BookGenerator.net'i dene:`;
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(data.referralUrl)}`,
+      "_blank",
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="mt-2 space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="h-9 w-full animate-pulse rounded-[14px] bg-muted" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 space-y-2">
+      {/* Link kutusu - tıklanabilir, seçilebilir */}
+      <div className="flex items-center gap-2 rounded-[14px] border border-border/60 bg-background/70 px-3 py-2.5">
+        <span className="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground select-all">
+          {data.referralUrl}
+        </span>
+      </div>
+      {/* Büyük kopyala butonu */}
+      <Button
+        className="w-full min-h-[44px] text-sm font-semibold"
+        onClick={handleCopy}
+      >
+        {copied ? (
+          <>
+            <CheckCircle2 className="mr-2 size-4" />
+            Kopyalandı!
+          </>
+        ) : (
+          <>
+            <Copy className="mr-2 size-4" />
+            Affiliate Linkini Kopyala
+          </>
+        )}
+      </Button>
+      {/* Paylaşım butonları */}
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 min-h-[38px] text-xs"
+          onClick={handleWhatsApp}
+        >
+          WhatsApp
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 min-h-[38px] text-xs"
+          onClick={handleTwitter}
+        >
+          X (Twitter)
+        </Button>
+      </div>
+      {data.clicks > 0 && (
+        <p className="text-center text-[10px] text-muted-foreground/70">
+          {data.clicks} kişi linkine tıkladı
+        </p>
+      )}
+    </div>
+  );
 }
 
 export function AccountScreen() {
@@ -538,6 +642,49 @@ export function AccountScreen() {
                     {verificationSending ? "Gönderiliyor..." : "Doğrulama Mailini Tekrar Gönder"}
                   </Button>
                 ) : null}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ── Affiliate Paneli ── */}
+          <Card className="overflow-hidden border-primary/20 bg-[radial-gradient(circle_at_bottom_right,_rgba(188,104,67,0.10),_transparent_60%)]">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <DollarSign className="size-4.5" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-semibold text-foreground">Affiliate — %30 Komisyon</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Özel linkini paylaş, her abonelikten %30 kazan.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-[20px] border border-border/50 bg-background/80 p-4">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                  Affiliate Linkin
+                </div>
+                <AffiliateLinkCopy />
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-[16px] border border-border/50 bg-background/50 p-3 text-center">
+                  <div className="text-2xl font-bold text-primary">%30</div>
+                  <div className="text-xs text-muted-foreground">Komisyon oranı</div>
+                </div>
+                <div className="rounded-[16px] border border-border/50 bg-background/50 p-3 text-center">
+                  <div className="text-2xl font-bold text-foreground">$50</div>
+                  <div className="text-xs text-muted-foreground">Min. ödeme</div>
+                </div>
+                <div className="rounded-[16px] border border-border/50 bg-background/50 p-3 text-center">
+                  <div className="text-xs font-medium text-muted-foreground">Sınır yok</div>
+                  <div className="text-xs text-muted-foreground">Davet limiti</div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-[16px] border border-primary/15 bg-primary/5 px-4 py-3 text-xs leading-5 text-muted-foreground">
+                <strong className="text-foreground">Nasıl çalışır?</strong> Affiliate linkini paylaş. Bağlantından üye olan ve ödeme yapan herkesten kalıcı olarak %30 komisyon kazanırsın. Ödemeler aylık PayPal veya banka transferi ile yapılır.
               </div>
             </CardContent>
           </Card>

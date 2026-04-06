@@ -273,7 +273,16 @@ def main() -> None:
 
     api_key = ""
     if args.force or not existing_art_ready(book_dir):
-        api_key = resolve_api_key()
+        try:
+            api_key = resolve_api_key()
+        except SystemExit as exc:
+            # Keep going without remote API providers. Downstream flow can still
+            # render procedural studio art and compose usable covers.
+            api_key = ""
+            print(
+                f"[cover-lab] {exc}. Falling back to procedural studio art.",
+                file=sys.stderr,
+            )
 
     entry = load_entry(book_dir)
     meta = build_cover_variants(

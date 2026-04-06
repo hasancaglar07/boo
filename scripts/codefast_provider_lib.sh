@@ -9,6 +9,17 @@ CODEFAST_EXHAUSTED_DIR="$CODEFAST_STATE_DIR/exhausted"
 
 mkdir -p "$CODEFAST_LOG_DIR" "$CODEFAST_USAGE_DIR" "$CODEFAST_EXHAUSTED_DIR"
 
+codefast_local_limit_tracking_enabled() {
+    case "${CODEFAST_ENABLE_LOCAL_LIMIT_TRACKING:-0}" in
+        1|true|TRUE|yes|YES|on|ON)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 codefast_today() {
     date +%Y-%m-%d
 }
@@ -46,7 +57,8 @@ codefast_provider_label() {
 
 codefast_provider_daily_limit() {
     case "$1" in
-        glm-main) echo 1000 ;;
+        # GLM text provider must stay unlimited in this project.
+        glm-main) echo "0" ;;
         *) echo 0 ;;
     esac
 }
@@ -79,11 +91,18 @@ codefast_increment_provider_usage() {
 codefast_mark_provider_exhausted() {
     local provider_id="$1"
     local reason="${2:-limit_reached}"
+    if ! codefast_local_limit_tracking_enabled; then
+        return 0
+    fi
     printf '%s\n' "$reason" > "$(codefast_provider_exhausted_file "$provider_id")"
 }
 
 codefast_provider_exhausted_reason() {
     local file
+    if ! codefast_local_limit_tracking_enabled; then
+        echo ""
+        return 0
+    fi
     file="$(codefast_provider_exhausted_file "$1")"
     if [ -f "$file" ]; then
         cat "$file"
@@ -96,8 +115,18 @@ codefast_provider_is_exhausted() {
     local provider_id="$1"
     local limit
     local current
+
+    if ! codefast_local_limit_tracking_enabled; then
+        return 1
+    fi
+
     limit="$(codefast_provider_daily_limit "$provider_id")"
     current="$(codefast_provider_usage_count "$provider_id")"
+
+    # GLM is configured as unlimited by default; do not block it with local marker files.
+    if [ "$provider_id" = "glm-main" ] && [ "$limit" -le 0 ]; then
+        return 1
+    fi
 
     if [ "$limit" -gt 0 ] && [ "$current" -ge "$limit" ]; then
         return 0
@@ -201,7 +230,9 @@ codefast_mark_limit_if_needed() {
     local response="$3"
 
     if [ "$http_code" = "429" ] || codefast_error_is_limit_related "$response"; then
-        codefast_mark_provider_exhausted "$provider_id" "daily_limit_or_rate_limit"
+        if codefast_local_limit_tracking_enabled; then
+            codefast_mark_provider_exhausted "$provider_id" "daily_limit_or_rate_limit"
+        fi
         return 0
     fi
     return 1

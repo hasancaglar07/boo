@@ -9,12 +9,12 @@ import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/
 const MOTIVATION_FACTS = [
   `📚 ${KDP_LIVE_BOOKS_CLAIM}`,
   `🛡️ ${KDP_GUARANTEE_CLAIM}`,
-  "🧭 Önce bölüm planını ve kapağı görürsün",
-  "🌍 Türkçe panel, çok dilli kitap çıktısı",
-  "🖼️ Vitrinde 30 gerçek showcase kitap var",
-  "📦 Tam erişimde EPUB ve PDF açılır",
+  "🧭 First, you'll see the chapter plan and cover",
+  "🌍 Turkish panel, multilingual book output",
+  "🖼️ There are 30 real showcase books on the display",
+  "📦 Open EPUB and PDF with full access",
   `⚙️ ${NO_API_COST_CLAIM}`,
-  "✨ Preview mantığını ödeme öncesi test edersin",
+  "✨ You can test the preview logic before payment",
 ];
 
 export default function RootLoading() {
@@ -51,9 +51,9 @@ export default function RootLoading() {
     <main className="shell flex min-h-[60vh] items-center justify-center py-24">
       <div className="w-full max-w-xl rounded-[28px] border border-border/80 bg-card/80 p-8 text-center">
         <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-muted border-t-primary" />
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">Sayfa hazırlanıyor</h1>
+        <h1 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">Page is being prepared</h1>
         <p className="mt-3 text-sm leading-7 text-muted-foreground">
-          İçerik yüklenirken kısa bir bekleme olabilir.
+          İThere may be a brief wait while content loads.
         </p>
 
         {/* Motivational Fact */}
@@ -67,10 +67,10 @@ export default function RootLoading() {
         {isLoggedIn === false && (
           <div className="mt-6 space-y-2">
             <p className="text-xs text-muted-foreground">
-              🎁 Kitaplarını kaybetmek istemiyorsan:
+              🎁🎁 If you don't want to lose your books:
             </p>
             <Button size="sm" variant="outline" asChild>
-              <Link href="/signup">Ücretsiz Hesap Oluştur</Link>
+              <Link href="/signup">Create Free Account</Link>
             </Button>
           </div>
         )}

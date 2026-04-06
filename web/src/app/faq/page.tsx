@@ -11,23 +11,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { faqSections } from "@/lib/marketing-data";
 import { buildPageMetadata } from "@/lib/seo";
 
-// Her FAQ bölümüne ilgili CTA — objection'ı direkt kapatır
+// CTA for each FAQ section — directly addresses the objection
 const sectionCtas: Record<string, { label: string; href: string }> = {
-  "Genel": { label: "Nasıl çalıştığını gör", href: "/how-it-works" },
-  "Kitap Üretimi": { label: "Örnekleri incele", href: "/examples" },
-  "Kapak ve Tasarım": { label: "Örneklere bak", href: "/examples" },
-  "Teslim ve Çıktılar": { label: "Planları karşılaştır", href: "/pricing" },
-  "Haklar ve Yayın": { label: "Ücretsiz önizleme başlat", href: "/start/topic" },
-  "Abonelik ve Ödeme": { label: "Fiyatları gör", href: "/pricing" },
-  "Destek": { label: "İletişime geç", href: "/contact" },
+  "General": { label: "See how it works", href: "/how-it-works" },
+  "Book Production": { label: "Explore examples", href: "/examples" },
+  "Cover and Design": { label: "See examples", href: "/examples" },
+  "Delivery and Outputs": { label: "Compare plans", href: "/pricing" },
+  "Rights and Publishing": { label: "Start free preview", href: "/start/topic" },
+  "Subscription and Payment": { label: "See pricing", href: "/pricing" },
+  "Support": { label: "Get in touch", href: "/contact" },
 };
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kitap Oluşturucu SSS | Yapay Zeka ile Kitap Yazma Soruları",
+  title: "Book Generator FAQ | AI Book Writing Questions",
   description:
-    "Kitap Oluşturucu kullanım akışı, planlar, çıktı formatları, haklar, kapak, ödeme ve destek süreçleri hakkında en sık sorulan soruların kısa cevaplarını inceleyin.",
+    "Browse short answers to the most frequently asked questions about Book Generator's workflow, plans, output formats, rights, covers, payments, and support processes.",
   path: "/faq",
-  keywords: ["book generator sss", "ai kitap yazma soruları", "epub pdf çıktı"],
+  keywords: ["book generator faq", "ai book writing questions", "epub pdf output"],
 });
 
 export default function FaqPage() {
@@ -61,36 +61,36 @@ export default function FaqPage() {
       <FAQPageHero />
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
-          <h1 className="sr-only">Kitap Oluşturucu sık sorulan sorular</h1>
+          <h1 className="sr-only">Book Generator frequently asked questions</h1>
           <SectionHeading
-            badge="SSS"
-            title="Kararı geciktiren temel sorular."
-            description="Ne üretildiği, nasıl çalıştığı, hangi çıktıları verdiği ve ilk kez kullanan biri için ne kadar anlaşılır olduğu burada netlenir."
+            badge="FAQ"
+            title="The key questions that delay decisions."
+            description="What gets produced, how it works, what outputs you get, and how understandable it is for a first-time user — all clarified here."
             align="center"
           />
           <p className="mx-auto max-w-2xl text-center text-sm leading-7 text-muted-foreground">
-            Teknik sorular için{" "}
+            For technical questions, visit the{" "}
             <Link href="/contact" className="text-foreground underline-offset-4 hover:underline">
-              iletişim
-            </Link>
-            , plan detayları için{" "}
+              contact
+            </Link>{" "}
+            page, for plan details check{" "}
             <Link href="/pricing" className="text-foreground underline-offset-4 hover:underline">
-              fiyatlar
+              pricing
             </Link>{" "}
-            ve süreç adımları için{" "}
+            and for process steps see the{" "}
             <Link href="/how-it-works" className="text-foreground underline-offset-4 hover:underline">
-              nasıl çalışır
+              how it works
             </Link>{" "}
-            sayfalarını da inceleyebilirsin.
+            page.
           </p>
         </div>
       </section>
 
       <section className="border-b border-border/80">
         <Faq5
-          badge="Hızlı cevaplar"
-          heading="İlk bakışta bilmek isteyeceğin 4 cevap"
-          description="Bunlar genelde kullanıcının satın alma veya deneme kararını belirleyen ilk sorulardır."
+          badge="Quick answers"
+          heading="4 answers you'll want to know at first glance"
+          description="These are typically the first questions that shape a user's decision to try or purchase."
           faqs={topFaqs}
         />
       </section>
@@ -98,9 +98,9 @@ export default function FaqPage() {
       <section className="py-18">
         <div className="shell space-y-10">
           <SectionHeading
-            badge="Tüm sorular"
-            title="Konulara göre ayrılmış daha detaylı cevaplar."
-            description="Genel kullanım, kitap üretimi, kapak, teslim, haklar, ödeme ve destek başlıkları altında toplandı."
+            badge="All questions"
+            title="More detailed answers organized by topic."
+            description="Grouped under general usage, book production, cover, delivery, rights, payment, and support headings."
           />
 
           {faqSections.map((section) => {
@@ -137,29 +137,29 @@ export default function FaqPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between gap-4">
               <h2 className="font-serif text-3xl font-semibold tracking-tight text-foreground">
-                Kimler için doğru değil?
+                Who is it not right for?
               </h2>
               <Link
                 href="/use-cases"
                 className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
               >
-                Kimler için olduğunu gör <ArrowRight className="size-3.5" />
+                See who it's for <ArrowRight className="size-3.5" />
               </Link>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardContent className="space-y-3">
-                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Bizim güçlü olduğumuz alan</h3>
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Where we excel</h3>
                   <p className="text-sm leading-8 text-muted-foreground">
-                    Rehber kitap, uzmanlık kitabı, müşteri çeken kısa kitap ve yayına hazır bilgi kitabı üretimi. Özellikle uzmanlar, eğitmenler, içerik üreticileri ve KDP odaklı kullanıcılar için.
+                    Guide books, expertise books, short lead-magnet books, and publication-ready informational books. Especially suited for experts, instructors, content creators, and KDP-focused users.
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="space-y-3">
-                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Doğru fit olmayan kullanım</h3>
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Not the right fit</h3>
                   <p className="text-sm leading-8 text-muted-foreground">
-                    Roman, akademik tez, ağır dipnotlu çalışma veya teknik dokümantasyon için tasarlanmadı. Bu sınırlamayı açık söylemek güveni artırır; ürünü olduğundan farklı göstermeyiz.
+                    It was not designed for novels, academic theses, heavily footnoted works, or technical documentation. Stating this limitation openly builds trust; we won't misrepresent the product.
                   </p>
                 </CardContent>
               </Card>
@@ -169,13 +169,13 @@ export default function FaqPage() {
       </section>
 
       <MarketingCtaSection
-        title="Soruların bittiyse şimdi kendi kitabını başlat."
-        description="Konu fikrini yaz, taslağı gör ve ilk EPUB akışını dene. Kararı sayfa üzerinde değil, ürün içinde netleştir. 30 gün iade garantisi, kredi kartı gerekmez."
+        title="Done with questions? Start your own book now."
+        description="Write your topic idea, see the outline, and try the first EPUB workflow. Make your decision inside the product, not on a landing page. 30-day refund guarantee, no credit card required."
         items={[
-          "İlk akışta net yönlendirme",
-          "Türkçe panel, İngilizce içerik",
-          "Bölüm planı ve çıktı sistemi",
-          "Önce önizleme, sonra tam kitap",
+          "Clear guidance from the first workflow",
+          "Turkish panel, English content",
+          "Chapter planning and output system",
+          "Preview first, then full book",
         ]}
       />
       <script

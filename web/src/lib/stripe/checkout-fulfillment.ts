@@ -70,7 +70,7 @@ export async function fulfillStripeCheckoutSession(
     return {
       ok: false,
       code: "MISSING_METADATA",
-      error: "Checkout metadata eksik.",
+      error: "Checkout metadata is missing.",
       stripeSessionId: session.id,
     };
   }
@@ -79,7 +79,7 @@ export async function fulfillStripeCheckoutSession(
     return {
       ok: false,
       code: "INVALID_PLAN",
-      error: "Checkout plan bilgisi geçersiz.",
+      error: "Checkout plan information is invalid.",
       stripeSessionId: session.id,
       userId: metadata.userId,
       bookSlug: metadata.bookSlug,
@@ -90,7 +90,7 @@ export async function fulfillStripeCheckoutSession(
     return {
       ok: false,
       code: "USER_MISMATCH",
-      error: "Checkout oturumu farklı kullanıcıya ait.",
+      error: "Checkout session belongs to a different user.",
       stripeSessionId: session.id,
       userId: metadata.userId,
       planId: metadata.planId,
@@ -102,7 +102,7 @@ export async function fulfillStripeCheckoutSession(
     return {
       ok: false,
       code: "SESSION_NOT_PAID",
-      error: "Checkout ödemesi tamamlanmamış.",
+      error: "Checkout payment has not been completed.",
       stripeSessionId: session.id,
       userId: metadata.userId,
       planId: metadata.planId,

@@ -31,8 +31,6 @@ import {
   type FunnelStep,
 } from "@/lib/funnel-draft";
 import {
-  loadSettings,
-  providerLooksReady,
   runWorkflow,
   saveBook,
   startBookPreviewPipeline,
@@ -181,7 +179,6 @@ export function GuidedWizardScreen({
     step,
     updateDraft,
     setError,
-    stepHref,
   );
 
   const [aiLoading, setAiLoading] = useState<"" | "outline" | "style" | "generate">("");
@@ -344,43 +341,47 @@ export function GuidedWizardScreen({
 
     setAiLoading("outline");
     try {
-      const settings = await loadSettings().catch(() => null);
       let chapters = localOutlineSuggestions(draft);
       let maybeTitle = draft.title;
       let maybeSubtitle = draft.subtitle;
 
-      if (settings && providerLooksReady(settings)) {
-        const response = await runWorkflow({
-          action: "outline_suggest",
-          topic: draft.topic,
-          title: draft.title,
-          subtitle: draft.subtitle,
-          language: draft.language,
-          audience: draft.audience || defaultAudience(draft.language),
-          genre: workflowGenreLabel(draft.bookType),
-          style: workflowStyleLabel(draft.depth),
-          tone: workflowToneLabel(draft.tone),
-        });
+      const response = await runWorkflow({
+        action: "outline_suggest",
+        topic: draft.topic,
+        title: draft.title,
+        subtitle: draft.subtitle,
+        language: draft.language,
+        audience: draft.audience || defaultAudience(draft.language),
+        genre: workflowGenreLabel(draft.bookType),
+        style: workflowStyleLabel(draft.depth),
+        tone: workflowToneLabel(draft.tone),
+      });
 
-        const generated = response.generated as
-          | {
-              title?: string;
-              subtitle?: string;
-              chapters?: Array<{ title?: string; summary?: string }>;
-            }
-          | undefined;
+      if (response.ok === false) {
+        const message =
+          (typeof response.output === "string" && response.output.trim()) ||
+          "Outline suggestions failed.";
+        throw new Error(message.split("\n").find(Boolean) || message);
+      }
 
-        if (generated?.chapters?.length) {
-          chapters = enrichOutlineItems(
-            generated.chapters.map((item, index) => ({
-              title: String(item.title || defaultChapterReference(draft.language, index + 1)).trim(),
-              summary: String(item.summary || "").trim(),
-            })),
-            draft,
-          );
-          maybeTitle = String(generated.title || maybeTitle || "").trim();
-          maybeSubtitle = String(generated.subtitle || maybeSubtitle || "").trim();
-        }
+      const generated = response.generated as
+        | {
+            title?: string;
+            subtitle?: string;
+            chapters?: Array<{ title?: string; summary?: string }>;
+          }
+        | undefined;
+
+      if (generated?.chapters?.length) {
+        chapters = enrichOutlineItems(
+          generated.chapters.map((item, index) => ({
+            title: String(item.title || defaultChapterReference(draft.language, index + 1)).trim(),
+            summary: String(item.summary || "").trim(),
+          })),
+          draft,
+        );
+        maybeTitle = String(generated.title || maybeTitle || "").trim();
+        maybeSubtitle = String(generated.subtitle || maybeSubtitle || "").trim();
       }
 
       updateDraft({
@@ -389,13 +390,14 @@ export function GuidedWizardScreen({
         outline: chapters,
       });
       trackEvent("outline_ai_used", { language: draft.language, count: chapters.length });
-    } catch {
+    } catch (error) {
       const fallback = localOutlineSuggestions(draft);
       updateDraft({
         title: draft.title || localTitleSuggestions(draft)[0]?.title || "",
         subtitle: draft.subtitle || localTitleSuggestions(draft)[0]?.subtitle || "",
         outline: fallback,
       });
+      setError(error instanceof Error ? error.message : "AI outline önerileri alınamadı.");
       trackEvent("outline_ai_used", { fallback: true, count: fallback.length });
     } finally {
       setAiLoading("");

@@ -13,29 +13,32 @@ codefast=sk-your-api-key
 
 `book-generator-env.sh` loads this file automatically.
 
-## Text Fallback Chain
+## Text Provider
 
-Default order for most book-writing tasks:
+All text-generation flows are configured to use:
 
-1. `https://claudecode.codefast.app` -> `claude-sonnet-4-6` (`~600/day`)
-2. `https://codex.codefast.app/v1` -> `gpt-5.4` (`1000/day`)
-3. `https://api14.codefast.app` -> `gemini-3.1-pro` (`750/day`)
-4. `https://claudecode2.codefast.app` -> `GLM-5.1` (`1000/day`)
-5. `https://api11.codefast.app/v1` -> `Qwen3.5` / `Qwen3.5-Coder` (`1000/day`)
-6. `https://api12.codefast.app/v1` -> `grok-4.20-beta` (`600/day`)
-7. Local Ollama fallback
+- `https://claudecode2.codefast.app`
+- Model: `GLM-5.1`
 
-The scripts track local daily usage per provider. If a provider returns quota, credit,
-or rate-limit errors, it is marked exhausted for the rest of the day and the next
-provider is used automatically.
+There is no multi-model text fallback chain in the active setup.
+
+## Local Quota Gate
+
+Local daily quota/exhausted tracking is disabled by default.
+
+- Default: `CODEFAST_ENABLE_LOCAL_LIMIT_TRACKING=0` (or unset)
+- Optional: set `CODEFAST_ENABLE_LOCAL_LIMIT_TRACKING=1` only if you explicitly want local quota gating.
+
+Upstream 429/rate-limit responses are still detected and logged, but they do not
+automatically block GLM with a local daily marker when tracking is disabled.
 
 ## Cover / Image Fallback Chain
 
 The cover script now uses direct Codefast media APIs:
 
-1. `grokapi.codefast.app` -> Grok Imagine (`100/day`)
-2. `geminiapi.codefast.app` -> Nano Banana Pro (`300/day` shared studio pool)
-3. `geminiapi.codefast.app` -> Nano Banana 2 (`300/day` shared studio pool)
+1. `grokapi.codefast.app` -> Grok Imagine
+2. `geminiapi.codefast.app` -> Nano Banana Pro
+3. `geminiapi.codefast.app` -> Nano Banana 2
 
 Static book covers intentionally skip `Veo 3.1` because it is video-focused.
 

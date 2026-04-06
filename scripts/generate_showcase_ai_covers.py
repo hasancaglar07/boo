@@ -1279,18 +1279,33 @@ def build_prompt(entry: dict[str, Any]) -> str:
         "Cinematic composition, tactile print texture, and coherent layout from edge to edge. "
         "Background artwork only - do not include any text, letters, words, numbers, or logos."
     )
+
+
+def variant_prompt_suffix(
+    family: dict[str, Any],
+    entry: dict[str, Any],
+    attempt_index: int = 1,
+) -> str:
+    entry = normalized_cover_entry(entry)
+    genre_key = str(entry.get("coverGenre") or infer_cover_genre(entry))
+    genre_label = str(GENRE_MATRIX.get(genre_key, {}).get("label") or "nonfiction")
+    branch = str(entry.get("coverBranch") or infer_cover_branch(entry))
+    family_label = str(family.get("label") or family.get("id") or "studio")
+    art_direction = str(family.get("artDirection") or "").strip()
+
     suffix = (
-        f"Favor the {family['label']} cover family for the {genre_label} genre: {family['artDirection']}. "
-        "Leave generous empty space for typography overlay."
+        f"Favor the {family_label} cover family for the {genre_label} genre."
+        + (f" {art_direction}." if art_direction else "")
+        + " Leave generous empty space for typography overlay."
     )
     if branch == "children":
         suffix += " Keep the emotional tone child-safe, warm, rounded, and inviting. No harsh corporate edges."
+
     retry = ""
     if attempt_index > 1:
         retry = (
-            " Retry: try a different composition with richer colors and more atmospheric depth."
-            "Use abstract geometry, illustration, gradients, light, and shadow."
-            "Use only abstract geometry, illustration, architecture, gradients, paper forms, light, and shadow."
+            " Retry with a distinctly different composition, richer color separation, and deeper atmosphere."
+            " Use only abstract geometry, illustration, architecture, gradients, paper forms, light, and shadow."
         )
     return f"{suffix} {retry}".strip()
 
@@ -1509,16 +1524,21 @@ def compose_cover_bundle(
 
 
 def generate_variant(prompt: str, output_path: Path, api_key: str, provider: str) -> bool:
-    if provider in VERTEX_IMAGEN_MODELS:
-        return generate_with_vertex_imagen(prompt, output_path, provider)
-    if provider == "vertex-gemini-flash-image":
-        return generate_with_vertex_gemini(prompt, output_path)
-    legacy_key = resolve_legacy_api_key() or api_key
-    if not legacy_key:
+    try:
+        if provider in VERTEX_IMAGEN_MODELS:
+            return generate_with_vertex_imagen(prompt, output_path, provider)
+        if provider == "vertex-gemini-flash-image":
+            return generate_with_vertex_gemini(prompt, output_path)
+        legacy_key = resolve_legacy_api_key() or api_key
+        if not legacy_key:
+            return False
+        if provider in NANO_MODELS:
+            return generate_with_nano(prompt, output_path, legacy_key, NANO_MODELS[provider])
         return False
-    if provider in NANO_MODELS:
-        return generate_with_nano(prompt, output_path, legacy_key, NANO_MODELS[provider])
-    return False
+    except Exception:
+        # Network/provider failures should not crash generation; caller can
+        # continue with other providers or procedural fallback art.
+        return False
 
 
 def art_candidate_rank(score_payload: dict[str, Any]) -> tuple[float, float]:
