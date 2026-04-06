@@ -39,21 +39,21 @@ const providers: any[] = [
         ...EMAIL_ACTION_RATE_LIMIT,
       });
       if (!rateLimit.allowed) {
-        throw new Error("Magic link sınırına ulaşıldı.");
+        throw new Error("Magic link limit reached.");
       }
       await sendMagicLinkEmail(identifier, url);
     },
   }),
   Credentials({
-    name: "Email ve Şifre",
+    name: "Email and Password",
     credentials: {
       email: { label: "E-posta", type: "email" },
-      password: { label: "Şifre", type: "password" },
+      password: { label: "Password", type: "password" },
     },
     async authorize(rawCredentials) {
       const parsed = credentialsSchema.safeParse(rawCredentials);
       if (!parsed.success) {
-        throw new Error("Geçersiz giriş bilgileri.");
+        throw new Error("Invalid credentials.");
       }
 
       const email = normalizeEmail(parsed.data.email);
@@ -63,17 +63,17 @@ const providers: any[] = [
         ...LOGIN_RATE_LIMIT,
       });
       if (!rateLimit.allowed) {
-        throw new Error("Çok fazla giriş denemesi yapıldı. Lütfen daha sonra tekrar dene.");
+        throw new Error("Too many login attempts. Please try again later.");
       }
 
       const user = await findUserByEmail(email);
       if (!user?.passwordHash) {
-        throw new Error("E-posta veya şifre hatalı.");
+        throw new Error("Incorrect email or password.");
       }
 
       const valid = await verifyPasswordHash(parsed.data.password, user.passwordHash);
       if (!valid) {
-        throw new Error("E-posta veya şifre hatalı.");
+        throw new Error("Incorrect email or password.");
       }
 
       await prisma.user.update({

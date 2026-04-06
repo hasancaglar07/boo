@@ -207,7 +207,7 @@ export function AdminShell({
               </div>
               <button
                 type="button"
-                title="Çıkış yap"
+                title="Sign Out yap"
                 onClick={() => void signOut({ callbackUrl: "/login" })}
                 className="flex shrink-0 items-center justify-center rounded-xl border border-white/10 p-2 text-white/60 transition hover:border-white/20 hover:text-white"
               >
@@ -219,7 +219,7 @@ export function AdminShell({
               <div className="text-center font-semibold text-white">{user.role.slice(0, 1)}</div>
               <button
                 type="button"
-                title="Çıkış yap"
+                title="Sign Out yap"
                 onClick={() => void signOut({ callbackUrl: "/login" })}
                 className="flex items-center justify-center rounded-xl border border-white/10 p-2 text-white/60 transition hover:border-white/20 hover:text-white"
               >

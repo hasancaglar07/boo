@@ -66,8 +66,8 @@ export interface CyberneticBentoGridProps {
 
 export function CyberneticBentoGrid({
   badge = "Core Features",
-  title = "Tek akış içinde yaz, düzenle ve yayınla.",
-  description = "Dağınık araç zinciri yerine tek karar hattı. Bu bölüm ürünün arka plandaki gerçek gücünü gösterir.",
+  title = "Write, edit, and publish in a single flow.",
+  description = "A single decision pipeline instead of scattered tool chains. This section reveals the real power behind the product.",
   items,
 }: CyberneticBentoGridProps) {
   return (

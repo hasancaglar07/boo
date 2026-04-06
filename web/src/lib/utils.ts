@@ -10,7 +10,7 @@ export function slugify(value: string) {
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "kitap";
+    .replace(/^-+|-+$/g, "") || "book";
 }
 
 export function titleCase(value: string) {
@@ -38,4 +38,3 @@ export function formatDate(value?: string) {
     year: "numeric",
   }).format(date);
 }
-

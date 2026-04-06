@@ -22,7 +22,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       variant="outline"
       size="icon"
       className={cn("size-9 rounded-full", className)}
-      aria-label={isDark ? "Açık moda geç" : "Koyu moda geç"}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
     >
       {isDark ? <SunMedium className="size-4" /> : <MoonStar className="size-4" />}

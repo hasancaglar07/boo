@@ -29,7 +29,7 @@ export function Pagination({
   return (
     <div className="mt-4 flex flex-col gap-3 rounded-[20px] border border-[color:var(--admin-border)] bg-white/50 px-4 py-3 text-sm dark:bg-white/5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2 text-sm admin-muted">
-        <span>Sayfa başına:</span>
+        <span>Per page:</span>
         <select
           value={pageSize}
           onChange={(e) => {
@@ -44,7 +44,7 @@ export function Pagination({
             <option key={size} value={size}>{size}</option>
           ))}
         </select>
-        <span>{totalItems} kayıt</span>
+        <span>{totalItems} records</span>
       </div>
       <div className="flex items-center gap-2">
         <button
@@ -54,7 +54,7 @@ export function Pagination({
           disabled={page <= 1}
         >
           <ChevronLeft className="size-4" />
-          Önceki
+          Previous
         </button>
         <span className="text-sm font-semibold text-[color:var(--admin-text)]">
           {page} / {totalPages}

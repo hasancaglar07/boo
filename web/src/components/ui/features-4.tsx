@@ -19,7 +19,7 @@ export interface Features4Props {
 
 export function Features4({
   badge,
-  title = "Net kararlar için kurulan temel sistem",
+  title = "Foundation system built for clear decisions",
   description,
   items,
   className,
