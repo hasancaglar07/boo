@@ -46,7 +46,7 @@ function premiumBook(slug: string, overrides: Omit<PremiumBookCover, "title" | "
 }
 
 const premiumBooks: PremiumBookCover[] = [
-  // Sol taraf - üst
+  // Left side - top
   premiumBook("authority-in-100-pages", {
     id: 1,
     rotation: -15,
@@ -54,7 +54,7 @@ const premiumBooks: PremiumBookCover[] = [
     scale: 1.2,
     zIndex: 10,
   }),
-  // Sağ taraf - üst
+  // Right side - top
   premiumBook("prompt-systems-for-small-teams", {
     id: 2,
     rotation: 12,
@@ -70,7 +70,7 @@ const premiumBooks: PremiumBookCover[] = [
     scale: 1.0,
     zIndex: 12,
   }),
-  // Sağ taraf - orta
+  // Right side - middle
   premiumBook("focus-by-design", {
     id: 4,
     rotation: 10,
@@ -86,7 +86,7 @@ const premiumBooks: PremiumBookCover[] = [
     scale: 0.95,
     zIndex: 14,
   }),
-  // Sağ taraf - alt
+  // Right side - bottom
   premiumBook("ia-pratica-para-negocios-pequenos", {
     id: 6,
     rotation: 8,
@@ -283,7 +283,7 @@ export const PremiumBookHero = React.forwardRef<
 >((
   {
     className,
-    title = "15 Dakikada Kitabını Hazırla",
+    title = "Prepare Your Book in 15 Minutes",
     subtitle = "Write your idea, AI generates the chapters, receive as EPUB and PDF",
     ctaText = "Start Your First Book Free →",
     ctaHref = "/start/topic",
@@ -314,10 +314,10 @@ export const PremiumBookHero = React.forwardRef<
       )}
       {...props}
     >
-      {/* Marka uyumlu terracotta arka plan */}
+      {/* Brand-compatible terracotta background */}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_10%,var(--background)),var(--background)_55%)]" />
 
-      {/* Animasyonlu terracotta glow — marka rengi */}
+      {/* Animated terracotta glow — brand color */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
           className="absolute inset-0 opacity-25"
@@ -338,7 +338,7 @@ export const PremiumBookHero = React.forwardRef<
       {/* Hero glow */}
       <div className="hero-glow" />
 
-      {/* Floating Books — masaüstünde görünür, mobilde gizli */}
+      {/* Floating Books — visible on desktop, hidden on mobile */}
       <div className="absolute inset-0 hidden md:block">
         {premiumBooks.map((book, index) => (
           <PremiumBookCard
@@ -351,7 +351,7 @@ export const PremiumBookHero = React.forwardRef<
         ))}
       </div>
 
-      {/* Hero içerik */}
+      {/* Hero content */}
       <div className="relative z-20 px-4 text-center">
         {/* Social Proof Bar */}
         {socialProof && (
@@ -381,7 +381,7 @@ export const PremiumBookHero = React.forwardRef<
           {badge}
         </motion.div>
 
-        {/* H1 — Daha büyük ve vurucu */}
+        {/* H1 — Larger and more impactful */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -401,7 +401,7 @@ export const PremiumBookHero = React.forwardRef<
           {subtitle}
         </motion.p>
 
-        {/* CTA Butonları — Daha büyük ve belirgin */}
+        {/* CTA Buttons — Larger and more prominent */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -443,7 +443,7 @@ export const PremiumBookHero = React.forwardRef<
           transition={{ delay: 0.72, duration: 0.5 }}
           className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs font-medium text-muted-foreground"
         >
-          {["5 kısa soru", "Önce preview", "Kredi kartı gerekmez"].map((item) => (
+          {["5 short questions", "Preview first", "No credit card required"].map((item) => (
             <span key={item} className="rounded-full border border-border/80 bg-card/70 px-3 py-1 backdrop-blur-sm">
               {item}
             </span>
@@ -463,7 +463,7 @@ export const PremiumBookHero = React.forwardRef<
         )}
       </div>
 
-      {/* Alt gradient geçiş */}
+      {/* Bottom gradient transition */}
       <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-background to-transparent" />
     </section>
   );

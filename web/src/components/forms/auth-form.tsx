@@ -19,7 +19,7 @@ import {
   syncPreviewAuthState,
 } from "@/lib/preview-auth";
 
-const DEFAULT_GOAL = "İlk kitabımı hızlı ve düzenli biçimde hazırlamak istiyorum.";
+const DEFAULT_GOAL = "I want to prepare my first book quickly and in an organized way.";
 
 type AuthFormMode = "login" | "register";
 type AuthFormMethod = "google" | "magic" | "credentials";
@@ -70,20 +70,20 @@ function normalizeAuthError(error: string) {
     value.includes("wrong")
   ) {
     return {
-      title: "Bilgiler hatalı",
-      description: "E-posta veya şifre eşleşmiyor.",
+      title: "Incorrect credentials",
+      description: "Email or password does not match.",
     };
   }
 
-  if (value.includes("verify") || value.includes("doğrul")) {
+  if (value.includes("verify") || value.includes("verification")) {
     return {
-      title: "Doğrulama gerekli",
-      description: "E-posta adresini doğrulaman gerekiyor.",
+      title: "Verification required",
+      description: "You need to verify your email address.",
     };
   }
 
   return {
-    title: "Giriş başarısız",
+    title: "Login failed",
     description: error,
   };
 }
@@ -108,9 +108,9 @@ export function AuthForm({
   const checkEmail = searchParams.get("checkEmail");
 
   const [name, setName] = useState(
-    mode === "register" && storedAccount.name !== "Kitap Sahibi" ? storedAccount.name : "",
+    mode === "register" && storedAccount.name !== "Book Owner" ? storedAccount.name : "",
   );
-  const [email, setEmail] = useState(storedAccount.email !== "ornek@mail.com" ? storedAccount.email : "");
+  const [email, setEmail] = useState(storedAccount.email !== "example@mail.com" ? storedAccount.email : "");
   const goal = storedAccount.goal && storedAccount.goal !== DEFAULT_GOAL ? storedAccount.goal : "";
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -125,24 +125,24 @@ export function AuthForm({
     if (checkEmail === "1") {
       setFeedback({
         variant: "success",
-        title: "Bağlantı gönderildi",
-        description: "E-postanı kontrol et.",
+        title: "Link sent",
+        description: "Check your email.",
       });
-      toast.success("Bağlantı gönderildi");
+      toast.success("Link sent");
     } else if (verified === "1") {
       setFeedback({
         variant: "success",
-        title: "Doğrulandı",
-        description: "Hesabın hazır.",
+        title: "Verified",
+        description: "Your account is ready.",
       });
-      toast.success("Doğrulandı");
+      toast.success("Verified");
     } else if (verified === "0") {
       setFeedback({
         variant: "error",
-        title: "Bağlantı geçersiz",
-        description: "Süresi dolmuş olabilir.",
+        title: "Invalid link",
+        description: "It may have expired.",
       });
-      toast.error("Bağlantı geçersiz");
+      toast.error("Invalid link");
     }
   }, [checkEmail, verified]);
 
@@ -173,8 +173,8 @@ export function AuthForm({
     onMethodSelected?.({ method: "google", mode });
     if (mode === "register") {
       setAccount({
-        name: nameTrimmed || storedAccount.name || "Kitap Sahibi",
-        email: emailTrimmed || storedAccount.email || "ornek@mail.com",
+        name: nameTrimmed || storedAccount.name || "Book Owner",
+        email: emailTrimmed || storedAccount.email || "example@mail.com",
         goal: goalTrimmed || storedAccount.goal || DEFAULT_GOAL,
         publisherImprint: storedAccount.publisherImprint || "",
         publisherLogoUrl: storedAccount.publisherLogoUrl || "",
@@ -190,10 +190,10 @@ export function AuthForm({
     if (!emailTrimmed) {
       setFeedback({
         variant: "error",
-        title: "E-posta gerekli",
-        description: "Lütfen e-posta adresini gir.",
+        title: "Email required",
+        description: "Please enter your email address.",
       });
-      toast.error("E-posta gerekli");
+      toast.error("Email required");
       return;
     }
 
@@ -210,17 +210,17 @@ export function AuthForm({
     if (result?.error) {
       setFeedback({
         variant: "error",
-        title: "Gönderilemedi",
-        description: "Tekrar dene.",
+        title: "Could not be sent",
+        description: "Please try again.",
       });
-      toast.error("Gönderilemedi");
+      toast.error("Could not be sent");
       setBusyMethod(null);
       return;
     }
 
     if (mode === "register") {
       setAccount({
-        name: nameTrimmed || storedAccount.name || "Kitap Sahibi",
+        name: nameTrimmed || storedAccount.name || "Book Owner",
         email: emailTrimmed,
         goal: goalTrimmed || storedAccount.goal || DEFAULT_GOAL,
         publisherImprint: storedAccount.publisherImprint || "",
@@ -233,10 +233,10 @@ export function AuthForm({
 
     setFeedback({
       variant: "success",
-      title: "Bağlantı gönderildi",
-      description: "E-postandaki linke tıkla.",
+      title: "Link sent",
+      description: "Click the link in your email.",
     });
-    toast.success("Bağlantı gönderildi");
+    toast.success("Link sent");
     setBusyMethod(null);
   }
 
@@ -247,28 +247,28 @@ export function AuthForm({
     if (!emailTrimmed) {
       setFeedback({
         variant: "error",
-        title: "E-posta gerekli",
-        description: "Lütfen e-posta adresini gir.",
+        title: "Email required",
+        description: "Please enter your email address.",
       });
-      toast.error("E-posta gerekli");
+      toast.error("Email required");
       return;
     }
     if (!passwordTrimmed) {
       setFeedback({
         variant: "error",
-        title: "Şifre gerekli",
-        description: "Lütfen şifreni gir.",
+        title: "Password is required",
+        description: "Please enter your password.",
       });
-      toast.error("Şifre gerekli");
+      toast.error("Password is required");
       return;
     }
     if (mode === "register" && !nameTrimmed) {
       setFeedback({
         variant: "error",
-        title: "Ad gerekli",
-        description: "Lütfen adını gir.",
+        title: "Name required",
+        description: "Please enter your name.",
       });
-      toast.error("Ad gerekli");
+      toast.error("Name required");
       return;
     }
 
@@ -297,10 +297,10 @@ export function AuthForm({
         if (!registerResponse.ok) {
           setFeedback({
             variant: "error",
-            title: "Kayıt başarısız",
-            description: registerPayload?.error || "Tekrar dene.",
+            title: "Registration failed",
+            description: registerPayload?.error || "Please try again.",
           });
-          toast.error("Kayıt başarısız");
+          toast.error("Registration failed");
           setBusyMethod(null);
           return;
         }
@@ -330,7 +330,7 @@ export function AuthForm({
       }
 
       const account = {
-        name: nameTrimmed || storedAccount.name || "Kitap Sahibi",
+        name: nameTrimmed || storedAccount.name || "Book Owner",
         email: emailTrimmed,
         goal: goalTrimmed || storedAccount.goal || DEFAULT_GOAL,
         publisherImprint: storedAccount.publisherImprint || "",
@@ -348,10 +348,10 @@ export function AuthForm({
     } catch {
       setFeedback({
         variant: "error",
-        title: "Bir hata oluştu",
-        description: "Tekrar dene.",
+        title: "An error occurred",
+        description: "Please try again.",
       });
-      toast.error("Bir hata oluştu");
+      toast.error("An error occurred");
     } finally {
       setBusyMethod(null);
     }
@@ -385,7 +385,7 @@ export function AuthForm({
           {busyMethod === "google" ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : null}
-          Google ile {mode === "login" ? "giriş yap" : "kayıt ol"}
+          {mode === "login" ? "Sign in with Google" : "Sign up with Google"}
         </Button>
 
         <div className="relative">
@@ -393,7 +393,7 @@ export function AuthForm({
             <span className="w-full border-t border-border/40" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">veya</span>
+            <span className="bg-card px-2 text-muted-foreground">or</span>
           </div>
         </div>
       </div>
@@ -403,12 +403,12 @@ export function AuthForm({
         {/* Name Field - Only for Register */}
         {mode === "register" && (
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium">Ad Soyad</Label>
+            <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Adın"
+              placeholder="Your name"
               required
               autoComplete="name"
               className="h-11"
@@ -418,13 +418,13 @@ export function AuthForm({
 
         {/* Email Field */}
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium">E-posta</Label>
+          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
           <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="ornek@mail.com"
+            placeholder="example@mail.com"
             required
             autoComplete="email"
             className="h-11"
@@ -434,13 +434,13 @@ export function AuthForm({
         {/* Password Field */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-sm font-medium">Şifre</Label>
+            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
             {mode === "login" && (
               <Link 
                 href="/reset-password" 
                 className="text-xs font-medium text-primary hover:underline"
               >
-                Unuttum?
+                Forgot?
               </Link>
             )}
           </div>
@@ -450,7 +450,7 @@ export function AuthForm({
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === "register" ? "En az 8 karakter" : "Şifren"}
+              placeholder={mode === "register" ? "At least 8 characters" : "Your password"}
               required
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               className="h-11 pr-10"
@@ -459,7 +459,7 @@ export function AuthForm({
               type="button"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -475,12 +475,12 @@ export function AuthForm({
           {busyMethod === "credentials" ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              İşleniyor...
+              Processing...
             </>
           ) : mode === "login" ? (
-            "Giriş Yap"
+            "Sign In"
           ) : (
-            "Kayıt Ol"
+            "Sign Up"
           )}
         </Button>
       </form>
@@ -496,10 +496,10 @@ export function AuthForm({
           {busyMethod === "magic" ? (
             <span className="flex items-center justify-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Gönderiliyor...
+              Sending...
             </span>
           ) : (
-            "Şifre girmek istemiyorum • E-posta bağlantısı gönder"
+            "Don't want to enter password • Send email link"
           )}
         </button>
       </div>

@@ -44,7 +44,7 @@ export function PricingCreativeSection({
       features: plans[0].features,
       popular: false,
       accentClassName: "text-foreground",
-      ctaLabel: "Başlangıç Planıyla Başla",
+      ctaLabel: "Start with Starter Plan",
       ctaHref: "/billing?plan=starter&autostart=1",
     },
     {

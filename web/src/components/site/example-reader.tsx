@@ -85,7 +85,7 @@ function ReaderCta({
         </div>
         <div className="min-w-0">
           <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Kendi Sürümünü Yaz
+            Write Your Own Version
           </div>
           <p className="mt-2 text-sm leading-7 text-foreground/82">
             If this structure looks publish-ready to you, start with your own topic and produce the same workflow:
@@ -96,7 +96,7 @@ function ReaderCta({
             className="mt-4 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition hover:opacity-90"
             onClick={() => trackEvent("examples_sticky_cta_clicked", { slug, location })}
           >
-            Kendi Kitabını Yaz <ArrowRight className="size-4" />
+            Write Your Own Book <ArrowRight className="size-4" />
           </Link>
         </div>
       </div>
@@ -344,7 +344,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
 
                 <div className="rounded-[28px] border border-border/80 bg-background p-5 shadow-sm">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Birebir Çıktılar
+                    Exact Outputs
                   </div>
                   <div className="mt-4 space-y-3">
                     <ExportButton asset={item.exports.html} label="Birebir HTML'i aç" slug={item.slug} format="html" />
@@ -371,7 +371,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
             className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition hover:opacity-90"
             onClick={() => trackEvent("examples_sticky_cta_clicked", { slug: item.slug, location: "reader_mobile_sticky" })}
           >
-            Kendi Kitabını Başlat <ArrowRight className="size-4" />
+            Start Your Own Book <ArrowRight className="size-4" />
           </Link>
         </div>
       </div>

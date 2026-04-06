@@ -99,9 +99,9 @@ export const AboutPageHero = React.forwardRef<
   const principles = [
     { icon: Target, label: "Az Kelime" },
     { icon: Layers, label: "Tek Yol" },
-    { icon: FileText, label: "Düzenlenebilir" },
-    { icon: BookOpen, label: "Yayın Odaklı" },
-    { icon: Shield, label: "Güvenilir" },
+    { icon: FileText, label: "Editable" },
+    { icon: BookOpen, label: "Publishing-Focused" },
+    { icon: Shield, label: "Reliable" },
     { icon: Sparkles, label: "AI + Sade" },
   ];
 
@@ -114,7 +114,7 @@ export const AboutPageHero = React.forwardRef<
       )}
       {...props}
     >
-      {/* Marka uyumlu arka plan */}
+      {/* Brand-compatible background */}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_6%,var(--background)),var(--background)_60%)]" />
       <div className="absolute inset-0 grid-overlay opacity-40" />
       <div className="hero-glow" />
@@ -158,7 +158,7 @@ export const AboutPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Daha fazla panel değil,{" "}
+          Not more panels,{" "}
           <span className="text-primary">more completed books.</span>
         </motion.h1>
 
@@ -168,7 +168,7 @@ export const AboutPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Amacımız tek: gereksiz karmaşıklığı kaldırıp, uzmanlığı olan herkesin gerçekten kitabını tamamlayabilmesini sağlamak.
+          Our single goal: remove unnecessary complexity and enable anyone with expertise to actually finish their book.
         </motion.p>
 
         {/* Principles Grid */}
@@ -221,7 +221,7 @@ export const PricingPageHero = React.forwardRef<
       )}
       {...props}
     >
-      {/* Marka arka plan */}
+      {/* Brand background */}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_8%,var(--background)),var(--background)_70%)]" />
       <div className="hero-glow" />
 
@@ -242,8 +242,8 @@ export const PricingPageHero = React.forwardRef<
           transition={{ delay: 0.1, duration: 0.6 }}
           className="mx-auto mt-5 max-w-3xl text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl"
         >
-          Bu hafta sonu kitabın hazır.{" "}
-          <span className="text-primary">$4 ile başla, EPUB&apos;ını indir.</span>
+          Your book will be ready this weekend.{" "}
+          <span className="text-primary">Start for $4, download your EPUB.</span>
         </motion.h1>
 
         <motion.p
@@ -281,10 +281,10 @@ export const PricingPageHero = React.forwardRef<
           className="mt-4 flex flex-wrap items-center justify-center gap-2"
         >
           {[
-            { icon: Shield, text: "30 Gün İade" },
-            { icon: CheckCircle2, text: "Önce Önizle" },
+            { icon: Shield, text: "30-Day Refund" },
+            { icon: CheckCircle2, text: "Preview First" },
             { icon: Zap, text: "$4 Tek Seferlik" },
-            { icon: BookOpen, text: "KK Gerekmez" },
+            { icon: BookOpen, text: "No CC Required" },
           ].map((badge) => (
             <span
               key={badge.text}
@@ -377,8 +377,8 @@ export const ExamplesPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Vaat değil,{" "}
-          <span className="text-primary">gerçek çıktılar.</span>
+          Not promises,{" "}
+          <span className="text-primary">real outputs.</span>
         </motion.h1>
 
         <motion.p
@@ -453,7 +453,7 @@ export const HowItWorksPageHero = React.forwardRef<
     { number: "02", title: "Draft", icon: Settings, description: "Chapter architecture" },
     { number: "03", title: "Production", icon: Sparkles, description: "Chapter writing" },
     { number: "04", title: "Cover", icon: BookOpen, description: "Visual workflow" },
-    { number: "05", title: "Çıktı", icon: Download, description: "EPUB + PDF" },
+    { number: "05", title: "Output", icon: Download, description: "EPUB + PDF" },
   ];
 
   return (
@@ -496,7 +496,7 @@ export const HowItWorksPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Boş sayfadan değil,{" "}
+          Not from a blank page,{" "}
           <span className="text-primary">start with a guided preview.</span>
         </motion.h1>
 
@@ -564,7 +564,7 @@ export const FAQPageHero = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const stats = [
     { value: "7", label: "Kategori" },
-    { value: "30+", label: "Soru-Cevap" },
+    { value: "30+", label: "Q&A" },
     { value: "1 dk", label: "Ortalama okuma" },
   ];
 
@@ -597,8 +597,8 @@ export const FAQPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Karar vermeden önce{" "}
-          <span className="text-primary">sorulan sorular.</span>
+          Before deciding,{" "}
+          <span className="text-primary">commonly asked questions.</span>
         </motion.h1>
 
         <motion.p
@@ -647,8 +647,8 @@ export const ContactPageHero = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const contactMethods = [
     { icon: MessageCircle, label: "Support", description: "Usage and technical questions" },
-    { icon: Clock, label: "1 İş Günü", description: "Ortalama yanıt süresi" },
-    { icon: Shield, label: "Güvenli", description: "Verileriniz bizimle güvende" },
+    { icon: Clock, label: "1 Business Day", description: "Average response time" },
+    { icon: Shield, label: "Secure", description: "Your data is safe with us" },
   ];
 
   return (
@@ -682,7 +682,7 @@ export const ContactPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <Users className="h-3.5 w-3.5 text-primary" />
-          İletişim
+          Contact
         </motion.div>
 
         <motion.h1
@@ -692,7 +692,7 @@ export const ContactPageHero = React.forwardRef<
           className="mx-auto mt-8 max-w-3xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
           For support{" "}
-          <span className="text-primary">kısa yol.</span>
+          <span className="text-primary">shortcut.</span>
         </motion.h1>
 
         <motion.p

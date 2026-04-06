@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   if (!post) {
     return buildPageMetadata({
-      title: "Yazı Bulunamadı",
-      description: "Aradığınız blog yazısı bulunamadı.",
+      title: "Post Not Found",
+      description: "The blog post you were looking for was not found.",
       path: `/blog/${slug}`,
       noIndex: true,
     });
@@ -34,8 +34,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     keywords: [
       post.category.toLowerCase(),
       "book generator blog",
-      "ai kitap yazma",
-      "kitap üretimi",
+      "ai book writing",
+      "book production",
     ],
     type: "article",
   });
@@ -191,7 +191,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   <time dateTime={post.datePublished}>{formatDate(post.datePublished)}</time>
                 </span>
                 <span className="size-1 rounded-full bg-border" />
-                <span>Son güncelleme: {formatDate(post.dateModified)}</span>
+                <span>Last updated: {formatDate(post.dateModified)}</span>
                 <span className="size-1 rounded-full bg-border" />
                 <span className="flex items-center gap-1.5">
                   <Clock className="size-3.5 shrink-0" />
@@ -199,12 +199,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </span>
               </div>
               <div className="mt-6 rounded-[20px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-5 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Quick answer</p>
                 <p className="mt-2 text-sm leading-7 text-foreground">{quickAnswer}</p>
               </div>
               <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="rounded-[20px] border border-border/70 bg-card/80 px-5 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Öne çıkanlar</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Highlights</p>
                   <ul className="mt-3 space-y-2 text-sm leading-7 text-foreground">
                     {takeawayItems.map((item) => (
                       <li key={item}>• {item}</li>
@@ -212,8 +212,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   </ul>
                 </div>
                 <div className="rounded-[20px] border border-border/70 bg-card/80 px-5 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Yayın notu</p>
-                  <p className="mt-2 text-sm leading-7 text-foreground">Kitap Oluşturucu editör ekibi tarafından hazırlanıp gözden geçirildi.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Publishing note</p>
+                  <p className="mt-2 text-sm leading-7 text-foreground">Prepared and reviewed by the Book Generator editorial team.</p>
                   <p className="mt-2 text-xs leading-6 text-muted-foreground">The purpose is not to provide legal or professional advice, but to help you make clearer publishing decisions.</p>
                 </div>
               </div>
@@ -253,31 +253,31 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 <ChevronRight className="size-3.5 rotate-180" />
-                Tüm yazılara dön
+                Back to all articles
               </Link>
             </div>
 
             {/* Post-article CTA */}
             <div className="mt-4 rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-8 py-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Sıradaki adım</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Next step</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-                Kendi kitabını oluşturmaya hazır mısın?
+                Ready to create your own book?
               </h2>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                Hesap gerekmez. Konunu gir, 30 saniyede bölüm planını ve kapak önizlemeni gör.
+                No account needed. Enter your topic and see your chapter plan and cover preview in 30 seconds.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
                   href="/start/topic"
                   className="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
                 >
-                  Ücretsiz Önizlemeyi Başlat →
+                  Start Free Preview →
                 </Link>
                 <Link
                   href="/examples"
                   className="inline-flex items-center rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
                 >
-                  Örnek Çıktıları Gör
+                  See Example Outputs
                 </Link>
               </div>
             </div>

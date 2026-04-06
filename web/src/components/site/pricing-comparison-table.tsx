@@ -21,22 +21,22 @@ const features: Feature[] = [
   { id: "cover",          name: "Monthly cover allowance",              premium: 3,       starter: 20,      creator: 60,   pro: 200 },
 
   // Core production
-  { id: "wizard",         name: "5 adımlı yönlendirmeli sihirbaz", premium: true,    starter: true,    creator: true, pro: true },
+  { id: "wizard",         name: "5-step guided wizard",     premium: true,    starter: true,    creator: true, pro: true },
   { id: "outline",        name: "AI chapter outline generation", premium: true,    starter: true,    creator: true, pro: true },
   { id: "bolum",          name: "Chapter writing + regeneration",  premium: true,    starter: true,    creator: true, pro: true },
   { id: "editor",         name: "Chapter editor",                  premium: true,    starter: true,    creator: true, pro: true },
-  { id: "ton",            name: "Ton ve hedef kitle ayarı",        premium: true,    starter: true,    creator: true, pro: true },
+  { id: "ton",            name: "Tone and target audience setting",        premium: true,    starter: true,    creator: true, pro: true },
 
   // Cover & design
   { id: "cover-ai",       name: "AI cover generation",       premium: true,    starter: true,    creator: true, pro: true },
   { id: "cover-style",    name: "Cover style selection (3 themes)",     premium: true,    starter: true,    creator: true, pro: true },
   { id: "cover-custom",   name: "Renk paleti özelleştirme",        premium: true,    starter: true,    creator: true, pro: true },
 
-  // Çıktı formatları
-  { id: "epub",           name: "EPUB çıktısı",                   premium: true,    starter: true,    creator: true, pro: true },
-  { id: "pdf",            name: "PDF çıktısı — KDP'ye hazır",     premium: true,    starter: true,    creator: true, pro: true },
-  { id: "html",           name: "HTML çıktısı",                   premium: false,   starter: false,   creator: true, pro: true },
-  { id: "markdown",       name: "Markdown çıktısı",               premium: false,   starter: false,   creator: true, pro: true },
+  // Output formats
+  { id: "epub",           name: "EPUB output",                   premium: true,    starter: true,    creator: true, pro: true },
+  { id: "pdf",            name: "PDF output — KDP-ready",     premium: true,    starter: true,    creator: true, pro: true },
+  { id: "html",           name: "HTML output",                   premium: false,   starter: false,   creator: true, pro: true },
+  { id: "markdown",       name: "Markdown output",               premium: false,   starter: false,   creator: true, pro: true },
 
   // Araştırma & analiz
   { id: "arastirma",      name: "Araştırma merkezi",              premium: false,   starter: false,   creator: true, pro: true },

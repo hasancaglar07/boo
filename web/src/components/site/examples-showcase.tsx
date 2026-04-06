@@ -32,14 +32,14 @@ const pipeline = [
   },
   {
     step: "02",
-    title: "Bölüm Planı",
+    title: "Chapter Plan",
     description: "Chapter architecture and book promise. Continue after approval.",
     icon: Layers,
   },
   {
     step: "03",
-    title: "Bölümler",
-    description: "İlk bölüm üretimi, kalite revizyonları ve devam iterasyonları.",
+    title: "Chapters",
+    description: "First chapter generation, quality revisions, and continuation iterations.",
     icon: FileText,
   },
   {
@@ -50,8 +50,8 @@ const pipeline = [
   },
   {
     step: "05",
-    title: "Çıktılar",
-    description: "EPUB, PDF ve HTML teslimi. Anında açılabilir.",
+    title: "Outputs",
+    description: "EPUB, PDF, and HTML delivery. Instantly openable.",
     icon: Download,
   },
 ];
@@ -225,7 +225,7 @@ function ExportCard({
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-muted-foreground">
-          {asset ? formatBytes(asset.size) : "Henüz yok"}
+          {asset ? formatBytes(asset.size) : "Not yet"}
         </span>
         {asset ? (
           <a
@@ -343,7 +343,7 @@ function OutlineModal({
 
         <div className="flex border-b border-border/60 bg-background/50">
           {(["outline", "chapter", "export"] as const).map((tab) => {
-            const labels = { outline: "İçindekiler", chapter: "İlk Bölüm", export: "Çıktılar" };
+            const labels = { outline: "Table of Contents", chapter: "First Chapter", export: "Outputs" };
             return (
               <button
                 key={tab}
@@ -395,7 +395,7 @@ function OutlineModal({
                 </div>
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Marka
+                    Brand
                   </div>
                   <div className="mt-2 flex items-center gap-3">
                     {item.brandingLogoUrl ? (
@@ -407,7 +407,7 @@ function OutlineModal({
                     ) : null}
                     <div>
                       <div className="text-sm font-semibold text-foreground">
-                        {item.brandingMark || item.publisher || "Marka"}
+                        {item.brandingMark || item.publisher || "Brand"}
                       </div>
                       {item.coverBrief ? (
                         <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.coverBrief}</p>
@@ -436,7 +436,7 @@ function OutlineModal({
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-border/70 bg-background/40 p-5 text-sm text-muted-foreground">
-                  Bölüm planı bulundu ama yapı okunabilir bir liste olarak çözülemedi.
+                  Chapter plan found but structure could not be parsed as a readable list.
                 </div>
               )}
             </div>
@@ -455,7 +455,7 @@ function OutlineModal({
                   {item.chapterPreview.title}
                 </h4>
                 <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                  İlk bölümden alınan gerçek önizleme metni.
+                  Real preview text from the first chapter.
                 </p>
               </div>
               <div className="rounded-2xl border border-border/80 bg-background/60 p-5" dir={item.direction}>
@@ -476,7 +476,7 @@ function OutlineModal({
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full" style={{ width: "14%", backgroundColor: item.spineColor }} />
                   </div>
-                  <span className="text-xs text-muted-foreground">Gerçek ilk bölüm önizlemesi</span>
+                  <span className="text-xs text-muted-foreground">Real first chapter preview</span>
                 </div>
               </div>
             </div>
@@ -487,28 +487,28 @@ function OutlineModal({
               <div className="mb-4">
                 <h4 className="font-serif text-lg font-semibold text-foreground">Teslim Formatları</h4>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Sadece gerçekten üretilmiş çıktı dosyaları aktif kalır.
+                  Only actually generated output files remain active.
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 <ExportCard
                   item={item}
                   format="EPUB"
-                  description="E-okuyucu için gerçek çıktı"
+                  description="Real output for e-reader"
                   asset={item.exports.epub}
                   icon={BookOpen}
                 />
                 <ExportCard
                   item={item}
                   format="PDF"
-                  description="Baskı veya paylaşım için çıktı"
+                  description="Output for print or sharing"
                   asset={item.exports.pdf}
                   icon={FileText}
                 />
                 <ExportCard
                   item={item}
                   format="HTML"
-                  description="Web önizleme için çıktı"
+                  description="Output for web preview"
                   asset={item.exports.html}
                   icon={Globe}
                 />
@@ -518,8 +518,8 @@ function OutlineModal({
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <CheckCircle2 className="size-4 flex-shrink-0 text-emerald-500" />
                   {availableFormats(item).length
-                    ? `${availableFormats(item).join(", ")} dosyaları public read-only route üzerinden açılır.`
-                    : "Bu örnek için çıktı dosyası henüz vitrinde gösterilecek seviyeye gelmemiş."}
+                    ? `${availableFormats(item).join(", ")} files are accessible via public read-only route.`
+                    : "Output files for this example are not yet at a level to be displayed on the showcase."}
                 </div>
               </div>
             </div>
@@ -565,14 +565,14 @@ export function ExamplesShowcase({
   categories: string[];
   languages: string[];
 }) {
-  const [activeCategory, setActiveCategory] = useState("Tümü");
-  const [activeLang, setActiveLang] = useState("Tümü");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeLang, setActiveLang] = useState("All");
   const [previewItem, setPreviewItem] = useState<ExampleCardEntry | null>(null);
   const [topic, setTopic] = useState("");
 
   const filtered = items.filter((item) => {
-    const categoryMatch = activeCategory === "Tümü" || item.category === activeCategory;
-    const languageMatch = activeLang === "Tümü" || item.language === activeLang;
+    const categoryMatch = activeCategory === "All" || item.category === activeCategory;
+    const languageMatch = activeLang === "All" || item.language === activeLang;
     return categoryMatch && languageMatch;
   });
 
@@ -687,9 +687,9 @@ export function ExamplesShowcase({
 
                   <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                     {[
-                      { label: "Bölüm", value: String(item.chapters) },
+                      { label: "Chapter", value: String(item.chapters) },
                       { label: "Dil", value: item.language },
-                      { label: "Çıktı", value: exportSummary(item) },
+                      { label: "Output", value: exportSummary(item) },
                     ].map(({ label, value }) => (
                       <div
                         key={`${item.id}-${label}`}
@@ -790,16 +790,16 @@ export function ExamplesShowcase({
               Başlat <ArrowRight className="size-4" />
             </Link>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">Ücretsiz önizleme · Kayıt gerekmez</p>
+          <p className="mt-3 text-xs text-muted-foreground">Ücretsiz preview · Kayıt gerekmez</p>
         </div>
       </section>
 
       <section className="border-b border-border/80 py-16">
         <div className="shell">
           <SectionHeading
-            badge="Üretim zinciri"
-            title="Bölüm planından çıktıya kadar görülebilir akış"
-            description="Her adım ayrı bir ekran. Nerede olduğunu, ne geldiğini her zaman bilirsin."
+            badge="Production chain"
+            title="Chapter planından outputya kadar görülebilir akış"
+            description="Each step is a separate screen. You always know where you are and what comes next."
           />
 
           <div className="relative">

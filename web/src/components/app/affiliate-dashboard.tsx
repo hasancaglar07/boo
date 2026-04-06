@@ -418,7 +418,7 @@ export function AffiliateDashboard() {
                     <div key={i} className="flex items-center justify-between rounded-[14px] border border-border/40 bg-background/50 px-4 py-3">
                       <div>
                         <div className="text-sm font-medium text-foreground">{c.newUserName || c.newUserEmail || "Kullanıcı"}</div>
-                        <div className="text-xs text-muted-foreground">{new Date(c.convertedAt).toLocaleDateString("tr-TR")}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(c.convertedAt).toLocaleDateString("en-US")}</div>
                       </div>
                       {c.rewardGranted ? (
                         <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
@@ -451,7 +451,7 @@ export function AffiliateDashboard() {
                     <div key={p.id} className="flex items-center justify-between rounded-[14px] border border-border/40 bg-background/50 px-4 py-3">
                       <div>
                         <div className="text-sm font-bold text-foreground">${p.amount.toFixed(2)}</div>
-                        <div className="text-xs text-muted-foreground">{new Date(p.date).toLocaleDateString("tr-TR")}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(p.date).toLocaleDateString("en-US")}</div>
                       </div>
                       {p.status === "paid" ? (
                         <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">

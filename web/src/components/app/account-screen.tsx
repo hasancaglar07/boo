@@ -46,7 +46,7 @@ const PLAN_LABELS: Record<string, string> = {
   starter: "Starter",
   creator: "Yazar",
   pro: "Stüdyo",
-  premium: "Tek Kitap",
+  premium: "Single Book",
 };
 
 function displayName(name?: string | null, email?: string | null) {
@@ -91,7 +91,7 @@ function AffiliateLinkCopy() {
   function handleWhatsApp() {
     if (!data) return;
     trackEvent("affiliate_whatsapp_clicked", { source: "profile" });
-    const text = `BookGenerator.net ile dakikalar içinde profesyonel kitap yaz! ${data.referralUrl}`;
+    const text = `Write professional books in minutes with BookGenerator.net! ${data.referralUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }
 
@@ -356,7 +356,7 @@ export function AccountScreen() {
     <AppFrame
       current="account"
       title="Profil ayarları"
-      subtitle="Adını, yazım hedefini ve hesap durumunu yönet."
+      subtitle="Manage your name, writing goal, and account status."
       books={books}
       viewer={viewer}
     >
@@ -394,7 +394,7 @@ export function AccountScreen() {
                       : "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400"
                   }`}
                 >
-                  {viewer?.emailVerified ? "E-posta doğrulandı" : "Doğrulama bekleniyor"}
+                  {viewer?.emailVerified ? "Email verified" : "Verification pending"}
                 </span>
               </div>
             </CardContent>
@@ -406,7 +406,7 @@ export function AccountScreen() {
                 <div className="flex items-center gap-2">
                   <BookOpen className="size-3.5 text-muted-foreground/60" />
                   <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                    Kitaplar
+                    Books
                   </div>
                 </div>
                 <div className="mt-3 text-3xl font-bold text-foreground">{books.length}</div>
@@ -442,7 +442,7 @@ export function AccountScreen() {
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-foreground">E-posta doğrulaması gerekli</div>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Hesap güvenliği, giriş kurtarma ve bildirimler için e-postanı doğrula. Bu adım yalnızca bir kez gerekir.
+                      Verify your email for account security, login recovery, and notifications. This step is required only once.
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button

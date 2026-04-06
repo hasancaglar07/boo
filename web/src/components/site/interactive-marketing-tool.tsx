@@ -217,7 +217,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
 
       const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error || "Rapor gönderilemedi.");
+        throw new Error(payload?.error || "Report could not be sent.");
       }
 
       setReportUnlocked(true);
@@ -225,7 +225,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
       trackEvent("tool_email_submitted", { tool: activeTool.id, score: result.overallScore });
       trackEvent("tool_full_report_delivered", { tool: activeTool.id, score: result.overallScore });
     } catch (error) {
-      setReportError(error instanceof Error ? error.message : "Rapor gönderilemedi.");
+      setReportError(error instanceof Error ? error.message : "Report could not be sent.");
     } finally {
       setReportPending(false);
     }
@@ -292,7 +292,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                   </Button>
 
                   <p className="text-center text-xs leading-6 text-muted-foreground">
-                    İlk skor anında açık. Tam rapor için yalnız e-posta ister.
+                    First score instantly visible. Only email required for full report.
                   </p>
                 </div>
               </CardContent>
@@ -308,7 +308,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
               <p className="editorial-eyebrow">Instant Report</p>
               <h2 className="editorial-title mt-4 text-foreground">Don't just score. See why the angle works.</h2>
               <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground">
-                Bu araç yalnız sayısal puan vermez. Ne kadar net olduğunu, hangi katmanda zayıfladığını ve hangi formatta daha iyi çalışacağını açık şekilde gösterir.
+                This tool doesn't just give a numerical score. It clearly shows how clear your idea is, where it weakens, and which format works better. gösterir.
               </p>
             </div>
 
@@ -350,7 +350,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                         <h3 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Suggested angle</h3>
                         <p className="mt-3 text-sm leading-7 text-muted-foreground">{result.recommendedAngle}</p>
                         <div className="mt-5 rounded-[20px] border border-border/70 bg-background/70 p-4">
-                          <p className="text-sm font-semibold text-foreground">Net sonraki adım</p>
+                          <p className="text-sm font-semibold text-foreground">Clear next step</p>
                           <p className="mt-2 text-sm leading-7 text-muted-foreground">{result.nextStep}</p>
                         </div>
                       </div>
@@ -432,17 +432,17 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                             className="bg-background/90"
                           />
                           <Button onClick={handleUnlockReport} className="gap-2" isLoading={reportPending}>
-                            Tam Raporu Aç
+                            Open Full Report
                             <ArrowRight className="size-4" />
                           </Button>
                         </div>
-                        {showValidation && !emailValid ? <p className="mt-2 text-sm text-primary">Tam rapor için geçerli bir e-posta gir.</p> : null}
+                        {showValidation && !emailValid ? <p className="mt-2 text-sm text-primary">Enter a valid email for the full report.</p> : null}
                         {reportError ? <p className="mt-2 text-sm text-primary">{reportError}</p> : null}
                       </div>
                     ) : (
                       <div className="space-y-4">
                         <div className="rounded-[20px] border border-primary/20 bg-primary/8 px-4 py-3 text-sm text-foreground">
-                          Tam rapor <span className="font-semibold">{reportDeliveredTo}</span> adresine gönderildi.
+                          Full report sent to <span className="font-semibold">{reportDeliveredTo}</span>.
                         </div>
                         <div className={`grid gap-4 ${result.reportSections.length > 2 ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}>
                           {result.reportSections.map((section) => (
@@ -530,7 +530,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                   className="min-w-[220px] border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                   onClick={() => trackEvent("tool_cta_clicked", { tool: activeTool.id, destination: "tools_hub" })}
                 >
-                  <Link href="/tools">Diğer Araçları Gör</Link>
+                  <Link href="/tools">See Other Tools</Link>
                 </Button>
               </div>
             </div>

@@ -321,7 +321,7 @@ export function BillingScreen() {
         <div className="billing-animate-in-1">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="editorial-eyebrow mb-1">Faturalama</p>
+              <p className="editorial-eyebrow mb-1">Billing</p>
               <h1 className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
                 Planını Yönet
               </h1>

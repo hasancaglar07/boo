@@ -50,8 +50,8 @@ export function ResetPasswordForm() {
       if (!response.ok) {
         const nextFeedback = {
           variant: "error" as const,
-          title: "Sıfırlama isteği gönderilemedi",
-          description: payload?.error || "Şu anda işlem tamamlanamadı. Lütfen tekrar dene.",
+          title: "Reset request could not be sent",
+          description: payload?.error || "The operation could not be completed right now. Please try again.",
         };
         setFeedback(nextFeedback);
         toast.error(nextFeedback.title, { description: nextFeedback.description });
@@ -60,8 +60,8 @@ export function ResetPasswordForm() {
 
       const nextFeedback = {
         variant: "success" as const,
-        title: "Sıfırlama bağlantısı gönderildi",
-        description: "E-postanı ve spam klasörünü kontrol et. Gelen link ile yeni şifreni belirleyebilirsin.",
+        title: "Reset link sent",
+        description: "Check your email and spam folder. You can set a new password using the link you receive.",
       };
       setFeedback(nextFeedback);
       toast.success(nextFeedback.title, { description: nextFeedback.description });
@@ -77,8 +77,8 @@ export function ResetPasswordForm() {
     if (password.trim().length < 8) {
       const nextFeedback = {
         variant: "error" as const,
-        title: "Şifre çok kısa",
-        description: "Yeni şifre en az 8 karakter olmalı.",
+        title: "Password is too short",
+        description: "Your new password must be at least 8 characters.",
       };
       setFeedback(nextFeedback);
       toast.error(nextFeedback.title, { description: nextFeedback.description });
@@ -88,8 +88,8 @@ export function ResetPasswordForm() {
     if (password !== passwordConfirm) {
       const nextFeedback = {
         variant: "error" as const,
-        title: "Şifreler eşleşmiyor",
-        description: "İki alana da aynı yeni şifreyi yazdığından emin ol.",
+        title: "Passwords do not match",
+        description: "Make sure you enter the same new password in both fields.",
       };
       setFeedback(nextFeedback);
       toast.error(nextFeedback.title, { description: nextFeedback.description });
@@ -114,10 +114,10 @@ export function ResetPasswordForm() {
       if (!response.ok) {
         const nextFeedback = {
           variant: "error" as const,
-          title: "Şifre güncellenemedi",
-          description: payload?.error || "Bağlantının süresi dolmuş olabilir. Yeni bir sıfırlama bağlantısı iste.",
+          title: "Password could not be updated",
+          description: payload?.error || "The link may have expired. Request a new reset link.",
           actionHref: "/reset-password",
-          actionLabel: "Yeni bağlantı iste",
+          actionLabel: "Request new link",
         };
         setFeedback(nextFeedback);
         toast.error(nextFeedback.title, { description: nextFeedback.description });
@@ -126,10 +126,10 @@ export function ResetPasswordForm() {
 
       const nextFeedback = {
         variant: "success" as const,
-        title: "Şifren güncellendi",
-        description: "Artık yeni şifrenle giriş yapabilirsin.",
+        title: "Your password has been updated",
+        description: "You can now log in with your new password.",
         actionHref: "/login",
-        actionLabel: "Giriş sayfasına git",
+        actionLabel: "Go to login page",
       };
       setFeedback(nextFeedback);
       toast.success(nextFeedback.title, { description: nextFeedback.description });
@@ -144,14 +144,14 @@ export function ResetPasswordForm() {
     <Card className="w-full max-w-lg border-border/70 bg-card/95 shadow-xl shadow-black/5 backdrop-blur">
       <CardContent className="p-8">
         <div className="mb-8">
-          <div className="text-sm font-medium text-muted-foreground">Şifre Sıfırlama</div>
+          <div className="text-sm font-medium text-muted-foreground">Reset Password</div>
           <h1 className="mt-3 text-3xl font-semibold text-foreground">
-            {token ? "Yeni şifre belirle" : "Sıfırlama bağlantısı iste"}
+            {token ? "Set a new password" : "Request a reset link"}
           </h1>
           <p className="mt-3 text-sm leading-7 text-muted-foreground">
             {token
-              ? "Yeni şifreni belirle. Bu bağlantı tek kullanımlıktır ve güvenlik için sınırlı süreyle geçerlidir."
-              : "Hesabın şifre ile oluşturulduysa e-postana sıfırlama bağlantısı göndeririz."}
+              ? "Set your new password. This link is single-use and valid for a limited time for security purposes."
+              : "If your account was created with a password, we'll send a reset link to your email."}
           </p>
         </div>
 
@@ -170,7 +170,7 @@ export function ResetPasswordForm() {
           {token ? (
             <>
               <div>
-                <Label htmlFor="new-password">Yeni şifre</Label>
+                <Label htmlFor="new-password">New password</Label>
                 <Input
                   id="new-password"
                   type="password"
@@ -178,11 +178,11 @@ export function ResetPasswordForm() {
                   onChange={(event) => setPassword(event.target.value)}
                   autoComplete="new-password"
                   required
-                  placeholder="En az 8 karakter"
+                  placeholder="At least 8 characters"
                 />
               </div>
               <div>
-                <Label htmlFor="new-password-confirm">Yeni şifre tekrar</Label>
+                <Label htmlFor="new-password-confirm">Confirm new password</Label>
                 <Input
                   id="new-password-confirm"
                   type="password"
@@ -190,13 +190,13 @@ export function ResetPasswordForm() {
                   onChange={(event) => setPasswordConfirm(event.target.value)}
                   autoComplete="new-password"
                   required
-                  placeholder="Yeni şifreyi tekrar yaz"
+                  placeholder="Re-enter your new password"
                 />
               </div>
             </>
           ) : (
             <div>
-              <Label htmlFor="reset-email">E-posta</Label>
+              <Label htmlFor="reset-email">Email</Label>
               <Input
                 id="reset-email"
                 type="email"
@@ -204,10 +204,10 @@ export function ResetPasswordForm() {
                 onChange={(event) => setEmail(event.target.value)}
                 autoComplete="email"
                 required
-                placeholder="ornek@mail.com"
+                placeholder="example@mail.com"
               />
               <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                Hesabın bu e-posta ile varsa sıfırlama linki gönderilir. Güvenlik nedeniyle bazı durumlarda aynı mesajı gösterebiliriz.
+                If an account exists with this email, a reset link will be sent. For security reasons, we may show the same message in some cases.
               </p>
             </div>
           )}
@@ -216,19 +216,19 @@ export function ResetPasswordForm() {
             {submitting ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                İşleniyor
+                Processing
               </>
             ) : token ? (
-              "Şifreyi Güncelle"
+              "Update Password"
             ) : (
-              "Sıfırlama Linki Gönder"
+              "Send Reset Link"
             )}
           </Button>
         </form>
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           <Link href="/login" className="font-medium text-primary hover:underline">
-            Girişe dön
+            Back to login
           </Link>
         </div>
       </CardContent>

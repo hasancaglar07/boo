@@ -177,7 +177,8 @@ $chapter_content"
     fi
     # API rate limit delay
     local jitter=$((RANDOM % 5))
-    show_wait_animation "$((DELAY_BETWEEN_CHAPTERS + jitter))" "Chapter cooldown"
+    local cooldown_base="${DELAY_BETWEEN_CHAPTERS:-0}"
+    show_wait_animation "$((cooldown_base + jitter))" "Chapter cooldown"
     # Call API to extend the chapter
     echo "🤖 Generating extended content using model: $model..."
     local extended_content=$(smart_api_call "$extension_prompt" "$extension_system_prompt" "chapter_extension" 0.7 "$extension_tokens" 1 "$model")

@@ -57,7 +57,7 @@ export function ContactForm() {
       setFormData({ name: "", email: "", subject: "", message: "", website: "" });
     } catch (error) {
       setFormState("error");
-      const message = error instanceof Error ? error.message : "Bir hata oluştu. Lütfen tekrar deneyin.";
+      const message = error instanceof Error ? error.message : "An error occurred. Please try again.";
       setFeedbackMessage(message);
       trackEvent("contact_form_failed", { reason: message });
     }
@@ -220,13 +220,13 @@ export function ContactForm() {
               {formState === "loading" && (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Gönderiliyor...
+                  Sending...
                 </>
               )}
               {formState === "success" && (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Gönderildi!
+                  Sent!
                 </>
               )}
               {formState === "idle" && (

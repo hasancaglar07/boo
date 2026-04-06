@@ -20,7 +20,7 @@ import {
 } from "@/lib/preview-auth";
 import { sanitizeNextPath } from "@/lib/auth/safe-next";
 
-const DEFAULT_GOAL = "İlk kitabımı hızlıca ön izlemek istiyorum.";
+const DEFAULT_GOAL = "I want to quickly preview my first book.";
 
 export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   const router = useRouter();
@@ -29,8 +29,8 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   const next = sanitizeNextPath(searchParams.get("next"), "/app/library");
   const slug = searchParams.get("slug") || "";
 
-  const [name, setName] = useState(existingAccount.name !== "Kitap Sahibi" ? existingAccount.name : "");
-  const [email, setEmail] = useState(existingAccount.email !== "ornek@mail.com" ? existingAccount.email : "");
+  const [name, setName] = useState(existingAccount.name !== "Book Owner" ? existingAccount.name : "");
+  const [email, setEmail] = useState(existingAccount.email !== "example@mail.com" ? existingAccount.email : "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -72,12 +72,12 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   }, [mode, next, router, slug]);
 
   function rememberDraftIdentity() {
-    const normalizedEmail = email.trim().toLowerCase() || existingAccount.email || "ornek@mail.com";
+    const normalizedEmail = email.trim().toLowerCase() || existingAccount.email || "example@mail.com";
     const normalizedName =
       name.trim() ||
       existingAccount.name ||
       normalizedEmail.split("@")[0].replace(/[._-]+/g, " ") ||
-      "Kitap Sahibi";
+      "Book Owner";
 
     setAccount({
       name: normalizedName,
@@ -92,7 +92,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
       saveFunnelDraft({
         ...draft,
         authorName: draft.authorName || normalizedName,
-        imprint: draft.imprint || "Kitap Oluşturucu",
+        imprint: draft.imprint || "Book Generator",
         updatedAt: new Date().toISOString(),
       });
     }
@@ -118,7 +118,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
   async function handleMagicLink() {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail) {
-      setError("E-posta bağlantısı için e-posta adresi gerekli.");
+      setError("Email address is required for the email link.");
       trackEvent("auth_form_failed", { mode, method: "magic", reason: "missing_email", source: "continue_auth", slug });
       return;
     }
@@ -135,7 +135,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
     }).catch(() => null);
 
     if (result?.error) {
-      setError("E-posta bağlantısı gönderilemedi. Lütfen tekrar dene.");
+      setError("Email link could not be sent. Please try again.");
       trackEvent("auth_form_failed", { mode, method: "magic", reason: "send_failed", source: "continue_auth", slug });
       setBusyMethod(null);
       return;
@@ -146,7 +146,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
       source: "continue_auth",
     });
     trackEvent("magic_link_sent", { mode, source: "continue_auth", slug });
-    setMessage("Giriş bağlantısı gönderildi. Gelen kutunu kontrol et.");
+    setMessage("Login link sent. Check your inbox.");
     setBusyMethod(null);
   }
 
@@ -155,13 +155,13 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
     const normalizedPassword = password.trim();
 
     if (!normalizedEmail) {
-      setError("Şifre ile devam etmek için e-posta gerekli.");
+      setError("Email is required to continue with password.");
       trackEvent("auth_form_failed", { mode, method: "credentials", reason: "missing_email", source: "continue_auth", slug });
       return;
     }
 
     if (!normalizedPassword) {
-      setError("Şifre gerekli.");
+      setError("Password is required.");
       trackEvent("auth_form_failed", { mode, method: "credentials", reason: "missing_password", source: "continue_auth", slug });
       return;
     }
@@ -200,7 +200,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
         } | null;
 
         if (!registerResponse.ok) {
-          setError(registerPayload?.error || "Kayıt oluşturulamadı.");
+          setError(registerPayload?.error || "Could not create account.");
           trackEvent("auth_form_failed", { mode, method: "credentials", reason: "register_failed", source: "continue_auth", slug });
           setBusyMethod(null);
           return;
@@ -235,7 +235,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
 
       router.push(next);
     } catch {
-      setError("Şifre ile devam edilemedi. Lütfen tekrar dene.");
+      setError("Could not continue with password. Please try again.");
       trackEvent("auth_form_failed", { mode, method: "credentials", reason: "unknown", source: "continue_auth", slug });
       setBusyMethod(null);
     }
@@ -248,54 +248,54 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
     router.push(next);
   }
 
-  const title = mode === "signup" ? "Ön izlemeni kaybetme" : "Kaldığın ön izlemeye dön";
+  const title = mode === "signup" ? "Don't lose your preview" : "Return to your preview";
   const description =
     mode === "signup"
-      ? "Ön izleme ve kitap taslağını hesabına bağla. Hazır olduğunda aynı yerden aç, sonra kitabı açma ya da çıktı alma kararını aynı hesapta ver."
-      : "Daha önce başlattığın kitabı hesabına bağla ve ön izleme ekranına geri dön.";
+      ? "Link your preview and book draft to your account. When you're ready, open it from the same place, and decide whether to unlock or export from the same account."
+      : "Link the book you started earlier to your account and return to the preview screen.";
 
   return (
     <FunnelShell
-      eyebrow={mode === "signup" ? "Üretim sürüyor" : "Devam Et"}
+      eyebrow={mode === "signup" ? "Production in progress" : "Continue"}
       title={title}
       description={description}
       summary={[
-        { label: "Durum", value: slug ? "Önizleme hazırlanıyor" : "Kitap akışı aktif" },
-        { label: "Sonraki adım", value: "Önizleme ekranı" },
-        { label: "Açılacak", value: "Kapak, outline ve ilk %20 içerik" },
+        { label: "Status", value: slug ? "Preview is being prepared" : "Book flow active" },
+        { label: "Next step", value: "Preview screen" },
+        { label: "Opening", value: "Cover, outline and first 20% content" },
       ]}
     >
       <div className="space-y-8">
         <div className="rounded-[28px] border border-primary/20 bg-primary/8 p-5 md:p-6">
-          <div className="text-lg font-semibold text-foreground">Kayıt değil, kitap bağlantısı</div>
+          <div className="text-lg font-semibold text-foreground">This is a book link, not a signup wall</div>
           <p className="mt-2 text-sm leading-7 text-muted-foreground">
-            Bu adım bir engel değil. Hazırladığın ön izlemeyi ve kitap taslağını hesabına bağlıyoruz; tekrar geldiğinde seni aynı yerden karşılasın. Burada ödeme istemiyoruz.
+            This step is not a barrier. We're linking your preview and book draft to your account so that when you return, we can pick up right where you left off. No payment is required here.
           </p>
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
           <div className="rounded-[22px] border border-border/70 bg-card/70 px-4 py-4">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Şimdi açılan
+              What opens now
             </div>
             <div className="mt-2 text-sm leading-6 text-foreground">
-              Kapak, bölüm planı ve ücretsiz ön izleme.
+              Cover, chapter plan and free preview.
             </div>
           </div>
           <div className="rounded-[22px] border border-border/70 bg-card/70 px-4 py-4">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Sonra karar verirsin
+              You decide later
             </div>
             <div className="mt-2 text-sm leading-6 text-foreground">
-              Beğenirsen tam kitabı, PDF&apos;i ve EPUB&apos;u açarsın.
+              If you like it, you can unlock the full book, PDF and EPUB.
             </div>
           </div>
           <div className="rounded-[22px] border border-primary/20 bg-primary/5 px-4 py-4">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Neden hesap
+              Why an account
             </div>
             <div className="mt-2 text-sm leading-6 text-foreground">
-              Kitabın kaybolmaz, başka cihazdan da kaldığın yerden dönersin.
+              Your book won't be lost. You can return from any device and pick up where you left off.
             </div>
           </div>
         </div>
@@ -304,26 +304,26 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-3">
               <label htmlFor="continue-name" className="text-sm font-semibold text-foreground">
-                Ad
+                Name
               </label>
               <Input
                 id="continue-name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Ad Soyad"
+                placeholder="Full Name"
                 className="h-14"
               />
             </div>
             <div className="space-y-3">
               <label htmlFor="continue-email" className="text-sm font-semibold text-foreground">
-                E-posta
+                Email
               </label>
               <Input
                 id="continue-email"
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="ornek@mail.com"
+                placeholder="example@mail.com"
                 className="h-14"
               />
             </div>
@@ -331,14 +331,14 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
         ) : (
           <div className="space-y-3">
             <label htmlFor="continue-login-email" className="text-sm font-semibold text-foreground">
-              E-posta
+              Email
             </label>
             <Input
               id="continue-login-email"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="ornek@mail.com"
+              placeholder="example@mail.com"
               className="h-14"
             />
           </div>
@@ -358,7 +358,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
               ) : (
                 <Sparkles className="mr-2 size-4" />
               )}
-              Google ile Devam Et
+              Continue with Google
             </Button>
           ) : null}
           <Button
@@ -373,13 +373,13 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
             ) : (
               <Mail className="mr-2 size-4" />
             )}
-            E-posta ile Link Gönder
+            Send Email Link
           </Button>
 
           <div className="rounded-[24px] border border-border/70 bg-card/70 p-4">
-            <p className="text-sm font-semibold text-foreground">Şifre ile devam et</p>
+            <p className="text-sm font-semibold text-foreground">Continue with password</p>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
-              Ayrı bir sayfaya gitmeden burada devam edebilirsin.
+              You can continue right here without going to a separate page.
             </p>
             <div className="mt-4 space-y-3">
               <div className="relative">
@@ -387,7 +387,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder={mode === "signup" ? "En az 8 karakter" : "Şifren"}
+                  placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}
                   className="h-12 pr-14"
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
                 />
@@ -395,7 +395,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
                   type="button"
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
                   onClick={() => setShowPassword((current) => !current)}
-                  aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
@@ -410,7 +410,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
                 {busyMethod === "password" ? (
                   <Loader2 className="mr-2 size-4 animate-spin" />
                 ) : null}
-                {mode === "signup" ? "Hesap oluştur ve devam et" : "Şifre ile devam et"}
+                {mode === "signup" ? "Create account and continue" : "Continue with password"}
               </Button>
             </div>
           </div>
@@ -418,7 +418,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
           <div className="flex flex-col gap-3 pt-2 sm:flex-row">
             <Button variant="outline" size="lg" className="w-full" asChild>
               <Link href={`/${mode}?next=${encodeURIComponent(next)}`}>
-                Tam sayfa akışını aç
+                Open full page flow
               </Link>
             </Button>
           </div>
@@ -426,7 +426,7 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
           {mode === "signup" ? (
             <div className="rounded-[20px] border border-dashed border-border/70 bg-background/50 px-4 py-3 text-center">
               <p className="text-xs leading-6 text-muted-foreground">
-                İstersen önce ön izlemeye dönebilirsin. Ama kitabını daha sonra bulmak, açmak ve çıktı almak için hesabına bağlaman gerekecek.
+                You can return to the preview first if you want. But to find, open and export your book later, you'll need to link it to your account.
               </p>
               <button
                 type="button"
@@ -434,13 +434,13 @@ export function ContinueAuthScreen({ mode }: { mode: "signup" | "login" }) {
                 disabled={busyMethod !== null}
                 onClick={handleSkip}
               >
-                {busyMethod === "skip" ? "Ön izlemeye gidiliyor..." : "Yine de ön izlemeye dön"}
+                {busyMethod === "skip" ? "Going to preview..." : "Return to preview anyway"}
               </button>
             </div>
           ) : null}
 
           <p className="text-center text-xs text-muted-foreground/70">
-            Kredi kartı gerekmez · Ücretsiz önizleme · İstediğin zaman çık
+            No credit card required · Free preview · Cancel anytime
           </p>
         </div>
       </div>

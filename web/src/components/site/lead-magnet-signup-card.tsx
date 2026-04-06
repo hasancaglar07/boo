@@ -62,12 +62,12 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
 
       const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error || "Paket şu anda gönderilemedi.");
+        throw new Error(payload?.error || "The package could not be sent right now.");
       }
 
       setDeliveredTo(email.trim());
     } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : "Paket şu anda gönderilemedi.");
+      setError(submissionError instanceof Error ? submissionError.message : "The package could not be sent right now.");
     } finally {
       setPending(false);
     }
@@ -85,7 +85,7 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
           <p className="mt-4 text-base leading-8 text-muted-foreground">{leadMagnet.description}</p>
 
           <div className="mt-8 rounded-[28px] border border-border/80 bg-background/80 p-5">
-            <p className="text-sm font-semibold text-foreground">Bu pakette:</p>
+            <p className="text-sm font-semibold text-foreground">In this package:</p>
             <ul className="mt-4 space-y-3">
               {leadMagnet.previewHighlights.map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">
@@ -134,20 +134,20 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
                       autoComplete="email"
                     />
                     {showValidation && !emailValid ? (
-                      <p className="text-sm text-primary">Geçerli bir e-posta girmen gerekiyor.</p>
+                      <p className="text-sm text-primary">Please enter a valid email address.</p>
                     ) : null}
                   </div>
 
                   <Button type="submit" size="lg" className="w-full gap-2" isLoading={pending}>
                     <Sparkles className="size-4" />
-                    Paketi Gönder
+                    Send Package
                   </Button>
 
                   <div className="rounded-[22px] border border-border/70 bg-muted/35 px-4 py-4">
                     <div className="flex items-start gap-3">
                       <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
                       <p className="text-sm leading-6 text-muted-foreground">
-                        Email only. Kaynak kopyası inbox&apos;una gider; bu adım seni doğrudan wizard ve tool akışına bağlamak için var.
+                        Email only. A copy of the resource goes to your inbox; this step exists to connect you directly to the wizard and tool flow.
                       </p>
                     </div>
                   </div>
@@ -166,7 +166,7 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
                 </div>
 
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Hemen uygulayabileceğin hızlı adımlar</p>
+                  <p className="text-sm font-semibold text-foreground">Quick steps you can apply right away</p>
                   <ul className="mt-4 space-y-3">
                     {leadMagnet.instantAccessItems.map((item) => (
                       <li key={item} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">

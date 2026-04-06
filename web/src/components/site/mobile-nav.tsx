@@ -35,7 +35,7 @@ function MobileLangToggle() {
       aria-label={lang === "en" ? "Switch to Turkish" : "Switch to English"}
     >
       <Globe className="h-4 w-4" aria-hidden="true" />
-      {lang === "en" ? "Türkçe" : "English"}
+      {lang === "tr" ? "English" : "Türkçe"}
     </button>
   );
 }

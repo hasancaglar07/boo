@@ -160,7 +160,7 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
 
   return (
     <section ref={containerRef} className="relative overflow-hidden border-b border-border/80 py-20 md:py-28">
-      {/* Marka uyumlu terracotta arka plan */}
+      {/* Brand-compatible terracotta background */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
           className="absolute inset-0 opacity-20"
@@ -215,7 +215,7 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
               )}
             >
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(201,100,66,0.12),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(124,58,30,0.08),transparent_28%)]" />
-              {/* Progress Bar — marka rengi */}
+              {/* Progress Bar — brand color */}
               <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden rounded-t-[40px]">
                 <motion.div
                   className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary/60"
@@ -249,8 +249,8 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       { icon: Languages, label: "Dil", value: currentBook.language },
-                      { icon: FileText, label: "Çıktı", value: exportFormats.join(" + ") || "Yakında" },
-                      { icon: BookOpen, label: "Bölüm", value: `${currentBook.chapters}` },
+                      { icon: FileText, label: "Output", value: exportFormats.join(" + ") || "Coming soon" },
+                      { icon: BookOpen, label: "Chapter", value: `${currentBook.chapters}` },
                     ].map((item) => (
                       <div
                         key={item.label}
@@ -310,7 +310,7 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
                     {[
                       { icon: Clock, value: currentBook.publisher || "Book Generator" },
                       { icon: Languages, value: currentBook.language },
-                      { icon: BookOpen, value: `${currentBook.chapters} bölüm` },
+                      { icon: BookOpen, value: `${currentBook.chapters} chapters` },
                     ].map((item) => (
                       <div key={item.value} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4 text-primary/70" />
@@ -378,13 +378,13 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
                       <Button asChild size="lg" variant="outline" className="min-w-[220px] flex-1">
                         <a href={exportAsset.url} target="_blank" rel="noreferrer">
                           <Download className="mr-2 h-4 w-4" />
-                          {exportAsset.label || "Örnek Çıktıyı Aç"}
+                          {exportAsset.label || "Open Sample Output"}
                         </a>
                       </Button>
                     ) : (
                       <Button size="lg" variant="outline" className="min-w-[220px] flex-1" disabled>
                         <Download className="mr-2 h-4 w-4" />
-                        Export Hazırlanıyor
+                        Export Preparing
                       </Button>
                     )}
                     <Button asChild size="lg" variant="ghost">
@@ -472,7 +472,7 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
           <p className="text-base leading-8 text-muted-foreground">
             With real covers, real book details, and real EPUB and PDF output files,{" "}
             <span className="font-semibold text-foreground">KDP-compliant publication-ready books</span>{" "}
-            inceliyorsun. Aynı akışla kendi kitabını bu hafta çıkarabilirsin.
+            reviewing. With the same workflow, you can publish your own book this week.
           </p>
           <Button asChild size="lg" className="mt-6 shadow-xl">
             <a href="/start/topic" className="inline-flex items-center gap-2">

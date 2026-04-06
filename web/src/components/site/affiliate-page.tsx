@@ -19,48 +19,48 @@ const STEPS = [
   {
     icon: Users,
     title: "Sign up for free",
-    desc: "BookGenerator.net'e kaydol. Hesabın otomatik olarak bir affiliate linki alır — ek başvuru gerekmez.",
+    desc: "Sign up for BookGenerator.net. Your account automatically receives an affiliate link — no extra application required.",
   },
   {
     icon: LinkIcon,
-    title: "Affiliate linkini paylaş",
-    desc: "Profilindeki özel linki kopyala ve sosyal medya, blog, e-posta veya WhatsApp'tan paylaş.",
+    title: "Share your affiliate link",
+    desc: "Copy your special link from your profile and share it on social media, blogs, email, or WhatsApp.",
   },
   {
     icon: BadgeDollarSign,
-    title: "Her ödemeden %30 kazan",
-    desc: "Linkinden üye olan ve ödeme yapan herkesten kalıcı %30 komisyon kazanırsın. Sınır yok.",
+    title: "Earn 30% from every payment",
+    desc: "Earn a permanent 30% commission from everyone who signs up through your link and makes a payment. No limit.",
   },
 ];
 
 const FAQS = [
   {
-    q: "Başvuru yapmam gerekiyor mu?",
-    a: "No! Your affiliate link is automatically created as soon as you register. Profil ayarlarınızdan veya /affiliate sayfasından hemen erişebilirsiniz.",
+    q: "Do I need to apply?",
+    a: "No! Your affiliate link is automatically created as soon as you register. You can access it immediately from your profile settings or the /affiliate page.",
   },
   {
-    q: "Komisyon oranı nedir?",
+    q: "What is the commission rate?",
     a: "You earn a 30% commission from every active subscription payment. This repeats every month as long as the subscription is active.",
   },
   {
-    q: "Premium plan ($4) komisyon kapsamında mı?",
+    q: "Is the Premium plan ($4) included in commissions?",
     a: "No. Affiliate commissions only apply to monthly subscription plans (Starter, Creator, Pro).",
   },
   {
     q: "How are payments made?",
-    a: "PayPal veya banka transferi ile ödeme yapılır. Minimum ödeme eşiği $50'dır. Ödemeler her ay düzenlenir.",
+    a: "Payments are made via PayPal or bank transfer. Minimum payout threshold is $50. Payments are processed monthly.",
   },
   {
-    q: "Komisyon ne zaman onaylanır?",
+    q: "When is the commission approved?",
     a: "After the 30-day refund period expires, the commission is approved and added to your balance.",
   },
   {
-    q: "Kaç kişiyi davet edebilirim?",
-    a: "Sınır yok. Ne kadar çok paylaşırsanız, o kadar çok kazanırsınız. Davet ettiğiniz her ödeme yapan üye %30 komisyon getirir.",
+    q: "How many people can I invite?",
+    a: "No limit. The more you share, the more you earn. Every paying member you invite brings a 30% commission.",
   },
   {
-    q: "Davet ettiğim kişinin linkimi kullanması zorunlu mu?",
-    a: "Evet. The affiliate system requires members to sign up through your special link. Linkiniz ?ref=KODUNUZ parametresini taşır ve otomatik tanınır.",
+    q: "Is it mandatory for my invitee to use my link?",
+    a: "Yes. The affiliate system requires members to sign up through your special link. Your link carries the ?ref=YOURCODE parameter and is automatically recognized.",zed.",
   },
 ];
 
@@ -108,7 +108,7 @@ function LoggedInAffiliateCard() {
           <div className="mb-6 flex items-center gap-2">
             <CheckCircle2 className="size-4 text-emerald-500" />
             <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-              Affiliate hesabın aktif
+              Your affiliate account is active
             </span>
           </div>
 
@@ -118,8 +118,8 @@ function LoggedInAffiliateCard() {
                 <LinkIcon className="size-4" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-foreground">Affiliate Linkin</h3>
-                <p className="text-xs text-muted-foreground">Kopyala, paylaş — her ödemeden %30 kazan</p>
+                <h3 className="text-base font-semibold text-foreground">Your Affiliate Link</h3>
+                <p className="text-xs text-muted-foreground">Copy, share — earn 30% from every payment</p>
               </div>
             </div>
 
@@ -131,7 +131,7 @@ function LoggedInAffiliateCard() {
                 onClick={handleCopy}
               >
                 <span className="min-w-0 flex-1 truncate font-mono text-sm text-foreground select-all">
-                  {data?.referralUrl || "Yükleniyor..."}
+                  {data?.referralUrl || "Loading..."}
                 </span>
                 <Copy className="size-4 shrink-0 text-muted-foreground" />
               </div>
@@ -140,9 +140,9 @@ function LoggedInAffiliateCard() {
             <div className="mt-4 flex flex-wrap gap-2">
               <Button size="sm" className="min-h-[40px]" onClick={handleCopy} disabled={!data}>
                 {copied ? (
-                  <><CheckCircle2 className="mr-1.5 size-3.5" /> Kopyalandı!</>
+                  <><CheckCircle2 className="mr-1.5 size-3.5" /> Copied!</>
                 ) : (
-                  <><Copy className="mr-1.5 size-3.5" /> Linki Kopyala</>
+                  <><Copy className="mr-1.5 size-3.5" /> Copy Link</>
                 )}
               </Button>
               <Button size="sm" variant="outline" className="min-h-[40px]" onClick={handleWhatsApp} disabled={!data}>
@@ -156,7 +156,7 @@ function LoggedInAffiliateCard() {
             {data && data.clicks > 0 && (
               <p className="mt-3 text-xs text-muted-foreground">
                 <Users className="inline size-3 mr-1" />
-                <strong className="text-foreground">{data.clicks}</strong> kişi linkine tıkladı
+                <strong className="text-foreground">{data.clicks}</strong> people clicked your link
               </p>
             )}
           </div>
@@ -167,7 +167,7 @@ function LoggedInAffiliateCard() {
               className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/8 px-5 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/14"
             >
               <BadgeDollarSign className="size-3.5" />
-              Detaylı affiliate panelini aç
+              Open detailed affiliate panel
               <span className="text-muted-foreground">→</span>
             </Link>
           </div>
@@ -216,30 +216,30 @@ export function AffiliatePage() {
         <div className="shell">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto inline-flex items-center rounded-full border border-border/80 bg-card/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground">
-              Affiliate Programı
+              Affiliate Program
             </div>
 
             <h1 className="mx-auto mt-8 max-w-3xl text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              Her Üyelikten %30 Komisyon Kazan
+              Earn 30% Commission from Every Membership
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-8 text-muted-foreground">
-              BookGenerator.net&apos;e kaydolan herkes otomatik olarak affiliate link alır. 
-              Linkini paylaş, ödeme yapan her davetinden kalıcı %30 komisyon kazan.
+              Everyone who signs up for BookGenerator.net automatically receives an affiliate link. 
+              Share your link, earn a permanent 30% commission from every paying invitee.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
                 <CheckCircle2 className="size-3 text-emerald-500" />
-                Başvuru gerekmez
+                No application required
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
                 <Zap className="size-3 text-primary" />
-                Anında affiliate link
+                Instant affiliate link
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
                 <BadgeDollarSign className="size-3 text-primary" />
-                Kalıcı %30 komisyon
+                Permanent 30% commission
               </span>
             </div>
 
@@ -249,11 +249,11 @@ export function AffiliatePage() {
                   <Button asChild size="lg" className="px-8">
                     <Link href="/app/affiliate">
                       <BadgeDollarSign className="mr-2 size-4" />
-                      Affiliate Panelini Aç
+                      Open Affiliate Panel
                     </Link>
                   </Button>
                   <Button asChild size="lg" variant="outline" className="px-8">
-                    <Link href="/app/library">Kitaplarıma Dön</Link>
+                    <Link href="/app/library">Back to My Books</Link>
                   </Button>
                 </>
               ) : (
@@ -279,8 +279,8 @@ export function AffiliatePage() {
         <div className="shell">
           <SectionHeading
             badge="How It Works?"
-            title="3 Adımda %30 Komisyon Kazan"
-            description="Kayıt ol, linkini paylaş, kazanç otomatik hesaplansın. Ek araç veya başvuru gerekmez."
+            title="Earn 30% Commission in 3 Steps"
+            description="Sign up, share your link, earnings are calculated automatically. No extra tools or application required."
             align="center"
           />
 
@@ -314,9 +314,9 @@ export function AffiliatePage() {
       <section className="border-b border-border/80 py-18">
         <div className="shell max-w-2xl">
           <SectionHeading
-            badge="Komisyon Tablosu"
-            title="Her Plan İçin %30"
-            description="Davet ettiğin kişi ödemeyi sürdürdüğü sürece her ay komisyon alırsın."
+            badge="Commission Table"
+            title="30% for Every Plan"
+            description="You earn commission every month as long as the person you invited continues their payment."
             align="center"
           />
 
@@ -326,8 +326,8 @@ export function AffiliatePage() {
                 <thead>
                   <tr className="border-b border-border/60 bg-muted/50">
                     <th className="px-5 py-3 text-left font-semibold text-foreground">Plan</th>
-                    <th className="px-5 py-3 text-right font-semibold text-foreground">Aylık</th>
-                    <th className="px-5 py-3 text-right font-semibold text-foreground">Komisyon/Ay</th>
+                    <th className="px-5 py-3 text-right font-semibold text-foreground">Monthly</th>
+                    <th className="px-5 py-3 text-right font-semibold text-foreground">Commission/Month</th>
                     <th className="px-5 py-3 text-right font-semibold text-primary">3 Ay</th>
                   </tr>
                 </thead>
@@ -355,7 +355,7 @@ export function AffiliatePage() {
         <div className="shell max-w-2xl">
           <SectionHeading
             badge="SSS"
-            title="Sık Sorulan Sorular"
+            title="Frequently Asked Questions"
             align="center"
           />
 
@@ -376,7 +376,7 @@ export function AffiliatePage() {
             title={isLoggedIn === true ? "Go to Affiliate Panel" : "Start Now"}
             description={
               isLoggedIn === true
-                ? "Detaylı affiliate panelinden linkini kopyalayabilir ve komisyon takibi yapabilirsin."
+                ? "You can copy your link and track commissions from the detailed affiliate panel."
                 : "Sign up, get your affiliate link, and start sharing. Earn a permanent 30% commission from every paying member."
             }
             align="center"
@@ -387,7 +387,7 @@ export function AffiliatePage() {
               <Button asChild size="lg" className="px-8">
                 <Link href="/app/affiliate">
                   <BadgeDollarSign className="mr-2 size-4" />
-                  Affiliate Panelini Aç
+                  Open Affiliate Panel
                 </Link>
               </Button>
             ) : (
@@ -399,14 +399,14 @@ export function AffiliatePage() {
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="px-8">
-                  <a href="mailto:affiliate@bookgenerator.net?subject=Affiliate%20Soru">Soru Sor</a>
+                  <a href="mailto:affiliate@bookgenerator.net?subject=Affiliate%20Question">Ask a Question</a>
                 </Button>
               </>
             )}
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground/70">
-            affiliate@bookgenerator.net · Sorular 2 iş günü içinde yanıtlanır
+            affiliate@bookgenerator.net · Questions are answered within 2 business days
           </p>
         </div>
       </section>

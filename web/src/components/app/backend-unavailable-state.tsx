@@ -15,21 +15,21 @@ export function BackendUnavailableState({
       <CardContent className="space-y-5">
         <div className="space-y-2">
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Servise şu an ulaşılamıyor
+            Service is currently unavailable
           </h2>
           <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-            Uygulama backend servisine bağlanamadı. Kısa süre sonra tekrar deneyebilir veya uygulama
-            içindeki yeni kitap akışına dönebilirsin.
+            Unable to connect to the application backend service. You can try again shortly or
+            return to the new book flow within the app.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button onClick={onRetry}>Yeniden dene</Button>
+          <Button onClick={onRetry}>Try again</Button>
           <Button variant="outline" asChild>
-            <Link href="/app/new/topic">Yeni kitap akışına dön</Link>
+            <Link href="/app/new/topic">Return to new book flow</Link>
           </Button>
           <Button variant="ghost" asChild>
-            <Link href="/how-it-works">Nasıl çalıştığını incele</Link>
+            <Link href="/how-it-works">See how it works</Link>
           </Button>
         </div>
       </CardContent>

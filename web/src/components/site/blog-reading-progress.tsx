@@ -24,7 +24,7 @@ export function BlogReadingProgress() {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(progress)}
-      aria-label="Okuma ilerlemesi"
+      aria-label="Reading progress"
       className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[2px] bg-border"
     >
       <div
