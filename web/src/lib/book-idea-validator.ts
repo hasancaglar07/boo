@@ -77,7 +77,7 @@ const STOP_WORDS = new Set([
   "how",
   "your",
   "guide",
-  "kitap",
+  "book",
   "book",
   "to",
   "of",
@@ -333,7 +333,7 @@ export function evaluateBookIdea(input: BookIdeaValidatorInput): BookIdeaValidat
       label: "Specificity",
       score: scores.specificity,
       weight: 15,
-      summary: "Konu ne kadar odaklı ve savunulabilir.",
+      summary: "How focused and defensible the topic is.",
     },
     {
       key: "differentiation",

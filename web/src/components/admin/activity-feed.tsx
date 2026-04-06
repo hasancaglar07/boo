@@ -69,7 +69,7 @@ export function ActivityFeed({
             );
           })
         ) : (
-          <p className="text-sm admin-muted">Henüz activity yok.</p>
+          <p className="text-sm admin-muted">No activity yet.</p>
         )}
       </div>
     </div>

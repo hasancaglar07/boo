@@ -75,7 +75,7 @@ const dict: Record<Lang, Record<string, string>> = {
     "nav.faq": "SSS",
     "nav.login": "Log In",
     "nav.myBooks": "My Books",
-    "nav.newBook": "Yeni Kitap",
+    "nav.newBook": "New Book",
     "nav.freePreview": "Free Preview",
     "nav.goHome": "Ana sayfaya git",
     "nav.mainMenu": "Main menu",

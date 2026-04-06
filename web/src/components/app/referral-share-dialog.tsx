@@ -84,7 +84,7 @@ export function ReferralShareDialog({ open, onOpenChange }: ReferralShareDialogP
           </div>
           <DialogTitle>Share Your Affiliate Link, Earn 30% Commission!</DialogTitle>
           <DialogDescription>
-            Arkadaşların senin linkinden üye olup payment yaparsa, her paymentnin %30'unu commission olarak kazanırsın. Inviteiye linki zorunludur — üye olmak için senin linkini kullanmalılar.
+            When your friends sign up through your link and make a payment, you earn 30% commission from each payment. An invite link is required — to sign up senin linkini kullanmalılar.
           </DialogDescription>
         </DialogHeader>
 

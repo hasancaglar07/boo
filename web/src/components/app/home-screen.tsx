@@ -457,7 +457,7 @@ export function HomeScreen() {
                   )
                 }
               >
-                {latestBook ? "Preview’a dön" : "İlk kitabını başlat"}
+                {latestBook ? "Preview’a dön" : "Start your first book"}
                 <ArrowRight className="ml-2 size-4" aria-hidden="true" />
               </Button>
 

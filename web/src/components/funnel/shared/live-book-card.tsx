@@ -3,7 +3,7 @@
 import { coverDirectionLabel, toneLabel, type FunnelDraft } from "@/lib/funnel-draft";
 
 export function LiveBookCard({ draft }: { draft: FunnelDraft }) {
-  const displayTitle = draft.title || "Kitabının adı burada görünecek";
+  const displayTitle = draft.title || "Your book title will appear here";
   const displaySubtitle =
     draft.subtitle ||
     "As title, subtitle, and cover direction progress, a clearer book feel emerges here.";

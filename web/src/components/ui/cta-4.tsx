@@ -14,15 +14,15 @@ export interface Cta4Props {
 const defaultItems = [
   "5 soruluk hızlı başlangıç sihirbazı",
   "EPUB önce, PDF sonra",
-  "Kapak ve metadata akışı",
-  "Düzenlenebilir bölüm yapısı",
+  "Cover and metadata flow",
+  "Editable chapter structure",
   "AI destekli araştırma katmanı",
 ] as const;
 
 export function Cta4({
-  title = "İlk kitabını çıkarmak için tek net başlangıç.",
+  title = "The single clear starting point for launching your first book.",
   description = "A book system that takes you from topic idea to your first publishable file without unnecessary panel fatigue.",
-  buttonText = "İlk kitabını başlat",
+  buttonText = "Start your first book",
   buttonUrl = "/start",
   items = defaultItems,
 }: Cta4Props) {

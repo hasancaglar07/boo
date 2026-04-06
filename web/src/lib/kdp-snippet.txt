@@ -1,0 +1,2 @@
+﻿kdpye-yuklemeden-once-ne-kontrol-etmeli",
+    title: "KDP’ye Yüklemeden Önce Ne Kontrol Etmeli?",

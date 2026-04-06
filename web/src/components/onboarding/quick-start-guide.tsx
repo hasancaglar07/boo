@@ -14,19 +14,19 @@ const QUICK_START_STEPS = [
   {
     icon: "🤖",
     title: "AI ile Outline",
-    description: "Otomatik bölüm planı oluştur",
+    description: "Generate automatic chapter plan",
     time: "30 sn",
   },
   {
     icon: "🎨",
     title: "Kapağı Seç",
-    description: "AI kapak taslağından birini seç",
+    description: "Choose one of the AI cover drafts",
     time: "15 sn",
   },
   {
     icon: "📖",
     title: "Preview Gör",
-    description: "İlk bölümü hemen oku",
+    description: "Read the first chapter right away",
     time: "Hemen",
   },
 ];
@@ -42,7 +42,7 @@ export function QuickStartGuide() {
   return (
     <div className="quick-start-card rounded-[28px] border border-border/80 bg-card/80 p-6 md:p-8">
       <div className="mb-6">
-        <h3 className="text-2xl font-bold text-foreground">⚡ 60 Saniyede İlk Kitabın</h3>
+        <h3 className="text-2xl font-bold text-foreground">⚡ Your First Book in 60 Seconds</h3>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           Sadece 4 adımda fikrini yayına hazır kitaba dönüştür
         </p>
@@ -78,7 +78,7 @@ export function QuickStartGuide() {
 
       <div className="mt-6">
         <Button size="lg" className="w-full" onClick={handleStart}>
-          Hemen Başla
+          Start Now
         </Button>
         <p className="mt-3 text-center text-xs text-muted-foreground">
           Kayıt gerekmez • Ücretsiz deneme • İstediğin zaman çık

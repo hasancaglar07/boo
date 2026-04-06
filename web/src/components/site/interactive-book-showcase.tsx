@@ -371,7 +371,7 @@ export function InteractiveBookShowcase({ books }: InteractiveBookShowcaseProps)
                     <Button asChild size="lg" className="min-w-[240px] flex-1 shadow-xl">
                       <Link href={`/examples/${encodeURIComponent(currentBook.slug)}`}>
                         <Play className="mr-2 h-4 w-4" />
-                        Gerçek Kitabı İncele
+                        Explore the Full Book
                       </Link>
                     </Button>
                     {exportAsset ? (

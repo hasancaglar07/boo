@@ -143,7 +143,7 @@ export default function AdminUsersPage() {
               { label: "Starter", value: "starter" },
               { label: "Creator", value: "creator" },
               { label: "Studio", value: "pro" },
-              { label: "Tek Kitap", value: "premium" },
+              { label: "Single Book", value: "premium" },
             ],
           },
           {

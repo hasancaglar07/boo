@@ -119,15 +119,15 @@ function MonitoringChart({ chartData = defaultChartData }: { chartData?: readonl
 
 export function Features9({
   badge = "Sinyaller",
-  title = "Üretim sadece yazı değil, takip edilen bir süreç.",
-  description = "Araştırma, destek ve çıktı üretimi aynı akış içinde birbirini besler.",
-  locationTitle = "Konu ve pazar sinyalleri",
-  locationDescription = "Anahtar kelime, konu kümeleri ve okur yönleri tek bakışta görülebilir.",
-  supportTitle = "Destek ve düzeltme akışı",
+  title = "Production is not just writing, it is a tracked process.",
+  description = "Research, support, and output generation feed each other within the same flow.",
+  locationTitle = "Topic and market signals",
+  locationDescription = "Keywords, topic clusters, and reader directions visible at a glance.",
+  supportTitle = "Support and revision flow",
   supportDescription = "Email, panel ve not sistemi ile sorun takibi ve düzeltme daha kontrollü ilerler.",
   uptimeLabel = "Çıktı hazır %99,99",
   activityTitle = "Yazım ve düzenleme ritmi",
-  activityDescription = "Outline, bölüm yazımı ve kalite düzenleme aynı zaman çizgisi içinde takip edilebilir.",
+  activityDescription = "Outline, chapter writing, and quality editing can be tracked within the same timeline.",
   chartData = defaultChartData,
 }: Features9Props) {
   return (

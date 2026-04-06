@@ -13,10 +13,10 @@ const STORAGE_KEY = "book_generator_onboarding_checklist";
 
 const DEFAULT_CHECKLIST_ITEMS = [
   { id: 1, text: "Set your first book topic", completed: false },
-  { id: 2, text: "AI ile outline oluştur", completed: false },
-  { id: 3, text: "Kapak stilini seç", completed: false },
+  { id: 2, text: "Generate outline with AI", completed: false },
+  { id: 3, text: "Select cover style", completed: false },
   { id: 4, text: "Preview gör", completed: false },
-  { id: 5, text: "Hesabına bağla", completed: false },
+  { id: 5, text: "Link to your account", completed: false },
 ];
 
 function loadChecklistState() {
@@ -69,7 +69,7 @@ export function OnboardingChecklist() {
     <div className="checklist-card rounded-[28px] border border-border/80 bg-card/80 p-6">
       <div className="mb-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-foreground">🎯 İlk Kitabın</h3>
+          <h3 className="text-lg font-bold text-foreground">🎯 Your First Book</h3>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-foreground">
               {completedCount}/{items.length}
@@ -84,10 +84,10 @@ export function OnboardingChecklist() {
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
           {isComplete
-            ? "Tebrikler! İlk kitabın hazır!"
+            ? "Congratulations! Your first book is ready!"
             : isLoggedIn
               ? "İlerlemeni takip et"
-              : "İlerlemeni takip et ve hesabına bağla"}
+              : "Track your progress and link to your account"}
         </p>
       </div>
 
@@ -136,7 +136,7 @@ export function OnboardingChecklist() {
           <div className="flex items-start gap-3">
             <div className="text-2xl">🎉</div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">Tebrikler! İlk kitabın hazır!</p>
+              <p className="text-sm font-semibold text-foreground">Congratulations! Your first book is ready!</p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
                 Now continue with the full book and export features.
               </p>
@@ -152,7 +152,7 @@ export function OnboardingChecklist() {
             {completedCount > 0 ? (
               <>Harika! {completedCount} adım tamamladın. Devam et!</>
             ) : (
-              <>İlk adımını atmak için wizard&apos;ı başlat.</>
+              <>Start the wizard to take your first step.</>
             )}
           </p>
         </div>

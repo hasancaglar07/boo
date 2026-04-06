@@ -42,7 +42,7 @@ const WHAT_YOU_GET = [
 const TRUST_ITEMS = [
   { label: KDP_GUARANTEE_CLAIM, icon: Shield },
   { label: "Instant access", icon: Zap },
-  { label: "Abonelik yok", icon: CheckCircle2 },
+  { label: "No subscription", icon: CheckCircle2 },
   { label: NO_API_COST_CLAIM, icon: BookOpen },
 ];
 
@@ -276,7 +276,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
           {/* Comparison: Biz vs Ajans */}
           <div className="rounded-2xl border border-border/70 bg-card p-5">
             <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.15em] text-muted-foreground">
-              Neden $4?
+              Why $4?
             </h2>
             <div className="space-y-2">
               {[

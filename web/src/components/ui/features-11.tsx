@@ -48,9 +48,9 @@ function renderVisual(visual: FeatureVisual) {
       <MockWindow title="Chapter Plan + Outline">
         <div className="space-y-3">
           {[
-            ["01", "Okur vaadi", "Belirli bir okur için net sonuç."],
-            ["02", "Bölüm yapısı", "Örneklerle güçlenmiş altı temiz bölüm."],
-            ["03", "Çıktıya hazır", "Ön sayfalar, kapak ve EPUB akışı."],
+            ["01", "Reader promise", "Clear outcome for a specific reader."],
+            ["02", "Chapter structure", "Six clean chapters strengthened with examples."],
+            ["03", "Export-ready", "Front matter, cover, and EPUB pipeline."],
           ].map(([label, title, text]) => (
             <div key={title} className="rounded-2xl border border-border/80 bg-card px-4 py-3">
               <div className="flex items-center gap-3">
@@ -142,7 +142,7 @@ function renderVisual(visual: FeatureVisual) {
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               {title === "Arşiv" ? (
                 <FileArchive className="size-4 text-primary" />
-              ) : title === "Kitap bilgileri" ? (
+              ) : title === "Book information" ? (
                 <SquareStack className="size-4 text-primary" />
               ) : (
                 <ArrowUpRight className="size-4 text-primary" />
@@ -159,7 +159,7 @@ function renderVisual(visual: FeatureVisual) {
 
 export function Features11({
   badge,
-  title = "Tek bir bölüm değil, birbirine bağlı bir üretim sistemi.",
+  title = "Not a single chapter, but an interconnected production system.",
   description = "Book production, research, editing, and export work like a single control pipeline.",
   cards,
   className,

@@ -604,7 +604,7 @@ export function BookIdeaValidatorTool() {
                 text: "Uses a decision tree to clarify which format works better for the same topic.",
               },
               {
-                href: "/blog/zayif-bir-kitap-fikri-nasil-guclendirilir",
+                href: "/blog/how-to-strengthen-a-weak-book-idea",
                 title: "How to strengthen a weak book idea?",
                 text: "Shows how to narrow down broad, generic, or outcome-less ideas.",
               },

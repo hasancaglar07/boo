@@ -31,7 +31,7 @@ export function PricingCreativeSection({
       features: premiumPlan.features,
       popular: false,
       accentClassName: "text-foreground",
-      ctaLabel: "$4 ile Bu Kitabı Aç",
+      ctaLabel: "Unlock This Book for $4",
       ctaHref: "/start/topic?plan=single-book",
     },
     {

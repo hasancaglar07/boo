@@ -117,7 +117,7 @@ export default function AdminModerationPage() {
       </div>
 
       <FilterBar
-        searchPlaceholder="Kitap veya slug ara"
+        searchPlaceholder="Search book or slug"
         filters={[
           {
             key: "status",

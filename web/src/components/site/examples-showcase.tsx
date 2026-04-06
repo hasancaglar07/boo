@@ -536,7 +536,7 @@ function OutlineModal({
                 onClose();
               }}
             >
-              Tam kitabı oku <ArrowRight className="size-4" />
+              Read full book <ArrowRight className="size-4" />
             </Link>
             <Link
               href="/start/topic"
@@ -755,7 +755,7 @@ export function ExamplesShowcase({
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="mb-4 text-5xl">📚</div>
-              <p className="text-base font-medium text-foreground">Bu filtre için örnek yok</p>
+              <p className="text-base font-medium text-foreground">No examples for this filter</p>
               <p className="mt-2 text-sm text-muted-foreground">Farklı bir kategori veya dil seç.</p>
             </div>
           ) : null}
@@ -766,7 +766,7 @@ export function ExamplesShowcase({
         <div className="shell mx-auto max-w-2xl text-center">
           <SectionHeading
             badge="Try your own topic"
-            title="Hangi kitabı yazmak istiyorsun?"
+            title="Which book do you want to write?"
             description="Enter your topic, create your own draft with the same workflow. No credit card required."
             align="center"
           />
@@ -823,7 +823,7 @@ export function ExamplesShowcase({
                         href="/start/topic"
                         className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                       >
-                        Başla <ChevronRight className="size-3" />
+                        Start <ChevronRight className="size-3" />
                       </Link>
                     ) : null}
                   </div>

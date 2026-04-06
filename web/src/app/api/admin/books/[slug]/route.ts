@@ -9,7 +9,7 @@ export async function GET(
   if (session instanceof Response) return session;
   const detail = await getAdminBookDetail((await params).slug);
   if (!detail) {
-    return Response.json({ ok: false, error: "Kitap bulunamadı." }, { status: 404 });
+    return Response.json({ ok: false, error: "Book not found." }, { status: 404 });
   }
   return detailResponse(detail);
 }

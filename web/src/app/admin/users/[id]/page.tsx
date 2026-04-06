@@ -115,7 +115,7 @@ export default function AdminUserDetailPage() {
     if (planId === data?.item.currentPlan) return;
     const label = PLAN_LABELS[planId] || planId;
     const confirmed = window.confirm(
-      `Bu kullanıcının planını "${PLAN_LABELS[data?.item.currentPlan || 'free']}" → "${label}" Are you sure you want to change this user's plan to`
+      `Change this user's plan from "${PLAN_LABELS[data?.item.currentPlan || 'free']}" → "${label}" to`
     );
     if (!confirmed) return;
     setBusy("plan");

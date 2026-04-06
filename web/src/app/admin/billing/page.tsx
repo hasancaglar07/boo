@@ -112,7 +112,7 @@ export default function AdminBillingPage() {
         };
         const kindLabels: Record<string, string> = {
           subscription: "Subscription",
-          one_time_book_unlock: "Kitap Kilidi",
+          one_time_book_unlock: "Book Unlock",
           manual_adjustment: "Manuel",
           refund: "Refund",
         };

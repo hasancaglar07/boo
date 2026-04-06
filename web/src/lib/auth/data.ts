@@ -742,7 +742,7 @@ export async function getAuthStateForUser(userId: string | null, email?: string 
       account: {
         name: "Book Creator",
         email: "demo@example.com",
-        goal: "İlk kitabımı hızlıca üretmek istiyorum.",
+        goal: "I want to quickly generate my first book.",
         publisherImprint: "",
         publisherLogoUrl: "",
       },
@@ -780,7 +780,7 @@ export async function getAuthStateForUser(userId: string | null, email?: string 
       account: {
         name: "Book Creator",
         email: normalizeEmail(email),
-        goal: "İlk kitabımı hızlıca üretmek istiyorum.",
+        goal: "I want to quickly generate my first book.",
         publisherImprint: "",
         publisherLogoUrl: "",
       },

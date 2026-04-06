@@ -221,7 +221,7 @@ export function BillingScreen() {
     checkoutHandledRef.current = queryKey;
 
     if (checkoutStatus === "cancelled") {
-      setCheckoutNotice("Payment iptal edildi.");
+      setCheckoutNotice("Payment cancelled.");
       setCheckoutNoticeTone("warning");
       setPendingPlanId(null);
       setSubmitting(false);

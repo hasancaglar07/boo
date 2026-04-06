@@ -310,7 +310,7 @@ export async function sendContactRequestEmails(input: {
     subject: "We received your message",
     html: `
       <p>We received your message.</p>
-      <p><strong>Konu:</strong> ${safeSubjectLabel}</p>
+      <p><strong>Subject:</strong> ${safeSubjectLabel}</p>
       <p>Our team will get back to you as soon as possible. You can share additional context from the contact page if needed.</p>
       <p><strong>Your submitted message</strong></p>
       <p>${safeMessage}</p>

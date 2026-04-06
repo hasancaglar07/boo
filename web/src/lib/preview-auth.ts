@@ -57,7 +57,7 @@ export type PreviewAuthStatePayload = {
   usage: PreviewUsage;
 };
 
-export const DEFAULT_PREVIEW_GOAL = "İlk kitabımı hızlıca üretmek istiyorum.";
+export const DEFAULT_PREVIEW_GOAL = "I want to quickly generate my first book.";
 export const DEFAULT_PREVIEW_USAGE: PreviewUsage = {
   canStartBook: true,
   reason: null,

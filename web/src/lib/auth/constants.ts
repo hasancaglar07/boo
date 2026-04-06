@@ -20,9 +20,9 @@ export const SUBSCRIPTION_PLANS = new Set(["starter", "creator", "pro"]);
 export const PLAN_LABELS: Record<string, string> = {
   free: "Free",
   starter: "Starter",
-  creator: "Yazar",
+  creator: "Creator",
   pro: "Stüdyo",
-  premium: "Tek Kitap",
+  premium: "Single Book",
 };
 
 export const PLAN_PRICES_CENTS: Record<string, number> = {

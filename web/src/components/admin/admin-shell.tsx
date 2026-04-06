@@ -76,7 +76,7 @@ function GlobalSearch() {
       <input
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        placeholder="Kullanıcı, e-posta veya kitap ara"
+        placeholder="Search user, email, or book"
         className="h-11 w-full rounded-2xl border border-[color:var(--admin-border)] bg-white/60 pl-9 pr-4 text-sm text-[color:var(--admin-text)] outline-none transition focus:border-[color:var(--admin-primary)] focus:ring-2 focus:ring-[color:var(--admin-primary-soft)] dark:bg-white/5"
       />
     </form>

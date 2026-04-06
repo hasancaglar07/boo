@@ -101,7 +101,7 @@ export default function AdminDashboardPage() {
           color="warning"
         />
         <MetricCard
-          title="Toplam kitap"
+          title="Total books"
           value={loading || !data ? "—" : formatAdminNumber(data.cards.totalBooks)}
           icon={<BookOpen className="size-5" />}
           color="warning"

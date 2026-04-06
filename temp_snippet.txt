@@ -1,0 +1,5 @@
+﻿: "ilk-kitabim-kac-bolum-olmali",
+    title: "İlk Kitabım Kaç Bölüm Olmalı?",
+    summary: "İlk kitapta fazla bölüm açmanın neden çoğu zaman hata olduğunu açıklar.",
+    category: "Yapı",
+    read
