@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { ok: false, error: parsed.error.issues[0]?.message || "Geçersiz report isteği." },
+      { ok: false, error: parsed.error.issues[0]?.message || "Invalid report request." },
       { status: 400 },
     );
   }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   if (!rateLimit.allowed) {
     return NextResponse.json(
-      { ok: false, error: "Çok fazla rapor istedin. Biraz sonra tekrar dene." },
+      { ok: false, error: "Too many report requests. Please try again later." },
       { status: 429 },
     );
   }

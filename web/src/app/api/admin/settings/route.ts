@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   if (session instanceof Response) return session;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return Response.json({ ok: false, error: "Geçersiz admin ayarı." }, { status: 400 });
+    return Response.json({ ok: false, error: "Invalid admin setting." }, { status: 400 });
   }
 
   if (parsed.data.action === "feature_flag") {

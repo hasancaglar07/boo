@@ -40,7 +40,7 @@ import { getAccount, getSession, getViewer, syncPreviewAuthState } from "@/lib/p
 import { pickRandomPublisherLogo } from "@/lib/publisher-logo-library";
 
 const GENERATION_STAGES = [
-  "Kitap vitrini hazırlanıyor",
+  "Book showcase is being prepared",
   "Kapak yönü işleniyor",
   "İlk okunabilir bölüm yazılıyor",
   "Ön izleme kütüphaneye bağlanıyor",
@@ -60,7 +60,7 @@ const STYLE_COPY_BY_LANGUAGE: Partial<Record<FunnelLanguage, { authors: string[]
     bios: [
       "{topic} üzerine çalışan bağımsız yazar ve içerik tasarımcısı.",
       "{topic} alanında sade, uygulanabilir ve güçlü anlatılar üretir.",
-      "Okunabilir, modern ve sonuç odaklı kitap akışları tasarlar.",
+      "Designs readable, modern, and result-oriented book workflows.",
     ],
   },
   English: {
@@ -411,7 +411,7 @@ export function GuidedWizardScreen({
     updateDraft({
       ...style,
       authorName: forceReplace ? localized.authorName : draft.authorName || getAccount().name || localized.authorName,
-      imprint: forceReplace ? preset.imprint : draft.imprint && draft.imprint !== "Kitap Oluşturucu" ? draft.imprint : preset.imprint,
+      imprint: forceReplace ? preset.imprint : draft.imprint && draft.imprint !== "Book Generator" ? draft.imprint : preset.imprint,
       logoText: forceReplace ? preset.mark : draft.logoText || preset.mark,
       logoUrl: forceReplace ? preset.url : draft.logoUrl || preset.url,
       coverBrief: forceReplace ? localized.coverBrief : draft.coverBrief || localized.coverBrief || randomCoverBrief(),
@@ -444,7 +444,7 @@ export function GuidedWizardScreen({
       const account = getAccount();
       const payload = buildGuidedBookPayload(draft, account.name);
       const book = await saveBook(payload);
-      if (!book) throw new Error("Kitap kaydedilemedi: sunucu geçersiz yanıt döndürdü.");
+      if (!book) throw new Error("Book could not be saved: server returned invalid response.");
 
       const nextDraft = {
         ...draft,
@@ -458,7 +458,7 @@ export function GuidedWizardScreen({
       void startBookPreviewPipeline(book.slug).catch(() => undefined);
       setPendingRedirect(`/app/book/${encodeURIComponent(book.slug)}/preview`);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Kitap oluşturulamadı. Lütfen tekrar dene.");
+      setError(cause instanceof Error ? cause.message : "Book could not be created. Please try again.");
       setAiLoading("");
     }
   }
@@ -516,7 +516,7 @@ export function GuidedWizardScreen({
     if (!appShellEnabled) return shell;
 
     return (
-      <AppFrame current="new" title="Yeni Kitap" books={[]} showBookShelf={false} hideHeader>
+      <AppFrame current="new" title="New Book" books={[]} showBookShelf={false} hideHeader>
         {shell}
       </AppFrame>
     );
@@ -525,7 +525,7 @@ export function GuidedWizardScreen({
   if (step === "topic") {
     return wrapInShell({
       title: "Kitabın konusu ne?",
-      description: "1/5. Önce kitap dilini seç, sonra konuyu yaz. Bu seçim tüm AI önerilerini aynı dilde üretir.",
+      description: "1/5. First select the book language, then write the topic. This selection produces all AI suggestions in the same language.",
       children: <TopicStep draft={draft} onUpdate={updateDraft} onNext={goNext} error={error} onError={setError} />,
     });
   }
@@ -533,7 +533,7 @@ export function GuidedWizardScreen({
   if (step === "title") {
     return wrapInShell({
       title: "Başlık ve alt başlık",
-      description: "2/5. Kendin yaz ya da AI'dan öneri al. Bu adım bittiğinde kitap adı ve positioning netleşir.",
+      description: "2/5. Write it yourself or get AI suggestions. When this step is done, the book title and positioning become clear.",
       children: (
         <TitleStep
           draft={draft}
@@ -594,8 +594,8 @@ export function GuidedWizardScreen({
   return wrapInShell({
     title: "Ön izlemeyi başlat",
     description: appShellEnabled
-      ? "5/5. Kitap vitrini tek akışta hazırlanır. Kapak ve ilk okunabilir bölüm arka planda canlı üretime girer."
-      : "5/5. Ön izleme kaybolmasın diye bu aşamada hesabına bağlarız. Kitap doğrudan kütüphanene kaydolur ve üretim arka planda devam eder.",
+      ? "5/5. Book showcase is prepared in a single flow. Cover and first readable chapter enter live production in the background."
+      : "5/5. To prevent losing the preview, we link it to your account at this stage. The book is saved directly to your library and production continues in the background.",
     children: (
       <GenerateStep
         draft={draft}

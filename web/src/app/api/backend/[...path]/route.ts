@@ -378,10 +378,10 @@ async function requirePreviewAccess(input: {
   });
 
   if (!input.userId && !input.guestIdentityId) {
-    return jsonError(401, "Bu önizleme için önce kitabını oluşturman veya hesabına bağlaman gerekiyor.", "AUTH_REQUIRED");
+    return jsonError(401, "You need to create or link this book to your account first for this preview.", "AUTH_REQUIRED");
   }
 
-  return jsonError(403, "Bu kitap önizlemesine erişim iznin yok.", "BOOK_ACCESS_DENIED");
+  return jsonError(403, "You don't have permission to access this book preview.", "BOOK_ACCESS_DENIED");
 }
 
 async function requireFullAccess(input: {
@@ -390,7 +390,7 @@ async function requireFullAccess(input: {
   guestIdentityId?: string | null;
 }) {
   if (!input.userId) {
-    return jsonError(401, "Bu işlem için oturum gerekli.", "AUTH_REQUIRED");
+    return jsonError(401, "Session required for this operation.", "AUTH_REQUIRED");
   }
 
   let ownsBook = await canAccessBookPreview(viewerFromIds(input.userId, null), input.slug);
@@ -405,12 +405,12 @@ async function requireFullAccess(input: {
     }
   }
   if (!ownsBook) {
-    return jsonError(403, "Bu kitaba erişim iznin yok.", "BOOK_ACCESS_DENIED");
+    return jsonError(403, "You don't have permission to access this book.", "BOOK_ACCESS_DENIED");
   }
 
   const fullAccess = await canAccessFullBook(input.userId, input.slug);
   if (!fullAccess) {
-    return jsonError(403, "Tam kitaba erişmek için planını yükseltmen gerekiyor.", "FULL_ACCESS_REQUIRED");
+    return jsonError(403, "You need to upgrade your plan to access the full book.", "FULL_ACCESS_REQUIRED");
   }
 
   return null;
@@ -489,7 +489,7 @@ async function handleBookCreateOrUpdate(
     const upstreamPayload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
 
     if (!response.ok || !upstreamPayload) {
-      return NextResponse.json(upstreamPayload || { ok: false, error: "Kitap güncellenemedi." }, { status: response.status });
+      return NextResponse.json(upstreamPayload || { ok: false, error: "Book could not be updated." }, { status: response.status });
     }
 
     await assignBookOwner({
@@ -507,7 +507,7 @@ async function handleBookCreateOrUpdate(
     if (!allowance.canStartBook) {
       return jsonError(
         403,
-        usageReasonLabel(allowance.reason) || "Yeni kitap oluşturmak için planını yükseltmen gerekiyor.",
+        usageReasonLabel(allowance.reason) || "You need to upgrade your plan to create a new book.",
         "BOOK_CREATION_LIMIT_REACHED",
       );
     }
@@ -528,7 +528,7 @@ async function handleBookCreateOrUpdate(
     });
     if (!rateLimit.allowed) {
       return withGuestCookie(
-        jsonError(429, "Çok fazla ücretsiz kitap oluşturma denemesi yapıldı. Lütfen daha sonra tekrar dene."),
+        jsonError(429, "Too many free book creation attempts. Please try again later."),
         guestToken,
       );
     }
@@ -538,7 +538,7 @@ async function handleBookCreateOrUpdate(
   const upstreamPayload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
   if (!response.ok || !upstreamPayload) {
     const errorResponse = NextResponse.json(
-      upstreamPayload || { ok: false, error: "Kitap oluşturulamadı." },
+      upstreamPayload || { ok: false, error: "Book could not be created." },
       { status: response.status },
     );
     return withGuestCookie(errorResponse, guestToken);
@@ -576,7 +576,7 @@ async function handleBookScopedRoute(
   const action = parts[3] || "";
 
   if (!slug) {
-    return jsonError(404, "Kitap bulunamadı.");
+    return jsonError(404, "Book not found.");
   }
 
   if (action === "preview" || action === "preview-bootstrap") {
@@ -712,7 +712,7 @@ async function handleSettingsRoute(
   }
 
   if (!userId) {
-    return jsonError(401, "Ayarları güncellemek için oturum gerekli.", "AUTH_REQUIRED");
+    return jsonError(401, "Session required to update settings.", "AUTH_REQUIRED");
   }
 
   return forwardResponse(request, "/api/settings", body);
@@ -727,7 +727,7 @@ async function handleWorkspaceRoute(
 ) {
   const slug = extractSlugFromWorkspacePath(upstreamPath);
   if (!slug) {
-    return jsonError(404, "Dosya bulunamadı.");
+    return jsonError(404, "File not found.");
   }
 
   const previewDenied = await requirePreviewAccess({
@@ -801,7 +801,7 @@ async function handleProxyRequest(
 
     if (upstreamPath === "/api/logs") {
       if (!userId) {
-        return jsonError(401, "Log kayıtları için oturum gerekli.", "AUTH_REQUIRED");
+        return jsonError(401, "Session required for log records.", "AUTH_REQUIRED");
       }
       return await forwardResponse(request, upstreamPath, body);
     }
@@ -815,12 +815,12 @@ async function handleProxyRequest(
     if (isBackendUnavailableLike(error)) {
       return jsonError(
         503,
-        "Servis geçici olarak erişilemiyor. Lütfen birkaç saniye sonra tekrar dene.",
+        "Service is temporarily unavailable. Please try again in a few seconds.",
         "BACKEND_UNAVAILABLE",
       );
     }
     console.error("[api/backend] unexpected error", error);
-    return jsonError(500, "Beklenmeyen sunucu hatası.");
+    return jsonError(500, "Unexpected server error.");
   }
 }
 

@@ -31,21 +31,21 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "Geçersiz plan isteği." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Invalid plan request." }, { status: 400 });
   }
 
   const planId = parsed.data.planId as BookPlanId;
   const bookSlug = parsed.data.bookSlug || null;
 
   if (planId === "premium" && !bookSlug) {
-    return NextResponse.json({ ok: false, error: "Tek kitap premium için slug gerekli." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Slug required for single book premium." }, { status: 400 });
   }
 
   if (
     bookSlug &&
     !(await canAccessBookPreview(viewerFromIds(session.user.id, null), bookSlug))
   ) {
-    return NextResponse.json({ ok: false, error: "Bu kitap için ödeme iznin yok." }, { status: 403 });
+    return NextResponse.json({ ok: false, error: "You don't have payment permission for this book." }, { status: 403 });
   }
 
   const appUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
           product_data: {
             name: `Book Generator — ${planLabel}`,
             description: bookSlug
-              ? `"${bookSlug}" kitabı için tam erişim`
+              ? `"${bookSlug}" full access for book`
               : `${planLabel} plan aktivasyonu`,
           },
           ...(isSubscription

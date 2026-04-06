@@ -19,11 +19,11 @@ export async function POST(request: NextRequest) {
   try {
     payload = (await request.json()) as EventPayload;
   } catch {
-    return NextResponse.json({ ok: false, error: "Geçersiz JSON." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Invalid JSON." }, { status: 400 });
   }
 
   if (!payload.event || typeof payload.event !== "string") {
-    return NextResponse.json({ ok: false, error: "event alanı zorunlu." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "event field is required." }, { status: 400 });
   }
 
   const session = await auth();

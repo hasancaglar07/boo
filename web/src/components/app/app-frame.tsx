@@ -53,8 +53,8 @@ type AppFrameProps = {
 };
 
 const NAV_ITEMS = [
-  { key: "home", href: "/app/library", label: "Kitaplarım", icon: Library },
-  { key: "new", href: "/app/new/topic", label: "Kitap Başlat", icon: Plus },
+  { key: "home", href: "/app/library", label: "My Books", icon: Library },
+  { key: "new", href: "/app/new/topic", label: "Start Book", icon: Plus },
   { key: "account", href: "/app/settings/profile", label: "Ayarlar", icon: User2 },
   { key: "billing", href: "/app/settings/billing", label: "Planlar", icon: CreditCard },
   { key: "affiliate", href: "/app/affiliate", label: "Affiliate %30", icon: DollarSign },
@@ -65,7 +65,7 @@ const PLAN_LABELS: Record<string, string> = {
   starter: "Starter",
   creator: "Yazar",
   pro: "Stüdyo",
-  premium: "Tek Kitap",
+  premium: "Single Book",
 };
 
 function displayNameForViewer(viewer?: PreviewViewer | null) {
@@ -217,7 +217,7 @@ function SidebarContent({
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="mb-2 shrink-0 flex items-center justify-between px-1">
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/42">
-                Kitaplar
+                Books
               </span>
               <span className="rounded-full border border-sidebar-border/60 bg-sidebar-accent/70 px-2 py-0.5 text-[10px] font-semibold text-sidebar-foreground/56">
                 {books.length}
@@ -254,7 +254,7 @@ function SidebarContent({
               })}
               {!books.length && (
                 <p className="px-3 py-3 text-xs text-sidebar-foreground/40">
-                  Henüz kitap yok.
+                  No books yet.
                 </p>
               )}
             </div>
@@ -263,7 +263,7 @@ function SidebarContent({
       ) : (
         <div className="flex min-h-0 flex-1 items-start">
           <div className="mt-5 rounded-[20px] border border-sidebar-border/55 bg-sidebar-accent/35 px-3 py-3 text-xs leading-6 text-sidebar-foreground/54">
-            Yeni kitap akışındasın. Adımlar bittiğinde önizleme ve çalışma alanı burada görünecek.
+            You are in the new book flow. When steps are completed, preview and workspace will appear here.
           </div>
         </div>
       )}
@@ -608,7 +608,7 @@ export function AppFrame({
                       <MenuLink
                         href="/app/settings/profile"
                         label="Profil ayarları"
-                        description="İsim, yazım hedefi ve hesap durumunu yönet."
+                        description="Manage your name, writing goal, and account status."
                         onSelect={() => setAccountMenuOpen(false)}
                       />
                       <MenuLink
@@ -650,10 +650,10 @@ export function AppFrame({
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-foreground">
-                    E-posta adresini doğrula
+                    Verify your email address
                   </div>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    Hesap güvenliği, giriş kurtarma ve bildirimlerin doğru çalışması için e-postanı doğrula. Bu adım yalnızca bir kez gerekir.
+                    Verify your email for account security, login recovery, and notifications to work properly. This step is required only once.
                   </p>
                   {verificationMessage ? (
                     <p className="mt-2 text-xs font-medium text-primary">{verificationMessage}</p>

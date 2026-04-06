@@ -6,7 +6,7 @@ export function LiveBookCard({ draft }: { draft: FunnelDraft }) {
   const displayTitle = draft.title || "Kitabının adı burada görünecek";
   const displaySubtitle =
     draft.subtitle ||
-    "Başlık, alt başlık ve kapak yönü ilerledikçe burada daha net bir kitap hissi oluşturur.";
+    "As title, subtitle, and cover direction progress, a clearer book feel emerges here.";
   const displayBrand = draft.logoText || draft.imprint || "Wordmark";
   const displayAuthor = draft.authorName || "Yazar adı";
 

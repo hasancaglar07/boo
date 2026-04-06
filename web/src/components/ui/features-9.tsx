@@ -188,7 +188,7 @@ export function Features9({
                   <span className="text-xs text-muted-foreground">Bugun</span>
                 </div>
                 <div className="mt-2 w-4/5 rounded-[20px] border border-border bg-background p-4 text-sm text-foreground">
-                  Outline iyi ama 2. bolumde daha fazla ornek gerekli.
+                  Outline is good but chapter 2 needs more examples.
                 </div>
               </div>
 

@@ -48,7 +48,7 @@ export function TopicStep({
       {/* ─── Language selector — FIRST REQUIRED STEP ─── */}
       <div className="space-y-2.5">
         <label htmlFor="language" className="text-base sm:text-lg font-bold text-foreground">
-          Kitap dili
+          Book language
         </label>
         <select
           id="language"
@@ -97,7 +97,7 @@ export function TopicStep({
       {/* ─── Book type — visual cards ─── */}
       <div className="space-y-3">
         <div className="text-base font-bold text-foreground">
-          Kitap tipi
+          Book type
         </div>
         <ChoiceGrid
           values={BOOK_TYPES}

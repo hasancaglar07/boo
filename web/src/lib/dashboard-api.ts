@@ -283,7 +283,7 @@ let settingsCache: { value: Settings; expiresAt: number } | null = null;
 export class BackendUnavailableError extends Error {
   readonly code = "BACKEND_UNAVAILABLE";
 
-  constructor(message = "Servis gecici olarak erisilemez durumda.") {
+  constructor(message = "Service is temporarily unavailable.") {
     super(message);
     this.name = "BackendUnavailableError";
   }
@@ -408,7 +408,7 @@ async function api<T>(path: string, options: ApiOptions = {}) {
       const message =
         typeof payload === "string"
           ? payload
-          : (payload?.error as string) || "BACKEND_UNAVAILABLE: Servis gecici olarak erisilemiyor.";
+          : (payload?.error as string) || "BACKEND_UNAVAILABLE: Service is temporarily unavailable.";
       throw new BackendUnavailableError(message);
     }
 
@@ -659,7 +659,7 @@ export function responseSummary(response: Record<string, unknown>) {
   const firstLine = String(response.output || "").trim().split("\n").find(Boolean) || "";
   const short = response.ok
     ? produced.length
-      ? `${produced.length} dosya üretildi veya güncellendi.`
+      ? `${produced.length} files produced or updated.`
       : "Operation completed."
     : firstLine || "Operation failed.";
   return { short, produced, warnings };

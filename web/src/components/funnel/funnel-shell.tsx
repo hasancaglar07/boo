@@ -69,7 +69,7 @@ export function FunnelShell({
           ) : (
             <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
               <BookOpen className="size-4" />
-              <span>Yeni Kitap</span>
+              <span>New Book</span>
             </div>
           )}
 
@@ -160,7 +160,7 @@ export function FunnelShell({
         {summary && summary.length > 0 ? (
           <details className="mb-5 overflow-hidden rounded-xl border border-border/50 bg-muted/30 transition-all duration-300">
             <summary className="flex cursor-pointer items-center justify-between px-4 py-2.5 text-sm font-semibold text-foreground select-none transition-all duration-300 hover:bg-muted/50">
-              <span>📖 Kitap Özeti</span>
+              <span>📖 Book Summary</span>
               <svg className="size-4 text-muted-foreground transition-transform duration-300 [[open]>&]:rotate-180" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

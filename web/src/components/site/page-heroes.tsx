@@ -565,7 +565,7 @@ export const FAQPageHero = React.forwardRef<
   const stats = [
     { value: "7", label: "Kategori" },
     { value: "30+", label: "Q&A" },
-    { value: "1 dk", label: "Ortalama okuma" },
+    { value: "1 min", label: "Average read" },
   ];
 
   return (

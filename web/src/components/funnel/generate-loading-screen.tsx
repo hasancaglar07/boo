@@ -77,7 +77,7 @@ export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoad
   const strokeOffset = circumference - (progressPercent / 100) * circumference;
 
   return (
-    <div className="flex min-h-[85dvh] items-center justify-center px-4" aria-busy={!done} aria-label="Kitap hazırlanıyor">
+    <div className="flex min-h-[85dvh] items-center justify-center px-4" aria-busy={!done} aria-label="Book is being prepared">
       <style>{`
         @keyframes ring-pulse {
           0%, 100% { filter: drop-shadow(0 0 6px rgba(var(--ring-rgb), 0.25)); }

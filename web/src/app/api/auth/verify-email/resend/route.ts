@@ -23,14 +23,14 @@ export async function POST() {
     },
   });
   if (!dbUser?.email) {
-    return NextResponse.json({ ok: false, error: "Kullanıcı bulunamadı." }, { status: 404 });
+    return NextResponse.json({ ok: false, error: "User not found." }, { status: 404 });
   }
 
   if (dbUser.emailVerified) {
     return NextResponse.json({
       ok: true,
       skipped: true,
-      message: "E-posta zaten doğrulanmış.",
+      message: "Email is already verified.",
     });
   }
 
@@ -59,7 +59,7 @@ export async function POST() {
     return NextResponse.json({
       ok: true,
       skipped: true,
-      message: "Bu giriş yöntemi için ek e-posta doğrulaması gerekmiyor.",
+      message: "No additional email verification needed for this login method.",
     });
   }
 
@@ -69,7 +69,7 @@ export async function POST() {
     ...EMAIL_ACTION_RATE_LIMIT,
   });
   if (!rateLimit.allowed) {
-    return NextResponse.json({ ok: false, error: "Doğrulama maili sınırına ulaşıldı." }, { status: 429 });
+    return NextResponse.json({ ok: false, error: "Verification email limit reached." }, { status: 429 });
   }
 
   const rawToken = randomToken();

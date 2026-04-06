@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { ok: false, error: parsed.error.issues[0]?.message || "Geçersiz iletişim isteği." },
+      { ok: false, error: parsed.error.issues[0]?.message || "Invalid contact request." },
       { status: 400 },
     );
   }
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
   if (!rateLimit.allowed) {
     return NextResponse.json(
-      { ok: false, error: "Çok sık mesaj gönderildi. Birkaç dakika sonra tekrar dene." },
+      { ok: false, error: "Too many messages sent. Please try again in a few minutes." },
       { status: 429 },
     );
   }

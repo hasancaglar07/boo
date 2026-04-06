@@ -541,8 +541,8 @@ export async function loadExamplesShowcaseData() {
 
   return {
     items: items.map((item) => item.card),
-    categories: ["Tümü", ...categories],
-    languages: ["Tümü", ...languages],
+    categories: ["All", ...categories],
+    languages: ["All", ...languages],
   };
 }
 

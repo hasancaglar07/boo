@@ -29,7 +29,7 @@ function CoverFace({
       <div className="relative h-full w-full overflow-hidden rounded-[18px]">
         <Image
           src={imageUrl}
-          alt={`${title} kitap kapağı`}
+          alt={`${title} book cover`}
           fill
           className="object-cover"
           unoptimized

@@ -16,7 +16,7 @@ export async function PATCH(
   if (session instanceof Response) return session;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return Response.json({ ok: false, error: "Geçersiz abonelik işlemi." }, { status: 400 });
+    return Response.json({ ok: false, error: "Invalid subscription operation." }, { status: 400 });
   }
 
   const id = (await params).id;

@@ -39,14 +39,14 @@ export function ReferralBanner() {
   function handleWhatsApp() {
     if (!data) return;
     trackEvent("affiliate_whatsapp_clicked", { source: "banner" });
-    const text = `BookGenerator.net ile dakikalar içinde profesyonel kitap yaz! ${data.referralUrl}`;
+    const text = `Write professional books in minutes with BookGenerator.net! ${data.referralUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }
 
   function handleTwitter() {
     if (!data) return;
     trackEvent("affiliate_twitter_clicked", { source: "banner" });
-    const text = `AI ile dakikalar içinde kitap yazdım 🚀 BookGenerator.net'i dene:`;
+    const text = `I wrote a book in minutes with AI 🚀 Try BookGenerator.net:`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(data.referralUrl)}`,
       "_blank",

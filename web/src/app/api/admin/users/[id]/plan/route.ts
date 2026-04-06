@@ -20,12 +20,12 @@ export async function PATCH(
 
   // Only ADMIN and SUPER_ADMIN can change plans
   if (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN") {
-    return Response.json({ ok: false, error: "Plan değiştirme yetkiniz yok." }, { status: 403 });
+    return Response.json({ ok: false, error: "You don't have permission to change plans." }, { status: 403 });
   }
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return Response.json({ ok: false, error: "Geçersiz plan ID. Şunlar olabilir: free, starter, creator, pro, premium" }, { status: 400 });
+    return Response.json({ ok: false, error: "Invalid plan ID. Options: free, starter, creator, pro, premium" }, { status: 400 });
   }
 
   const userId = (await params).id;
@@ -33,7 +33,7 @@ export async function PATCH(
   // Verify user exists
   const user = await prisma.user.findUnique({ where: { id: userId }, include: { entitlements: true } });
   if (!user) {
-    return Response.json({ ok: false, error: "Kullanıcı bulunamadı." }, { status: 404 });
+    return Response.json({ ok: false, error: "User not found." }, { status: 404 });
   }
 
   const result = await changeUserPlan(userId, parsed.data.planId, session.user.id, parsed.data.reason);

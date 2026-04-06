@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 const WHAT_YOU_GET = [
   { icon: FileText, text: "Tüm bölümler — kilitli içerik yok" },
   { icon: Download, text: "PDF indir, Amazon KDP'ye hazır" },
-  { icon: BookOpen, text: "EPUB çıktısı — e-kitap mağazaları için" },
+  { icon: BookOpen, text: "EPUB output — for e-book stores" },
   { icon: Zap, text: "Tam çalışma alanı ve düzenleme araçları" },
   { icon: Shield, text: "Kapak, arka kapak ve tüm varlıklar" },
   { icon: CheckCircle2, text: `${KDP_GUARANTEE_CLAIM} + ${REFUND_GUARANTEE_CLAIM}` },
@@ -49,16 +49,16 @@ const TRUST_ITEMS = [
 const PLAN_COMPARE = [
   {
     id: "premium",
-    name: "Tek Kitap",
+    name: "Single Book",
     price: "$4",
     originalPrice: "$29",
     interval: "tek seferlik",
     badge: "En iyi başlangıç",
     badgeColor: "bg-primary text-primary-foreground",
     highlight: true,
-    description: "Bu kitap için tam erişim. Bir kez öde, dosyalar senindir.",
+    description: "Full access for this book. Pay once, the files are yours.",
     features: [
-      "1 kitap — tam erişim",
+      "1 book — full access",
       "PDF + EPUB export",
       "Kapak ve arka kapak",
       "30 gün iade",
@@ -72,12 +72,12 @@ const PLAN_COMPARE = [
     price: "$19",
     originalPrice: null,
     interval: "aylık",
-    badge: "Ayda 10 kitap",
+    badge: "10 books/month",
     badgeColor: "bg-muted text-muted-foreground",
     highlight: false,
-    description: "Her ay düzenli kitap üret, kendi üretim ritmine gir.",
+    description: "Produce books regularly every month, establish your own production rhythm.",
     features: [
-      "Ayda 10 kitap",
+      "10 books/month",
       "EPUB + PDF export",
       "Kapak üretimi",
       "Bölüm editörü",
@@ -125,7 +125,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
 
   const currentBook = books.find((b) => b.slug === slug) ?? null;
   const mockupBrand =
-    currentBook?.branding_mark || currentBook?.publisher || "Kitap Oluşturucu";
+    currentBook?.branding_mark || currentBook?.publisher || "Book Generator";
   const mockupLabel = currentBook?.cover_brief || "Ödeme sonrası tam ürün açılır";
 
   const handleBuy = useCallback(async (planId: string) => {
@@ -282,7 +282,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
               {[
                 { label: "Serbest yazar ajansı", price: "$500+", strikethrough: true },
                 { label: "Freelance editör", price: "$200+", strikethrough: true },
-                { label: "Kitap Oluşturucu", price: "$4", strikethrough: false, highlight: true },
+                { label: "Book Generator", price: "$4", strikethrough: false, highlight: true },
               ].map(({ label, price, strikethrough, highlight }) => (
                 <div
                   key={label}

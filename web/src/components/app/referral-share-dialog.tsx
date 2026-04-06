@@ -55,14 +55,14 @@ export function ReferralShareDialog({ open, onOpenChange }: ReferralShareDialogP
   function handleWhatsApp() {
     if (!data) return;
     trackEvent("referral_whatsapp_clicked", {});
-    const text = `BookGenerator.net ile dakikalar içinde profesyonel kitap yaz! Seni davet ediyorum — üye olunca %30 komisyon kazanmamı sağla 😊 ${data.referralUrl}`;
+    const text = `Write professional books in minutes with BookGenerator.net! I'm inviting you — when you sign up, you help me earn a 30% commission 😊 ${data.referralUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }
 
   function handleTwitter() {
     if (!data) return;
     trackEvent("referral_twitter_clicked", {});
-    const text = `AI ile dakikalar içinde kitap yazdım 🚀 BookGenerator.net'i dene, senin linkinle üye olursan herkes kazanır:`;
+    const text = `I wrote a book in minutes with AI 🚀 Try BookGenerator.net, if you sign up with my link, everyone wins:`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(data.referralUrl)}`,
       "_blank",

@@ -90,7 +90,7 @@ export function GenerateStep({
             {draft.outline.length} bölüm
           </span>
           <span className="rounded-full border border-border/60 bg-card/80 px-2.5 py-1 text-xs text-muted-foreground">
-            {draft.imprint || draft.logoText || "Kitap Oluşturucu"}
+            {draft.imprint || draft.logoText || "Book Generator"}
           </span>
         </div>
       </div>
@@ -99,7 +99,7 @@ export function GenerateStep({
       <div className="flex items-start gap-2.5 rounded-xl border border-primary/10 bg-primary/[0.03] px-3.5 py-3">
         <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
         <p className="text-[13px] leading-5 text-muted-foreground/70">
-          Ön izleme hemen başlar · Kitap hesabına kaydolur · Tam kitap (PDF/EPUB) daha sonra açılır · Ödeme istemez
+          Preview starts immediately · Book is saved to your account · Full book (PDF/EPUB) unlocks later · No payment required
         </p>
       </div>
 
@@ -135,7 +135,7 @@ export function GenerateStep({
       <p className="text-xs text-muted-foreground/50 text-center">
         {appShell
           ? "Önce ön izlemeyi gör · Tam kitabı sonra aç"
-          : "Ödeme istemez · Kitap hesabına yazılır · Hazır olunca kütüphanende görünür"}
+          : "No payment required · Book is saved to your account · Appears in your library when ready"}
       </p>
     </div>
   );

@@ -19,11 +19,11 @@ const defaultFaqs: readonly FaqItem[] = [
   },
   {
     question: "Ilk kez kullanan biri bunu anlayabilir mi?",
-    answer: "Evet. Ana akista kisa sorular, net karar adimlari ve yonlendirilmis kitap olusturma yolu vardir.",
+    answer: "Yes. The main flow has short questions, clear decision steps, and a guided book creation path.",
   },
   {
-    question: "Ingilizce kitap uretebilir miyim?",
-    answer: "Evet. Arayuz Turkce kalsa da kitap icerigi English veya sectigin dilde uretilebilir.",
+    question: "Can I produce books in English?",
+    answer: "Yes. Even if the interface stays in another language, book content can be produced in English or any language you choose.",
   },
   {
     question: "Cikti olarak ne alirim?",

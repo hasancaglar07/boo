@@ -85,7 +85,7 @@ function renderVisual(visual: FeatureVisual) {
               index === 2 && "translate-y-6 rotate-[8deg]",
             )}
           >
-            <div className="text-[10px] uppercase tracking-[0.18em] text-white/70">Kitap</div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-white/70">Book</div>
             <div>
               <div className="text-sm font-semibold leading-5">{title}</div>
               <div className="mt-2 text-xs text-white/70">{author}</div>
@@ -116,7 +116,7 @@ function renderVisual(visual: FeatureVisual) {
           <div className="rounded-2xl border border-border/80 bg-card p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <BookOpenText className="size-4 text-primary" />
-              Kitap planı
+              Book plan
             </div>
             <div className="mt-3 space-y-2 text-xs text-muted-foreground">
               <div className="rounded-xl bg-background px-3 py-2">Okuru ilk anda yakala</div>
@@ -135,7 +135,7 @@ function renderVisual(visual: FeatureVisual) {
         {[
           ["EPUB", "Ana teslim biçimi"],
           ["PDF", "Sabit yerleşim"],
-          ["Kitap bilgileri", "Yazar, ISBN, yayınevi"],
+          ["Book details", "Author, ISBN, publisher"],
           ["Arşiv", "Zaman damgalı çıktı klasörü"],
         ].map(([title, text]) => (
           <div key={title} className="rounded-2xl border border-border/80 bg-card p-4">
@@ -160,7 +160,7 @@ function renderVisual(visual: FeatureVisual) {
 export function Features11({
   badge,
   title = "Tek bir bölüm değil, birbirine bağlı bir üretim sistemi.",
-  description = "Kitap üretimi, araştırma, düzenleme ve çıktı alma tek bir kontrol hattı gibi çalışır.",
+  description = "Book production, research, editing, and export work like a single control pipeline.",
   cards,
   className,
 }: Features11Props) {

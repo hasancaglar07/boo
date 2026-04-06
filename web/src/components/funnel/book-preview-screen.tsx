@@ -190,7 +190,7 @@ function GenerationBanner({
       live: generation.first_chapter_state === "running" || generation.first_chapter_state === "queued",
     },
     {
-      label: "Tam kitap",
+      label: "Full book",
       done: usingFullGeneration ? fullComplete : Boolean(generation.product_ready),
       live: usingFullGeneration
         ? fullActive && !fullComplete
@@ -209,8 +209,8 @@ function GenerationBanner({
             </span>
             {usingFullGeneration
               ? fullComplete
-                ? "Tam kitap hazır"
-                : "Tam kitap arka planda yazılıyor"
+                ? "Full book ready"
+                : "Full book is being written in the background"
               : generation.product_ready
               ? "Üretim tamamlandı"
               : "Publishing stüdyosu çalışıyor"}
@@ -219,9 +219,9 @@ function GenerationBanner({
             {usingFullGeneration
               ? fullComplete
                 ? "Tüm bölümler tamamlandı. Aynı sayfadan PDF/EPUB indirebilir ve çalışma alanında düzenlemeye devam edebilirsin."
-                : "Pro erişim için eksik bölümler arka planda üretiliyor. Sayfa açık kalmasa da süreç devam eder."
+                : "Missing chapters for Pro access are being generated in the background. The process continues even if you close the page."
               : generation.product_ready
-              ? "Preview, kapak ve tam kitap akışı hazır. Aynı sayfadan kapağı seçip satın alma kararını verebilirsin."
+              ? "Preview, cover, and full book flow are ready. You can select the cover and make your purchase decision from the same page."
               : "Bu sayfayı kapatsan da üretim devam eder. Preview hazır olduğunda ilgili sayfaya e-posta ile dönebilirsin."}
           </p>
           {usingFullGeneration && fullGeneration.message ? (
@@ -341,7 +341,7 @@ function PremiumCTA({
         <div className="bg-gradient-to-br from-primary/12 via-primary/6 to-transparent px-6 py-5">
           <div className="flex items-center justify-between gap-3">
             <span className="rounded-full bg-primary/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
-              {commerce?.primaryOffer.badge || "Lansman fiyatı"}
+              {commerce?.primaryOffer.badge || "Launch price"}
             </span>
             {bonusLabel ? (
               <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-400">
@@ -363,7 +363,7 @@ function PremiumCTA({
         {/* Features */}
         <div className="px-6 pb-5 pt-4">
           <p className="text-sm font-semibold text-foreground">
-            {commerce?.primaryOffer.description || "Bu kitap için tam erişim - abonelik yok"}
+            {commerce?.primaryOffer.description || "Full access for this book - no subscription"}
           </p>
 
           <ul className="mt-4 space-y-3">
@@ -537,7 +537,7 @@ function PaywallDialog({
                 </div>
                 <div className="mt-1 text-xs leading-5 text-muted-foreground">
                   {commerce?.primaryOffer.description ||
-                    "Tek kitap için tam erişim, PDF/EPUB export ve çalışma alanı."}
+                    "Full access for a single book, PDF/EPUB export, and workspace."}
                 </div>
               </div>
               <div className="text-right">
@@ -552,7 +552,7 @@ function PaywallDialog({
 
             <div className="mt-4 grid gap-2">
               {[
-                "Bu kitap için tüm bölümler",
+                "All chapters for this book",
                 "PDF + EPUB export",
                 "Kapak, arka kapak, workspace",
                 "30 gün iade garantisi",
@@ -582,7 +582,7 @@ function PaywallDialog({
                   {commerce?.secondaryOffer.label || "Starter"}
                 </div>
                 <div className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {commerce?.secondaryOffer.description || "Her ay yeni kitaplar üretmek için aylık plan."}
+                  {commerce?.secondaryOffer.description || "Monthly plan for producing new books every month."}
                 </div>
               </div>
               <div className="text-right">
@@ -831,7 +831,7 @@ function BookMetaStrip({
       {[
         { label: "Yazar", value: authorName },
         { label: "İmprint", value: imprint },
-        { label: "Dil", value: `${languageLabel(language)} kitap` },
+        { label: "Language", value: `${languageLabel(language)} book` },
         { label: "Önizleme", value: `İlk %${ratio}` },
       ].map(({ label, value }) => (
         <div
@@ -1309,9 +1309,9 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const bonusLabel = bonusDeadlineLabel(commerce?.bonusDeadlineAt);
 
   const pageSubtitle = premium
-    ? "Tam erişim aktif. Kitap, kapak ve export yüzeyi açık."
+    ? "Full access active. Book, cover, and export surface are open."
     : generation.product_ready
-      ? `Kitap hazır — ilk %${ratio} okunabilir önizleme açık.`
+      ? `Book ready — first ${ratio}% readable preview open.`
       : generation.preview_ready
         ? "İlk bölüm hazır. Kapak ve tam içerik tamamlanıyor."
         : generation.active
@@ -1635,7 +1635,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
             <Card>
               <CardContent className="p-5">
                 <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Kitap Kimliği
+                  Book ID
                 </div>
                 <div className="space-y-3">
                   <div className="rounded-xl bg-muted/30 px-3 py-3 border-0">

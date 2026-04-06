@@ -99,22 +99,22 @@ export function AffiliateDashboard() {
   function handleWhatsApp() {
     if (!data) return;
     trackEvent("affiliate_whatsapp_clicked", { source: "affiliate_dashboard" });
-    const text = `BookGenerator.net ile dakikalar içinde profesyonel kitap yaz! ${data.referralUrl}`;
+    const text = `Write professional books in minutes with BookGenerator.net! ${data.referralUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }
 
   function handleTwitter() {
     if (!data) return;
     trackEvent("affiliate_twitter_clicked", { source: "affiliate_dashboard" });
-    const text = `AI ile dakikalar içinde kitap yazdım 🚀 BookGenerator.net'i dene:`;
+    const text = `I wrote a book in minutes with AI 🚀 Try BookGenerator.net:`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(data.referralUrl)}`, "_blank");
   }
 
   function handleEmail() {
     if (!data) return;
     trackEvent("affiliate_email_clicked", { source: "affiliate_dashboard" });
-    const subject = encodeURIComponent("Kitap yazmak hiç bu kadar kolay değildi!");
-    const body = encodeURIComponent(`Merhaba!\n\nBookGenerator.net ile yapay zeka yardımıyla dakikalar içinde profesyonel kitap yazabilirsin.\n\nÜcretsiz denemek için: ${data.referralUrl}\n\nİyi yazılar!`);
+    const subject = encodeURIComponent("Writing a book has never been this easy!");
+    const body = encodeURIComponent(`Hello!\n\nYou can write professional books in minutes with AI at BookGenerator.net.\n\nTry it for free: ${data.referralUrl}\n\nHappy writing!`);
     window.open(`mailto:?subject=${subject}&body=${body}`);
   }
 
@@ -218,7 +218,7 @@ export function AffiliateDashboard() {
                   disabled={!data}
                 >
                   <Mail className="mr-1.5 size-4" />
-                  E-posta
+                  Email
                 </Button>
               </div>
 
@@ -271,7 +271,7 @@ export function AffiliateDashboard() {
                   className="mt-4 min-h-[48px]"
                   disabled={data.availableBalance < 50}
                   onClick={async () => {
-                    const email = prompt("Ödeme almak istediğiniz PayPal e-posta adresini girin:");
+                    const email = prompt("Enter your PayPal email address for payout:");
                     if (!email) return;
                     const res = await fetch("/api/referral/payout-request", {
                       method: "POST",
@@ -288,7 +288,7 @@ export function AffiliateDashboard() {
                   }}
                 >
                   <BadgeDollarSign className="mr-1.5 size-4" />
-                  {data.availableBalance >= 50 ? "Ödeme Talep Et" : `Min. $50 gerekli (Eksik: $${(50 - data.availableBalance).toFixed(2)})`}
+                  {data.availableBalance >= 50 ? "Request Payout" : `Min. $50 gerekli (Eksik: $${(50 - data.availableBalance).toFixed(2)})`}
                 </Button>
               </div>
             )}
@@ -356,7 +356,7 @@ export function AffiliateDashboard() {
               </div>
 
               <div className="mt-3 rounded-[14px] border border-primary/15 bg-primary/5 px-4 py-2.5 text-[11px] leading-4 text-muted-foreground">
-                Davet ettiğin kişi ödemeyi sürdürdüğü sürece her ay komisyon alırsın.
+                You earn commission every month as long as the person you referred maintains their payment.
               </div>
             </CardContent>
           </Card>
@@ -384,7 +384,7 @@ export function AffiliateDashboard() {
                 {
                   icon: Gift,
                   label: "Kazan",
-                  description: "Linkinden üye olan ve ödeme yapan herkesten %30 komisyon kazanırsın.",
+                  description: "You earn 30% commission from everyone who signs up through your link and makes a payment.",
                 },
               ].map(({ icon: Icon, label, description }) => (
                 <button
@@ -486,7 +486,7 @@ export function AffiliateDashboard() {
                   <BookOpen className="size-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold text-foreground">Kitaplarıma Dön</div>
+                  <div className="text-sm font-semibold text-foreground">Back to My Books</div>
                   <div className="mt-0.5 text-xs leading-5 text-muted-foreground">Kütüphane ve yazım alanına geri dön.</div>
                 </div>
                 <ArrowRight className="mt-2 size-4 text-muted-foreground/40" />

@@ -24,14 +24,14 @@ export async function POST(request: NextRequest) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { ok: false, error: parsed.error.issues[0]?.message || "Geçersiz lead magnet isteği." },
+      { ok: false, error: parsed.error.issues[0]?.message || "Invalid lead magnet request." },
       { status: 400 },
     );
   }
 
   const leadMagnet = getLeadMagnetBySlug(parsed.data.leadMagnetSlug);
   if (!leadMagnet) {
-    return NextResponse.json({ ok: false, error: "Kaynak bulunamadı." }, { status: 404 });
+    return NextResponse.json({ ok: false, error: "Resource not found." }, { status: 404 });
   }
 
   const session = await auth();
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   if (!rateLimit.allowed) {
     return NextResponse.json(
-      { ok: false, error: "Çok sık istek gönderildi. Birkaç dakika sonra tekrar dene." },
+      { ok: false, error: "Too many requests. Please try again in a few minutes." },
       { status: 429 },
     );
   }

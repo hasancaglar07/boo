@@ -65,7 +65,7 @@ const ANNUAL_DISCOUNT = 0.2; // 20% discount for annual
 const PLAN_HIGHLIGHT_ID = "creator"; // "En Popüler" badge gösterilecek plan
 
 const COMPARISON_FEATURES = [
-  { label: "Kitap Üretimi", starter: "10 kitap/ay", creator: "30 kitap/ay", pro: "80 kitap/ay" },
+  { label: "Book Production", starter: "10 books/mo", creator: "30 books/mo", pro: "80 books/mo" },
   { label: "AI Kapak Hakkı", starter: "20 kapak/ay", creator: "60 kapak/ay", pro: "200 kapak/ay" },
   { label: "AI Bölüm Üretimi", starter: true, creator: true, pro: true },
   { label: "Çıkış Formatları", starter: "EPUB + PDF", creator: "EPUB + PDF + HTML", pro: "EPUB + PDF + HTML + MD" },
@@ -377,7 +377,7 @@ export function BillingScreen() {
                 </div>
                 <span className="text-sm text-muted-foreground">
                   {usage.usedBooks} / {usage.limit === null ? "∞" : usage.limit}{" "}
-                  {usage.limit !== null && "kitap"}
+                  {usage.limit !== null && "books"}
                 </span>
               </div>
 
@@ -403,7 +403,7 @@ export function BillingScreen() {
                   <p className="text-xs text-muted-foreground">
                     {usagePercent >= 90
                       ? "Limitine yaklaştın! Planını yükselt."
-                      : "Planını yükselterek daha fazla kitap üretebilirsin."}
+                      : "Upgrade your plan to produce more books."}
                   </p>
                   <button
                     type="button"

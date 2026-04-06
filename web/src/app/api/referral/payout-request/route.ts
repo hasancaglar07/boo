@@ -17,13 +17,13 @@ export async function POST(request: NextRequest) {
   const payoutEmail = typeof body?.email === "string" ? body.email.trim() : "";
 
   if (!payoutEmail) {
-    return NextResponse.json({ ok: false, error: "Ödeme e-posta adresi gerekli." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Payment email address is required." }, { status: 400 });
   }
 
   // Check referral code exists
   const referralCode = await prisma.referralCode.findUnique({ where: { userId } });
   if (!referralCode) {
-    return NextResponse.json({ ok: false, error: "Affiliate kodunuz yok." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "You don't have an affiliate code." }, { status: 400 });
   }
 
   // Calculate available balance
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   if (available < AFFILIATE_MIN_PAYOUT_USD) {
     return NextResponse.json({
       ok: false,
-      error: `Minimum ödeme tutarı $${AFFILIATE_MIN_PAYOUT_USD}. Mevcut bakiye: $${available.toFixed(2)}`,
+      error: `Minimum payout amount is ${AFFILIATE_MIN_PAYOUT_USD}. Current balance: ${available.toFixed(2)}`,
     }, { status: 400 });
   }
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   if (existingOpen) {
     return NextResponse.json({
       ok: false,
-      error: "Zaten bekleyen bir ödeme talebiniz var. İşlem tamamlanana kadar bekleyin.",
+      error: "You already have a pending payout request. Please wait until it's processed.",
     }, { status: 400 });
   }
 

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "Geçersiz kayıt alanları." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Invalid registration fields." }, { status: 400 });
   }
 
   const email = normalizeEmail(parsed.data.email);
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   const existing = await findUserByEmail(email);
   if (existing) {
-    return NextResponse.json({ ok: false, error: "Bu e-posta ile zaten bir hesap var." }, { status: 409 });
+    return NextResponse.json({ ok: false, error: "An account with this email already exists." }, { status: 409 });
   }
 
   const passwordHash = await hashPassword(parsed.data.password);

@@ -98,7 +98,7 @@ function AffiliateLinkCopy() {
   function handleTwitter() {
     if (!data) return;
     trackEvent("affiliate_twitter_clicked", { source: "profile" });
-    const text = `AI ile dakikalar içinde kitap yazdım 🚀 BookGenerator.net'i dene:`;
+    const text = `I wrote a book in minutes with AI 🚀 Try BookGenerator.net:`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(data.referralUrl)}`,
       "_blank",
@@ -411,7 +411,7 @@ export function AccountScreen() {
                 </div>
                 <div className="mt-3 text-3xl font-bold text-foreground">{books.length}</div>
                 <div className="mt-2 text-sm text-muted-foreground">
-                  Bu hesapla oluşturulmuş toplam kitap.
+                  Total books created with this account.
                 </div>
               </CardContent>
             </Card>
@@ -696,7 +696,7 @@ export function AccountScreen() {
                   <Sparkles className="size-4.5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-foreground">Hesap özeti</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Account summary</h2>
                   <p className="text-sm text-muted-foreground">
                     Bu alanlar salt-okunurdur; plan ve email değiştirme bu iterasyonun dışında.
                   </p>

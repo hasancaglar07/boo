@@ -20,14 +20,14 @@ export async function POST(
   });
 
   if (!user?.email) {
-    return Response.json({ ok: false, error: "Kullanıcı bulunamadı." }, { status: 404 });
+    return Response.json({ ok: false, error: "User not found." }, { status: 404 });
   }
 
   if (user.emailVerified) {
     return mutationResponse({
       sent: false,
       skipped: true,
-      message: "Kullanıcının e-postası zaten doğrulanmış.",
+      message: "User's email is already verified.",
     });
   }
 
@@ -56,7 +56,7 @@ export async function POST(
     return mutationResponse({
       sent: false,
       skipped: true,
-      message: "Bu kullanıcı için ek e-posta doğrulaması gerekmiyor.",
+      message: "No additional email verification needed for this user.",
     });
   }
 
@@ -66,7 +66,7 @@ export async function POST(
     ...EMAIL_ACTION_RATE_LIMIT,
   });
   if (!rateLimit.allowed) {
-    return Response.json({ ok: false, error: "Doğrulama maili limiti aşıldı." }, { status: 429 });
+    return Response.json({ ok: false, error: "Verification email limit exceeded." }, { status: 429 });
   }
 
   const rawToken = randomToken();

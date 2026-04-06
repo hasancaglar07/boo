@@ -405,11 +405,11 @@ export function HomeScreen() {
             {viewer?.usage?.canStartBook === false ? (
               <div className="mt-4 max-w-2xl rounded-[20px] border border-primary/20 bg-primary/5 px-4 py-4">
                 <div className="text-sm font-semibold text-foreground">
-                  Yeni kitap slotun şu an kapalı
+                  New book slot is currently closed
                 </div>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
                   {viewer.usage.reason === "monthly_quota_reached"
-                    ? "Aylık kitap kotana ulaştın. Yeni üretim için planını yükselt ya da yeni dönemi bekle."
+                    ? "You have reached your monthly book quota. Upgrade your plan or wait for the next cycle."
                     : "Mevcut planın ilk kitap preview’ını kullandı. Yeni kitap için planlardan birini seç."}
                 </p>
                 <div className="mt-3">
@@ -435,7 +435,7 @@ export function HomeScreen() {
                 Plan: {currentPlanLabel}
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
-                {books.length} kitap
+                {books.length} books
               </div>
               <div className="rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-xs font-medium text-foreground">
                 {viewer?.emailVerified ? "Email doğrulandı" : "Email doğrulanmadı"}
@@ -484,7 +484,7 @@ export function HomeScreen() {
         <div className="flex flex-col gap-5">
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              { label: "Kitap", value: books.length, icon: BookOpen },
+              { label: "Book", value: books.length, icon: BookOpen },
               { label: "Çıktı", value: compactNumber(totalExports), icon: Upload },
               { label: "Araştırma", value: compactNumber(totalResearch), icon: FileText },
               { label: "Plan", value: currentPlanLabel, small: true, icon: Target },
@@ -582,7 +582,7 @@ export function HomeScreen() {
               {(onboardingActions.length ? onboardingActions.slice(0, 4) : [
                 {
                   icon: BookOpen,
-                  label: "Yeni kitap başlat",
+                  label: "Start new book",
                   description: "Kısa sihirbaz ile yeni üretim akışını başlat.",
                   run: () => router.push(newBookHref),
                 },
@@ -628,13 +628,13 @@ export function HomeScreen() {
         </div>
       </div>
 
-      <section className="mt-10 home-anim-in home-d6" aria-label="Kitaplık">
+      <section className="mt-10 home-anim-in home-d6" aria-label="Library">
         <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-foreground">Kitapların</h2>
+          <h2 className="text-xl font-semibold text-foreground">Your Books</h2>
           <Link href={newBookHref}>
             <Button variant="outline" size="sm" className="min-h-[44px]">
               <Sparkles className="mr-1.5 size-3.5" aria-hidden="true" />
-              Yeni kitap
+              New Book
             </Button>
           </Link>
         </div>
@@ -648,8 +648,8 @@ export function HomeScreen() {
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Kitap ara..."
-                aria-label="Kitap ara"
+                placeholder="Search books..."
+                aria-label="Search books"
                 className="min-h-[44px] w-full rounded-[20px] bg-transparent pl-11 pr-10 text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
               />
               {searchQuery && (
@@ -708,11 +708,11 @@ export function HomeScreen() {
                       {book.title}
                     </h3>
                     <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                      {book.subtitle || book.description || "Preview ve tam kitap akışı hazır."}
+                      {book.subtitle || book.description || "Preview and full book flow ready."}
                     </p>
                   </div>
 
-                  <div className="mb-3 flex flex-wrap gap-2" aria-label="Kitap detayları">
+                  <div className="mb-3 flex flex-wrap gap-2" aria-label="Book details">
                     <Badge className="border-border/50">
                       <Layers className="mr-1 size-3" aria-hidden="true" />
                       {book.status?.chapter_count || book.chapter_count || 0} bölüm
@@ -774,7 +774,7 @@ export function HomeScreen() {
                   Sonuç bulunamadı
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  &ldquo;{debouncedSearch}&rdquo; ile eşleşen kitap yok. Farklı bir terim dene.
+                  &ldquo;{debouncedSearch}&rdquo; No matching books found. Try a different term.
                 </p>
                 <Button
                   variant="outline"

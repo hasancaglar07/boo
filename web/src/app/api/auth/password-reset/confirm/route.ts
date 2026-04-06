@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "Geçersiz sıfırlama isteği." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Invalid reset request." }, { status: 400 });
   }
 
   const tokenHash = hashToken(parsed.data.token);
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (!resetToken || resetToken.consumedAt || resetToken.expiresAt <= new Date()) {
-    return NextResponse.json({ ok: false, error: "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Password reset link is invalid or expired." }, { status: 400 });
   }
 
   await prisma.$transaction([

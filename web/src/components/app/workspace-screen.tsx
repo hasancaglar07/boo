@@ -45,7 +45,7 @@ type WorkspaceTab = (typeof tabOptions)[number];
 
 const TAB_LABELS: Record<WorkspaceTab, string> = {
   home: "Genel",
-  book: "Kitap",
+  book: "Book",
   writing: "Content",
   research: "Research",
   publish: "Yayın",
@@ -441,7 +441,7 @@ export function WorkspaceScreen({
       setDraft(saved);
       await refresh();
       setIsDirty(false);
-      updateToast(toastId, "Kitap kaydedildi.", "success");
+      updateToast(toastId, "Book saved.", "success");
     } catch (error) {
       if (isBackendUnavailableError(error)) {
         setBackendUnavailable(true);
@@ -552,7 +552,7 @@ export function WorkspaceScreen({
 
   const actions = [
     { label: "Genel", description: "Ana ilerleme özeti", run: () => setActiveTab("home") },
-    { label: "Kitap", description: "Başlık ve bölüm omurgası", run: () => setActiveTab("book") },
+    { label: "Book", description: "Title and chapter outline", run: () => setActiveTab("book") },
     { label: "İçerik", description: "Outline ve bölüm yazımı", run: () => setActiveTab("writing") },
     { label: "Araştırma", description: "KDP ve anahtar kelime araçları", run: () => setActiveTab("research") },
     { label: "Yayın", description: "EPUB ve PDF teslimi", run: () => setActiveTab("publish") },
@@ -673,7 +673,7 @@ export function WorkspaceScreen({
       current="workspace"
       layout="book"
       currentBookSlug={slug}
-      title={draft.title || "Kitap"}
+      title={draft.title || "Book"}
       subtitle={isDirty ? "Kaydedilmemiş değişiklik var." : "Genel görünüm, içerik üretimi, araştırma ve yayın teslimi tek akışta."}
       books={books}
       actions={actions}
@@ -700,7 +700,7 @@ export function WorkspaceScreen({
               { icon: Layers, value: stats.chapter_count, label: "Bölüm" },
               { icon: FlaskConical, value: stats.research_count, label: "Araştırma" },
               { icon: BarChart3, value: stats.export_count, label: "Çıktı" },
-              { icon: BookOpen, value: book.outline_file ? "Hazır" : "Eksik", label: "Taslak" },
+              { icon: BookOpen, value: book.outline_file ? "Ready" : "Missing", label: "Outline" },
             ].map(({ icon: Icon, value, label }) => (
               <Card key={label}>
                 <CardContent className="flex items-start gap-3">
@@ -720,7 +720,7 @@ export function WorkspaceScreen({
           <Card>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">Kitap ilerleme</span>
+                <span className="text-sm font-medium text-foreground">Book progress</span>
                 <span className="text-sm font-semibold text-primary">{progressScore}%</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -763,7 +763,7 @@ export function WorkspaceScreen({
           <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
             <Card>
               <CardContent className="space-y-4">
-                <div className="text-sm font-medium text-foreground">Kitap bilgileri</div>
+                <div className="text-sm font-medium text-foreground">Book details</div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div><Label>Başlık</Label><Input value={draft.title} onChange={(e) => updateDraft({ title: e.target.value })} /></div>
                   <div><Label>Alt başlık</Label><Input value={draft.subtitle || ""} onChange={(e) => updateDraft({ subtitle: e.target.value })} /></div>
@@ -1166,7 +1166,7 @@ export function WorkspaceScreen({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-base font-bold text-foreground">EPUB Oluştur</div>
-                    <div className="mt-1 text-xs text-muted-foreground">E-kitap formatı • Tüm okuyucularla uyumlu • İçerik kontrolü için ideal</div>
+                    <div className="mt-1 text-xs text-muted-foreground">E-book format • Compatible with all readers • Ideal for content review</div>
                   </div>
                 </button>
 

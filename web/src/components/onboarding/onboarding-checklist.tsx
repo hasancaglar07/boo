@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 const STORAGE_KEY = "book_generator_onboarding_checklist";
 
 const DEFAULT_CHECKLIST_ITEMS = [
-  { id: 1, text: "İlk kitap konusu belirle", completed: false },
+  { id: 1, text: "Set your first book topic", completed: false },
   { id: 2, text: "AI ile outline oluştur", completed: false },
   { id: 3, text: "Kapak stilini seç", completed: false },
   { id: 4, text: "Preview gör", completed: false },
@@ -138,7 +138,7 @@ export function OnboardingChecklist() {
             <div className="flex-1">
               <p className="text-sm font-semibold text-foreground">Tebrikler! İlk kitabın hazır!</p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Şimdi tam kitap ve export özellikleriyle devam et.
+                Now continue with the full book and export features.
               </p>
               <Button size="sm" className="mt-3" onClick={handleGetStarted}>
                 Premium&apos;a Geç

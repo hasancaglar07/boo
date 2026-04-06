@@ -102,7 +102,7 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
       <div
         ref={ref}
         role="region"
-        aria-label="Dönen kitap vitrini"
+        aria-label="Rotating book showcase"
         className={cn("relative flex h-full w-full items-center justify-center overflow-hidden", className)}
         style={{ perspective: "2200px" }}
         {...props}

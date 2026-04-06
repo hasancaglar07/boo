@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "Geçersiz checkout doğrulama isteği." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Invalid checkout verification request." }, { status: 400 });
   }
 
   const fulfillment = await fulfillStripeCheckoutBySessionId(parsed.data.sessionId, {

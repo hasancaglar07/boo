@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "Geçersiz e-posta." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Invalid email." }, { status: 400 });
   }
 
   const email = normalizeEmail(parsed.data.email);

@@ -126,7 +126,7 @@ export function OutlineStep({
       {/* ── Book Length Selector — Horizontal Pill Buttons ── */}
       <div>
         <label className="text-base sm:text-lg font-bold text-foreground mb-2 block">
-          Kitap uzunluğu hedefi
+          Book length target
         </label>
         <div className="flex flex-wrap gap-2">
           {BOOK_LENGTHS.map((value) => {

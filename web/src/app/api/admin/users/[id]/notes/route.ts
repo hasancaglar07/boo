@@ -17,7 +17,7 @@ export async function POST(
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return Response.json({ ok: false, error: "Geçersiz not." }, { status: 400 });
+    return Response.json({ ok: false, error: "Invalid note." }, { status: 400 });
   }
 
   const userId = (await params).id;

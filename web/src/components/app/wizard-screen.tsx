@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 const questions = [
   {
     key: "type",
-    title: "Ne tür kitap yazmak istiyorsun?",
+    title: "What kind of book do you want to write?",
     stepLabel: "Tür",
     options: [
       { value: "rehber", label: "Rehber" },
@@ -184,7 +184,7 @@ export function WizardScreen() {
   }
 
   return (
-    <AppFrame current="new" title="Yeni Kitap" subtitle="5 kısa soruyla başla." books={books}>
+    <AppFrame current="new" title="New Book" subtitle="Start with 5 quick questions." books={books}>
       <Card className="mx-auto max-w-3xl">
         <CardContent className="p-8">
           {/* Progress header */}

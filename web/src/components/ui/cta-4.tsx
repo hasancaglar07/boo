@@ -21,7 +21,7 @@ const defaultItems = [
 
 export function Cta4({
   title = "İlk kitabını çıkarmak için tek net başlangıç.",
-  description = "Konu fikrinden ilk yayınlanabilir dosyaya kadar seni gereksiz panel yorgunluğuna sokmadan ilerleyen bir kitap sistemi.",
+  description = "A book system that takes you from topic idea to your first publishable file without unnecessary panel fatigue.",
   buttonText = "İlk kitabını başlat",
   buttonUrl = "/start",
   items = defaultItems,
@@ -65,7 +65,7 @@ export function Cta4({
                     KDP_LIVE_BOOKS_CLAIM,
                     FULL_TRUST_CLAIM,
                     "Önce preview, sonra ödeme",
-                    "Tek kitap için $4 unlock",
+                    "$4 unlock for a single book",
                   ].map((item) => (
                     <span
                       key={item}

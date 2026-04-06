@@ -26,7 +26,7 @@ async function backendJson<T>(path: string, init?: RequestInit) {
   const payload = (await response.json().catch(() => null)) as T | null;
   if (!response.ok || !payload) {
     throw new Error(
-      (payload as { error?: string } | null)?.error || "Kapak seçimi güncellenemedi.",
+      (payload as { error?: string } | null)?.error || "Cover selection could not be updated.",
     );
   }
   return payload;
@@ -40,7 +40,7 @@ export async function POST(
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "Geçersiz kapak seçimi." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Invalid cover selection." }, { status: 400 });
   }
 
   const session = await auth();
@@ -51,7 +51,7 @@ export async function POST(
   );
 
   if (!allowed) {
-    return NextResponse.json({ ok: false, error: "Bu kitap için kapak seçimi yapamazsın." }, { status: 403 });
+    return NextResponse.json({ ok: false, error: "You cannot select a cover for this book." }, { status: 403 });
   }
 
   const existing = await backendJson<Record<string, unknown>>(`/api/books/${encodeURIComponent(slug)}`);

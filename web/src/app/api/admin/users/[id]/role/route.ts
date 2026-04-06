@@ -15,12 +15,12 @@ export async function PATCH(
   const session = await requireAdminApiAccess();
   if (session instanceof Response) return session;
   if (session.user.role !== "SUPER_ADMIN") {
-    return Response.json({ ok: false, error: "Sadece SUPER_ADMIN rol değiştirebilir." }, { status: 403 });
+    return Response.json({ ok: false, error: "Only SUPER_ADMIN can change roles." }, { status: 403 });
   }
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return Response.json({ ok: false, error: "Geçersiz rol." }, { status: 400 });
+    return Response.json({ ok: false, error: "Invalid role." }, { status: 400 });
   }
 
   const userId = (await params).id;

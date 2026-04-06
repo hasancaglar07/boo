@@ -70,7 +70,7 @@ export function GenerateAuthGateDialog({
 
         <div className="mt-5 inline-flex rounded-[16px] border border-[#dcc1ae]/80 bg-white/88 p-1">
           {[
-            { value: "register" as const, label: "Hesap Oluştur" },
+            { value: "register" as const, label: "Create Account" },
             { value: "login" as const, label: "Giriş Yap" },
           ].map((item) => (
             <button
@@ -107,7 +107,7 @@ export function GenerateAuthGateDialog({
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <p className="text-xs leading-6 text-[#8b6a59]">
-            Ödeme istemiyoruz. Giriş tamamlanınca ön izleme başlar ve aynı hesapta devam edersin.
+            We don't require payment. Once you sign in, the preview starts and you continue on the same account.
           </p>
           <Button
             type="button"

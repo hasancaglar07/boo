@@ -19,7 +19,7 @@ const schema = z.object({
 function validateToolValues(values: MarketingToolValues, toolSlug: string) {
   const tool = getGenericMarketingToolBySlug(toolSlug);
   if (!tool) {
-    return { tool: null, error: "Araç bulunamadı." };
+    return { tool: null, error: "Tool not found." };
   }
 
   for (const field of tool.fields) {
@@ -27,13 +27,13 @@ function validateToolValues(values: MarketingToolValues, toolSlug: string) {
     if (field.type === "select") {
       const allowedValues = new Set(field.options.map((option) => option.value));
       if (!allowedValues.has(value)) {
-        return { tool: null, error: `${field.label} alanında geçersiz seçim var.` };
+        return { tool: null, error: `${field.label} field has an invalid selection.` };
       }
       continue;
     }
 
     if (value.trim().length < field.minLength) {
-      return { tool: null, error: `${field.label} alanını daha net doldur.` };
+      return { tool: null, error: `Please fill in the ${field.label} field more clearly.` };
     }
   }
 
@@ -52,7 +52,7 @@ export async function POST(
 
   if (!parsed.success) {
     return NextResponse.json(
-      { ok: false, error: parsed.error.issues[0]?.message || "Geçersiz report isteği." },
+      { ok: false, error: parsed.error.issues[0]?.message || "Invalid report request." },
       { status: 400 },
     );
   }
@@ -75,7 +75,7 @@ export async function POST(
 
   if (!rateLimit.allowed) {
     return NextResponse.json(
-      { ok: false, error: "Çok fazla rapor istedin. Biraz sonra tekrar dene." },
+      { ok: false, error: "Too many report requests. Please try again later." },
       { status: 429 },
     );
   }

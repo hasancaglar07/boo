@@ -332,7 +332,7 @@ export function canOpenStep(draft: FunnelDraft, step: FunnelStep) {
 }
 
 export function localTitleSuggestions(draft: FunnelDraft) {
-  const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Kitap Fikri" : "Book Idea"));
+  const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Book Idea" : "Book Idea"));
   const audience = draft.audience?.trim() || (isTurkishLanguage(draft.language) ? "first-time readers" : "first-time readers");
   if (isTurkishLanguage(draft.language)) {
     return [
@@ -341,7 +341,7 @@ export function localTitleSuggestions(draft: FunnelDraft) {
         subtitle: `A clear roadmap from beginner to advanced for ${audience}`,
       },
       {
-        title: `${subject}: Adım Adım Uygulama Kitabı`,
+        title: `${subject}: Step-by-Step Application Book`,
         subtitle: `A simple, practical, and consistent learning flow for ${audience}`,
       },
       {
@@ -368,7 +368,7 @@ export function localTitleSuggestions(draft: FunnelDraft) {
 }
 
 export function localOutlineSuggestions(draft: FunnelDraft) {
-  const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Konu" : "Topic"));
+  const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Topic" : "Topic"));
   const language = draft.language;
   if (isTurkishLanguage(language)) {
     return enrichOutlineItems([
@@ -377,7 +377,7 @@ export function localOutlineSuggestions(draft: FunnelDraft) {
       { title: "Core Mechanics and Critical Logic", summary: "Chapter explaining the most important systems with simple examples." },
       { title: "Common Mistakes", summary: "Mistakes seen at the beginner level and ways to fix them." },
       { title: "Strategy and Foundation for Progress", summary: "A regular progress plan to follow for better results." },
-      { title: "İleri Seviye Taktikler", summary: "Temeller oturduktan sonra fark yaratan yöntemler ve ince ayarlar." },
+      { title: "Advanced Tactics", summary: "Methods and fine-tunings that make a difference after the basics are established." },
       { title: "Long-Term Development Plan", summary: "Practice, review, and improvement suggestions to make gains permanent." },
     ], draft);
   }
@@ -532,7 +532,7 @@ export function chapterRoleLabel(role: FunnelChapterRole, language: FunnelLangua
     case "foundation":
       return "Temel";
     case "core":
-      return "Ana bölüm";
+      return "Main chapter";
     case "case":
       return "Uygulama";
     case "advanced":
@@ -586,7 +586,7 @@ export function bookLengthLabel(bookLength: FunnelBookLength, language: FunnelLa
   if (!isTurkishLanguage(language)) {
     return bookLength === "compact" ? "Compact book" : bookLength === "extended" ? "Extended book" : "Standard book";
   }
-  return bookLength === "compact" ? "Kompakt kitap" : bookLength === "extended" ? "Detaylı kitap" : "Standart kitap";
+  return bookLength === "compact" ? "Compact book" : bookLength === "extended" ? "Detailed book" : "Standard book";
 }
 
 export function bookLengthDescription(bookLength: FunnelBookLength, language: FunnelLanguage) {
@@ -614,7 +614,7 @@ function buildChapterGenerationBrief(item: FunnelOutlineItem, bookLength: Funnel
   if (!isTurkishLanguage(language)) {
     return `${item.summary.trim()} Chapter role: ${chapterRoleLabel(item.role, language)}. Suggested depth: ${chapterLengthLabel(item.length, language)}. Target length: ${words.min}-${words.max} words.`;
   }
-  return `${item.summary.trim()} Bölüm rolü: ${chapterRoleLabel(item.role, language)}. Önerilen derinlik: ${chapterLengthLabel(item.length, language)}. Hedef uzunluk: ${words.min}-${words.max} kelime.`;
+  return `${item.summary.trim()} Chapter role: ${chapterRoleLabel(item.role, language)}. Suggested depth: ${chapterLengthLabel(item.length, language)}. Target lengluk: ${words.min}-${words.max} kelime.`;
 }
 
 function derivedBookSlug(draft: FunnelDraft, resolvedTitle: string) {
@@ -654,7 +654,7 @@ function buildCoverPromptFromDraft(draft: FunnelDraft, resolvedTitle: string, re
 export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
   const plannedOutline = draft.outline.length ? draft.outline : localOutlineSuggestions(draft);
   const totalWords = outlineWordRange(plannedOutline, draft.bookLength);
-  const resolvedTitle = (draft.title || titleCase(draft.topic) || "Kitap").trim();
+  const resolvedTitle = (draft.title || titleCase(draft.topic) || "Book").trim();
   const resolvedSubtitle = draft.subtitle.trim();
   const resolvedSlug = derivedBookSlug(draft, resolvedTitle);
   const coverBrief = draft.coverBrief.trim();
@@ -677,7 +677,7 @@ export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
     title: resolvedTitle,
     subtitle: resolvedSubtitle,
     language: draft.language,
-    author: draft.authorName.trim() || author.trim() || "Kitap Sahibi",
+    author: draft.authorName.trim() || author.trim() || "Book Owner",
     publisher: draft.imprint.trim() || "Book Generator",
     year: String(new Date().getFullYear()),
     description: buildDraftDescription(draft),
@@ -736,7 +736,7 @@ export function bookTypeLabel(bookType: FunnelBookType) {
     case "cocuk":
       return "Children's book";
     default:
-      return "Kitap";
+      return "Book";
   }
 }
 
