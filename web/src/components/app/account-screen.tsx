@@ -452,7 +452,7 @@ export function AccountScreen() {
                         onClick={() => void handleResendVerification()}
                         disabled={verificationSending}
                       >
-                        {verificationSending ? "Sending..." : "Resend verification email"
+                        {verificationSending ? "Sending..." : "Resend verification email"}
                       </Button>
                     </div>
                     {verificationMessage ? (
