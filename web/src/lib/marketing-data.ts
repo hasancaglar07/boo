@@ -450,7 +450,7 @@ export const blogPosts = [
     ],
   },
   {
-    slug: "yazmayi-bilmeden-kitap-cikarabilir-miyim",
+    slug: "can-i-publish-a-book-without-knowing-how-to-write",
     title: "Can I Publish a Book Without Knowing How to Write?",
     summary: "Provides the simplest answer to the first-time user's fear.",
     category: "Başlangıç",
@@ -562,7 +562,7 @@ export const blogPosts = [
     ],
   },
   {
-    slug: "chatgpt-ile-outline-cikiyor-ama-kitap-neden-bitmiyor",
+    slug: "chatgpt-generates-outlines-but-why-doesnt-the-book-get-finished",
     title: "ChatGPT Generates Outlines But Why Doesn't the Book Get Finished?",
     summary: "The real reason book projects that start with ChatGPT but never get finished is not model quality — it's workflow fragmentation and context loss.",
     category: "Başlangıç",

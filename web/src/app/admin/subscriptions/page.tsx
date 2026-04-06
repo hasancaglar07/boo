@@ -122,13 +122,13 @@ export default function AdminSubscriptionsPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold text-[color:var(--admin-text)]">Subscriptions</h1>
-        <p className="mt-1 text-sm admin-muted">Manual entitlement tabanlı aktif abonelik görünümü.</p>
+        <p className="mt-1 text-sm admin-muted">Manual entitlement-based active subscription view.</p>
       </div>
 
       {data && (
         <section className="grid gap-4 md:grid-cols-3">
           <div className="admin-panel rounded-[24px] p-5">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] admin-muted">Toplam Abonelik</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] admin-muted">Total Subscriptions</div>
             <div className="mt-3 text-3xl font-semibold text-[color:var(--admin-text)]">{data.totalItems}</div>
           </div>
           <div className="admin-panel rounded-[24px] p-5">
@@ -150,7 +150,7 @@ export default function AdminSubscriptionsPage() {
             label: "Plan",
             options: [
               { label: "Starter", value: "starter" },
-              { label: "Yazar", value: "creator" },
+              { label: "Creator", value: "creator" },
               { label: "Stüdyo", value: "pro" },
             ],
           },
@@ -173,7 +173,7 @@ export default function AdminSubscriptionsPage() {
         columns={columns}
         getRowId={(row) => row.id}
         loading={loading}
-        emptyTitle="Abonelik bulunamadı"
+        emptyTitle="No subscriptions found"
         emptyMessage="Aktif subscription entitlement yok."
         sort={searchParams.get("sort") || "startedAt"}
         order={(searchParams.get("order") as "asc" | "desc" | null) || "desc"}

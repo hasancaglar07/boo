@@ -59,7 +59,7 @@ const REPORTS: ReportConfig[] = [
   },
   {
     id: "revenue",
-    title: "Gelir Raporu",
+    title: "Revenue Report",
     description: "Invoice records, filterable by plan and payment status.",
     icon: <DollarSign className="size-5" />,
     baseUrl: "/api/admin/reports/revenue",
@@ -80,7 +80,7 @@ const REPORTS: ReportConfig[] = [
   },
   {
     id: "books",
-    title: "Kitap Raporu",
+    title: "Book Report",
     description: "All book records, creation date, and statuses.",
     icon: <BookOpen className="size-5" />,
     baseUrl: "/api/admin/reports/books",
@@ -91,7 +91,7 @@ const REPORTS: ReportConfig[] = [
         label: "Durum",
         options: [
           { value: "all", label: "All" },
-          { value: "draft", label: "Taslak" },
+          { value: "draft", label: "Draft" },
           { value: "published", label: "Published" },
         ],
       },
@@ -188,7 +188,7 @@ export default function AdminReportsPage() {
       <div className="admin-panel rounded-[28px] p-5">
         <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[color:var(--admin-text)]">
           <FileText className="size-4" />
-          Mevcut Raporlar
+          Available Reports
         </div>
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {REPORTS.map((report) => (

@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
           trend={computeTrend(data?.userGrowth, "users")}
         />
         <MetricCard
-          title="Aktif abonelik"
+          title="Active subscription"
           value={loading || !data ? "—" : formatAdminNumber(data.cards.activeSubscriptions)}
           icon={<CreditCard className="size-5" />}
           color="success"

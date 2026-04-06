@@ -111,7 +111,7 @@ export default function AdminBillingPage() {
           refund: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
         };
         const kindLabels: Record<string, string> = {
-          subscription: "Abonelik",
+          subscription: "Subscription",
           one_time_book_unlock: "Kitap Kilidi",
           manual_adjustment: "Manuel",
           refund: "Refund",

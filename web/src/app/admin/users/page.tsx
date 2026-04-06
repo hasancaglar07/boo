@@ -141,7 +141,7 @@ export default function AdminUsersPage() {
             options: [
               { label: "Free", value: "free" },
               { label: "Starter", value: "starter" },
-              { label: "Yazar", value: "creator" },
+              { label: "Creator", value: "creator" },
               { label: "Studio", value: "pro" },
               { label: "Tek Kitap", value: "premium" },
             ],
@@ -181,7 +181,7 @@ export default function AdminUsersPage() {
         onSort={handleSort}
         bulkActions={[
           {
-            label: "Filtreli CSV indir",
+            label: "Download Filtered CSV",
             onClick: () => {
               window.location.assign(`/api/admin/reports/users?${query}`);
             },
