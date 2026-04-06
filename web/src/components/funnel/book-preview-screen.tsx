@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import {
@@ -296,7 +296,7 @@ function BookMetaStrip({
         { label: "Author", value: authorName },
         { label: "Imprint", value: imprint },
         { label: "Language", value: `${languageLabel(language)} book` },
-        { label: "Preview", value: `İlk %${ratio}` },
+        { label: "Preview", value: `First ${ratio}%` },
       ].map(({ label, value }) => (
         <div
           key={label}
@@ -679,7 +679,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
               {!coverUrl && (
                 <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
-                  Kapak arka planda üretiliyor. Ready olunca burası güncellenir.
+                  Cover is being generated in the background üretiliyor. Ready olunca burası güncellenir.
                 </p>
               )}
             </CardContent>
@@ -819,7 +819,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                     onClick={() => openUpgrade("pdf")}
                   >
                     <Download className="mr-2 size-4" />
-                    PDF İndir
+                    Download PDF
                   </Button>
                 )}
               </div>
@@ -863,7 +863,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
           {preview.preview.locked_sections.length > 0 && (
             <div>
               <div className="mb-3 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Locked chapterler ({preview.preview.locked_sections.length})
+                Locked chapters ({preview.preview.locked_sections.length})
               </div>
               <div className="space-y-2">
                 {preview.preview.locked_sections.map((section) => (
@@ -932,7 +932,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   {authorBio && (
                     <div className="rounded-[14px] border border-border/60 bg-background/60 px-3 py-3">
                       <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                        Author biyografisi
+                        Author biography
                       </div>
                       <div className="mt-1 text-sm leading-6 text-muted-foreground">{authorBio}</div>
                     </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -292,7 +292,7 @@ export function WorkspaceScreen({
     { label: "Content", description: "Outline ve chapter yazımı", run: () => setActiveTab("writing") },
     { label: "Araştırma", description: "KDP ve anahtar words araçları", run: () => setActiveTab("research") },
     { label: "Yayın", description: "EPUB ve PDF teslimi", run: () => setActiveTab("publish") },
-    { label: "Settings", description: "API anahtarları", run: () => setActiveTab("settings") },
+    { label: "Settings", description: "API Keys", run: () => setActiveTab("settings") },
     { label: "Kaydet", description: "Kitabı kaydet", run: () => saveCurrentBook() },
   ];
 
@@ -471,8 +471,8 @@ export function WorkspaceScreen({
                 <div className="grid gap-4 md:grid-cols-2">
                   <div><Label>Başlık</Label><Input value={draft.title} onChange={(e) => updateDraft({ title: e.target.value })} /></div>
                   <div><Label>Alt başlık</Label><Input value={draft.subtitle || ""} onChange={(e) => updateDraft({ subtitle: e.target.value })} /></div>
-                  <div><Label>Yazar</Label><Input value={draft.author || ""} onChange={(e) => updateDraft({ author: e.target.value })} /></div>
-                  <div><Label>Yayınevi</Label><Input value={draft.publisher || ""} onChange={(e) => updateDraft({ publisher: e.target.value })} /></div>
+                  <div><Label>Author</Label><Input value={draft.author || ""} onChange={(e) => updateDraft({ author: e.target.value })} /></div>
+                  <div><Label>Publisher</Label><Input value={draft.publisher || ""} onChange={(e) => updateDraft({ publisher: e.target.value })} /></div>
                   <div><Label>ISBN</Label><Input value={draft.isbn || ""} onChange={(e) => updateDraft({ isbn: e.target.value })} /></div>
                   <div><Label>Yıl</Label><Input value={draft.year || ""} onChange={(e) => updateDraft({ year: e.target.value })} /></div>
                   <div><Label>Branding / wordmark</Label><Input value={draft.branding_mark || ""} onChange={(e) => updateDraft({ branding_mark: e.target.value })} /></div>
@@ -527,7 +527,7 @@ export function WorkspaceScreen({
                   <Textarea value={draft.description || ""} onChange={(e) => updateDraft({ description: e.target.value })} />
                 </div>
                 <div>
-                  <Label>Yazar biyografisi</Label>
+                  <Label>Author biyografisi</Label>
                   <Textarea value={draft.author_bio || ""} onChange={(e) => updateDraft({ author_bio: e.target.value })} />
                 </div>
               </CardContent>
@@ -785,31 +785,31 @@ export function WorkspaceScreen({
         <TabsContent value="settings" className="mt-6 space-y-6">
           <Card>
             <CardContent className="space-y-4">
-              <div className="text-sm font-medium text-foreground">API Anahtarları</div>
+              <div className="text-sm font-medium text-foreground">API Keys</div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div><Label>GEMINI_API_KEY</Label><Input type="password" value={settings.GEMINI_API_KEY || ""} onChange={(e) => setSettings({ ...settings, GEMINI_API_KEY: e.target.value })} /></div>
                 <div><Label>OPENAI_API_KEY</Label><Input type="password" value={settings.OPENAI_API_KEY || ""} onChange={(e) => setSettings({ ...settings, OPENAI_API_KEY: e.target.value })} /></div>
                 <div><Label>GROQ_API_KEY</Label><Input type="password" value={settings.GROQ_API_KEY || ""} onChange={(e) => setSettings({ ...settings, GROQ_API_KEY: e.target.value })} /></div>
                 <div><Label>Ollama model</Label><Input value={settings.ollama_model || ""} onChange={(e) => setSettings({ ...settings, ollama_model: e.target.value })} /></div>
               </div>
-              <div className="text-sm font-medium text-foreground">Varsayılanlar</div>
+              <div className="text-sm font-medium text-foreground">Defaults</div>
               <div className="grid gap-4 md:grid-cols-2">
-                <div><Label>Yazar</Label><Input value={settings.default_author || ""} onChange={(e) => setSettings({ ...settings, default_author: e.target.value })} /></div>
-                <div><Label>Yayınevi</Label><Input value={settings.default_publisher || ""} onChange={(e) => setSettings({ ...settings, default_publisher: e.target.value })} /></div>
+                <div><Label>Author</Label><Input value={settings.default_author || ""} onChange={(e) => setSettings({ ...settings, default_author: e.target.value })} /></div>
+                <div><Label>Publisher</Label><Input value={settings.default_publisher || ""} onChange={(e) => setSettings({ ...settings, default_publisher: e.target.value })} /></div>
               </div>
               <Button
                 onClick={async () => {
-                  const toastId = addToast("Ayarlar kaydediliyor...", "loading");
+                  const toastId = addToast("Saving settings...", "loading");
                   try {
                     const saved = await saveSettings(settings);
                     setSettings(saved);
-                    updateToast(toastId, "Ayarlar kaydedildi.", "success");
+                    updateToast(toastId, "Settings saved.", "success");
                   } catch (error) {
-                    updateToast(toastId, error instanceof Error ? error.message : "Ayarlar kaydedilemedi.", "error");
+                    updateToast(toastId, error instanceof Error ? error.message : "Settings could not be saved.", "error");
                   }
                 }}
               >
-                Ayarları kaydet
+                Save Settings
               </Button>
             </CardContent>
           </Card>

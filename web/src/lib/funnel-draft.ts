@@ -1,4 +1,4 @@
-import { slugify, titleCase } from "@/lib/utils";
+﻿import { slugify, titleCase } from "@/lib/utils";
 
 export type FunnelStep = "topic" | "title" | "outline" | "style" | "generate";
 export type FunnelBookType = "rehber" | "is" | "egitim" | "cocuk" | "diger";
@@ -10,7 +10,7 @@ export type FunnelChapterRole = "opening" | "foundation" | "core" | "case" | "ad
 export type FunnelChapterLength = "short" | "medium" | "long";
 export const SUPPORTED_LANGUAGES = [
   { value: "Turkish", label: "Türkçe", description: "Local reader tone, Turkish chapter flow, and natural title structure." },
-  { value: "English", label: "İngilizce", description: "Clean, clear, and fluent English structure for international readers." },
+  { value: "English", label: "English", description: "Clean, clear, and fluent English structure for international readers." },
   { value: "German", label: "Deutsch", description: "Output suited for more technical and systematic German reader expectations." },
   { value: "French", label: "Français", description: "More editorial and fluent French reader rhythm." },
   { value: "Spanish", label: "Español", description: "Strong general language suitable for Latin and European markets." },
@@ -102,7 +102,7 @@ export function isEnglishLanguage(language?: string) {
 }
 
 export function languageLabel(language?: string) {
-  return SUPPORTED_LANGUAGES.find((item) => item.value === language)?.label || String(language || "İngilizce");
+  return SUPPORTED_LANGUAGES.find((item) => item.value === language)?.label || String(language || "English");
 }
 
 export function languageDescription(language?: string) {
@@ -337,7 +337,7 @@ export function localTitleSuggestions(draft: FunnelDraft) {
   if (isTurkishLanguage(draft.language)) {
     return [
       {
-        title: `${subject} Rehberi`,
+        title: `${subject} Guide`,
         subtitle: `A clear roadmap from beginner to advanced for ${audience}`,
       },
       {
@@ -536,7 +536,7 @@ export function chapterRoleLabel(role: FunnelChapterRole, language: FunnelLangua
     case "case":
       return "Uygulama";
     case "advanced":
-      return "İleri seviye";
+      return "Advanced";
     case "closing":
       return "Closing";
   }
@@ -579,7 +579,7 @@ export function chapterLengthLabel(length: FunnelChapterLength, language: Funnel
   if (!isTurkishLanguage(language)) {
     return length === "short" ? "Short" : length === "medium" ? "Medium" : "Long";
   }
-  return length === "short" ? "Kısa" : length === "medium" ? "Orta" : "Uzun";
+  return length === "short" ? "Short" : length === "medium" ? "Medium" : "Long";
 }
 
 export function bookLengthLabel(bookLength: FunnelBookLength, language: FunnelLanguage) {
@@ -751,9 +751,9 @@ export function toneLabel(tone: FunnelTone, language: FunnelLanguage) {
           : "Professional";
   }
   return tone === "warm"
-    ? "Samimi"
+    ? "Warm"
     : tone === "inspiring"
-      ? "İlham verici"
+      ? "Inspiring"
       : tone === "clear"
         ? "Clear and instructive"
         : "Profesyonel";
@@ -777,10 +777,10 @@ export function coverDirectionLabel(direction: FunnelCoverDirection, language: F
           : "Editorial";
   }
   return direction === "tech"
-    ? "Cesur teknoloji"
+    ? "Bold tech"
     : direction === "minimal"
-      ? "Minimal profesyonel"
+      ? "Minimal professional"
       : direction === "energetic"
         ? "Young and energetic"
-        : "Modern editoryal";
+        : "Modern editorial";
 }

@@ -256,6 +256,12 @@ export type Settings = {
   cover_service: string;
   cover_username: string;
   cover_password: string;
+  GEMINI_API_KEY?: string;
+  OPENAI_API_KEY?: string;
+  GROQ_API_KEY?: string;
+  ollama_model?: string;
+  default_author?: string;
+  default_publisher?: string;
 };
 
 type ApiOptions = RequestInit & {
