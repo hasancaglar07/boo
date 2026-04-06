@@ -115,9 +115,9 @@ export function TopicStep({
           htmlFor="audience"
           className="text-base sm:text-lg font-bold text-foreground"
         >
-          Hedef okur{" "}
+          Target reader{" "}
           <span className="font-normal text-muted-foreground/50">
-            (isteğe bağlı)
+            (optional)
           </span>
         </label>
         <Input

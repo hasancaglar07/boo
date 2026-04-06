@@ -1,4 +1,4 @@
-﻿import { PUBLIC_BILLING_EMAIL, PUBLIC_SUPPORT_EMAIL } from "@/lib/contact-shared";
+import { PUBLIC_BILLING_EMAIL, PUBLIC_SUPPORT_EMAIL } from "@/lib/contact-shared";
 import {
   KDP_GUARANTEE_CLAIM,
   KDP_LIVE_BOOKS_CLAIM,
@@ -74,7 +74,7 @@ export const howItWorksPageSteps = [
   {
     step: "3",
     title: "Get your EPUB and PDF",
-    text: "Önizlemeyi gör, beğenirsen tam kitabı aç. Çıktı dosyaları KDP'ye yüklemeye hazır gelir.",
+    text: "See the preview, unlock the full book if you like it. Output files are ready to upload to KDP.",
     output: "Preview, EPUB, and PDF output files",
   },
 ] as const;

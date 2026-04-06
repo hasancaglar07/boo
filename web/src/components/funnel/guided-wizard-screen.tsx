@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -80,7 +80,7 @@ function normalizeRouteBase(routeBase: string) {
 }
 
 function defaultAudience(language: FunnelLanguage) {
-  return isTurkishLanguage(language) ? "genel okur" : "general readers";
+  return isTurkishLanguage(language) ? "general readers" : "general readers";
 }
 
 function defaultChapterReference(language: FunnelLanguage, number: number) {
@@ -524,7 +524,7 @@ export function GuidedWizardScreen({
 
   if (step === "topic") {
     return wrapInShell({
-      title: "Kitabın topicsu ne?",
+      title: "What is your book topic?",
       description: "1/5. First select the book language, then write the topic. This selection produces all AI suggestions in the same language.",
       children: <TopicStep draft={draft} onUpdate={updateDraft} onNext={goNext} error={error} onError={setError} />,
     });
@@ -573,7 +573,7 @@ export function GuidedWizardScreen({
 
   if (step === "style") {
     return wrapInShell({
-      title: "Dil ve stil",
+      title: "Language and style",
       description: "4/5. This screen auto-filled. Select the language, brand, and overall feel of the cover; preview generation starts in the next step.",
       children: (
         <StyleStep

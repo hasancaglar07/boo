@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, X, Sparkles, Globe } from "lucide-react";
+import { Menu, X, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/components/lang-provider";
@@ -21,24 +21,6 @@ const secondaryNavKeys = [
   { href: "/blog", labelKey: "footer.blog" },
   { href: "/use-cases", labelKey: "footer.useCases" },
 ];
-
-/* ─── Language Toggle for Mobile ─────────────────────────────── */
-
-function MobileLangToggle() {
-  const { lang, setLang } = useLang();
-  const next = lang === "en" ? "tr" : "en";
-
-  return (
-    <button
-      onClick={() => setLang(next)}
-      className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[14px] font-medium text-muted-foreground transition-all duration-150 hover:bg-accent/70 hover:text-foreground"
-      aria-label={lang === "en" ? "Switch to Turkish" : "Switch to English"}
-    >
-      <Globe className="h-4 w-4" aria-hidden="true" />
-      {lang === "tr" ? "English" : "Türkçe"}
-    </button>
-  );
-}
 
 export function MobileNav({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
   const { t } = useLang();
@@ -106,7 +88,6 @@ export function MobileNav({ isAuthenticated = false }: { isAuthenticated?: boole
                     {t(item.labelKey)}
                   </Link>
                 ))}
-                <MobileLangToggle />
               </nav>
             </div>
 

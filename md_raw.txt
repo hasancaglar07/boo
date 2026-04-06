@@ -1,0 +1,583 @@
+import { PUBLIC_BILLING_EMAIL, PUBLIC_SUPPORT_EMAIL } from "@/lib/contact-shared";
+import {
+  KDP_GUARANTEE_CLAIM,
+  KDP_LIVE_BOOKS_CLAIM,
+  NO_API_COST_CLAIM,
+  REFUND_GUARANTEE_CLAIM,
+} from "@/lib/site-claims";
+
+export const audienceGroups = [
+  {
+    title: "Those who want to turn expertise into a book",
+    text: "For coaches, consultants, instructors, and professionals who have accumulated knowledge in a niche.",
+  },
+  {
+    title: "Those who want to publish their first guide book",
+    text: "For those who want to produce a reliable, structured, and publishable book around a single topic.",
+  },
+  {
+    title: "Those who want to produce English content",
+    text: "So you can structure and produce your book in English even though the interface stays in Turkish.",
+  },
+] as const;
+
+export const deliverables = [
+  "Title, subtitle, and book description",
+  "Chapter-by-chapter outline and working skeleton",
+  "Editable chapter content",
+  "Cover workflow and output files",
+  "EPUB, PDF, and additional formats on eligible plans",
+  "Research outputs, topic and keyword suggestions",
+] as const;
+
+export const howItWorksSteps = [
+  {
+    step: "1",
+    title: "Define your book topic and genre",
+    text: "Enter your book genre, topic, and target reader with short answers. No blank page — the AI wizard guides you.",
+  },
+  {
+    step: "2",
+    title: "Approve the outline and chapter plan",
+    text: "AI suggests title, subtitle, and chapter flow. You edit, approve — or write from scratch.",
+  },
+  {
+    step: "3",
+    title: "Generate your book with AI",
+    text: "Select writing style and cover direction, then start generation. First preview ready in 10–30 seconds.",
+  },
+  {
+    step: "4",
+    title: "Review the free preview",
+    text: "See the cover, chapter list, and first 20% of content. Go back and change if you don’t like it.",
+  },
+  {
+    step: "5",
+    title: "Download KDP-ready EPUB and PDF",
+    text: "Unlock full access, download your book. Upload to Amazon KDP or your own publishing channel.",
+  },
+] as const;
+
+export const howItWorksPageSteps = [
+  {
+    step: "1",
+    title: "Describe your topic",
+    text: "Enter your book topic, target reader, and language into the wizard. 5 short questions, zero blank pages.",
+    output: "Clear book direction and title suggestion",
+  },
+  {
+    step: "2",
+    title: "Approve the outline, start generation",
+    text: "AI suggests title, chapter flow, and topic summary. You edit and approve. Then generate the entire book with one click.",
+    output: "Visible chapter plan and book structure",
+  },
+  {
+    step: "3",
+    title: "Get your EPUB and PDF",
+    text: "See the preview, unlock the full book if you like it. Output files are ready to upload to KDP.",
+    output: "Preview, EPUB, and PDF output files",
+  },
+] as const;
+
+export const premiumPlan = {
+  id: "premium",
+  name: "One Book",
+  price: "$4",
+  interval: "one-time",
+  label: "1 book — no subscription, yours forever",
+  description: "Pay once, the book is yours — from draft to EPUB, everything included, no subscription.",
+  badge: "Try and decide",
+  perUnit: null,
+  features: [
+    "1 complete book — all chapters unlocked",
+    "AI cover generation — 3 styles, custom color palette",
+    "EPUB + PDF output — ready for KDP upload",
+    "Multilingual production (Turkish, English, and more)",
+    "Tone and target audience settings (from wizard)",
+    `${KDP_GUARANTEE_CLAIM} + ${REFUND_GUARANTEE_CLAIM}`,
+  ],
+} as const;
+
+export const plans = [
+  {
+    id: "starter",
+    name: "Basic",
+    price: "$19",
+    interval: "monthly",
+    label: "10 books per month",
+    badge: null,
+    perUnit: "$1.90 per book",
+    annualMonthlyPrice: "$15",
+    description: "Build your rhythm with 10 books per month — $1.90 per book, KDP-ready output.",
+    features: [
+      "10 books per month generation",
+      "20 covers per month — AI styles, customizable",
+      "EPUB + PDF output — for each book",
+      "Quick draft with wizard: topic → structure → chapters",
+      "Chapter editor — edit, regenerate, modify",
+      "Multilingual book support",
+      "Book workspace — all projects in one place",
+      "Standard email support",
+    ],
+  },
+  {
+    id: "creator",
+    name: "Writer",
+    price: "$39",
+    interval: "monthly",
+    label: "30 books per month",
+    badge: "Most Popular",
+    perUnit: "$1.30 per book",
+    annualMonthlyPrice: "$31",
+    decoyNote: "37% of Studio's books at 49% of the price",
+    description: "Which topic sells? Research, produce 30 books, grow on KDP — $1.30 per book.",
+    features: [
+      "30 books per month generation",
+      "60 covers per month — full customization",
+      "Research center — KDP trend and keyword analysis",
+      "Market gap analysis — competitor book scanning",
+      "EPUB, PDF and HTML outputs",
+      "Per-chapter regeneration and tone adjustment",
+      "Multilingual series production (publish same topic in different languages)",
+      "Priority support",
+    ],
+  },
+  {
+    id: "pro",
+    name: "Studio",
+    price: "$79",
+    interval: "monthly",
+    label: "80 books per month",
+    badge: null,
+    perUnit: "$0.99 per book",
+    annualMonthlyPrice: "$63",
+    description: "80 books/month, API access, automation — $0.99 per book, no extra billing.",
+    features: [
+      "80 books per month generation — full capacity",
+      "200 covers per month",
+      "All output formats: EPUB, PDF, HTML, Markdown",
+      "Research center + advanced KDP market analysis",
+      "Series and theme-based bulk production",
+      "Chapter templates and customized tone profiles",
+      "API and automation access — connect to your systems",
+      NO_API_COST_CLAIM,
+      "Priority support + custom onboarding guidance",
+    ],
+  },
+] as const;
+
+export const faqSections = [
+  {
+    title: "General",
+    items: [
+      [
+        "What does this product do?",
+        "It takes your idea, generates an outline, produces chapters, and converts your book into publishable output files.",
+      ],
+      [
+        "Can I generate content in English?",
+        "Yes. The interface stays in Turkish, but book content can be produced in English or any other language you choose.",
+      ],
+      [
+        "Can a first-time user understand this?",
+        "Yes. The main workflow consists of a 5-question wizard and 3 basic steps: idea, outline, publish.",
+      ],
+      [
+        "Is the preview really free? Do I need card details?",
+        "Yes, completely free. You can complete the wizard, see your cover and chapter plan without registration or card details. The first 20% content preview is also included. Payment is only required when you want the full book and output files.",
+      ],
+      [
+        "Is AI-generated content really usable quality?",
+        `The output is a structured outline — not like a professional editor, but a ready-to-edit skeleton instead of starting from a blank page. You can modify, regenerate, or replace any chapter with your own text. ${KDP_LIVE_BOOKS_CLAIM} and our books are prepared with ${KDP_GUARANTEE_CLAIM}.`,
+      ],
+      [
+        "Who is this product NOT suitable for?",
+        "It is not designed for novel or fiction writers, those seeking academic formatting (footnotes, bibliography), or technical documentation needs. It's the right tool for guides, expertise books, info products, or KDP non-fiction.",
+      ],
+    ],
+  },
+  {
+    title: "Book Production",
+    items: [
+      [
+        "How do I create a book?",
+        "Enter brief information such as topic, target reader, tone, and language. The system builds an outline and chapter flow based on that.",
+      ],
+      [
+        "Do I have to generate chapters before approving the outline?",
+        "No. It is recommended to decide on the outline first, then proceed to chapter generation.",
+      ],
+      [
+        "Can I edit the book later?",
+        "Yes. Chapter contents and book metadata can be updated in the workspace.",
+      ],
+      [
+        "Can I generate just a single piece like an introduction or summary?",
+        "The main workflow is focused on full book production. In advanced workflows, you can also work on specific chapters.",
+      ],
+      [
+        "Can I write in Turkish and produce an English book?",
+        "Yes. You can fill out the wizard entirely in Turkish; the system produces content in your chosen language — including English. No translation tool needed. Converting your Turkish knowledge into an English KDP book is one of the strongest use cases for this product.",
+      ],
+      [
+        "How many chapters are generated? Can I control the length?",
+        "You approve the number of chapters and their titles during the outline stage; the system typically suggests a 7–12 chapter outline. You can add, remove, or reorder chapters. Chapter length is also an adjustable parameter.",
+      ],
+    ],
+  },
+  {
+    title: "Cover and Design",
+    items: [
+      [
+        "Can I add a cover?",
+        "Yes. Local cover generation, manual upload, and AI-assisted cover options are available in supported workflows.",
+      ],
+      [
+        "Are back cover and additional images supported?",
+        "Yes. Front and back cover files can be managed in the publishing and asset workflows within the workspace.",
+      ],
+      [
+        "Are covers generated automatically?",
+        "If you want, an automatic workflow is used; or you can proceed entirely with your own uploaded images.",
+      ],
+    ],
+  },
+  {
+    title: "Delivery and Outputs",
+    items: [
+      [
+        "What files do I receive?",
+        "Depending on your plan and selection, you receive EPUB, PDF, HTML, Markdown, and additional e-book formats where applicable.",
+      ],
+      [
+        "Which output is recommended first?",
+        "It is recommended to get EPUB first. After checking the structure, you can move on to PDF and other formats.",
+      ],
+      [
+        "Where are the outputs stored?",
+        "Each book is stored in its own folder with timestamped output folders.",
+      ],
+      [
+        "Can I upload the EPUB file directly to Amazon KDP?",
+        `Yes. The generated EPUB is compatible with Amazon KDP's standard upload workflow. Including cover and metadata, ${KDP_LIVE_BOOKS_CLAIM}. Our books are prepared with ${KDP_GUARANTEE_CLAIM}; for a pre-publish checklist, you can also check the KDP guide in the blog section.`,
+      ],
+    ],
+  },
+  {
+    title: "Rights and Publishing",
+    items: [
+      [
+        "Do I own the content?",
+        "Since you provide the topic, direction, edits, and final approval, control of the resulting book belongs to the user.",
+      ],
+      [
+        "Can I publish on KDP or other platforms?",
+        "Yes. The product produces digital outputs; the publishing decision and compliance with platform rules are the user's responsibility.",
+      ],
+      [
+        "Do you provide ISBNs?",
+        "No. Metadata management is available, but ISBN procurement must be handled by the user or publisher.",
+      ],
+    ],
+  },
+  {
+    title: "Subscription and Payment",
+    items: [
+      [
+        "Can I change my plan?",
+        "Yes. Package upgrade, downgrade, or cancellation can be managed from the billing area.",
+      ],
+      [
+        "Do unused credits roll over?",
+        "No. Monthly credits do not carry over to the next period.",
+      ],
+      [
+        "What if I chose the wrong plan?",
+        "Submit a change or refund request through support; we evaluate and respond as quickly as possible.",
+      ],
+      [
+        "What does the $4 one-time payment include?",
+        "The $4 Single Book plan provides full access for one book without a monthly subscription: all chapters, cover, EPUB, and PDF output. No time limit. Those who want to produce multiple books can opt for monthly plans, but this is the lowest entry point for trying your first book.",
+      ],
+    ],
+  },
+  {
+    title: "Support",
+    items: [
+      [
+        "How do I get support?",
+        "You can get technical, delivery, or billing support through the support channels on the contact page.",
+      ],
+      [
+        "How long does it take to get a response?",
+        "The standard target is to respond within the first business day. Critical payment issues are handled faster.",
+      ],
+      [
+        "What should I do if the result is not what I expected?",
+        "First, review the topic summary and outline. If needed, correct the workflow with rewriting, expanding, or support redirection.",
+      ],
+    ],
+  },
+] as const;
+
+
+
+export const supportChannels = [
+  {
+    title: "General support",
+    text: "Main support channel for usage questions, account access, and delivery flow.",
+    value: PUBLIC_SUPPORT_EMAIL,
+  },
+  {
+    title: "Billing",
+    text: "Billing-focused support for plan, cancellation, and payment issues.",
+    value: PUBLIC_BILLING_EMAIL,
+  },
+  {
+    title: "Response target",
+    text: "Within the first business day for standard requests, faster for critical payment issues.",
+    value: "1 business day",
+  },
+] as const;
+
+export const blogPosts = [
+  {
+    slug: "how-to-validate-a-nonfiction-book-idea",
+    title: "How to Validate a Nonfiction Book Idea",
+    summary: "A framework for quickly testing whether a nonfiction book idea is worth publishing and turning into a product.",
+    category: "Research",
+    readTime: "6 min",
+    datePublished: "2026-04-02",
+    dateModified: "2026-04-02",
+    intro: "A book idea can sound appealing but still be weak. Especially on the nonfiction side, the real question is not: is the topic interesting? The real question is: does this topic promise a clear outcome for a specific reader, is it narrow enough, does it generate commercial or authority value, and can it carry a solid 6-10 chapter spine? This article covers the practical path to validating a book idea — not through fiction instincts, but from the perspective of authority books, lead magnets, and KDP nonfiction.",
+        sections: [
+      ["Reader clarity comes before topic", "In a nonfiction idea, the first check is not the topic title; it is the reader definition. 'A marketing book' is weak; 'a client acquisition system for B2B SaaS founders to land their first 10 customers' is strong. Because the second statement directly says who it is written for and in what context it produces value. If the reader cannot be described in a single sentence, the title, the promise, and the chapter structure all become blurry. Good idea validation always starts with reader clarity."],
+      ["No outcome sentence means an incomplete idea", "What will the reader be able to do after finishing the book? Make decisions faster, acquire clients, build a cleaner system, launch a publication? If there is no outcome sentence, the book turns into a mere pile of information. Strong nonfiction ideas do not just explain topics; they carry the reader from one state to another. If you cannot state the transformation in one sentence, the idea is still raw."],
+      ["If the scope is not narrow, credibility weakens", "The most common mistake beginners make is starting with too broad a topic. Fields like 'leadership', 'personal development', 'digital marketing' are category names, not book ideas. What turns a category into an idea is narrowing: segment, problem, method, time horizon, or use case. Narrow scope does not shrink the book; it makes it completable, readable, and defensible."],
+      ["Material gives the depth signal", "If you have notes, workshop content, client questions, blog posts, or your own framework, the idea is stronger. Because nonfiction books are most often packaged expertise. Having no material does not mean the idea is bad; but a short guide or lead magnet might be a more appropriate starting point than a book. Depth comes not just from topic selection but from the existence of a content inventory."],
+      ["Ideas must not only be readable but useful", "Whether authority book, lead magnet, or paid guide, good nonfiction ideas produce value beyond the book itself. They facilitate a sales conversation, strengthen expert image, collect emails, or create a KDP opportunity. Ideas that produce no function carry only writing motivation; but a sustainable publishing system also requires function."],
+      ["The best test: can you pull out a mini outline?", "The fastest way to validate an idea is to write a 6-8 item mini outline for it. If sections like introduction, core problem, main framework, mistakes, implementation plan, and case study emerge naturally, the idea carries a spine. If the outline comes out forced, the problem is usually not in the content but in positioning. Fix the angle first, then return to the outline."],
+    ],
+  },
+  {
+    slug: "authority-book-mu-lead-magnet-book-mu",
+    title: "Authority Book or Lead Magnet Book?",
+    summary: "Clarifies when the same topic works better as an authority book and when it works better as a lead magnet.",
+    category: "Getting Started",
+    readTime: "6 min",
+    datePublished: "2026-04-02",
+    dateModified: "2026-04-02",
+    intro: "Many experts get stuck on the same question: should my topic become a full book, or a short but high-converting lead magnet? The issue is usually not a lack of content; it is the format decision. An authority book builds trust, a lead magnet collects demand. The same raw material can transform into two different structures. This article separates when each approach is the right choice.",
+    sections: [
+      ["When is an authority book the right choice?", "If your goal is trust, expertise perception, and premium positioning, an authority book is the better choice. This format builds broader context, presenting you not merely as a tactic provider but as a thought leader. If you offer speaking, consulting, workshops, or higher-priced services, an authority book functions as a long-term asset."],
+      ["When does a lead magnet book work better?", "If you want to collect emails faster, solve a single problem clearly, and move the user to a specific next step, the lead magnet format is more effective. In this structure, scope is kept narrow, section count is limited, and the CTA stays visible. The goal is not to deliver a full book experience; it is to collect demand in exchange for a quick win."],
+      ["How can the same topic become two different structures?", "For example, a topic like 'client acquisition system for coaches' as an authority book develops positioning, trust, and system logic at length. As a lead magnet, it narrows down to a single sub-problem: setting up the first discovery call system. The difference is not the topic but the scope and CTA architecture. That is why the format decision usually stems from business objectives rather than the title."],
+      ["Decision criterion: depth or speed?", "An authority book requires more editorial effort but creates a more lasting impact. A lead magnet is produced faster and measured more clearly. If you have a deep framework with multiple sub-topics, an authority book makes sense. If you have a single problem you want to test quickly, a lead magnet is more efficient."],
+      ["What is the sign of choosing the wrong format?", "If you constantly feel the need to squeeze in CTAs while writing an authority book, you probably should be writing a lead magnet instead. If you keep adding new sections and expanding scope while preparing a lead magnet, it likely has authority book potential. A feeling of forcing is often the first sign of format mismatch."],
+      ["Practical decision rule", "When the reader finishes the book, do you want them to take you more seriously, or to leave you their contact information? In the first case, an authority book carries more weight; in the second, a lead magnet. If unsure, create a mini outline and place the CTA at the end. If the outline keeps expanding, you are heading toward the authority side; if it tightens around a single outcome, you are heading toward the lead magnet side."],
+    ],
+  },
+  {
+    slug: "ai-ile-yazilan-kitap-kime-aittir",
+    title: "Who Owns an AI-Written Book?",
+    summary: "Explains content control, ownership, and user responsibility in simple terms.",
+    category: "Rights",
+    readTime: "7 min",
+    datePublished: "2024-10-15",
+    dateModified: "2025-02-01",
+    intro: "As AI book-writing tools become widespread, the most frequently asked question remains the same: Am I truly the owner of this book? As long as the topic, direction, and final decision are yours, the answer is largely clear — but understanding the legal and practical dimensions builds a real foundation of confidence before publishing. There is not yet a fully established legal framework for AI-generated content worldwide; it varies from country to country and platform to platform. This article is not legal advice — it summarizes the essential framework and practical steps you need to know before publishing your book, in simple terms. A few minutes are enough to understand that the more decisions you made, the more that work belongs to you.",
+    sections: [
+      ["How does copyright arise?", "Traditional copyright law begins with the human mind that creates a work. When creativity, originality, and freedom of expression come together, a right is born. As of today, the AI model is not recognized as a legal subject in most countries — including the US, the EU, and Turkey. Therefore, no copyright claim arises on behalf of the model itself. The real question is: how much creative contribution did the person using the AI tool make? If you chose the topic, defined the target audience, approved the chapter structure, read and edited the text, and added personal examples or perspectives — your mental effort played the decisive role in the resulting work. This situation is fundamentally no different from an author who hires a ghostwriter: they produce the content, but the book's owner determines the topic, tone, and direction. To keep your ownership claim strong, it is sufficient to play an active and documentable role in the process. Users who remain passive, take random content without providing a brief, and publish directly may be in a weaker position — but for conscious, step-by-step users, the picture is much clearer."],
+      ["What does using an AI tool change?", "Using an AI tool affects how the product is created, not whether it belongs to you. Just as an author using a word processor is the undisputed owner of their writing, a user who builds an outline with an AI assistant, generates and edits chapters keeps full control of their book. A photographer did not invent the camera, but the photo they took belongs to them — because they chose the framing, the lighting, the moment, and the intent. The same logic applies to book authorship. What matters is not the tool but the decision chain: which topic did you choose, which chapter titles did you accept, which did you change or remove, what examples and personal experiences did you add to the text? Book Generator places you at the center at every stage of this process — the system proposes a draft, but you are the one who approves and shapes every decision. Every moment you edit, rewrite chapters, or add a personal perspective, you are concretizing your creative effort on that content. This structure documents your active role in the production process both practically and legally."],
+      ["What do KDP and publishing platforms ask?", "Major digital publishing platforms, including Amazon KDP, require you to explicitly declare that you own the rights to the content you upload. This declaration is necessary to prevent copyright infringement or copied content from being uploaded. Platforms do not currently ban AI-generated content outright — but they do require the content to be original, not copied from another source, and non-misleading. AI-generated content generally passes this originality test as long as it is not directly copied from the model's training data. However, some platforms have started requiring disclosure for content that is prominently AI-assisted. Amazon's publisher guidelines are also being updated in this area. The practical recommendation is: check the current platform policy before uploading, specifically whether there is a disclosure or statement requirement regarding AI generation. This small step keeps the likelihood of future platform issues close to zero."],
+      ["Ways to keep practical control in your hands", "A few concrete steps help keep your ownership strong in practice, and none of them are time-consuming. First step: write or actively edit the brief and outline yourself. Instead of blindly approving the system's suggested chapter titles, changing at least a few of them documents your decision trail. Second step: read every generated chapter and rewrite at least a few sentences yourself or add a personal example. Third step: let the book's topic draw from your own expertise, experience, or research — generating a completely generic draft on a completely generic topic is the weakest position. Fourth step: export the final file from your own account and publish from your own publisher account. These four steps together make the question of who owns the published book practically indisputable. Additionally, keeping notes from the production process, editing records, or brief history after publishing the book serves as supporting documentation in case of a dispute."],
+      ["Honest answers to common concerns", "The most frequently heard concern is: what if the AI company uses the generated content for its own purposes? This is a legitimate and well-placed question about the transparency of the service agreement. Book Generator's policy is clear: the generated content belongs to the user, and the platform does not share user content with third parties or use it in model training. It is always a wise practice to read the privacy policy and terms of use before choosing any tool. The second common concern: if two users enter similar briefs, will similar content be produced? On generic topics, structural similarity can occur — just as two different authors might write 'a beginner's guide to freelancing.' But a unique voice, personal examples, audience-specific tone, and editing layer meaningfully eliminate this structural similarity. The more personal imprint you leave on the output, the more distinctive and uniquely yours the book becomes. Third concern: is AI-generated content obvious, will readers notice? When personal examples, concrete context, and an editing layer are added, this issue is largely resolved."],
+      ["Conclusion: whose book is it?", "If you chose the topic, defined the reader, approved the draft, read and shaped the chapters, and made the final decision — this is your book. AI is a speed and structure tool; you are the architect, editor, and publisher of the book. Using the tool does not eliminate ownership — just as a photographer using a camera, an architect using design software, or a journalist using a voice recorder does not make the work any less theirs. What matters is not the tool but the human mind and decision process behind it. The effort you put into your book, every editing step you take, and every unique perspective you offer — all of these make you the true owner of that book."],
+    ],
+  },
+  {
+    slug: "ilk-kitabimi-nasil-planlarim",
+    title: "How Do I Plan My First Book?",
+    summary: "Provides the shortest planning logic for someone producing a book for the first time.",
+    category: "Getting Started",
+    readTime: "7 min",
+    datePublished: "2024-11-01",
+    dateModified: "2025-02-10",
+    intro: "With a first book, the problem is usually not writing — it is starting scattered. The topic is broad, the chapters are vague, and it is unclear where to begin. Many people go in circles for months saying 'I am planning' — because the real issue is not a lack of information, but a lack of structure. Yet a good plan is more than half the book. Someone who knows what they will write almost always finishes; someone who does not know usually leaves it half-done. This article does not take you through long methodologies, heavy writing craft books, or monthly planning processes — it takes you to a short, actionable planning logic that genuinely helps you complete your first book. A few clear decisions carry far more value than dozens of vague ideas.",
+    sections: [
+      ["Why a plan saves the book", "Books that start without a plan usually remain unfinished — because it is not the inability to write that wears people down, but not knowing what to write. The first few pages flow easily, then it becomes unclear what to write in which chapter, the topic scatters, and motivation drops. A plan gives you clear answers to three fundamental questions: What question are you answering? Who are you writing for? What will have changed in the reader's life when the book is finished? If you can answer these three questions honestly, the remaining content fits within this framework. The plan does not have to be long and detailed — being clear enough to fit on a single A4 page is sufficient. Even professional writers usually start a 300-page book from a one-page summary. You can do the same: one sentence for the topic, one sentence for the target reader, one sentence for the book's promise. Starting here prevents the endless draft loop."],
+      ["Choose a single outcome", "A good book offers the reader a single meaningful transformation. What will someone who finishes the book be able to do, know, or feel? If you can answer this question in one clear sentence, your book has focus. For example: 'Someone who reads this book will learn step by step how to use social media to find freelance clients.' This clarity directly determines the chapter structure, example selection, and tone. Books that try to explain everything at once unfortunately cannot fully explain anything — because each topic takes up some space, but none are covered in sufficient depth. If you are writing your first book, keep the scope narrow; this is not a weakness, it is discipline. Instead of trying to cover freelancing, entrepreneurship, and digital marketing in the same book, focus on just one topic. Narrowing down does not lose you anything — on the contrary, it makes the book finishable and helps you build a stronger connection with the reader."],
+      ["Define a single reader type", "Who are you writing for? The more specific the answer, the stronger the book. Books written 'for everyone' in practice do not fully resonate with anyone; content that touches each reader a little truly speaks to no one. Think of your target reader as a concrete person: how old are they, what industry do they work in, what do they know, what do they not know, what problem are they trying to solve, and what resources are they currently using? For example, instead of 'working parents,' 'someone expecting their first child, working remotely, and struggling with productivity' is a much stronger target reader description. The more precisely you define them, the more accurate your tone, word choice, example selection, and even chapter ordering become. Books written for a vague audience quickly become generic, loaded with jargon or an inexplicably plain language, and finding concrete examples becomes difficult. Writing for a single reader type does not restrict you — on the contrary, it sets you free."],
+      ["Build a small outline", "For a first draft, 5 to 7 main chapters are sufficient for most guide or expert books. Each chapter should answer a separate question and build on the knowledge of the previous one. You do not need to write perfect chapter titles at this stage — just check whether the flow is logical. A simple test for yourself: Can Chapter 3 be understood without reading Chapter 1? If yes, there is no real connection between these chapters. Once the outline is in place, content production becomes much easier and faster. Because you already know what you will cover in each chapter — topic selection, structure building, and content production stages do not mix. The Book Generator wizard starts this process automatically: based on topic and target reader information, the system suggests an outline, and you edit and approve it. Starting with a ready-made skeleton instead of a blank page keeps the momentum going from the very beginning."],
+      ["Set a realistic scope", "You do not have to cover everything in your first book — in fact, trying to do so is one of the most common reasons for not finishing it. Covering less but in depth is far more valuable than covering a lot superficially, both for the reader and the writer. A dense, concrete 60-page guide leaves a much stronger impact and is completed much faster than a repetitive, loose 200-page book. When defining scope, use this elimination question for yourself: 'If I remove this chapter, what would my target reader genuinely lose?' If the answer is not clear, that chapter is probably not essential. Write only the indispensable content; leave the rest for a next book, a blog, or a course. Once the scope decision is made, production flows much more smoothly."],
+      ["How does the tool speed up this process?", "The Book Generator wizard flow is designed precisely to accelerate this planning stage. After entering topic, target reader, tone, and language information through a few short questions, the system suggests a concrete outline — complete with chapter titles, ordering, and overall structure. You can approve this suggestion directly, edit the titles one by one, or write them entirely from scratch. The biggest advantage is this: instead of starting with a blank page, you start with a structure you can work on. In your first book, the biggest obstacle is usually not a lack of information, but being unable to answer the question 'where do I start?' The wizard removes this question from your plate and moves you straight into the content decision stage. Even experienced writers use similar outlining processes — the difference is that the tool reduces this time to seconds."],
+    ],
+  },
+  {
+    slug: "epub-vs-pdf-difference",
+    title: "What Is the Difference Between EPUB and PDF?",
+    summary: "Explains which format is right for the first-time user and when.",
+    category: "Publishing",
+    readTime: "6 min",
+    datePublished: "2024-11-15",
+    dateModified: "2025-02-15",
+    intro: "You finished your book —” it's time to export. But which format? EPUB, PDF, or both? This question sounds simple, but choosing the wrong format can lead to unnecessary technical issues, platform rejection notices, or display problems that ruin the reader experience. Most users want both formats, rightfully —” but they don't know which to start with or what the difference really means in practice. This article skips long technical explanations and goes straight to the conclusion: choose the right format, for the right purpose, at the right time.",
+    sections: [
+      ["What is EPUB and how does it work?", "EPUB is an open standard developed for electronic publishing, and its name comes from the words 'electronic publication.' Its most fundamental feature is its reflowable structure: text automatically reshapes itself according to the reader's screen size, resolution, and font preferences. When reading on a phone, lines narrow and adapt; on a tablet, they widen; on an e-reader, the user can increase or decrease font size —” the content remains readable under all conditions. This flexibility has made EPUB the standard for digital distribution. Amazon Kindle, Apple Books, Kobo, Google Play Books, and nearly all major e-book platforms support the EPUB 3 format. Amazon used to recommend the .mobi format; however, since 2022, it has adopted EPUB as its primary format. In short, if you plan to distribute digitally, upload to KDP, or send directly to the reader, EPUB should be your primary output."],
+      ["What is PDF, and when should you use it?", "PDF stands for 'Portable Document Format' and was developed by Adobe in the early 1990s. Its core characteristic is fixed layout: pages appear exactly as designed —” font size, line spacing, image placement, and page margins never change. No matter which device or software opens it, the appearance stays the same. This makes it ideal for print: files sent to a printing house, physical book production, full-page designed guides, or certificates all require PDF. If you want to publish a paperback or hardcover book on Amazon KDP, the interior text and cover must be prepared as separate PDF files. On the other hand, PDF is cumbersome for digital reading in many ways: reading on a phone screen is tiring, you constantly need to zoom in and out to fit lines, and the font size cannot be adjusted by the user. This is why EPUB is preferred over PDF for uploading to e-book platforms."],
+      ["Which format does KDP require?", "Amazon KDP expects two different formats for two different publication types. To publish a digital book (Kindle eBook), the EPUB 3 format is required, and KDP accepts this format directly. Before 2022, the .mobi format was also widely used, but Amazon now officially recommends EPUB, and it is preferred for new uploads. KDP's own preview tool, Kindle Previewer, lets you upload your EPUB file and simulate how it will look on a Kindle screen —” running this check before uploading is a good habit. To publish a printed book (paperback or hardcover), PDF is required. The interior text is prepared as a single PDF, and the cover as a separate PDF. The cover PDF's dimensions are determined by the page count because the spine thickness changes with the number of pages. KDP offers a free cover template tool to simplify this calculation. In summary: EPUB for digital, PDF for print —” if you're planning to do both, you need to have both formats ready."],
+      ["Which format should you get first?", "The practical recommendation is clear: get EPUB first, and leave PDF for later. Once you have the EPUB, you can easily check the book's structure, chapter ordering, heading hierarchy, and overall flow in an e-reader, Kindle Previewer, or browser-based tools. Which chapter heading appears at the wrong hierarchy level, does the table of contents show the correct links, does the flow make sense —” it is much easier to see these in EPUB. Catching and fixing structural issues here saves time and prevents unnecessary revision cycles in PDF. If you are only doing digital distribution, you may not need PDF at all. If you are considering print, follow this order: first verify content and structure with EPUB, then check the print layout with PDF. Getting both at the same time is also possible; however, from a quality-control perspective, EPUB should always be the first step."],
+      ["What to watch out for during the conversion process", "When producing EPUB, the most critical point is the heading hierarchy. If H1 for the book title, H2 for chapter headings, and H3 for sub-chapter headings are not marked correctly, the table of contents will be generated incorrectly, and navigation will break in some reader apps. Check whether images are embedded inside the EPUB —” linked images may not appear on some platforms. Additionally, testing your EPUB file with a validation tool like epubcheck before publishing will prevent potential KDP rejection notices. When producing PDF, margins, font embedding, and page size are of critical importance. KDP offers standard trim size options for printed books; the most common is 6x9 inches. Images with bleed areas require additional settings. Book Generator handles most of these technical details on your behalf and produces platform-compatible outputs; still, skipping the final check step is not a good habit."],
+      ["Summary: choose the format based on your purpose", "EPUB: digital reading, e-book platforms, Amazon Kindle, Apple Books, Kobo, mobile devices. The user can adjust font size, text adapts to screen size, and file size is small. PDF: print, fixed layout, printer file, KDP paperback interior and cover. Design is preserved pixel-perfectly and appears platform-independent. Both formats may be necessary for different purposes, and neither can replace the other. Always start with EPUB: verify the structure there, check the content, and then move to PDF once approved. Book Generator offers both formats as export options; getting both at the same time requires no extra effort."],
+    ],
+  },
+  {
+    slug: "what-to-check-before-uploading-to-kdp",
+    title: "What to Check Before Uploading to KDP?",
+    summary: "Provides a short but practical pre-publish quality check.",
+    category: "KDP",
+    readTime: "7 min",
+    datePublished: "2024-12-01",
+    dateModified: "2025-03-01",
+    intro: "Your book is ready, it's time to upload. But before you head to the KDP upload screen, spending a few minutes on basic checks will save you from days of correction cycles later. Rejected submissions and low conversion rates usually stem from preventable mistakes —” title in the wrong category, incorrect cover dimensions, description losing the reader in the first sentence. This article is not a lengthy checklist; it covers the five most critical pre-upload checks, why each matters, and how to fix them with practical examples. Publishers who perform these checks are far less likely to ask 'why are there no sales?' after publishing.",
+    sections: [
+      ["Is the metadata clear?", "On KDP, the title, subtitle, and book description are the most critical fields because the Amazon algorithm looks at the words in these areas to classify your book and show it to potential readers. Your title should explain what the book is about in a single sentence —” vague or purely creative titles kill search traffic. For example, 'Digital Freedom' is far weaker than 'Transition to Freelance Life: From Corporate Job to Independent Career in 90 Days.' If you have a subtitle, it should clarify the target audience or the promise; it should make the reader answer the question 'is this book for me?' The first two sentences of the description are the most critical area: on many platforms the full description is not visible, only the first forty-fifty words appear on screen. Instead of starting with 'In this book you will learn X,' try a sentence that creates a moment of recognition in the reader: 'If you dread going to work every morning, this book is for you.' Having your keywords appear naturally in the title and description contributes to both search ranking and reader trust."],
+      ["Are categories and keywords selected?", "KDP allows you to choose two categories and seven keywords —” leaving these fields blank or filling them randomly results in a serious discoverability loss. Category selection directly affects both organic search visibility and the 'Best Seller' badge probability. Instead of getting lost among hundreds of books in a main category, it is much more valuable to be in a smaller but relevant subcategory. For example, rather than a broad category like 'Business and Career,' a niche subcategory like 'Freelancing and Pricing Strategies' helps you stand out from competitors in the first months. For keywords, think of real reader searches, not jargon: what does a person type into the Amazon search box? To answer this, use Amazon's autocomplete suggestions —” it's free and feeds directly from real user behavior. Spending ten minutes in this area can create months of organic reach difference for your book."],
+      ["Is the content flow clean?", "Pre-upload content review does not mean word-by-word correction —” the main goal is to catch structural issues. First, look at the chapter titles: when you read them in order, do you see a logical flow? Does each chapter build on the previous one, or are they just independent pieces listed one after another? Then read only the first sentence of each chapter: does the first sentence clearly state what the chapter is about? This quick scan usually reveals disconnected chapters and unnecessary repetitions within seconds. Especially in content generated from AI drafts, the same idea is often repeated in different chapters with different words. Also apply the 'if I remove this, what does the reader lose?' test: if removing a chapter makes the book read more smoothly, that chapter is probably unnecessary. A clean flow reduces return rates and increases the likelihood of positive reviews."],
+      ["Does the cover meet KDP requirements?", "KDP requires a minimum of 1000 pixels width for digital book covers, with an ideal resolution of 2560x1600 pixels and a 1.6:1 aspect ratio. Covers that do not meet these requirements are either rejected during upload or appear blurry and pixelated on the platform —” both instantly damage the perception of professionalism. For print books, the front cover, back cover, and spine must be prepared as a single combined PDF; the spine width varies by page count and using KDP's template calculator tool is mandatory. Before uploading the cover, reduce it to a small thumbnail size and test whether the title is still readable. In the Kindle store, books appear as a tiny square in list view; covers with unreadable titles at this size get no clicks. The cover should also match the genre: a guide and business book look —” clean background, typography-focused, minimal icons —” sends a trust signal, while a non-fiction cover designed like a fiction cover confuses readers and lowers conversion."],
+      ["Is the file technically sound?", "Testing the EPUB file with the Kindle Previewer app or the browser-based KDP preview tool before uploading to KDP helps you catch serious issues early. The main points to check: Does the table of contents link to the correct chapters? Does each chapter heading actually start on a new page? Do images display properly on all devices? Are fonts embedded in the EPUB file? This last point is especially important: unembedded fonts produce unpredictable appearances on different devices and ruin the reading experience. If you are uploading a PDF for a print book, make sure the margins, trim size settings, and bleed values match the measurements on the KDP specifications page. Book Generator outputs are produced platform-compatible, but doing a final verification is good practice —” this five-minute check prevents hours of correction rounds later on."],
+      ["Final pre-publish review", "After completing the five checks, one more step: review the book from start to finish in KDP's Kindle Previewer tool. This tool offers three different device views —” phone, tablet, and e-ink reader. Having the book appear readable and consistent across all three views is the fundamental measure of publishing quality. Are there weird jumps at page transitions? Do chapter beginnings always open on a new page? Do special characters or list items display correctly? You do not need to re-upload the book to fix small issues you spot in this review —” you can correct the file and upload a new version, and you can also update a published book later. But discovering major structural issues after publishing is costly both in terms of early negative reviews and lost first impressions. Spend ten minutes on this final review; you do not have to be perfect, just ready to publish."],
+    ],
+  },
+  {
+    slug: "can-i-publish-a-book-without-knowing-how-to-write",
+    title: "Can I Publish a Book Without Knowing How to Write?",
+    summary: "Provides the simplest answer to the first-time user's fear.",
+    category: "Getting Started",
+    readTime: "6 min",
+    datePublished: "2024-12-15",
+    dateModified: "2025-03-05",
+    intro: "Bu soruyu soran herkes aynı noktada takılır: yazmak zor bir beceri gibi görünür, aylarca pratik gerektirir, belki de herkese göre değildir. Oysa rehber kitap ve bilgi kitabı yazmak, edebi roman yazmaktan bambayla farklı bir iştir. Burada güzel cümleler değil, net bilgi ve doğru yapı önemlidir. Gerçekte çoğu insan yazarlıktan değil, başlamaktan korkuyor — ve başlamak için mükemmel bir yazar olmana hiç gerek yok. Doğru bir araç ve net bir konu, seni beklediğinden çok daha hızlı bir kitap sahibi yapabilir.",
+    sections: [
+      ["Yazarlık korkusu gerçek mi?", "Evet, gerçek — ama çoğu zaman yanlış kaynaktan geliyor. İnsanlar 'iyi bir yazar olmam lazım' diye düşünür; bu düşünce başlamalarını engelleyen en büyük mentol bloğa dönüşür. Oysa bilgi kitabı yazarlığı edebi bir roman yazmaktan tamamen farklıdır. Bir romanda üslup, dil zenginliği ve kurgusal yaratıcılık merkezde yer alır. Rehber kitapta ise okur senden güzel cümleler değil, net bilgi ve pratik yönlendirme bekler. Zaten bildiğin bir konuda birikimini aktarıyorsun — bu bir arkadaşına bir şeyi anlatmaktan pek farklı değil. Bir koç, danışman ya da deneyimli bir uygulayıcı olarak zaten sahip olduğun bilgiyi kağıda dökmek yazarlık değil, aktarım becerisidir. Farklılık sadece yapıda: kitap, konuşmayı belirli bir sıraya sokar ve okura adım adım ilerler. Bu yapıyı kurmak için de çok güçlü bir yazar olmak gerekmez."],
+      ["Yazmak ile yönlendirmek farkı", "Geleneksel kitap yazımında her kelimeyi sen üretirsin — boş sayfayla başlarsın, her cümle senden çıkar, her paragraf senin emeğindir. AI destekli kitap üretiminde ise rolün köklü biçimde değişiyor: sen yönlendiriyorsun, sistem taslak üretiyor, sen düzenliyorsun. Bu süreçte yazarlık becerisi değil, içerik kararları alabilmek önemli. Konu ne olacak? Hangi bölümler olacak? Hangi örnekler verilecek? Hangi ton kullanılacak? Bu soruları cevaplayabiliyorsan kitap üretebilirsin. Cümleleri mükemmel kurmak zorunda değilsin — taslağı görüp 'bu doğru mu, eksik mi, değişmeli mi?' diyebilmek yeterli. Bu rol bir editöre ya da proje yöneticisine benziyor: nihai kararlar sende, üretim ağırlığı araçta. Yazarlık korkusunu bu zihinsel çerçeve ile ele almak, çoğu insanın ilk adımı atmasını kolaylaştırıyor."],
+      ["AI aracın rolü nedir?", "Book Generator gibi araçlar seni boş sayfayla başa başa bırakmaz. Konu, hedef okur ve ton bilgilerini girdiğinde sistem bir outline önerir — bölüm başlıkları, önerilen sıralama ve genel yapıyla birlikte. Outline'ı onayladığında bölüm içeriklerini üretir; her bölümü ayrı ayrı gözden geçirip düzenleyebilirsin. Her aşamada sana düzenleme, yeniden üretim veya elle yazma seçeneği sunar. Araç bir taslak makinesidir — heykel kaba halde seni bekliyor, sen son şekli veriyorsun. Bu süreçte 'yazarlık' değil, içerik editörlüğü yapıyorsun: hangi bölüm kalacak, hangi cümle değişecek, hangi örnek daha somut hale getirilecek? Bu kararlar senin uzmanlığını yansıtıyor. Araç sadece taslağı hızlı kuruyor; kitabın kalitesi senin düzenleme gözüne ve konu bilgine bağlı."],
+      ["Sihirbaz akışı neden fark yaratıyor?", "İlk kullanıcının en büyük engeli boş ekrandır. 'Nereden başlayayım?' sorusu cevapsız kaldığında insanlar ya mükemmeliyetçilikle felç oluyor ya da süreci sonsuza erteliyor. Neyi soracağını bilmeden, nereden başlayacağını bilmeden geçen her dakika motivasyonu düşürür. Wizard akışı bu engeli ortadan kaldırır: sana sırayla yönlendirilmiş sorular sorar, cevaplarına göre ilerler. Konu ne? Hedef okur kim? Kitap kaç bölüm olsun? Ton nasıl olsun? Bu soruları cevapladığında sistemin elinde bir brief var — ve kısa sürede sana bir taslak sunuyor. Boş ekranda sıfırdan başlamak yerine hazır bir yapıyla başlamak, özellikle ilk kitabında devasa bir fark yaratır. Düzeltmek, sıfırdan kurmaktan her zaman daha kolaydır. Wizard seni bu noktaya taşıyor."],
+      ["Net amaç mükemmel prompttan üstündür", "AI araçlarıyla çalışırken en sık duyulan tavsiye daha iyi prompt yazmak olur — 'doğru prompt yazmasını bilmiyorum' kaygısı, başlamayı engelleyen bir başka duvar haline gelir. Ama gerçekte asıl fark yaratan şey teknik prompt becerisi değil, içerik netliğidir. Şu üç soruya cevap verebildiğinde sistem zaten çok daha iyi çalışır: Ne anlatmak istiyorum? Kime yazıyorum? Kitabı bitiren okur ne yapabilecek ya da ne bilecek? Bu sorulara net cevabın varsa, sistem bunu işlevsel bir kitap yapısına dönüştürebilir. Teknik prompt becerisine ihtiyaç duymadan, sadece konunu ve amacını samimi biçimde ifade ederek çok iyi sonuçlar alabilirsin. Prompt mühendisliği değil, içerik sahibi olmak asıl güç kaynağı."],
+      ["İlk adımı atmak için ne lazım?", "Sadece bir konu. Ve o konuda başkasına anlatabilecek bir şeyin olması — yıllar içinde öğrendiğin bir beceri, defalarca yaşadığın bir süreç, sürekli soru aldığın bir alan. Yazarlık deneyimine, akıcı bir İngilizceye ya da yayıncılık sektörü hakkında uzmanlığa ihtiyacın yok. Book Generator Türkçe arayüzle çalışır ve kitabı istediğin dilde üretir — Türkçe brief gir, İngilizce kitap çıkar. Kayıt olmadan başlayabilirsin: konu girişi yap, 30 saniyede outline ve kapak önizlemeni gör. Beğenmediysen geri dön, konuyu değiştir, farklı bir yön dene. Risk yok, boş sayfa yok, ön bilgi şartı yok. Yazarlık korkusunu aşmanın en iyi yolu tartışmak değil, bir taslak görmektir — ve bunu görmek için sadece bir konu girmen yeterli."],
+    ],
+  },
+  {
+    slug: "kitap-fikri-nasil-secilir",
+    title: "How to Choose a Book Idea?",
+    summary: "Ties topic selection not just to inspiration, but to reader and need alignment.",
+    category: "Research",
+    readTime: "8 min",
+    datePublished: "2025-01-10",
+    dateModified: "2025-03-10",
+    intro: "Finding a book idea often feels like waiting for inspiration — one day the right topic will just come. This waiting usually results in the book never being written. Yet the best book ideas are born not from inspiration, but from genuine expertise that aligns with a clear reader need. Topic selection is not an aesthetic decision but a strategic one: the author who chooses the right topic struggles less with writing and more with selling their book. This article moves topic selection from intuition to a systematic decision process grounded in concrete data.",
+    sections: [
+      ["Why is topic selection so important?", "Starting with the wrong topic makes every stage of the book harder. Content becomes scattered because structuring a topic with unclear boundaries is difficult; the reader base becomes vague because a book that tries to appeal to everyone truly appeals to no one; the marketing message becomes inconsistent because what the book promises is unclear. On the other hand, choosing the right topic makes everything easier: the chapter structure falls into place naturally, examples come to mind faster, addressing the reader becomes easier, and the motivation to finish the book stays high. Two fundamental questions should be asked in topic selection: Do you genuinely have in-depth knowledge on this topic? And is there a real audience searching for this topic and willing to spend money on it? If you can say yes to both, you are at a solid starting point."],
+      ["Choose what you know", "Topics without a foundation of expertise or experience quickly reduce content depth. A book composed of general knowledge that repeats information already available on the internet adds no value to the reader. Why should the reader spend their money and time? But a book filtered through your own experience, supported by real examples, providing genuine answers to problems encountered repeatedly in a field is far more powerful. For example, someone who has run an e-commerce business for years can write not 'What Is Dropshipping?' but '7 Supplier Tests You Must Do Before Your First Order' — a specific, experience-based book whose value is far greater than information someone merely researched and compiled. Choose an area where you can teach others, where people consult you, and where you produce real results. This area is your unbeatable advantage."],
+      ["Think problem-first", "When people buy books, they are usually paying for one of two things: to solve a problem or to reach a goal. That is why the best-selling non-fiction books are mostly ones that address a clear problem. 'A book on photography' is broad and vague — but 'Shooting in Low Light: Professional Results Without Extra Gear' is a much stronger and more targeted topic. The more specific the topic and the more concrete the problem it solves, the faster it connects with the target reader. When defining your topic, ask these two questions: 'Who will read this book?' and 'After reading it, what will they be able to do or know?' When you can give clear answers to both, the topic becomes much stronger both for content production and marketing. A vague topic means a vague reader and vague sales."],
+      ["How do you measure market demand?", "Spending two or three hours making sure a good idea finds real demand prevents months of sales disappointment later. Look at books close to your topic on Amazon: how many titles are there, when were they published, and what do readers praise and criticize in reviews of the best sellers? Reviews are an extremely valuable data source: the shortcomings readers dislike are the opportunity for your book. Check the search volume and trend direction on Google Trends — is it rising, falling, or seasonal? Look at what questions people ask on Reddit and Quora about the topic: questions people ask without hesitation reveal real knowledge gaps. Deciding on your topic without this research is like starting a venture blindfolded."],
+      ["KDP keyword araştırması", "Amazon KDP'de yayın yapmayı düşünüyorsan keyword araştırması, konu seçimi sürecinin ayrılmaz bir parçası olmalı. KDP'de anahtar kelimeler hem arama sonuçlarında görünürlüğü hem de kategori sıralamasını doğrudan etkiler. Ücretsiz ve etkili bir başlangıç için Amazon'un kendi arama çubuğunu kullan: konuyla ilgili bir kelime girdiğinde çıkan otomatik tamamlama önerileri, gerçek kullanıcıların ne aradığını yansıtır. Bu öneriler hem popüler aramaları hem de henüz kitapların az olduğu niş alıları gösterebilir. Daha derinlemesine araştırma için Publisher Rocket, Book Bolt veya Helium 10 gibi araçlar aylık arama hacmi ve rekabet yoğunluğu verisi sunar. Hedef şudur: yeterince aranıyor ama yeterince rakip kitap yok. Bu kesişim noktası, yeni bir kitabın en hızlı ivme kazanabileceği alandır. Keyword araştırmasını konu seçiminin önüne koymak yerine seçimin teyidi olarak kullanmak en sağlıklı yaklaşımdır."],
+      ["Rekabeti doğru değerlendirmek", "Yüzlerce kitabın olduğu bir niş kötü işaret değildir — aksine talebin güçlü kanıtıdır. İnsanlar o konuya para harcıyor demektir. Ama bu nişte sıyrılmak için farklı bir açı sunman gerekir. Rakip kitaplardaki bir yıldız ve iki yıldız yorumlarına özellikle dikkat et: okurlar ne eksik buluyor, hangi sorular cevaplanmamış kalıyor, hangi bölümler çok teorik ya da çok yüzeysel bulunuyor? Bu şikayetler senin kitabının vaat cümlesi haline gelir: 'Rakiplerin üç yıldız aldığı sorunu ben çözüyorum.' Örneğin, muhasebe yazılımları hakkında çok kitap var ama hepsi teorik kalıyorsa, sen 'Serbest Çalışanlar İçin Pratik Muhasebe: Yazılım Adım Adım' başlığıyla o boşluğu doldurabilirsin. Hiç rakibin olmayan niş ise gerçekten tehlikeli olabilir — ya talep yok ya da kimse o konuya para harcamak istemiyor. İkisi de iyi senaryo değil."],
+      ["Son karar: sezgi mi, veri mi?", "İkisi birden — ama ikisi de tek başına yeterli değil. Veri talep olduğunu kanıtlar ve hangi konunun daha fazla potansiyel taşıdığını gösterir. Sezgi ise o konuyu yazarken gerçekten katma değer üretip üretemeyeceğini, süreçte motivasyonu koruyup koruyamayacağını ortaya koyar. Verisi güçlü ama hiç ilgini çekmeyen bir konuyu seçersen içerik üretimi sıkıcı ve zorlayıcı bir hal alır — çoğunlukla yarım kalır. İlgini çeken ama talebini doğrulayamadığın bir konuyu seçersen aylarca emek ver, satış hayal kırıklığıyla karşılaşırsın. İkisinin kesiştiği nokta, hem bilgi ve deneyim sahibi olduğun hem de gerçek bir okur kitlesinin arayıp para harcadığı konudur. Bu kesişimi bulmak için zaman harcamak, her şeyin geri kalanını kolaylaştırır. Book Generator araştırma merkezi bu süreçte konu belirleme ve keyword analizinde somut veri sunarak karar sürecini destekler."],
+    ],
+  },
+  {
+    slug: "ingilizce-kitap-icin-nasil-brief-verilir",
+    title: "How to Write a Brief for an English Book?",
+    summary: "Shows the shortcut to getting better results when producing an English book from a Turkish interface.",
+    category: "Prompting",
+    readTime: "7 min",
+    datePublished: "2025-01-20",
+    dateModified: "2025-03-15",
+    intro: "As a Turkish speaker, producing an English book is now possible - but when the language changes, the rules of writing a brief change too. The target audience is different, the tone expectations are different, the word choices are different. A good brief ensures the AI system captures the right language, the right tone, and the right content depth. This article teaches you not what to write, but how to write a brief.",
+    sections: [
+      ["Why is the brief so decisive?", "The AI system does not know your intent, your background, or your goal - it produces based only on the information you provide. The clearer the brief, the closer the output is to the target. A vague brief produces a 'general' book: one that seems written for everyone, truly speaks to no one, and has inconsistent tone. A specific brief, on the other hand, produces a book that solves a particular problem for a particular reader, has a consistent voice, and delivers real value. This difference becomes even more critical in English content because tone, register, and reader expectations diverge significantly from Turkish content. English book readers generally expect direct, action-oriented, jargon-free language. To meet this expectation, the system needs to understand it - and the only thing that communicates this to the system is your brief. The more care you put in, the higher the output quality and the shorter your revision time."],
+      ["Define the target reader in English and be specific", "The most critical and most neglected part of the brief is the target reader description. Saying 'Professionals' or 'beginners' is not enough - these descriptions give the system almost no useful information. What industry do they work in? What experience level? What geography? What problem are they struggling with? For example, the difference is enormous: instead of 'business owners,' write 'solo e-commerce founders in the US, running Shopify stores, 1-3 years in business, struggling with customer retention after first purchase.' A description this specific directly affects the system's tone selection, word level, example type, and even chapter ordering. The more detailed your reader description, the more accurate the output - giving the reader a feeling of 'this book was written for me.' Writing a target reader description takes 5 minutes but multiplies output quality."],
+      ["Add a tone and style sentence", "Setting the tone is a critical step in English content, and most users skip it. Academic, conversational, authoritative, or friendly? This difference can determine whether the reader finishes the book or not. A short style sentence gives the system a very clear signal. Example: 'Clear, concise, actionable - like a smart friend who knows the subject deeply and does not waste your time.' Or: 'Professional but approachable, no jargon, real-world examples from small business owners.' Or: 'Direct and data-driven, like a Harvard Business Review article but shorter and more practical.' This single sentence ensures the system maintains a consistent voice across all chapters. When tone is not specified, the system usually chooses a neutral and somewhat formal language - which is not right for most guide books and can push the reader away from the very first page."],
+      ["Define chapter depth and scope upfront", "Do you want a short quick guide, or a comprehensive playbook? 50 pages or 150 pages? How many subtopics should each chapter cover? Do you want chapters to include practical exercises or checklists? Stating these decisions in the brief upfront both increases production quality and prevents wasting time with unexpected outputs. Example depth instruction: 'Each chapter should cover one focused concept, have 3-4 subsections, include at least one real-world example and one actionable takeaway. Chapters should be 800-1200 words each.' With this instruction, the system produces a 10-chapter content with consistent length and practical value in each. Another benefit of specifying scope: it prevents the system from unnecessarily broadening the topic. An exclusion list in the form of 'do not cover this topic' is also very valuable - knowing what will not be included keeps the system focused."],
+      ["Brief template you can use", "Here is a template you can copy and fill in directly: Book title: [title]. Target reader: [very specific description - industry, experience, problem]. Book goal: [what the reader will be able to do after finishing the book - one sentence]. Tone: [style description]. Scope: [how many chapters, how many words per chapter]. Exclude: [topics that will not be in this book]. Language notes: [American English or British? Is jargon acceptable?]. These last two fields are often forgotten but very important. The 'Exclude' list prevents the system from going out of scope. 'Language notes' especially ensures American English usage when targeting the US market on KDP - British English in an American book can receive negative reviews. Filling out the template takes 10 minutes; the time and quality difference it delivers is worth it."],
+      ["Common mistakes and how to avoid them", "The most common mistake: giving the brief in Turkish. Even if the system understands the language, writing the target reader description, tone decision, and scope boundaries in English increases consistency. A Turkish brief can put the system into a translation mode bouncing between two languages and cause drift in the output. Second mistake: the topic is too broad. Instead of 'Digital marketing for beginners,' 'Instagram Reels strategy for personal trainers with under 5,000 followers' produces much stronger and far more targeted content. The narrower the niche, the stronger the book. Third mistake: not specifying tone. Fourth mistake: leaving the reader description vague. Fifth mistake: not limiting scope - when you do not set boundaries, the system can add chapters that go off-topic. Fixing even one of these mistakes noticeably increases output quality."],
+      ["From brief to output: what to expect", "Even with a good brief, the first draft may not be 100 percent perfect - this is normal and expected. AI production is a starting point, not a finished product. When you receive the output, ask these questions: Is the tone appropriate for the target reader? Are the examples realistic and culturally accurate? Is the chapter flow logical? Is the language level appropriate for the reader - too technical or too simple? Do this evaluation chapter by chapter and regenerate or manually edit problematic areas. The better the brief, the shorter this revision round. The goal: write the brief so clearly that 80 percent usable content comes in the first round, and complete the remaining 20 percent with your personal voice, original examples, and fine-tuning. When this ratio is achieved, English book production truly becomes an efficient process."],
+    ],
+  },
+  {
+    slug: "how-many-chapters-should-my-first-book-have",
+    title: "How Many Chapters Should My First Book Have?",
+    summary: "Explains why opening too many chapters in your first book is usually a mistake.",
+    category: "Structure",
+    readTime: "6 min",
+    datePublished: "2025-02-01",
+    dateModified: "2025-03-20",
+    intro: "Deciding how many chapters your first book should have is more important than you think. Too few chapters feel superficial, too many chapters cause you to lose focus. But the number is actually a secondary question —” first you need to understand what each chapter should accomplish.",
+    sections: [
+      ["Chapter count does not determine quality", "A book with 20 chapters is not more valuable than one with 7 chapters. On the contrary, books with too many chapters tend to have thinner content, repetitive material, and lose the reader's focus. Chapter count is not a prestige indicator —” it is a structural decision. The real question is: how many distinct, mutually reinforcing core ideas does your book have? That number should determine your chapter count. The common reason for opening too many chapters is this: the topic feels 'big' and planning each sub-topic as a separate chapter seems logical. But most of the time, these sub-topics work much better as sub-headings within a single chapter. Chapter = an independent, complete idea. Sub-heading = one dimension of that idea. Clarifying this distinction instantly clears up the confusion."],
+      ["What is the ideal range for beginners?", "For most practical guides and informational books, 5 to 8 chapters is a solid starting point. This range offers enough depth without overwhelming the reader. Each chapter covers one core idea or one step, progressing through a transformation or learning process throughout the book —” this structure produces a book that is easy both to read and to write. So where does this number come from? Practical guides have a truth about reader psychology: when a reader picks up a book, they look at the table of contents and ask 'can I finish this book?' based on the chapter count. 5-8 chapters appear both comprehensive enough and achievable. 15-20 chapters, on the other hand, trigger a 'I can't complete this' feeling in most readers. There's nothing wrong with your first book being shorter —” what matters is finishing it."],
+      ["When do you need more chapters?", "Some book genres genuinely require more chapters. Step-by-step technical guides may necessitate each step being its own chapter. Anthology-style books covering multiple distinct topics, or reference books where each chapter can be read independently, may also warrant a higher chapter count. In these cases, 10-15 chapters is reasonable. But exceeding 15 is a danger zone for most guide books —” content dilution, repetition, and loss of focus become inevitable. If you've planned 15 chapters but the content feels thin, merging and deepening chapters always yields better results. Increasing chapter count to meet a volume target is a flawed strategy."],
+      ["How long should each chapter be?", "In practical guides, 1500-3000 words per chapter —” roughly 6-12 pages —” is the right range for most chapters. With this many words, you can explore an idea in depth, provide concrete examples, and leave the reader with actionable steps. Chapters under 500 words generally feel superficial; the reader asks 'is that it?'. Chapters over 5000 words tire the reader and create the impression of disorganized writing by someone who hasn't mastered the topic. Consistent length matters too —” a 3x length difference between chapters makes the book appear unbalanced. The goal: each chapter should carry similar weight, keeping the reader's rhythm consistent."],
+      ["How should you plan chapter titles?", "A good chapter title tells the reader what they will learn —” it sparks curiosity without misleading. Instead of vague titles like 'Introduction', 'Basic Concepts', or 'Summary', concrete titles like 'How to Build Your Customer Base in the First 30 Days?' or '3 Pricing Mistakes and How to Avoid Them?' draw the reader to the page. When you place chapter titles side by side, a logical flow should be visible —” a reader looking at the table of contents should be able to sense the book's teaching sequence. Titles also matter for SEO: on e-book platforms, chapter titles signal to search algorithms. The Book Generator wizard offers title suggestions, and you can customize them individually."],
+      ["The advantages of starting small", "Starting with 5-7 chapters makes both production and editing easier, and significantly increases the likelihood of actually finishing the book. Fewer chapters = faster completion = earlier publication = earlier feedback. A completed book is always more valuable than an unfinished one planned to be 'much more comprehensive and perfect.' Once your book is published, you'll receive real feedback from readers; you can expand the scope in a second edition or your next book. This iterative approach both reduces risk and allows you to shape your content based on real demand. Starting small is discipline —” making grand plans is more often than not a polite form of procrastination."],
+    ],
+  },
+  {
+    slug: "ai-taslagi-nasil-duzeltilir",
+    title: "How to Edit an AI Draft?",
+    summary: "A quick editing method to make your raw draft more trustworthy and more human.",
+    category: "Editing",
+    readTime: "7 min",
+    datePublished: "2025-02-15",
+    dateModified: "2025-03-25",
+    intro: "You got your AI draft —” but it's not quite what you wanted. Some chapters are too general, some sentences feel too mechanical, and the same idea repeats in places. This is normal. AI generation saves you from starting from scratch, but treating the draft as a finished product is usually the wrong call. This article walks you through the quick editing process you need to transform a raw draft into truly your own book.",
+    sections: [
+      ["Why the raw draft needs editing", "The AI system knows the topic but it doesn't know you. It can't carry over your personal experiences, your specific examples, your voice, or the unique connection you have with your target audience. Even when the generated content is accurate and consistent, it typically uses language that 'anyone could write' —” it's not original, not personal, and indistinguishable from your competitor's book in the same field. Editing exists precisely to add this originality. Additionally, the system sometimes repeats itself; it restates the same idea in different words across different chapters. It produces sentences disconnected from context. It picks a level that's either too technical or conversely too basic for the target reader. Noticing and fixing these is your job —” and this ability to notice comes from your mastery of the subject. Presenting the draft as a finished product is a big mistake; a draft presented after editing transforms into a real book."],
+      ["Check the structure first", "Before correcting word by word, look at the big picture. Is the chapter order logical? Does each chapter build on the previous one? As the book progresses from start to finish, is the reader genuinely learning something or undergoing a transformation —” or are unrelated pieces of information simply listed? Fixing structural issues before editing sentences is essential. Because editing sentences inside a chapter that will be deleted or moved is pure time waste. To check the structure, read the table of contents —” can the flow be understood just by looking at headings? Read the first sentence of each chapter —” can the question 'what is this chapter about?' be answered in that first sentence? These two checks reveal the vast majority of structural issues within minutes."],
+      ["Clean up repetitions", "AI systems sometimes repeat the same idea in different chapters using different words. This is especially common in intro and summary paragraphs —” each chapter starts and ends independently, so the system may not fully carry over what was said in previous chapters as context. As you scan each chapter, ask yourself: 'Have I covered this idea before? Has the reader already learned this?' If the answer is yes, either delete that section or merge it with another chapter. Repetition is a very serious problem because it simultaneously sends two messages: the content is insufficient and has been padded with filler; and the author can't keep track of what they've said. Both of these messages cause the reader to lose trust. Eliminating repetition shortens the book but strengthens it."],
+      ["Add your own voice", "This is the most important and most valuable step of editing. Think of the AI-written text as a skeleton —” the bones are in place but you'll add the flesh, the blood, the character. Add a personal experience: something you lived through, heard from a client, saw in a project. Write a sentence as if speaking —” instead of 'This is important,' write 'The first time I saw this, it took me ten minutes to understand it, but once I noticed, everything changed.' In a chapter, address the reader directly: 'If you too...'. Add a real number or concrete data. Each of these small touches is what separates the book from an ordinary AI output and builds a genuine connection with the reader. Without them, the book informs; with them, the book builds trust."],
+      ["Real examples and concrete details", "AI drafts mostly use abstract or generic examples: 'a company applied this strategy and succeeded.' These kinds of examples tell the reader nothing —” who is this company, what did they do, how did they succeed, how long did it take? Replace abstract examples with concrete and familiar ones. A real company name, a real number, a scenario from your own experience, or a very specific situation: 'One of their clients tried it for 3 months, changed this, got that result.' Readers connect with concrete examples because they can see themselves in them. Abstract explanations inform but don't create credibility. This change dramatically improves reliability, readability, and the lasting impression."],
+      ["When to regenerate vs. when to edit?", "The practical answer to this question is: look at the scale of the change. If you're changing a few sentences in a chapter, rewriting a paragraph or two —” edit. Manual editing is faster at this scale. But if the chapter has gone completely in the wrong direction, if it's entirely unsuitable for the target reader, if the tone is inconsistent from chapter to chapter, or if it has gone out of scope —” regenerate. Book Generator allows chapter-based regeneration: select a single chapter, provide a different brief or tone instruction, regenerate. This is much faster than regenerating the entire book. Practical rule: if minor editing suffices, edit; if a major change is needed, regenerate and build on top."],
+      ["The final read-through ritual", "After editing is done, read the book cover to cover once more —” but this time with different eyes: imagine your target reader, read from their perspective. How does this person feel when reading the book? Is there anything unclear? Is there a boring, repetitive, or overly heavy chapter? Has the book's promise —” the implicit pledge it made —” been fulfilled in the final chapter? This final read makes small improvements and overlooked issues visible. It also gives you the most important signal: is the book done or not? It doesn't have to be perfect —” it has to be ready to publish. Recognizing this distinction is what gets most books completed."],
+    ],
+  },
+  {
+    slug: "kapak-secerken-en-onemli-5-sey",
+    title: "5 Most Important Things When Choosing a Cover",
+    summary: "Helps you make cover decisions based on function rather than aesthetics.",
+    category: "Cover",
+    readTime: "7 min",
+    datePublished: "2025-03-01",
+    dateModified: "2025-03-28",
+    intro: "Choosing a cover often seems like an aesthetic decision \u2014 but it is actually a strategic one. A good cover communicates the book's genre, attracts the right reader, and signals professionalism. A bad cover can drive readers away no matter how good the content is. This article explains the five key points to focus on to make your cover decision functional rather than just pretty.",
+    sections: [
+      ["A cover is a marketing tool", "Your cover's only job is not to look beautiful \u2014 it is to sell. On Amazon listings, social media posts, or a website, the one thing your cover needs to do is this: stop the right reader and make them click. To achieve that, it must answer functional questions before aesthetic preferences: Was this cover designed for my target reader? Does it communicate the book's genre at first glance? Does it speak the same visual language as competing books? If you can say 'yes' to these questions, your cover is doing its job. Why is this so important? Because a book's click decision on Amazon is typically made within 2-3 seconds \u2014 the title and cover either pull the reader in or let them scroll past in that window. No matter how good the content is, if the reader doesn't click through to the page, none of it matters. In this sense, the cover is the book's most important marketing investment."],
+      ["The book's genre must be immediately clear", "Different book genres have different visual languages, and readers decode them subconsciously at remarkable speed. Business and career books typically use clean, minimalist, typography-heavy covers \u2014 plain background, large and bold text, abstract or minimal imagery if any. Personal development books work with warmer colors, inspirational visuals, and sometimes the author's photo. Technical guides prefer a clear and simple layout \u2014 icons, diagrams, or screenshots are commonly used. When a reader looks at a cover, they unconsciously read these signals and answer the question 'is this book in my genre?' If the cover's visual language doesn't match the book's genre, the reader experiences confusion and moves on. Looking at the covers of the top 10 bestsellers in your target category is the fastest way to learn that category's visual language."],
+      ["The title must be readable even at small sizes", "Don't forget that on Amazon listings your book appears as a thumbnail \u2014 usually a small rectangle between 80x110 and 150x200 pixels. At that size, the only thing your cover needs to do is make the title readable. Large, high-contrast typography is therefore essential. 'Elegant' thin, decorative, or script fonts become illegible at small sizes. Don't try to fit too many words \u2014 the main title should be the largest text on the cover, and the subtitle, if there is one, should be smaller but still readable. Before producing the cover, shrink it to 150x200 pixels and check: can you read the title in 5 seconds? If not, the cover will fail on platform listings no matter how beautiful it looks at full size."],
+      ["Color and contrast are functional", "Color choice is both an aesthetic and a practical decision \u2014 but the practical dimension is far more decisive. High color contrast improves readability: dark text on a light background or vice versa is the safest choice. Low-saturation or very similar tones blend together at small sizes, causing the title to merge into the background. Also consider the industry-specific color language: navy, dark gray, and gold tones signal trust and professionalism for finance and business books. Green and white are common for health and wellness books. Orange, yellow, and vibrant colors carry associations of energy and motivation in personal development books. Instead of choosing colors randomly, study successful books in the category and observe which color palette works there. Then differentiate starting from that palette \u2014 not completely disconnected, but familiar yet distinctive."],
+      ["Simplicity usually wins", "The most common mistake in cover design is cramming in too many elements. Multiple main images, excessive text, complex background patterns, too many colors, multiple fonts \u2014 using all of these together does not convey 'professionalism'; on the contrary, it conveys clutter. The most effective covers usually consist of a single strong concept, a clear title, and a minimal layout. Don't leave the reader unsure of where to look \u2014 design where their eye lands first. Have one focal point on the cover and let all other elements support that focus. Sometimes just strong typography and a solid background color works far better than a complex illustrated cover. Did complexity come at a high price? Did a good designer cost a lot? A simple but effective cover is always more valuable than an expensive but cluttered one."],
+      ["Meet KDP technical requirements", "For digital books, KDP requires a minimum of 1000 pixels width, ideally 2560x1600 pixels resolution, and a 1.6:1 aspect ratio. Covers that don't meet these requirements are either rejected during upload or appear pixelated and blurry on the platform \u2014 both outcomes instantly damage the perception of professionalism. For print books, the front cover, spine, and back cover must be prepared as a single combined PDF; spine width varies based on page count, and KDP provides its own free template calculator tool. The color space should be RGB, not CMYK (for digital), and the file format should preferably be JPEG or TIFF. Book Generator produces cover outputs that comply with these requirements \u2014 but if you are using your own design or receiving one from an external designer, share these technical requirements at the first meeting."],
+      ["Final test: thumbnail and competitor comparison", "After completing the cover, do two quick tests. First test: shrink the cover to 150x200 pixels and check whether the title is still readable. This simulation shows you the real appearance on Amazon listings. Second test: place the cover images of 10-15 books in your target category side by side and insert your own cover among them. Does it stand out? Does it look appropriate for the category but sufficiently different? Speaking the category's language and being distinctive at the same time is possible \u2014 but a cover that completely rejects the category's visual language creates distrust in the reader. These two tests take a total of 10 minutes and help you catch major issues before publishing. Rather than endlessly prolonging the cover decision with perfectionism, pass these two tests and publish."],
+    ],
+  },
+  {
+    slug: "chatgpt-ile-outline-cikiyor-ama-kitap-neden-bitmiyor",
+    title: "ChatGPT Generates Outlines But Why Doesn't the Book Get Finished?",
+    summary: "The real reason book projects that start with ChatGPT but never get finished is not model quality — it's workflow fragmentation and context loss.",
+    category: "Getting Started",
+    readTime: "7 min",
+    datePublished: "2026-04-03",
+    dateModified: "2026-04-03",
+    intro: "ChatGPT ile bir outline oluşturmak kolaydır. Birkaç bölüm başlığı çıkarmak da kolaydır. Ama aynı konuşmada 8 bölümü tutarlı üretmek, tonu korumak, kapsam kaymasını önlemek ve sonunda yayına hazır bir dosya çıkarmak — bunlar ayrı bir iş. Bu yazı, ChatGPT ile kitap projesinin neden sık sık yarıda kaldığını analiz ediyor ve hangi noktadan sonra özel bir kitap akışının fark yarattığını açıklıyor.",
+    sections: [
+      ["Outline üretmek kitap yazmak değil", "ChatGPT'ye 'X konusunda 10 bölümlük outline çıkar' dediğinde birkaç saniyede kullanılabilir bir yapı gelir. Bu hızlı başlangıç güçlüdür ama aldatıcıdır. Çünkü outline üretmek ile o outline'ı tutarlı biçimde kitaba dönüştürmek tamamen farklı operasyonlar gerektirir. Outline tek bir konuşmada çıkar; kitap ise her bölüm için ayrı bağlam, referans ve ton tutarlılığı ister. ChatGPT bu ikinci aşamada seni desteklemeye devam eder ama seni yönlendirmez."],
+      ["Bağlam kaybı her bölümde birikir", "ChatGPT'de uzun kitap projelerinin önündeki en büyük engel bağlam uzunluğu değil bağlam yönetimidir. 3. bölümü yazarken 1. bölümde söylediklerin hatırlatılmadıkça model sürüklenir: ton değişir, örnekler çakışır, terminoloji tutarsızlaşır. Bu problemi çözmek için sürekli 'yukarıda yazdıklarımı hatırla ve buna göre devam et' yazmak zorunda kalırsın. Her bölüm için bu döngüyü tekrar başlatmak özellikle 6-10 bölümlük kitaplarda zaman alıcı ve dağıtıcı hale gelir."],
+      ["Her bölüm yeni bir komut demek", "ChatGPT ile kitap yazan çoğu kişi şunu fark eder: 4. veya 5. bölümde her şeyi sıfırdan açıklamak zorunda kalmak üretim motivasyonunu düşürüyor. 'Senden şunu istiyorum, bu kitabın hedef kitlesi şu, tonu şöyle, bir önceki bölümde şunu söyledik, şimdi...' — bu giriş cümleleri her seferinde daha uzun hale geliyor. Kitap yazmanın keyfi giderek teknik operasyona dönüşüyor. Bu ChatGPT'nin kötü olduğu anlamına gelmiyor; kitap üretimi için tasarlanmamış bir araçla kitap yazmaya çalışmanın doğal sonucu."],
+      ["EPUB ve PDF çıkarmak ayrı bir operasyon", "ChatGPT metin üretir. Ama üretilen metin doğrudan KDP'ye yüklenebilir bir EPUB dosyasına dönüşmez. Calibre, Sigil, Vellum veya başka araçlarla export işlemini manuel yapman gerekir. Her araç ayrı öğrenme eğrisi ve zaman ister. Kapak ayrı; metadata düzenlemesi ayrı; bölüm formatlaması ayrı. Bu araç zinciri tek başına saatler alabilir ve çoğu zaman 'üretilmiş ama tamamlanmamış kitap' sorununa yol açar: metin hazır ama yayın dosyası yok."],
+      ["Workflow kopukluğu motivasyonu tüketir", "Bir kitap projesinin yarıda kalmasının en sık sebebi vakit yokluğu değil motivasyon düşüşüdür. Motivasyon çoğunlukla işin karmaşıklaşmasından düşer: her bölüm için prompt yeniden kurmak, ton tutarlılığını elle kontrol etmek, export zincirini ayrıca çözmek ve hangi aşamada ne kalındığını takip etmek. Bu sürtünmeler birikerek bir kitap projesini aylar içinde pasif nota döndürür."],
+      ["Fark sistem tasarımında", "ChatGPT'nin gücü ve kitap üretim sisteminin farkı model kalitesinde değildir. Fark iş akışı mimarisindedir: konu özetinden bölüm planına, bölüm planından tüm bölümlere, kapaktan EPUB çıktısına tek ve tutarlı bir akış. Bu akışta bağlam bir bölümden diğerine taşınır; ton profili tüm üretimi boyunca korunur; kapak ve export süreci ayrı operasyon gerektirmez. Sistem her adımda ne yapılacağını söyler — kullanıcı yön verir, ama operasyonu yönetmek zorunda kalmaz."],
+      ["ChatGPT iyi bir başlangıç noktası, ama bitiş noktası değil", "ChatGPT ile outline çıkarmak, fikir test etmek veya kısa içerik denemesi yapmak hâlâ mantıklı. Ama 6-12 bölümlük bir non-fiction kitabı baştan sona üretmek, tonu korumak, export zincirine hazır hale getirmek ve bunu düzenli tekrar edebilmek istiyorsan özel bir kitap üretim akışına geçiş noktasına geldin demektir. Outline çıkıyor ama kitap bitmiyor — bu şikayetin cevabı daha iyi prompt değil, daha iyi sistem."],
+    ],
+  },
+] as const;

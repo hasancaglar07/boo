@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, Globe } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useTheme } from "@/components/theme-provider";
@@ -26,30 +26,11 @@ const nav: NavItem[] = [
   { type: "link", href: "/faq", labelKey: "nav.faq" },
 ];
 
-/* ─── Language Toggle ─────────────────────────────────────── */
-
-function LangToggle() {
-  const { lang, setLang } = useLang();
-  const next = lang === "en" ? "tr" : "en";
-
-  return (
-    <button
-      onClick={() => setLang(next)}
-      className="inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-      aria-label={lang === "en" ? "Switch to Turkish" : "Switch to English"}
-      title={lang === "en" ? "Switch to Turkish" : "Switch to English"}
-    >
-      <Globe className="h-4 w-4" aria-hidden="true" />
-      <span className="uppercase">{next}</span>
-    </button>
-  );
-}
-
 /* ─── Main header ────────────────────────────────────────── */
 
 export function SiteHeader() {
   const { resolvedTheme } = useTheme();
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const pathname = usePathname();
   const logoSrc = resolvedTheme === "dark" ? "/dark-logo.png" : "/logo.png";
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(getSession()));
@@ -119,7 +100,6 @@ export function SiteHeader() {
 
         {/* ── Actions ── */}
         <div className="flex shrink-0 items-center gap-1">
-          <LangToggle />
           <ThemeToggle />
 
           <div className="mx-2 hidden h-4 w-px bg-border/80 lg:block" aria-hidden="true" />
