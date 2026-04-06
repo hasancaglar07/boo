@@ -5,8 +5,8 @@ import { requireAuthenticatedUser } from "@/lib/auth/server-access";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kitaplarım | Book Generator",
-  description: "Kitaplarını, önizlemelerini ve dışa aktarma akışını yönet.",
+  title: "My Books | Book Generator",
+  description: "Manage your books, previews, and export workflow.",
   path: "/app/library",
   noIndex: true,
 });

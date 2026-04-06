@@ -22,36 +22,36 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { absoluteUrl, buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kitap Oluşturucu Nasıl Çalışır? 3 Adımda Kitap Üretimi",
+  title: "How Book Creator Works | 3-Step Book Production",
   description:
-    "Kısa bir konu özetinden bölüm planına, önizlemeden EPUB/PDF çıktısına kadar kitap üretim sürecinin nasıl ilerlediğini adım adım görün.",
+    "See step-by-step how the book production process works — from a brief topic summary to chapter plans, previews, and EPUB/PDF output.",
   path: "/how-it-works",
-  keywords: ["kitap oluşturucu nasıl çalışır", "ai kitap üretimi", "epub pdf kitap oluşturma"],
+  keywords: ["how book creator works", "ai book production", "epub pdf book creation"],
 });
 
 const steps = [
   {
     step: "1",
-    title: "Konunu ve hedef okurunu gir",
-    text: "Kısa bir özet, hedef okur ve anlatmak istediğin sonucu paylaşırsın. Uzun formlar değil, yönlendirmeli sorularla başlarsın.",
-    output: "Net kitap yönü, başlık açısı ve başlangıç çerçevesi",
-    cta: "Konu özetini gir",
+    title: "Enter your topic and target reader",
+    text: "Share a brief summary, your target reader, and the outcome you want to convey. No long forms — you start with guided questions.",
+    output: "Clear book direction, title angle, and starting framework",
+    cta: "Enter your topic summary",
     icon: Target,
   },
   {
     step: "2",
-    title: "Taslağı gözden geçir ve onayla",
-    text: "Sistem başlık, bölüm akışı ve kitap omurgasını önerir. İstersen düzenler, netleştirir ve onaylayarak üretime geçersin.",
-    output: "Görünür bölüm planı ve daha kontrollü üretim akışı",
-    cta: "Bölüm planını oluştur",
+    title: "Review and approve the outline",
+    text: "The system suggests a title, chapter flow, and book structure. You can edit, refine, and approve before moving to production.",
+    output: "Visible chapter plan and a more controlled production workflow",
+    cta: "Build your chapter plan",
     icon: Layers3,
   },
   {
     step: "3",
-    title: "Önizlemeyi gör, çıktılarını al",
-    text: "İlk sonucu görür, beğendiğinde kitabını tam çıktıya dönüştürürsün. EPUB ve PDF dosyaları tek akışta hazırlanır.",
-    output: "Önizleme, düzenlenebilir içerik ve EPUB/PDF çıktıları",
-    cta: "Üretime başla",
+    title: "Preview your book and get your outputs",
+    text: "See the first result, and when you like it, convert your book to full output. EPUB and PDF files are prepared in a single workflow.",
+    output: "Preview, editable content, and EPUB/PDF outputs",
+    cta: "Start production",
     icon: FileOutput,
   },
 ] as const;
@@ -59,106 +59,106 @@ const steps = [
 const reassuranceItems = [
   {
     icon: Clock3,
-    title: "Hızlı başlangıç",
-    text: "Uzun hazırlık yapmadan birkaç kısa cevapla başlarsın.",
+    title: "Quick start",
+    text: "Start with a few short answers — no lengthy preparation needed.",
   },
   {
     icon: PencilRuler,
-    title: "Kontrol sende",
-    text: "Taslağı görmeden ve onaylamadan kör üretime geçmezsin.",
+    title: "You're in control",
+    text: "You never go into blind production without seeing and approving the outline first.",
   },
   {
     icon: ShieldCheck,
-    title: "Çıktı odaklı akış",
-    text: "Süreç yalnızca yazı üretmez; sonunda EPUB/PDF teslimini hedefler.",
+    title: "Output-focused workflow",
+    text: "The process doesn't just generate text — it aims to deliver EPUB/PDF at the end.",
   },
   {
     icon: Users,
-    title: "Uzmanlar için uygun",
-    text: "Bilgisini kitaba dönüştürmek isteyen eğitmenler, danışmanlar ve üreticiler için tasarlanmıştır.",
+    title: "Built for experts",
+    text: "Designed for instructors, consultants, and creators who want to turn their knowledge into a book.",
   },
 ] as const;
 
 const behindTheScenes = [
   {
-    eyebrow: "Yön",
-    title: "Önce ne yazacağını değil, neden yazdığını netleştirirsin",
+    eyebrow: "Direction",
+    title: "Clarify why you're writing, not just what",
     description:
-      "Kime yazdığın, okura hangi sonucu vaat ettiğin ve hangi dilde ilerlemek istediğin baştan belirlenir. Böylece kitap daha ilk adımdan dağılmaz.",
+      "Who you're writing for, what outcome you promise the reader, and what language to use are determined upfront. So your book stays focused from the very first step.",
     icon: Target,
   },
   {
     eyebrow: "Plan",
-    title: "Bölüm yapısı görünür olur",
+    title: "The chapter structure becomes visible",
     description:
-      "Başlık, alt başlık ve bölüm sırası birlikte şekillenir. Sonradan toparlanan bir metin yerine baştan planlanan bir omurga oluşur.",
+      "Title, subtitles, and chapter order take shape together. Instead of assembling text after the fact, you build a structured outline from the start.",
     icon: Layers3,
   },
   {
-    eyebrow: "Üretim",
-    title: "Önizleme ile ilerlersin",
+    eyebrow: "Production",
+    title: "Move forward with a preview",
     description:
-      "Sistem yalnızca metin dökmez. Önce görünür bir sonuç üretir; sen de üretimi neye dönüştürdüğünü daha erken görürsün.",
+      "The system doesn't just dump text. It produces a visible result first — so you see what you're turning into a finished product much earlier.",
     icon: Sparkles,
   },
   {
-    eyebrow: "Teslim",
-    title: "Çıktılar sonradan değil, sürecin içinde hazırlanır",
+    eyebrow: "Delivery",
+    title: "Outputs are built into the process, not tacked on at the end",
     description:
-      "EPUB, PDF ve temel yayın dosyaları işin sonuna eklenen ayrı bir uğraş olmaktan çıkar; üretimin doğal parçası haline gelir.",
+      "EPUB, PDF, and basic publishing files stop being a separate chore added at the end — they become a natural part of production.",
     icon: FileOutput,
   },
 ] as const;
 
 const audience = [
-  "Uzmanlığını kitaba dönüştürmek isteyen danışmanlar ve eğitmenler",
-  "Boş sayfadan başlamak yerine yönlendirmeli bir akış isteyen ilk kitap yazarları",
-  "Hızlı taslak, görünür bölüm planı ve çıktı odaklı ilerlemek isteyen içerik üreticileri",
+  "Consultants and instructors who want to turn their expertise into a book",
+  "First-time authors who prefer a guided workflow over starting from a blank page",
+  "Content creators who want fast drafts, visible chapter plans, and output-driven progress",
 ] as const;
 
 const deliverables = [
   {
     icon: WandSparkles,
-    label: "Kitap yönü",
-    text: "Başlık açısı, konumlandırma ve kitabın temel vaadi",
+    label: "Book direction",
+    text: "Title angle, positioning, and the book's core promise",
   },
   {
     icon: SearchCheck,
     label: "Plan",
-    text: "Bölüm bölüm görünür taslak ve kitap omurgası",
+    text: "Chapter-by-chapter visible outline and book structure",
   },
   {
     icon: BookOpenCheck,
-    label: "İçerik",
-    text: "Düzenlenebilir bölüm içerikleri ve önizleme çıktısı",
+    label: "Content",
+    text: "Editable chapter content and preview output",
   },
   {
     icon: FileOutput,
-    label: "Teslim",
-    text: "EPUB, PDF ve yayın hazırlığını kolaylaştıran temel dosyalar",
+    label: "Delivery",
+    text: "EPUB, PDF, and essential files that simplify publishing preparation",
   },
 ] as const;
 
 const faqs = [
   {
-    question: "Başlamak için neye ihtiyacım var?",
+    question: "What do I need to get started?",
     answer:
-      "Genelde kısa bir konu özeti, hedef okur bilgisi ve kitabın neyi başarmasını istediğine dair birkaç net cevap yeterlidir.",
+      "Usually a brief topic summary, target reader information, and a few clear answers about what you want the book to achieve are enough.",
   },
   {
-    question: "Taslağı görmeden üretime geçiyor muyum?",
+    question: "Do I go into production without seeing the outline?",
     answer:
-      "Hayır. Süreç, yönünü ve bölüm planını görüp onaylamanı kolaylaştıracak şekilde tasarlanmıştır.",
+      "No. The process is designed so you can see and approve your direction and chapter plan first.",
   },
   {
-    question: "Sadece metin mi alıyorum, yoksa çıktı dosyaları da var mı?",
+    question: "Do I only get text, or are there output files too?",
     answer:
-      "Amaç yalnızca metin üretmek değil; önizleme ve kitap çıktılarıyla birlikte EPUB/PDF teslimine kadar ilerlemektir.",
+      "The goal isn't just generating text — it's progressing all the way to preview and book outputs including EPUB/PDF delivery.",
   },
   {
-    question: "Bu ürün kimler için daha uygun?",
+    question: "Who is this product best suited for?",
     answer:
-      "Özellikle bilgi, deneyim veya yöntemini kitaplaştırmak isteyen uzmanlar, eğitmenler, danışmanlar ve üreticiler için uygundur.",
+      "It's especially suited for experts, instructors, consultants, and creators who want to turn their knowledge, experience, or methodology into a book.",
   },
 ] as const;
 
@@ -166,10 +166,10 @@ export default function HowItWorksPage() {
   const howToSchema = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: "Kitap Oluşturucu ile nasıl kitap üretilir?",
+    name: "How to produce a book with Book Creator?",
     description:
-      "Konu özetini gir, taslağı onayla, önizlemeyi gör ve EPUB/PDF çıktıları al.",
-    inLanguage: "tr-TR",
+      "Enter your topic summary, approve the outline, preview it, and get EPUB/PDF outputs.",
+    inLanguage: "en-US",
     totalTime: "PT30M",
     url: absoluteUrl("/how-it-works"),
     step: steps.map((item) => ({
@@ -202,16 +202,15 @@ export default function HowItWorksPage() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Nasıl çalışır
+              How it works
             </div>
 
             <h1 className="mt-8 text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl">
-              Konunu gir, planını onayla, <span className="text-primary">kitabını çıktıya dönüştür.</span>
+              Enter your topic, approve your plan, <span className="text-primary">turn your book into output.</span>
             </h1>
 
             <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg">
-              Kitap Oluşturucu; kısa bir konu özetini görünür bölüm planına, önizlemeye ve EPUB/PDF
-              çıktısına taşıyan yönlendirmeli bir kitap üretim akışıdır.
+              Book Creator is a guided book production workflow that turns a brief topic summary into a visible chapter plan, preview, and EPUB/PDF output.
             </p>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -219,11 +218,11 @@ export default function HowItWorksPage() {
                 href="/start/topic"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-95"
               >
-                Kitabını oluşturmaya başla
+                Start building your book
                 <ArrowRight className="size-4" />
               </Link>
               <span className="text-sm text-muted-foreground">
-                Kısa cevaplarla başlarsın. Taslağı görür, sonra ilerlersin.
+                Start with short answers. See the outline, then proceed.
               </span>
             </div>
 
@@ -237,7 +236,7 @@ export default function HowItWorksPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium uppercase tracking-[0.18em] text-primary/70">
-                        Adım {item.step}
+                        Step {item.step}
                       </span>
                       <Icon className="size-4 text-primary" />
                     </div>
@@ -254,9 +253,9 @@ export default function HowItWorksPage() {
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell">
           <SectionHeading
-            badge="3 adımda süreç"
-            title="Süreç tam olarak nasıl ilerler?"
-            description="Yeni bir ziyaretçi olarak yalnızca ne olacağını değil, her adımın sonunda elinde ne olacağını da görmelisin. Bu sayfa bunun için var."
+            badge="3-step process"
+            title="How exactly does the process work?"
+            description="As a new visitor, you should see not only what happens but also what you get at the end of each step. This page exists for that reason."
           />
 
           <div className="grid gap-4 md:grid-cols-3">
@@ -277,7 +276,7 @@ export default function HowItWorksPage() {
                     </div>
                     <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/70">
-                        Bu adımın sonucu
+                        Result of this step
                       </p>
                       <p className="mt-1 text-sm font-medium text-foreground">{item.output}</p>
                     </div>
@@ -301,9 +300,9 @@ export default function HowItWorksPage() {
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell">
           <SectionHeading
-            badge="Güven ve netlik"
-            title="Seni boş sayfa stresiyle değil, görünür bir akışla ilerletir"
-            description="Bu sayfanın amacı sadece özellik göstermek değil; ne kadar emek vereceğini, ne kadar kontrolün olacağını ve sonunda ne alacağını netleştirmektir."
+            badge="Trust and clarity"
+            title="Guides you with a visible workflow, not blank page anxiety"
+            description="This page isn't just about showcasing features — it clarifies how much effort you'll invest, how much control you'll have, and what you'll receive at the end."
           />
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -326,9 +325,9 @@ export default function HowItWorksPage() {
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell">
           <SectionHeading
-            badge="Neden daha anlaşılır?"
-            title="Kısa özetten yayına giden yolu görünür parçalara ayırır"
-            description="Süreç tek bir “üret” düğmesinden ibaret değildir. Önce yön kurulur, sonra plan netleşir, ardından çıktı odaklı üretim yapılır."
+            badge="Why is it clearer?"
+            title="Breaks the path from brief to publish into visible pieces"
+            description='The process is not just a single "generate" button. Direction is established first, then the plan solidifies, then output-driven production begins.'
           />
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -357,9 +356,9 @@ export default function HowItWorksPage() {
         <div className="shell grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
           <div>
             <SectionHeading
-              badge="Kimler için?"
-              title="Özellikle uzmanlığını kitaba dönüştürmek isteyenler için"
-              description="Bu akış, yalnızca yazı yazmak isteyenler için değil; bilgisini ürünleştirmek, sistemleştirmek ve somut çıktıya çevirmek isteyenler için daha uygundur."
+              badge="Who is it for?"
+              title="Especially for those who want to turn their expertise into a book"
+              description="This workflow is not just for those who want to write — it is better suited for those who want to productize, systematize, and turn their knowledge into concrete output."
             />
 
             <div className="space-y-3">
@@ -377,9 +376,9 @@ export default function HowItWorksPage() {
 
           <div>
             <SectionHeading
-              badge="Sürecin sonunda"
-              title="Elinde ne olur?"
-              description="Yalnızca fikir değil; ilerlemeyi mümkün kılan görünür ara çıktılar ve teslime yakın dosyalar oluşur."
+              badge="At the end of the process"
+              title="What do you end up with?"
+              description="Not just ideas — you get visible intermediate outputs that enable progress and files ready for delivery."
             />
 
             <div className="grid gap-4">
@@ -409,9 +408,9 @@ export default function HowItWorksPage() {
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell">
           <SectionHeading
-            badge="Sık sorulan sorular"
-            title="Karar vermeden önce en çok merak edilenler"
-            description="How-it-works sayfası ikna etmeye çalışırken belirsizlik bırakmamalı. Bu kısa cevaplar da o boşluğu kapatır."
+            badge="Frequently asked questions"
+            title="Most asked questions before deciding"
+            description="A how-it-works page should not leave uncertainty while trying to persuade. These short answers fill that gap."
           />
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -433,24 +432,24 @@ export default function HowItWorksPage() {
             <div className="mx-auto max-w-3xl text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/70 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                Başlamaya hazır
+                Ready to start
               </div>
               <h2 className="mt-6 text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-                Boş ekrana bakarak değil, <span className="text-primary">yönlendirilmiş bir sistemle başla.</span>
+                Don't stare at a blank screen — <span className="text-primary">start with a guided system.</span>
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-muted-foreground">
-                Konunu netleştir, bölüm planını gör, önizlemeyi incele ve kitabını çıktıya dönüştür.
-                Süreci tek tek kurmak yerine görünür adımlarla ilerle.
+                Clarify your topic, see your chapter plan, review the preview, and convert your book to output.
+                Instead of building the process piece by piece, move forward with visible steps.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
                   href="/start/topic"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-95"
                 >
-                  Ücretsiz önizlemeyi başlat
+                  Start your free preview
                   <ArrowRight className="size-4" />
                 </Link>
-                <span className="text-sm text-muted-foreground">Kısa girişle başla · Planı gör · Sonra karar ver</span>
+                <span className="text-sm text-muted-foreground">Start with a brief intro · See the plan · Then decide</span>
               </div>
             </div>
           </div>

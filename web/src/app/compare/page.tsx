@@ -9,11 +9,11 @@ import { buildPageMetadata } from "@/lib/seo";
 import { KDP_GUARANTEE_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Karşılaştırma | Kitap Oluşturucu ve Alternatifler",
+  title: "Comparison | Book Creator and Alternatives",
   description:
-    "Kitap Oluşturucu'yu manuel yazım, genel yapay zeka asistanları ve rakip araçlarla karşılaştır. Neden kitap üretimi için özel bir araç gerekir?",
+    "Compare Book Creator against manual writing, general AI assistants, and competing tools. Find out why a specialized book production tool is essential.",
   path: "/compare",
-  keywords: ["book generator karşılaştırma", "ai kitap yazma alternatifleri", "chatgpt kitap", "jasper alternatifleri"],
+  keywords: ["book generator comparison", "ai book writing alternatives", "chatgpt book", "jasper alternatives"],
 });
 
 type Support = "yes" | "no" | "partial";
@@ -27,19 +27,19 @@ interface CompareRow {
 }
 
 const rows: CompareRow[] = [
-  { feature: "Kitap odaklı konu giriş sistemi", bookGenerator: "yes", manualAI: "no", generalTools: "no", note: "Diğer araçlar genel komut kabul eder; kitap yapısı bilmez." },
-  { feature: "Otomatik taslak üretimi", bookGenerator: "yes", manualAI: "partial", generalTools: "partial" },
-  { feature: "Bölüm bölüm tutarlı üretim", bookGenerator: "yes", manualAI: "no", generalTools: "no", note: "Uzun içeriklerde bağlam kopukluğu yaşanır." },
-  { feature: "EPUB çıktısı", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
-  { feature: "KDP uyumlu PDF", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
-  { feature: "Kapak görseli üretimi", bookGenerator: "yes", manualAI: "no", generalTools: "partial" },
-  { feature: "Kaynakça / referans desteği", bookGenerator: "yes", manualAI: "partial", generalTools: "partial" },
-  { feature: "Kullanıcı ayrıca API ödemez", bookGenerator: "yes", manualAI: "no", generalTools: "partial", note: "Book Generator'da model maliyeti planın içindedir; bazı genel araçlarda ayrı maliyet çıkar." },
-  { feature: "Yayın geçmişi ve revizyon", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
-  { feature: "Türkçe kitap üretimi", bookGenerator: "yes", manualAI: "partial", generalTools: "partial", note: "Genel AI araçları Türkçe üretebilir ama yapı bozulabilir." },
-  { feature: "KDP niş araştırma", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
-  { feature: "Kurulum gerektirmez (web tabanlı)", bookGenerator: "yes", manualAI: "partial", generalTools: "yes" },
-  { feature: "Ücret modeli — kitap başı değer", bookGenerator: "yes", manualAI: "no", generalTools: "no", note: "Token bazlı araçlarda uzun kitap = yüksek maliyet." },
+  { feature: "Book-focused topic input system", bookGenerator: "yes", manualAI: "no", generalTools: "no", note: "Other tools accept generic prompts; they don't understand book structure." },
+  { feature: "Automatic outline generation", bookGenerator: "yes", manualAI: "partial", generalTools: "partial" },
+  { feature: "Consistent chapter-by-chapter generation", bookGenerator: "yes", manualAI: "no", generalTools: "no", note: "Long-form content suffers from context drift." },
+  { feature: "EPUB output", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
+  { feature: "KDP-compliant PDF", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
+  { feature: "Cover image generation", bookGenerator: "yes", manualAI: "no", generalTools: "partial" },
+  { feature: "Bibliography / reference support", bookGenerator: "yes", manualAI: "partial", generalTools: "partial" },
+  { feature: "No separate API costs for users", bookGenerator: "yes", manualAI: "no", generalTools: "partial", note: "In Book Creator, model costs are included in the plan; some general tools charge separately." },
+  { feature: "Publishing history and revisions", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
+  { feature: "Book production in Turkish", bookGenerator: "yes", manualAI: "partial", generalTools: "partial", note: "General AI tools can produce Turkish content, but structure may break." },
+  { feature: "KDP niche research", bookGenerator: "yes", manualAI: "no", generalTools: "no" },
+  { feature: "No setup required (web-based)", bookGenerator: "yes", manualAI: "partial", generalTools: "yes" },
+  { feature: "Pricing model — per-book value", bookGenerator: "yes", manualAI: "no", generalTools: "no", note: "Token-based tools mean longer books = higher costs." },
 ];
 
 function SupportIcon({ value }: { value: Support }) {
@@ -50,44 +50,44 @@ function SupportIcon({ value }: { value: Support }) {
 
 const alternatives = [
   {
-    name: "ChatGPT / Claude (manuel)",
-    pros: ["Güçlü dil modeli", "Esneklik"],
+    name: "ChatGPT / Claude (manual)",
+    pros: ["Powerful language model", "Flexibility"],
     cons: [
-      "Kitap yapısı yok",
-      "Her bölüm için yeni komut yazman gerek",
-      "Bağlam sürüklenmesi ile tutarsızlık",
-      "EPUB/PDF çıktısı yok",
-      "Uzun kitaplarda token maliyeti yüksek",
+      "No book structure",
+      "You need to write new prompts for every chapter",
+      "Inconsistency due to context drift",
+      "No EPUB/PDF output",
+      "High token costs for long books",
     ],
   },
   {
     name: "Jasper / Copy.ai",
-    pros: ["İyi kısa içerik üretimi", "Şablon desteği"],
+    pros: ["Good short-form content generation", "Template support"],
     cons: [
-      "Kitap uzunluğu içerik için tasarlanmamış",
-      "KDP çıktısı yok",
-      "Türkçe kalitesi değişken",
-      "Pahalı abonelik",
+      "Not designed for book-length content",
+      "No KDP output",
+      "Turkish quality is inconsistent",
+      "Expensive subscription",
     ],
   },
   {
-    name: "Scrivener + AI eklentiler",
-    pros: ["Güçlü yazar aracı", "Yapılandırılmış yazım"],
+    name: "Scrivener + AI plugins",
+    pros: ["Powerful authoring tool", "Structured writing"],
     cons: [
-      "Öğrenme eğrisi yüksek",
-      "AI entegrasyonu karmaşık",
-      "Ücretli + eklenti maliyetleri",
-      "KDP çıktısı manuel ayar gerektirir",
+      "Steep learning curve",
+      "Complex AI integration",
+      "Paid + plugin costs",
+      "KDP output requires manual adjustment",
     ],
   },
   {
-    name: "Manuel yazım",
-    pros: ["Tam kontrol", "AI bağımlılığı yok"],
+    name: "Manual writing",
+    pros: ["Full control", "No AI dependency"],
     cons: [
-      "Aylar / yıllar sürebilir",
-      "Başlamak zor",
-      "Düzenleme maliyeti yüksek",
-      "Outline oluşturmak başlı başına iş",
+      "Can take months or years",
+      "Hard to get started",
+      "High editing costs",
+      "Creating an outline is a project in itself",
     ],
   },
 ];
@@ -99,18 +99,18 @@ export default function ComparePage() {
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="mb-4">Karşılaştırma</Badge>
+            <Badge className="mb-4">Comparison</Badge>
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              ChatGPT ile başlayabilirsin.{" "}
-              <span className="text-primary">Bitirmek için yetmeyebilir.</span>
+              You can start with ChatGPT.{" "}
+              <span className="text-primary">But it may not be enough to finish.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
-              Sorun model kalitesi değil; her bölüm için yeniden komut yazmak, tonu korumak, kapağı ayrı çözmek ve çıktıyı ayrı tamamlamak. Kitap Oluşturucu bu dağınık zinciri tek akışta toplar.
+              The problem isn't model quality — it's rewriting prompts for every chapter, maintaining a consistent tone, solving the cover separately, and completing the output separately. Book Creator streamlines this scattered chain into a single workflow.
             </p>
             <div className="mx-auto mt-8 max-w-3xl rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 text-left shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Short answer</p>
               <p className="mt-2 text-sm leading-7 text-foreground">
-                Kitap Oluşturucu, ChatGPT veya genel yapay zeka araçlarının yerine geçen genel bir sohbet aracı değil; tek bir fikirden bölüm planı, bölüm, kapak ve çıktı üreten özel bir kitap üretim sistemidir. Farkı model kalitesinden çok, kitap üretimine özel akış, editör ve yayına hazır çıktı sunmasıdır.
+                Book Creator is not a general chatbot replacing ChatGPT or general AI tools — it's a specialized book production system that generates chapter plans, chapters, covers, and output from a single idea. The difference lies not in model quality, but in its book-specific workflow, editor, and publication-ready output.
               </p>
             </div>
           </div>
@@ -120,9 +120,9 @@ export default function ComparePage() {
       <section className="border-b border-border/80 py-14">
         <div className="shell">
           <div className="mx-auto max-w-4xl rounded-[24px] border border-border/80 bg-card/80 px-6 py-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Manuel yolun gizli maliyeti</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">The hidden cost of the manual approach</p>
             <p className="mt-3 text-base leading-8 text-foreground">
-              10–30 saatlik iş akışı tek araçta yönetilemiyor: araştırma bir yerde, taslak başka bir yerde, kapak ayrı, çıktı ayrı. Bu dağınıklık kitabın yarım kalmasının en yaygın nedeni. Kitap Oluşturucu bu zinciri tek bir akışta toplar.
+              A 10–30 hour workflow can't be managed in a single tool: research in one place, outline in another, cover separately, output separately. This fragmentation is the most common reason books remain unfinished. Book Creator brings this entire chain into a single workflow.
             </p>
           </div>
         </div>
@@ -132,18 +132,18 @@ export default function ComparePage() {
       <section className="border-b border-border/80 py-16">
         <div className="shell">
           <SectionHeading
-            badge="Özellik Tablosu"
-            title="Ne yapabilir, ne yapamaz?"
-            description="Kitap üretimine özel özellikler — genel AI araçlarında yoklar."
+            badge="Feature Table"
+            title="What can it do, and what can't it?"
+            description="Features purpose-built for book production — things general AI tools lack."
           />
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="pb-4 pl-2 text-left font-medium text-muted-foreground">Özellik</th>
-                  <th className="pb-4 text-center font-semibold text-foreground">Kitap Oluşturucu</th>
-                  <th className="pb-4 text-center font-medium text-muted-foreground">Manuel AI</th>
-                  <th className="pb-4 pr-2 text-center font-medium text-muted-foreground">Genel Araçlar</th>
+                  <th className="pb-4 pl-2 text-left font-medium text-muted-foreground">Feature</th>
+                  <th className="pb-4 text-center font-semibold text-foreground">Book Creator</th>
+                  <th className="pb-4 text-center font-medium text-muted-foreground">Manual AI</th>
+                  <th className="pb-4 pr-2 text-center font-medium text-muted-foreground">General Tools</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -172,9 +172,9 @@ export default function ComparePage() {
             </table>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-6 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5"><Check className="size-3.5 text-green-600" /> Tam destek</span>
-            <span className="flex items-center gap-1.5"><Minus className="size-3.5 text-yellow-500" /> Kısmi / manuel</span>
-            <span className="flex items-center gap-1.5"><X className="size-3.5 text-red-500" /> Yok</span>
+            <span className="flex items-center gap-1.5"><Check className="size-3.5 text-green-600" /> Full support</span>
+            <span className="flex items-center gap-1.5"><Minus className="size-3.5 text-yellow-500" /> Partial / manual</span>
+            <span className="flex items-center gap-1.5"><X className="size-3.5 text-red-500" /> None</span>
           </div>
         </div>
       </section>
@@ -183,8 +183,8 @@ export default function ComparePage() {
       <section className="border-b border-border/80 py-16">
         <div className="shell">
           <SectionHeading
-            badge="Alternatifleri Anlamak"
-            title="Neden başka araçlar yetmez?"
+            badge="Understanding Alternatives"
+            title="Why other tools fall short?"
           />
           <div className="grid gap-6 sm:grid-cols-2">
             {alternatives.map((alt) => (
@@ -192,7 +192,7 @@ export default function ComparePage() {
                 <h3 className="font-serif text-lg font-semibold text-foreground">{alt.name}</h3>
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Artıları</p>
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Pros</p>
                     <ul className="space-y-1.5">
                       {alt.pros.map((p) => (
                         <li key={p} className="flex items-start gap-1.5 text-sm text-muted-foreground">
@@ -203,7 +203,7 @@ export default function ComparePage() {
                     </ul>
                   </div>
                   <div>
-                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Eksileri</p>
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Cons</p>
                     <ul className="space-y-1.5">
                       {alt.cons.map((c) => (
                         <li key={c} className="flex items-start gap-1.5 text-sm text-muted-foreground">
@@ -221,13 +221,13 @@ export default function ComparePage() {
       </section>
 
       <MarketingCtaSection
-        title="Genel araçlarla vakit kaybetmek yerine kendi konunla farkı gör."
-        description={`Önce önizlemeyi gör, sonra bu kitabı açmaya değer olup olmadığına karar ver. Asıl fark sohbet aracı değil, yayına hazır akıştır. ${NO_API_COST_CLAIM} ve kitaplar ${KDP_GUARANTEE_CLAIM} ile hazırlanır.`}
+        title="Stop wasting time with general tools — see the difference with your own topic."
+        description={`Preview first, then decide if this book is worth publishing. The real difference isn't the chatbot — it's the publication-ready workflow. ${NO_API_COST_CLAIM} and books are prepared with ${KDP_GUARANTEE_CLAIM}.`}
         items={[
-          "Konu özeti → bölüm planı → kitap zinciri",
-          "KDP uyumlu EPUB / PDF",
-          "Türkçe kitap desteği",
-          "Önce önizleme, sonra tam kitap",
+          "Topic summary → chapter plan → book pipeline",
+          "KDP-compliant EPUB / PDF",
+          "Turkish book support",
+          "Preview first, then full book",
         ]}
       />
     </MarketingPage>

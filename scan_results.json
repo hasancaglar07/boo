@@ -1,7 +1,7 @@
 [
   {
     "file": "web/src/lib/marketing-tools.ts",
-    "lines": 399
+    "lines": 223
   },
   {
     "file": "web/src/components/app/workspace-screen.tsx",
@@ -104,6 +104,10 @@
     "lines": 29
   },
   {
+    "file": "web/src/components/lang-provider.tsx",
+    "lines": 29
+  },
+  {
     "file": "web/src/components/app/app-frame.tsx",
     "lines": 27
   },
@@ -113,10 +117,6 @@
   },
   {
     "file": "web/src/components/site/home-product-overview-section.tsx",
-    "lines": 26
-  },
-  {
-    "file": "web/src/components/site/site-footer.tsx",
     "lines": 26
   },
   {
@@ -228,10 +228,6 @@
     "lines": 10
   },
   {
-    "file": "web/src/components/site/mobile-nav.tsx",
-    "lines": 10
-  },
-  {
     "file": "web/src/app/privacy/page.tsx",
     "lines": 9
   },
@@ -253,10 +249,6 @@
   },
   {
     "file": "web/src/app/admin/users/page.tsx",
-    "lines": 8
-  },
-  {
-    "file": "web/src/app/login/page.tsx",
     "lines": 8
   },
   {
@@ -305,10 +297,6 @@
   },
   {
     "file": "web/src/components/site/home-pricing-testimonials.tsx",
-    "lines": 7
-  },
-  {
-    "file": "web/src/components/site/site-header.tsx",
     "lines": 7
   },
   {
@@ -561,6 +549,14 @@
   },
   {
     "file": "web/src/components/site/blog-toc.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src/components/site/mobile-nav.tsx",
+    "lines": 2
+  },
+  {
+    "file": "web/src/components/site/site-header.tsx",
     "lines": 2
   },
   {

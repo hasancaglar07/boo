@@ -7,8 +7,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kayıt Ol | Kitap Oluşturucu",
-  description: "Kitap Oluşturucu hesabı oluştur, ön izlemeni kaydet ve kitap akışına devam et.",
+  title: "Sign Up | Book Generator",
+  description: "Create a Book Generator account, save your preview, and continue your book workflow.",
   path: "/signup",
   noIndex: true,
 });
@@ -40,10 +40,10 @@ export default async function SignupPage({
           {/* Header Section */}
           <div className="border-b border-border/40 px-8 pt-8 pb-6">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Hesap Oluştur
+              Create Account
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Ücretsiz başla • 2 dakika
+              Start for free • 2 minutes
             </p>
           </div>
 
@@ -55,12 +55,12 @@ export default async function SignupPage({
           {/* Footer Link - Minimal */}
           <div className="border-t border-border/40 px-8 py-4">
             <p className="text-center text-sm text-muted-foreground">
-              Zaten hesabın var mı?{" "}
+              Already have an account?{" "}
               <Link 
                 href={loginHref} 
                 className="font-medium text-foreground hover:text-primary transition-colors"
               >
-                Giriş yap
+                Log in
               </Link>
             </p>
           </div>
@@ -68,7 +68,7 @@ export default async function SignupPage({
 
         {/* Trust Indicator - Optional, subtle */}
         <p className="mt-6 text-center text-xs text-muted-foreground/70">
-          Kredi kartı gerekmez • Güvenli kayıt
+          No credit card required • Secure sign-up
         </p>
       </div>
     </div>

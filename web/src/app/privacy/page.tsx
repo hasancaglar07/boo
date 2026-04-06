@@ -6,28 +6,28 @@ import { Card, CardContent } from "@/components/ui/card";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Book Generator Gizlilik Politikası | Veri Kullanımı",
+  title: "Book Generator Privacy Policy | Data Usage",
   description:
-    "Book Generator gizlilik politikasını inceleyin. Hesap verileri, içerik verileri, API anahtarları ve üçüncü taraf hizmetlerle veri işleme prensiplerini öğrenin.",
+    "Review the Book Generator privacy policy. Learn about account data, content data, API keys, and data processing principles with third-party services.",
   path: "/privacy",
-  keywords: ["gizlilik politikası", "book generator veri kullanımı", "ai içerik güvenliği"],
+  keywords: ["privacy policy", "book generator data usage", "ai content security"],
 });
 
 export default function PrivacyPage() {
   return (
     <MarketingPage>
       <section className="shell py-20">
-        <Badge>Gizlilik</Badge>
-        <h1 className="mt-4 text-5xl font-semibold tracking-tight text-foreground">Gizlilik politikası</h1>
+        <Badge>Privacy</Badge>
+        <h1 className="mt-4 text-5xl font-semibold tracking-tight text-foreground">Privacy policy</h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-          Bu ürün, kitap üretim sürecinde gereken hesap, ayar ve çıktı verilerini olabildiğince sınırlı biçimde işler.
+          This product processes account, settings, and output data required during the book production process in the most limited way possible.
         </p>
         <div className="mt-12 grid gap-4 md:grid-cols-2">
           {[
-            ["Hesap verileri", "Ad, e-posta, plan ve kullanım akışı gibi temel bilgiler hesap deneyimi için tutulabilir."],
-            ["İçerik verileri", "Kitap brief'i, bölüm içerikleri, metadata ve export dosyaları kitap üretim sürecinin parçasıdır."],
-            ["API anahtarları", "Anahtarlar yalnızca kullanıcı tarafından kaydedildiğinde ilgili iş akışlarında kullanılır."],
-            ["Üçüncü taraf sağlayıcılar", "AI veya çıktı sağlayıcıları kullanıldığında, ilgili sağlayıcının kendi şartları ayrıca geçerlidir."],
+            ["Account data", "Basic information such as name, email, plan, and usage flow may be retained for the account experience."],
+            ["Content data", "Book briefs, chapter contents, metadata, and export files are part of the book production process."],
+            ["API keys", "Keys are only used in relevant workflows when saved by the user."],
+            ["Third-party providers", "When AI or output providers are used, the respective provider's own terms also apply."],
           ].map(([title, text]) => (
             <Card key={title}>
               <CardContent>

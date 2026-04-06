@@ -1,0 +1,1201 @@
+.agent\skills\seo\scripts\article_seo.py:142:    # ── Meta tags (common for all CMSes) ──────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:157:    # ── Author ─────────────────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:166:    # ── Publish date ───────────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:179:    # ── CMS-specific body container ────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:221:    # ── Headings ──────────────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:233:    # ── Paragraphs ────────────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:240:    # ── Images ────────────────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:365:# Keyword extraction (frequency-weighted n-grams — honest naming)
+.agent\skills\seo\scripts\article_seo.py:371:    Uses frequency counting (not TF-IDF — no corpus reference available).
+.agent\skills\seo\scripts\article_seo.py:523:    parser.add_argument("--keyword", help="Target primary keyword (optional — extracted automatically if omitted)")
+.agent\skills\seo\scripts\article_seo.py:536:    # ── CMS detection ──────────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:539:    # ── Content extraction ─────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:542:    # ── Structured data ────────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:545:    # ── Full text for keyword extraction + readability ─────────────────────
+.agent\skills\seo\scripts\article_seo.py:549:    # ── Readability ────────────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:552:    # ── Keyword research ───────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:567:    # ── SEO issue detection ─────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:570:    # ── Build result ───────────────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:599:    # ── Human-readable output ──────────────────────────────────────────────
+.agent\skills\seo\scripts\article_seo.py:604:    print(f"\nArticle SEO Analysis — {args.url}")
+.agent\skills\seo\scripts\article_seo.py:609:    print(f"Author            : {result['author'] or '⚠️ Not detected'}")
+.agent\skills\seo\scripts\article_seo.py:625:        flag = "✅" if sd.get("status") == "active" else "🔴" if sd.get("status") == "deprecated" else "⚠️"
+.agent\skills\seo\scripts\article_seo.py:634:    for sev, label in [("Critical", "🔴"), ("Warning", "⚠️"), ("Info", "ℹ️")]:
+.agent\skills\seo\scripts\broken_links.py:148:        result["issues"].append("⚠️ No links found on page")
+.agent\skills\seo\scripts\broken_links.py:187:            f"🔴 {len(result['broken'])} broken link(s) found"
+.agent\skills\seo\scripts\broken_links.py:191:            f"⚠️ {len(result['timeout'])} link(s) timed out"
+.agent\skills\seo\scripts\broken_links.py:198:                f"⚠️ {len(chains)} redirect chain(s) detected (>1 hop)"
+.agent\skills\seo\scripts\broken_links.py:227:    print(f"Broken Link Check — {result['page_url']}")
+.agent\skills\seo\scripts\broken_links.py:231:          f"🔴 Broken: {s['broken']} | ↪️ Redirected: {s['redirected']} | "
+.agent\skills\seo\scripts\broken_links.py:235:        print(f"\n🔴 Broken Links:")
+.agent\skills\seo\scripts\broken_links.py:246:            print(f"\n⚠️ Redirect Chains (>1 hop):")
+.agent\skills\seo\scripts\capture_screenshot.py:105:    # Sanitize output path — prevent directory traversal
+.agent\skills\seo\scripts\competitor_gap.py:8:No API keys required — uses sitemaps and on-page content only.
+.agent\skills\seo\scripts\competitor_gap.py:133:# Site crawl (lightweight — sitemap + top pages)
+.agent\skills\seo\scripts\competitor_gap.py:236:        description="Competitor Topic Gap Analyzer — finds content gaps from competitor sitemaps/pages"
+.agent\skills\seo\scripts\competitor_gap.py:287:            icon = "🔴" if gap["priority"] == "High" else "⚠️"
+.agent\skills\seo\scripts\competitor_gap.py:289:            print(f"  {icon} \"{gap['topic']}\" — covered by {gap['covered_by_competitors']} competitor(s): {comp_str}")
+.agent\skills\seo\scripts\competitor_gap.py:294:        print("\n✅ No significant topic gaps found — your content coverage is strong!")
+.agent\skills\seo\scripts\duplicate_content.py:226:                    "finding": f"Pages are {sim:.0%} similar — likely near-duplicate content.",
+.agent\skills\seo\scripts\duplicate_content.py:296:            print(f"  🔴 {len(group['urls'])} identical pages:")
+.agent\skills\seo\scripts\duplicate_content.py:304:            print(f"  ⚠️  {pair['similarity']:.0%} similar:")
+.agent\skills\seo\scripts\duplicate_content.py:312:            icon = "🔴" if page["severity"] == "Critical" else "⚠️"
+.agent\skills\seo\scripts\duplicate_content.py:313:            print(f"  {icon} {page['url']} — {page['word_count']} words (min: {page['threshold']})")
+.agent\skills\seo\scripts\entity_checker.py:400:        description="Entity SEO Checker — Knowledge Graph, Wikidata, sameAs validation"
+.agent\skills\seo\scripts\entity_checker.py:418:    print(f"\nEntity SEO Check — {report['url']}")
+.agent\skills\seo\scripts\entity_checker.py:432:        icon = "🔴" if data["priority"] == "Critical" else "⚠️"
+.agent\skills\seo\scripts\entity_checker.py:436:    print(f"\nWikidata          : {'✅ ' + wd['qid'] + ' — ' + wd.get('description', '') if wd['found'] else '❌ Not found'}")
+.agent\skills\seo\scripts\entity_checker.py:442:        sev_icon = {"Critical": "🔴", "Warning": "⚠️", "Info": "ℹ️"}
+.agent\skills\seo\scripts\generate_report.py:327:    print(f"🔍 Analyzing {url}...")
+.agent\skills\seo\scripts\generate_report.py:356:        # New analysis scripts (supplementary — failures don't block report)
+.agent\skills\seo\scripts\generate_report.py:375:        status = "⚠️ error" if "error" in result and result.get("error") else "✅"
+.agent\skills\seo\scripts\generate_report.py:605:        html += f'<div style="margin-top:16px"><h3 style="font-size:0.95rem;margin-bottom:8px;">🔍 Issues Found</h3>{issues_html}</div>'
+.agent\skills\seo\scripts\generate_report.py:607:        html += '<div style="margin-top:16px"><h3 style="font-size:0.95rem;margin-bottom:8px;">💡 Recommendations</h3>'
+.agent\skills\seo\scripts\generate_report.py:623:        '<h3 style="font-size:0.95rem;margin-bottom:8px;">✍️ What To Replace (Before/After)</h3>'
+.agent\skills\seo\scripts\generate_report.py:647:        "security": "🔒 Security", "social": "📱 Social Meta", "robots": "🤖 Robots",
+.agent\skills\seo\scripts\generate_report.py:648:        "broken_links": "🔗 Links", "internal_links": "🕸️ Internal Links",
+.agent\skills\seo\scripts\generate_report.py:649:        "redirects": "↪️ Redirects", "llms_txt": "🧠 AI Search",
+.agent\skills\seo\scripts\generate_report.py:650:        "pagespeed": "⚡ Performance", "onpage": "📝 On-Page", "readability": "📖 Readability",
+.agent\skills\seo\scripts\generate_report.py:651:        "article": "📄 Article SEO", "entity": "🏛️ Entity SEO",
+.agent\skills\seo\scripts\generate_report.py:652:        "link_profile": "🔗 Link Profile", "hreflang": "🌍 Hreflang",
+.agent\skills\seo\scripts\generate_report.py:653:        "duplicate_content": "📋 Content Uniqueness",
+.agent\skills\seo\scripts\generate_report.py:658:        html += '<h3 style="font-size:0.95rem;margin:16px 0 8px;">🛠️ Environment-Specific Fixes</h3>'
+.agent\skills\seo\scripts\generate_report.py:685:    return html if html else '<p style="color:var(--green)">✅ No recommendations — everything looks good!</p>'
+.agent\skills\seo\scripts\generate_report.py:719:                text = f"{issue.get('finding', '')} — Fix: {issue.get('fix', '')}" if issue.get('fix') else issue.get('finding', str(issue))
+.agent\skills\seo\scripts\generate_report.py:722:                severity = "critical" if "🔴" in issue else "warning" if "⚠️" in issue else "info"
+.agent\skills\seo\scripts\generate_report.py:766:        "security": ("🔒", "Security Headers"),
+.agent\skills\seo\scripts\generate_report.py:767:        "social": ("📱", "Social Meta"),
+.agent\skills\seo\scripts\generate_report.py:768:        "robots": ("🤖", "Robots & Crawlers"),
+.agent\skills\seo\scripts\generate_report.py:769:        "broken_links": ("🔗", "Broken Links"),
+.agent\skills\seo\scripts\generate_report.py:770:        "internal_links": ("🕸️", "Internal Links"),
+.agent\skills\seo\scripts\generate_report.py:772:        "llms_txt": ("🧠", "AI Search (llms.txt)"),
+.agent\skills\seo\scripts\generate_report.py:773:        "pagespeed": ("⚡", "Performance (CWV)"),
+.agent\skills\seo\scripts\generate_report.py:774:        "onpage": ("📝", "On-Page SEO"),
+.agent\skills\seo\scripts\generate_report.py:775:        "readability": ("📖", "Readability"),
+.agent\skills\seo\scripts\generate_report.py:776:        "article": ("📄", "Article Extractor"),
+.agent\skills\seo\scripts\generate_report.py:777:        "entity": ("🏛️", "Entity SEO"),
+.agent\skills\seo\scripts\generate_report.py:778:        "link_profile": ("🔗", "Link Profile"),
+.agent\skills\seo\scripts\generate_report.py:779:        "hreflang": ("🌍", "Hreflang"),
+.agent\skills\seo\scripts\generate_report.py:780:        "duplicate_content": ("📋", "Content Uniqueness"),
+.agent\skills\seo\scripts\generate_report.py:822:        social_rows += f'<tr><td>{tag}</td><td>{status}</td><td>{val[:60] if val else "—"}</td></tr>'
+.agent\skills\seo\scripts\generate_report.py:826:        social_rows += f'<tr><td>{tag}</td><td>{status}</td><td>{val[:60] if val else "—"}</td></tr>'
+.agent\skills\seo\scripts\generate_report.py:886:<title>SEO Report — {domain}</title>
+.agent\skills\seo\scripts\generate_report.py:1078:<div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</div>
+.agent\skills\seo\scripts\generate_report.py:1128:            <h2>🧭 Environment Detection (LLM-Inferred)</h2>
+.agent\skills\seo\scripts\generate_report.py:1147:            <h2>🛠️ Environment-Specific Fix Plan</h2>
+.agent\skills\seo\scripts\generate_report.py:1158:            <h2>🚨 All Issues ({len(all_issues)})</h2>
+.agent\skills\seo\scripts\generate_report.py:1162:            {issues_html if issues_html else '<p style="color:var(--text-muted)">No issues found — excellent!</p>'}
+.agent\skills\seo\scripts\generate_report.py:1169:            <h2>🔒 Security Headers <span class="badge {"pass" if scores["categories"].get("security",0) >= 80 else "warning" if scores["categories"].get("security",0) >= 50 else "critical"}">{scores["categories"].get("security",0)}/100</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1188:            <h2>📱 Social Meta Tags <span class="badge {"pass" if scores["categories"].get("social",0) >= 80 else "warning" if scores["categories"].get("social",0) >= 50 else "critical"}">{scores["categories"].get("social",0)}/100</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1202:            <h2>🤖 Robots & AI Crawlers <span class="badge {"pass" if scores["categories"].get("robots",0) >= 80 else "warning" if scores["categories"].get("robots",0) >= 50 else "critical"}">{scores["categories"].get("robots",0)}/100</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1222:            <h2>🔗 Broken Links <span class="badge {"pass" if bl_broken == 0 else "critical"}">{bl_broken} broken / {bl_total} total</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1239:            <h2>🕸️ Internal Link Structure <span class="badge {"pass" if scores["categories"].get("internal_links",0) >= 80 else "warning" if scores["categories"].get("internal_links",0) >= 50 else "critical"}">{scores["categories"].get("internal_links",0)}/100</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1261:            {f'<table><thead><tr><th>#</th><th>Status</th><th>URL</th><th>Time</th><th>Type</th></tr></thead><tbody>{redirect_rows}</tbody></table>' if redirect_rows else '<p style="color:var(--green)">✅ No redirects — direct access</p>'}
+.agent\skills\seo\scripts\generate_report.py:1268:            <h2>🧠 AI Search Readiness (llms.txt) <span class="badge {"pass" if llm.get("exists") else "critical"}">{"Found" if llm.get("exists") else "Not Found"}</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1284:            <h2>⚡ Performance & Core Web Vitals <span class="badge {"pass" if scores["categories"].get("pagespeed",0) >= 80 else "warning" if scores["categories"].get("pagespeed",0) >= 50 else "critical"}">{scores["categories"].get("pagespeed",0)}/100</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1302:            <h2>📝 On-Page SEO <span class="badge {"pass" if scores["categories"].get("onpage",0) >= 80 else "warning" if scores["categories"].get("onpage",0) >= 50 else "critical"}">{scores["categories"].get("onpage",0)}/100</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1315:                    <tr><td>Title</td><td>{(op.get('title','') or '—')[:70]}</td><td>{len(op.get('title','') or '')}</td></tr>
+.agent\skills\seo\scripts\generate_report.py:1316:                    <tr><td>Meta Description</td><td>{(op.get('meta_description','') or '—')[:100]}</td><td>{len(op.get('meta_description','') or '')}</td></tr>
+.agent\skills\seo\scripts\generate_report.py:1317:                    <tr><td>H1</td><td>{(op.get('h1',[''])[0] if isinstance(op.get('h1'), list) and op.get('h1') else op.get('h1','') or '—')[:70]}</td><td>—</td></tr>
+.agent\skills\seo\scripts\generate_report.py:1318:                    <tr><td>Canonical</td><td class="link-url">{op.get('canonical','—')[:80]}</td><td>—</td></tr>
+.agent\skills\seo\scripts\generate_report.py:1328:            <h2>📖 Readability <span class="badge {"pass" if scores["categories"].get("readability",0) >= 80 else "warning" if scores["categories"].get("readability",0) >= 50 else "critical"}">{scores["categories"].get("readability",0)}/100</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1346:            <h2>📄 Article Info & Keywords <span class="badge {"pass" if scores["categories"].get("article",0) >= 80 else "warning" if scores["categories"].get("article",0) >= 50 else "critical"}">{scores["categories"].get("article",0)}/100</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1360:                        <td style="font-weight: 600; color: var(--accent);">{art.get('target_keyword', '—')}</td>
+.agent\skills\seo\scripts\generate_report.py:1361:                        <td>{', '.join(art.get('lsi_keywords', [])) if art.get('lsi_keywords') else '—'}</td>
+.agent\skills\seo\scripts\generate_report.py:1372:            <h2>🏛️ Entity SEO <span class="badge {"pass" if scores["categories"].get("entity",0) >= 50 else "warning" if scores["categories"].get("entity",0) >= 20 else "critical"}">{scores["categories"].get("entity",0)}/100</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1389:            <h2>🔗 Link Profile <span class="badge {"pass" if scores["categories"].get("link_profile",0) >= 70 else "warning" if scores["categories"].get("link_profile",0) >= 40 else "critical"}">{scores["categories"].get("link_profile",0)}/100</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1406:            <h2>🌍 Hreflang / International SEO <span class="badge {"pass" if hf.get('hreflang_tags_found', 0) > 0 else "info"}">{hf.get('hreflang_tags_found', 0)} tags</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1414:            {'<p style="color:var(--text-muted);margin-top:12px">No hreflang tags found — this is expected for single-language sites.</p>' if hf.get('hreflang_tags_found', 0) == 0 else render_recommendations(hf)}
+.agent\skills\seo\scripts\generate_report.py:1421:            <h2>📋 Content Uniqueness <span class="badge {"pass" if len(dc.get('near_duplicates', [])) == 0 else "warning"}">{len(dc.get('near_duplicates', []))} dupes / {len(dc.get('thin_pages', []))} thin</span></h2>
+.agent\skills\seo\scripts\generate_report.py:1437:            <h2>💡 All Recommendations</h2>
+.agent\skills\seo\scripts\generate_report.py:1476:        btn.textContent = '🌙';
+.agent\skills\seo\scripts\generate_report.py:1479:        btn.textContent = '☀️';
+.agent\skills\seo\scripts\gsc_checker.py:212:                "finding": f"Position {pos} with {imps} impressions — within striking distance.",
+.agent\skills\seo\scripts\gsc_checker.py:224:                "finding": f"Position {pos} but only {ctr}% CTR — a Featured Snippet may be stealing clicks.",
+.agent\skills\seo\scripts\gsc_checker.py:235:                "finding": f"{imps} impressions but {ctr}% CTR — title/meta not compelling.",
+.agent\skills\seo\scripts\gsc_checker.py:248:        description="Google Search Console Data Checker — pulls GSC data for LLM analysis"
+.agent\skills\seo\scripts\gsc_checker.py:287:    print(f"\nGoogle Search Console Report — {args.site_url}")
+.agent\skills\seo\scripts\gsc_checker.py:300:            print(f"  ⚡ [{opp['type']}] {opp['query'][:40]} — {opp['finding']}")
+.agent\skills\seo\scripts\gsc_checker.py:308:                print(f"  📄 {sm['path']} — errors: {sm['errors']}, warnings: {sm['warnings']}")
+.agent\skills\seo\scripts\hreflang_checker.py:43:# Valid ISO 639-1 two-letter language codes (subset — common + frequently misused)
+.agent\skills\seo\scripts\hreflang_checker.py:229:        issues.append("'zh' is ambiguous — use 'zh-Hans' (Simplified) or 'zh-Hant' (Traditional).")
+.agent\skills\seo\scripts\hreflang_checker.py:240:            issues.append(f"Unknown region code '{region}' — verify against ISO 3166-1 Alpha-2.")
+.agent\skills\seo\scripts\hreflang_checker.py:375:                "finding": f"Missing return tag on {alt_url} — no hreflang pointing back to {page_url}.",
+.agent\skills\seo\scripts\hreflang_checker.py:397:                "finding": "No canonical tag found — cannot verify hreflang/canonical alignment.",
+.agent\skills\seo\scripts\hreflang_checker.py:426:    # Also check HTTP headers (Check 8 — alternative implementation method)
+.agent\skills\seo\scripts\hreflang_checker.py:461:    # Check 1 — Self-reference
+.agent\skills\seo\scripts\hreflang_checker.py:464:    # Check 3 — x-default
+.agent\skills\seo\scripts\hreflang_checker.py:467:    # Check 7 — Protocol consistency
+.agent\skills\seo\scripts\hreflang_checker.py:470:    # Check 6 — Canonical alignment
+.agent\skills\seo\scripts\hreflang_checker.py:473:    # Checks 4 & 5 — Language/region code validation
+.agent\skills\seo\scripts\hreflang_checker.py:476:    # Check 2 — Return tags (bidirectional)
+.agent\skills\seo\scripts\hreflang_checker.py:502:        description="Hreflang Validator — checks all 8 rules from seo-hreflang.md"
+.agent\skills\seo\scripts\hreflang_checker.py:523:    print(f"\nHreflang Validation — {report['url']}")
+.agent\skills\seo\scripts\hreflang_checker.py:540:    sev_icon = {"Critical": "🔴", "High": "🟠", "Medium": "⚠️", "Low": "ℹ️", "Info": "ℹ️"}
+.agent\skills\seo\scripts\hreflang_checker.py:546:            icon = sev_icon.get(check.get("severity", "Low"), "⚠️")
+.agent\skills\seo\scripts\hreflang_checker.py:555:            icon = sev_icon.get(issue.get("severity", "High"), "🟠")
+.agent\skills\seo\scripts\hreflang_checker.py:564:                icon = sev_icon.get(check.get("severity", "Critical"), "🔴")
+.agent\skills\seo\scripts\hreflang_checker.py:572:    print(f"  🔴 Critical: {s['critical']}  🟠 High: {s['high']}  ⚠️ Medium: {s['medium']}  ℹ️ Low: {s['low']}")
+.agent\skills\seo\scripts\indexnow_checker.py:235:        description="IndexNow Checker & Pinger — validate and submit URLs to search engines"
+.agent\skills\seo\scripts\indexnow_checker.py:268:    print(f"\nIndexNow Validation — {report['url']}")
+.agent\skills\seo\scripts\indexnow_checker.py:276:            print(f"  🔴 {name.replace('_', ' ').title()}: {check.get('finding', '')}")
+.agent\skills\seo\scripts\internal_links.py:201:            f"⚠️ {len(result['orphan_candidates'])} potential orphan page(s) "
+.agent\skills\seo\scripts\internal_links.py:209:            f"⚠️ {len(low_link_pages)} page(s) have fewer than 3 internal links"
+.agent\skills\seo\scripts\internal_links.py:216:            f"⚠️ {len(high_link_pages)} page(s) have >100 internal links — may dilute link equity"
+.agent\skills\seo\scripts\internal_links.py:222:            f"⚠️ {len(result['nofollow_links'])} internal link(s) have nofollow — "
+.agent\skills\seo\scripts\internal_links.py:230:            f"⚠️ {no_text_links} link(s) have no anchor text"
+.agent\skills\seo\scripts\internal_links.py:240:            "Increase internal linking — aim for 3-5 relevant links per 1000 words"
+.agent\skills\seo\scripts\internal_links.py:272:    print(f"Internal Link Analysis — {result['domain']}")
+.agent\skills\seo\scripts\internal_links.py:283:        print(f"\n⚠️ Potential Orphan Pages ({len(result['orphan_candidates'])}):")
+.agent\skills\seo\scripts\internal_links.py:285:            print(f"  • {orphan['url']} ({orphan['incoming_links']} incoming)")
+.agent\skills\seo\scripts\internal_links.py:293:        print(f"\n⚠️ Nofollow Internal Links ({len(result['nofollow_links'])}):")
+.agent\skills\seo\scripts\internal_links.py:295:            print(f"  • {link['url']} (from {link['source']})")
+.agent\skills\seo\scripts\internal_links.py:305:            print(f"  💡 {rec}")
+.agent\skills\seo\scripts\link_profile.py:294:        description="Link Profile Analyzer — crawls site, builds link graph, identifies issues"
+.agent\skills\seo\scripts\link_profile.py:320:    print(f"\nLink Profile Analysis — {args.url}")
+.agent\skills\seo\scripts\link_profile.py:331:        print(f"\n🔴 Orphan Pages ({orph['count']}):")
+.agent\skills\seo\scripts\link_profile.py:337:        print(f"\n⚠️  Dead-End Pages ({dead['count']}):")
+.agent\skills\seo\scripts\link_profile.py:349:            icon = "🔴" if issue["severity"] == "High" else "⚠️"
+.agent\skills\seo\scripts\llms_txt_checker.py:80:            result["quality"]["issues"].append("🔴 No llms.txt found")
+.agent\skills\seo\scripts\llms_txt_checker.py:103:        result["quality"]["issues"].append("⚠️ llms.txt is empty")
+.agent\skills\seo\scripts\llms_txt_checker.py:111:        result["quality"]["issues"].append("⚠️ First line should be a title (# Site Name)")
+.agent\skills\seo\scripts\llms_txt_checker.py:160:        quality["issues"].append("⚠️ Missing title")
+.agent\skills\seo\scripts\llms_txt_checker.py:166:            quality["issues"].append("⚠️ Description too short")
+.agent\skills\seo\scripts\llms_txt_checker.py:170:        quality["issues"].append("⚠️ Missing description (> blockquote)")
+.agent\skills\seo\scripts\llms_txt_checker.py:189:        quality["issues"].append("⚠️ No links found")
+.agent\skills\seo\scripts\llms_txt_checker.py:217:    print(f"llms.txt Check — {result['url']}")
+.agent\skills\seo\scripts\llms_txt_checker.py:228:        print(f"Status: 🔴 Not found (HTTP {result['status']})")
+.agent\skills\seo\scripts\llms_txt_checker.py:243:            print(f"  💡 {sug}")
+.agent\skills\seo\scripts\pagespeed.py:104:            result["error"] = "API request timed out (60s) — try again later"
+.agent\skills\seo\scripts\pagespeed.py:229:    print(f"PageSpeed Insights — {result['url']}")
+.agent\skills\seo\scripts\pagespeed.py:235:        icon = "🟢"
+.agent\skills\seo\scripts\pagespeed.py:237:        icon = "🟡"
+.agent\skills\seo\scripts\pagespeed.py:239:        icon = "🔴"
+.agent\skills\seo\scripts\pagespeed.py:252:                icon = "🔴"
+.agent\skills\seo\scripts\pagespeed.py:254:                icon = "⚠️"
+.agent\skills\seo\scripts\pagespeed.py:281:            print(f"  💡 {opp['title']} (save ~{display})")
+.agent\skills\seo\scripts\pagespeed.py:286:            print(f"  ⚠️ {diag['title']}: {diag['display']}")
+.agent\skills\seo\scripts\parse_html.py:140:    # Schema (JSON-LD) — enhanced with type validation
+.agent\skills\seo\scripts\readability.py:3:Content readability analysis — pure Python, no external NLP dependencies.
+.agent\skills\seo\scripts\readability.py:171:        result["issues"].append("🔴 No readable text content found")
+.agent\skills\seo\scripts\readability.py:191:        result["issues"].append("🔴 No words found in content")
+.agent\skills\seo\scripts\readability.py:237:            f"⚠️ Average sentence length ({result['avg_sentence_length']} words) is too long — target 15-20"
+.agent\skills\seo\scripts\readability.py:243:            f"⚠️ Content is difficult to read (Flesch: {fre_val}) — may reduce engagement"
+.agent\skills\seo\scripts\readability.py:248:            f"ℹ️ Content readability is moderate (Flesch: {fre_val}) — suitable for educated audience"
+.agent\skills\seo\scripts\readability.py:253:            f"⚠️ {result['complex_word_pct']}% complex words (3+ syllables) — consider simplifying"
+.agent\skills\seo\scripts\readability.py:258:            f"⚠️ Average paragraph length ({result['avg_paragraph_length']} sentences) — aim for 2-4"
+.agent\skills\seo\scripts\readability.py:263:        result["issues"].append(f"⚠️ Thin content ({result['word_count']} words) — may rank poorly")
+.agent\skills\seo\scripts\readability.py:375:    print(f"Flesch Reading Ease: {result['flesch_reading_ease']}/100 — {result['reading_level']}")
+.agent\skills\seo\scripts\readability.py:389:            print(f"  💡 {rec}")
+.agent\skills\seo\scripts\redirect_checker.py:63:                result["issues"].append(f"🔴 Redirect loop detected at: {current}")
+.agent\skills\seo\scripts\redirect_checker.py:82:                    result["issues"].append(f"🔴 Redirect at step {i+1} has no Location header")
+.agent\skills\seo\scripts\redirect_checker.py:110:            result["issues"].append(f"🔴 Too many redirects (>{max_redirects})")
+.agent\skills\seo\scripts\redirect_checker.py:123:        result["issues"].append("⚠️ Mixed HTTP/HTTPS in redirect chain")
+.agent\skills\seo\scripts\redirect_checker.py:128:            f"🔴 Long redirect chain ({result['total_hops']} hops) — degrades crawl efficiency"
+.agent\skills\seo\scripts\redirect_checker.py:132:            f"⚠️ Redirect chain has {result['total_hops']} hops — aim for max 1"
+.agent\skills\seo\scripts\redirect_checker.py:139:                f"⚠️ Temporary redirect (302) at step {hop['step']} — "
+.agent\skills\seo\scripts\redirect_checker.py:167:        print(f"Redirect Chain — {result['url']}")
+.agent\skills\seo\scripts\redirect_checker.py:179:                icon = "✅" if 200 <= status < 300 else "🔴"
+.agent\skills\seo\scripts\redirect_checker.py:180:                print(f"  {icon} [{status}] {hop['url']} ({time_ms}ms) — FINAL")
+.agent\skills\seo\scripts\robots_checker.py:75:            result["issues"].append("🔴 No robots.txt found — all crawlers allowed by default")
+.agent\skills\seo\scripts\robots_checker.py:171:            f"⚠️ {len(unmanaged)} AI crawlers not explicitly managed: {', '.join(unmanaged[:5])}"
+.agent\skills\seo\scripts\robots_checker.py:175:        result["issues"].append("⚠️ No Sitemap directive found in robots.txt")
+.agent\skills\seo\scripts\robots_checker.py:196:    print(f"robots.txt Analysis — {result['url']}")
+.agent\skills\seo\scripts\robots_checker.py:203:            print(f"  • {sm}")
+.agent\skills\seo\scripts\robots_checker.py:218:        icon = "✅" if "blocked" in status else "⚠️" if "not managed" in status else "ℹ️"
+.agent\skills\seo\scripts\security_headers.py:103:            result["issues"].append("🔴 Site not using HTTPS — critical for SEO and trust")
+.agent\skills\seo\scripts\security_headers.py:123:                                    f"⚠️ HSTS max-age is {max_age}s — recommend at least 31536000 (1 year)"
+.agent\skills\seo\scripts\security_headers.py:128:                        result["issues"].append("⚠️ HSTS missing includeSubDomains directive")
+.agent\skills\seo\scripts\security_headers.py:141:            result["issues"].append(f"🔴 {missing_count} security headers missing — poor security posture")
+.agent\skills\seo\scripts\security_headers.py:143:            result["issues"].append(f"⚠️ {missing_count} security header(s) missing")
+.agent\skills\seo\scripts\security_headers.py:167:    print(f"Security Headers — {result['url']}")
+.agent\skills\seo\scripts\security_headers.py:171:    https_icon = "✅" if result["https"] else "🔴"
+.agent\skills\seo\scripts\security_headers.py:194:            print(f"  💡 {rec}")
+.agent\skills\seo\scripts\social_meta.py:124:                    f"⚠️ {tag} is too long ({len(value)} chars, max {rules['max_length']})"
+.agent\skills\seo\scripts\social_meta.py:128:                    f"⚠️ {tag} is too short ({len(value)} chars, min {rules['min_length']})"
+.agent\skills\seo\scripts\social_meta.py:134:                    result["issues"].append("⚠️ og:image should be an absolute URL")
+.agent\skills\seo\scripts\social_meta.py:139:                    result["issues"].append("⚠️ og:url should be an absolute URL")
+.agent\skills\seo\scripts\social_meta.py:143:            result["issues"].append(f"🔴 Missing required: {tag}")
+.agent\skills\seo\scripts\social_meta.py:156:                    f"⚠️ {tag} has invalid value '{value}' — "
+.agent\skills\seo\scripts\social_meta.py:161:                    f"⚠️ {tag} is too long ({len(value)} chars, max {rules['max_length']})"
+.agent\skills\seo\scripts\social_meta.py:165:            result["issues"].append(f"⚠️ Missing: {tag}")
+.agent\skills\seo\scripts\social_meta.py:220:    print(f"Social Meta Tags — {result['url']}")
+.agent\skills\seo\scripts\social_meta.py:233:            icon = "🔴" if req == "required" else "ℹ️"
+.agent\skills\seo\scripts\social_meta.py:244:            icon = "⚠️" if req == "required" else "ℹ️"
+.agent\skills\seo\scripts\social_meta.py:263:            print(f"  💡 {rec}")
+.agent\skills\seo\scripts\validate_schema.py:25:        return []  # No schema found — not an error
+.agent\skills\seo\scripts\validate_schema.py:32:            errors.append(f"Block {i}: Invalid JSON — {e}")
+.agent\skills\seo\scripts\validate_schema.py:85:        "ClaimReview": "retired June 2025 — fact-check rich results discontinued",
+.agent\skills\seo\scripts\validate_schema.py:86:        "VehicleListing": "retired June 2025 — vehicle listing structured data discontinued",
+.agent\skills\seo\scripts\validate_schema.py:87:        "PracticeProblem": "retired late 2025 — rich results discontinued",
+.agent\skills\seo\scripts\validate_schema.py:88:        "Dataset": "retired late 2025 — rich results discontinued",
+.agent\skills\seo\scripts\validate_schema.py:96:        errors.append(f"{prefix}: @type '{schema_type}' is {restricted[schema_type]} — verify site qualifies")
+.agent\skills\seo\scripts\validate_schema.py:132:        print("⚠️  Schema validation warnings:")
+.agent\skills\seo\scripts\validate_schema.py:137:        print("🛑 Schema validation ERRORS (blocking):")
+.agent\skills\seo\scripts\validate_schema.py:142:    sys.exit(1)  # Warnings only — proceed
+Agentic-SEO-Skill\scripts\article_seo.py:142:    # ── Meta tags (common for all CMSes) ──────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:157:    # ── Author ─────────────────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:166:    # ── Publish date ───────────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:179:    # ── CMS-specific body container ────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:221:    # ── Headings ──────────────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:233:    # ── Paragraphs ────────────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:240:    # ── Images ────────────────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:365:# Keyword extraction (frequency-weighted n-grams — honest naming)
+Agentic-SEO-Skill\scripts\article_seo.py:371:    Uses frequency counting (not TF-IDF — no corpus reference available).
+Agentic-SEO-Skill\scripts\article_seo.py:523:    parser.add_argument("--keyword", help="Target primary keyword (optional — extracted automatically if omitted)")
+Agentic-SEO-Skill\scripts\article_seo.py:536:    # ── CMS detection ──────────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:539:    # ── Content extraction ─────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:542:    # ── Structured data ────────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:545:    # ── Full text for keyword extraction + readability ─────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:549:    # ── Readability ────────────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:552:    # ── Keyword research ───────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:567:    # ── SEO issue detection ─────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:570:    # ── Build result ───────────────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:599:    # ── Human-readable output ──────────────────────────────────────────────
+Agentic-SEO-Skill\scripts\article_seo.py:604:    print(f"\nArticle SEO Analysis — {args.url}")
+Agentic-SEO-Skill\scripts\article_seo.py:609:    print(f"Author            : {result['author'] or '⚠️ Not detected'}")
+Agentic-SEO-Skill\scripts\article_seo.py:625:        flag = "✅" if sd.get("status") == "active" else "🔴" if sd.get("status") == "deprecated" else "⚠️"
+Agentic-SEO-Skill\scripts\article_seo.py:634:    for sev, label in [("Critical", "🔴"), ("Warning", "⚠️"), ("Info", "ℹ️")]:
+Agentic-SEO-Skill\scripts\broken_links.py:148:        result["issues"].append("⚠️ No links found on page")
+Agentic-SEO-Skill\scripts\broken_links.py:187:            f"🔴 {len(result['broken'])} broken link(s) found"
+Agentic-SEO-Skill\scripts\broken_links.py:191:            f"⚠️ {len(result['timeout'])} link(s) timed out"
+Agentic-SEO-Skill\scripts\broken_links.py:198:                f"⚠️ {len(chains)} redirect chain(s) detected (>1 hop)"
+Agentic-SEO-Skill\scripts\broken_links.py:227:    print(f"Broken Link Check — {result['page_url']}")
+Agentic-SEO-Skill\scripts\broken_links.py:231:          f"🔴 Broken: {s['broken']} | ↪️ Redirected: {s['redirected']} | "
+Agentic-SEO-Skill\scripts\broken_links.py:235:        print(f"\n🔴 Broken Links:")
+Agentic-SEO-Skill\scripts\broken_links.py:246:            print(f"\n⚠️ Redirect Chains (>1 hop):")
+Agentic-SEO-Skill\scripts\capture_screenshot.py:105:    # Sanitize output path — prevent directory traversal
+Agentic-SEO-Skill\scripts\competitor_gap.py:8:No API keys required — uses sitemaps and on-page content only.
+Agentic-SEO-Skill\scripts\competitor_gap.py:133:# Site crawl (lightweight — sitemap + top pages)
+Agentic-SEO-Skill\scripts\competitor_gap.py:236:        description="Competitor Topic Gap Analyzer — finds content gaps from competitor sitemaps/pages"
+Agentic-SEO-Skill\scripts\competitor_gap.py:287:            icon = "🔴" if gap["priority"] == "High" else "⚠️"
+Agentic-SEO-Skill\scripts\competitor_gap.py:289:            print(f"  {icon} \"{gap['topic']}\" — covered by {gap['covered_by_competitors']} competitor(s): {comp_str}")
+Agentic-SEO-Skill\scripts\competitor_gap.py:294:        print("\n✅ No significant topic gaps found — your content coverage is strong!")
+Agentic-SEO-Skill\scripts\duplicate_content.py:226:                    "finding": f"Pages are {sim:.0%} similar — likely near-duplicate content.",
+Agentic-SEO-Skill\scripts\duplicate_content.py:296:            print(f"  🔴 {len(group['urls'])} identical pages:")
+Agentic-SEO-Skill\scripts\duplicate_content.py:304:            print(f"  ⚠️  {pair['similarity']:.0%} similar:")
+Agentic-SEO-Skill\scripts\duplicate_content.py:312:            icon = "🔴" if page["severity"] == "Critical" else "⚠️"
+Agentic-SEO-Skill\scripts\duplicate_content.py:313:            print(f"  {icon} {page['url']} — {page['word_count']} words (min: {page['threshold']})")
+Agentic-SEO-Skill\scripts\entity_checker.py:400:        description="Entity SEO Checker — Knowledge Graph, Wikidata, sameAs validation"
+Agentic-SEO-Skill\scripts\entity_checker.py:418:    print(f"\nEntity SEO Check — {report['url']}")
+Agentic-SEO-Skill\scripts\entity_checker.py:432:        icon = "🔴" if data["priority"] == "Critical" else "⚠️"
+Agentic-SEO-Skill\scripts\entity_checker.py:436:    print(f"\nWikidata          : {'✅ ' + wd['qid'] + ' — ' + wd.get('description', '') if wd['found'] else '❌ Not found'}")
+Agentic-SEO-Skill\scripts\entity_checker.py:442:        sev_icon = {"Critical": "🔴", "Warning": "⚠️", "Info": "ℹ️"}
+Agentic-SEO-Skill\scripts\generate_report.py:327:    print(f"🔍 Analyzing {url}...")
+Agentic-SEO-Skill\scripts\generate_report.py:356:        # New analysis scripts (supplementary — failures don't block report)
+Agentic-SEO-Skill\scripts\generate_report.py:375:        status = "⚠️ error" if "error" in result and result.get("error") else "✅"
+Agentic-SEO-Skill\scripts\generate_report.py:605:        html += f'<div style="margin-top:16px"><h3 style="font-size:0.95rem;margin-bottom:8px;">🔍 Issues Found</h3>{issues_html}</div>'
+Agentic-SEO-Skill\scripts\generate_report.py:607:        html += '<div style="margin-top:16px"><h3 style="font-size:0.95rem;margin-bottom:8px;">💡 Recommendations</h3>'
+Agentic-SEO-Skill\scripts\generate_report.py:623:        '<h3 style="font-size:0.95rem;margin-bottom:8px;">✍️ What To Replace (Before/After)</h3>'
+Agentic-SEO-Skill\scripts\generate_report.py:647:        "security": "🔒 Security", "social": "📱 Social Meta", "robots": "🤖 Robots",
+Agentic-SEO-Skill\scripts\generate_report.py:648:        "broken_links": "🔗 Links", "internal_links": "🕸️ Internal Links",
+Agentic-SEO-Skill\scripts\generate_report.py:649:        "redirects": "↪️ Redirects", "llms_txt": "🧠 AI Search",
+Agentic-SEO-Skill\scripts\generate_report.py:650:        "pagespeed": "⚡ Performance", "onpage": "📝 On-Page", "readability": "📖 Readability",
+Agentic-SEO-Skill\scripts\generate_report.py:651:        "article": "📄 Article SEO", "entity": "🏛️ Entity SEO",
+Agentic-SEO-Skill\scripts\generate_report.py:652:        "link_profile": "🔗 Link Profile", "hreflang": "🌍 Hreflang",
+Agentic-SEO-Skill\scripts\generate_report.py:653:        "duplicate_content": "📋 Content Uniqueness",
+Agentic-SEO-Skill\scripts\generate_report.py:658:        html += '<h3 style="font-size:0.95rem;margin:16px 0 8px;">🛠️ Environment-Specific Fixes</h3>'
+Agentic-SEO-Skill\scripts\generate_report.py:685:    return html if html else '<p style="color:var(--green)">✅ No recommendations — everything looks good!</p>'
+Agentic-SEO-Skill\scripts\generate_report.py:719:                text = f"{issue.get('finding', '')} — Fix: {issue.get('fix', '')}" if issue.get('fix') else issue.get('finding', str(issue))
+Agentic-SEO-Skill\scripts\generate_report.py:722:                severity = "critical" if "🔴" in issue else "warning" if "⚠️" in issue else "info"
+Agentic-SEO-Skill\scripts\generate_report.py:766:        "security": ("🔒", "Security Headers"),
+Agentic-SEO-Skill\scripts\generate_report.py:767:        "social": ("📱", "Social Meta"),
+Agentic-SEO-Skill\scripts\generate_report.py:768:        "robots": ("🤖", "Robots & Crawlers"),
+Agentic-SEO-Skill\scripts\generate_report.py:769:        "broken_links": ("🔗", "Broken Links"),
+Agentic-SEO-Skill\scripts\generate_report.py:770:        "internal_links": ("🕸️", "Internal Links"),
+Agentic-SEO-Skill\scripts\generate_report.py:772:        "llms_txt": ("🧠", "AI Search (llms.txt)"),
+Agentic-SEO-Skill\scripts\generate_report.py:773:        "pagespeed": ("⚡", "Performance (CWV)"),
+Agentic-SEO-Skill\scripts\generate_report.py:774:        "onpage": ("📝", "On-Page SEO"),
+Agentic-SEO-Skill\scripts\generate_report.py:775:        "readability": ("📖", "Readability"),
+Agentic-SEO-Skill\scripts\generate_report.py:776:        "article": ("📄", "Article Extractor"),
+Agentic-SEO-Skill\scripts\generate_report.py:777:        "entity": ("🏛️", "Entity SEO"),
+Agentic-SEO-Skill\scripts\generate_report.py:778:        "link_profile": ("🔗", "Link Profile"),
+Agentic-SEO-Skill\scripts\generate_report.py:779:        "hreflang": ("🌍", "Hreflang"),
+Agentic-SEO-Skill\scripts\generate_report.py:780:        "duplicate_content": ("📋", "Content Uniqueness"),
+Agentic-SEO-Skill\scripts\generate_report.py:822:        social_rows += f'<tr><td>{tag}</td><td>{status}</td><td>{val[:60] if val else "—"}</td></tr>'
+Agentic-SEO-Skill\scripts\generate_report.py:826:        social_rows += f'<tr><td>{tag}</td><td>{status}</td><td>{val[:60] if val else "—"}</td></tr>'
+Agentic-SEO-Skill\scripts\generate_report.py:886:<title>SEO Report — {domain}</title>
+Agentic-SEO-Skill\scripts\generate_report.py:1078:<div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</div>
+Agentic-SEO-Skill\scripts\generate_report.py:1128:            <h2>🧭 Environment Detection (LLM-Inferred)</h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1147:            <h2>🛠️ Environment-Specific Fix Plan</h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1158:            <h2>🚨 All Issues ({len(all_issues)})</h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1162:            {issues_html if issues_html else '<p style="color:var(--text-muted)">No issues found — excellent!</p>'}
+Agentic-SEO-Skill\scripts\generate_report.py:1169:            <h2>🔒 Security Headers <span class="badge {"pass" if scores["categories"].get("security",0) >= 80 else "warning" if scores["categories"].get("security",0) >= 50 else "critical"}">{scores["categories"].get("security",0)}/100</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1188:            <h2>📱 Social Meta Tags <span class="badge {"pass" if scores["categories"].get("social",0) >= 80 else "warning" if scores["categories"].get("social",0) >= 50 else "critical"}">{scores["categories"].get("social",0)}/100</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1202:            <h2>🤖 Robots & AI Crawlers <span class="badge {"pass" if scores["categories"].get("robots",0) >= 80 else "warning" if scores["categories"].get("robots",0) >= 50 else "critical"}">{scores["categories"].get("robots",0)}/100</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1222:            <h2>🔗 Broken Links <span class="badge {"pass" if bl_broken == 0 else "critical"}">{bl_broken} broken / {bl_total} total</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1239:            <h2>🕸️ Internal Link Structure <span class="badge {"pass" if scores["categories"].get("internal_links",0) >= 80 else "warning" if scores["categories"].get("internal_links",0) >= 50 else "critical"}">{scores["categories"].get("internal_links",0)}/100</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1261:            {f'<table><thead><tr><th>#</th><th>Status</th><th>URL</th><th>Time</th><th>Type</th></tr></thead><tbody>{redirect_rows}</tbody></table>' if redirect_rows else '<p style="color:var(--green)">✅ No redirects — direct access</p>'}
+Agentic-SEO-Skill\scripts\generate_report.py:1268:            <h2>🧠 AI Search Readiness (llms.txt) <span class="badge {"pass" if llm.get("exists") else "critical"}">{"Found" if llm.get("exists") else "Not Found"}</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1284:            <h2>⚡ Performance & Core Web Vitals <span class="badge {"pass" if scores["categories"].get("pagespeed",0) >= 80 else "warning" if scores["categories"].get("pagespeed",0) >= 50 else "critical"}">{scores["categories"].get("pagespeed",0)}/100</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1302:            <h2>📝 On-Page SEO <span class="badge {"pass" if scores["categories"].get("onpage",0) >= 80 else "warning" if scores["categories"].get("onpage",0) >= 50 else "critical"}">{scores["categories"].get("onpage",0)}/100</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1315:                    <tr><td>Title</td><td>{(op.get('title','') or '—')[:70]}</td><td>{len(op.get('title','') or '')}</td></tr>
+Agentic-SEO-Skill\scripts\generate_report.py:1316:                    <tr><td>Meta Description</td><td>{(op.get('meta_description','') or '—')[:100]}</td><td>{len(op.get('meta_description','') or '')}</td></tr>
+Agentic-SEO-Skill\scripts\generate_report.py:1317:                    <tr><td>H1</td><td>{(op.get('h1',[''])[0] if isinstance(op.get('h1'), list) and op.get('h1') else op.get('h1','') or '—')[:70]}</td><td>—</td></tr>
+Agentic-SEO-Skill\scripts\generate_report.py:1318:                    <tr><td>Canonical</td><td class="link-url">{op.get('canonical','—')[:80]}</td><td>—</td></tr>
+Agentic-SEO-Skill\scripts\generate_report.py:1328:            <h2>📖 Readability <span class="badge {"pass" if scores["categories"].get("readability",0) >= 80 else "warning" if scores["categories"].get("readability",0) >= 50 else "critical"}">{scores["categories"].get("readability",0)}/100</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1346:            <h2>📄 Article Info & Keywords <span class="badge {"pass" if scores["categories"].get("article",0) >= 80 else "warning" if scores["categories"].get("article",0) >= 50 else "critical"}">{scores["categories"].get("article",0)}/100</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1360:                        <td style="font-weight: 600; color: var(--accent);">{art.get('target_keyword', '—')}</td>
+Agentic-SEO-Skill\scripts\generate_report.py:1361:                        <td>{', '.join(art.get('lsi_keywords', [])) if art.get('lsi_keywords') else '—'}</td>
+Agentic-SEO-Skill\scripts\generate_report.py:1372:            <h2>🏛️ Entity SEO <span class="badge {"pass" if scores["categories"].get("entity",0) >= 50 else "warning" if scores["categories"].get("entity",0) >= 20 else "critical"}">{scores["categories"].get("entity",0)}/100</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1389:            <h2>🔗 Link Profile <span class="badge {"pass" if scores["categories"].get("link_profile",0) >= 70 else "warning" if scores["categories"].get("link_profile",0) >= 40 else "critical"}">{scores["categories"].get("link_profile",0)}/100</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1406:            <h2>🌍 Hreflang / International SEO <span class="badge {"pass" if hf.get('hreflang_tags_found', 0) > 0 else "info"}">{hf.get('hreflang_tags_found', 0)} tags</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1414:            {'<p style="color:var(--text-muted);margin-top:12px">No hreflang tags found — this is expected for single-language sites.</p>' if hf.get('hreflang_tags_found', 0) == 0 else render_recommendations(hf)}
+Agentic-SEO-Skill\scripts\generate_report.py:1421:            <h2>📋 Content Uniqueness <span class="badge {"pass" if len(dc.get('near_duplicates', [])) == 0 else "warning"}">{len(dc.get('near_duplicates', []))} dupes / {len(dc.get('thin_pages', []))} thin</span></h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1437:            <h2>💡 All Recommendations</h2>
+Agentic-SEO-Skill\scripts\generate_report.py:1476:        btn.textContent = '🌙';
+Agentic-SEO-Skill\scripts\generate_report.py:1479:        btn.textContent = '☀️';
+Agentic-SEO-Skill\scripts\gsc_checker.py:212:                "finding": f"Position {pos} with {imps} impressions — within striking distance.",
+Agentic-SEO-Skill\scripts\gsc_checker.py:224:                "finding": f"Position {pos} but only {ctr}% CTR — a Featured Snippet may be stealing clicks.",
+Agentic-SEO-Skill\scripts\gsc_checker.py:235:                "finding": f"{imps} impressions but {ctr}% CTR — title/meta not compelling.",
+Agentic-SEO-Skill\scripts\gsc_checker.py:248:        description="Google Search Console Data Checker — pulls GSC data for LLM analysis"
+Agentic-SEO-Skill\scripts\gsc_checker.py:287:    print(f"\nGoogle Search Console Report — {args.site_url}")
+Agentic-SEO-Skill\scripts\gsc_checker.py:300:            print(f"  ⚡ [{opp['type']}] {opp['query'][:40]} — {opp['finding']}")
+Agentic-SEO-Skill\scripts\gsc_checker.py:308:                print(f"  📄 {sm['path']} — errors: {sm['errors']}, warnings: {sm['warnings']}")
+Agentic-SEO-Skill\scripts\hreflang_checker.py:43:# Valid ISO 639-1 two-letter language codes (subset — common + frequently misused)
+Agentic-SEO-Skill\scripts\hreflang_checker.py:229:        issues.append("'zh' is ambiguous — use 'zh-Hans' (Simplified) or 'zh-Hant' (Traditional).")
+Agentic-SEO-Skill\scripts\hreflang_checker.py:240:            issues.append(f"Unknown region code '{region}' — verify against ISO 3166-1 Alpha-2.")
+Agentic-SEO-Skill\scripts\hreflang_checker.py:375:                "finding": f"Missing return tag on {alt_url} — no hreflang pointing back to {page_url}.",
+Agentic-SEO-Skill\scripts\hreflang_checker.py:397:                "finding": "No canonical tag found — cannot verify hreflang/canonical alignment.",
+Agentic-SEO-Skill\scripts\hreflang_checker.py:426:    # Also check HTTP headers (Check 8 — alternative implementation method)
+Agentic-SEO-Skill\scripts\hreflang_checker.py:461:    # Check 1 — Self-reference
+Agentic-SEO-Skill\scripts\hreflang_checker.py:464:    # Check 3 — x-default
+Agentic-SEO-Skill\scripts\hreflang_checker.py:467:    # Check 7 — Protocol consistency
+Agentic-SEO-Skill\scripts\hreflang_checker.py:470:    # Check 6 — Canonical alignment
+Agentic-SEO-Skill\scripts\hreflang_checker.py:473:    # Checks 4 & 5 — Language/region code validation
+Agentic-SEO-Skill\scripts\hreflang_checker.py:476:    # Check 2 — Return tags (bidirectional)
+Agentic-SEO-Skill\scripts\hreflang_checker.py:502:        description="Hreflang Validator — checks all 8 rules from seo-hreflang.md"
+Agentic-SEO-Skill\scripts\hreflang_checker.py:523:    print(f"\nHreflang Validation — {report['url']}")
+Agentic-SEO-Skill\scripts\hreflang_checker.py:540:    sev_icon = {"Critical": "🔴", "High": "🟠", "Medium": "⚠️", "Low": "ℹ️", "Info": "ℹ️"}
+Agentic-SEO-Skill\scripts\hreflang_checker.py:546:            icon = sev_icon.get(check.get("severity", "Low"), "⚠️")
+Agentic-SEO-Skill\scripts\hreflang_checker.py:555:            icon = sev_icon.get(issue.get("severity", "High"), "🟠")
+Agentic-SEO-Skill\scripts\hreflang_checker.py:564:                icon = sev_icon.get(check.get("severity", "Critical"), "🔴")
+Agentic-SEO-Skill\scripts\hreflang_checker.py:572:    print(f"  🔴 Critical: {s['critical']}  🟠 High: {s['high']}  ⚠️ Medium: {s['medium']}  ℹ️ Low: {s['low']}")
+Agentic-SEO-Skill\scripts\indexnow_checker.py:235:        description="IndexNow Checker & Pinger — validate and submit URLs to search engines"
+Agentic-SEO-Skill\scripts\indexnow_checker.py:268:    print(f"\nIndexNow Validation — {report['url']}")
+Agentic-SEO-Skill\scripts\indexnow_checker.py:276:            print(f"  🔴 {name.replace('_', ' ').title()}: {check.get('finding', '')}")
+Agentic-SEO-Skill\scripts\internal_links.py:201:            f"⚠️ {len(result['orphan_candidates'])} potential orphan page(s) "
+Agentic-SEO-Skill\scripts\internal_links.py:209:            f"⚠️ {len(low_link_pages)} page(s) have fewer than 3 internal links"
+Agentic-SEO-Skill\scripts\internal_links.py:216:            f"⚠️ {len(high_link_pages)} page(s) have >100 internal links — may dilute link equity"
+Agentic-SEO-Skill\scripts\internal_links.py:222:            f"⚠️ {len(result['nofollow_links'])} internal link(s) have nofollow — "
+Agentic-SEO-Skill\scripts\internal_links.py:230:            f"⚠️ {no_text_links} link(s) have no anchor text"
+Agentic-SEO-Skill\scripts\internal_links.py:240:            "Increase internal linking — aim for 3-5 relevant links per 1000 words"
+Agentic-SEO-Skill\scripts\internal_links.py:272:    print(f"Internal Link Analysis — {result['domain']}")
+Agentic-SEO-Skill\scripts\internal_links.py:283:        print(f"\n⚠️ Potential Orphan Pages ({len(result['orphan_candidates'])}):")
+Agentic-SEO-Skill\scripts\internal_links.py:285:            print(f"  • {orphan['url']} ({orphan['incoming_links']} incoming)")
+Agentic-SEO-Skill\scripts\internal_links.py:293:        print(f"\n⚠️ Nofollow Internal Links ({len(result['nofollow_links'])}):")
+Agentic-SEO-Skill\scripts\internal_links.py:295:            print(f"  • {link['url']} (from {link['source']})")
+Agentic-SEO-Skill\scripts\internal_links.py:305:            print(f"  💡 {rec}")
+Agentic-SEO-Skill\scripts\link_profile.py:294:        description="Link Profile Analyzer — crawls site, builds link graph, identifies issues"
+Agentic-SEO-Skill\scripts\link_profile.py:320:    print(f"\nLink Profile Analysis — {args.url}")
+Agentic-SEO-Skill\scripts\link_profile.py:331:        print(f"\n🔴 Orphan Pages ({orph['count']}):")
+Agentic-SEO-Skill\scripts\link_profile.py:337:        print(f"\n⚠️  Dead-End Pages ({dead['count']}):")
+Agentic-SEO-Skill\scripts\link_profile.py:349:            icon = "🔴" if issue["severity"] == "High" else "⚠️"
+Agentic-SEO-Skill\scripts\llms_txt_checker.py:80:            result["quality"]["issues"].append("🔴 No llms.txt found")
+Agentic-SEO-Skill\scripts\llms_txt_checker.py:103:        result["quality"]["issues"].append("⚠️ llms.txt is empty")
+Agentic-SEO-Skill\scripts\llms_txt_checker.py:111:        result["quality"]["issues"].append("⚠️ First line should be a title (# Site Name)")
+Agentic-SEO-Skill\scripts\llms_txt_checker.py:160:        quality["issues"].append("⚠️ Missing title")
+Agentic-SEO-Skill\scripts\llms_txt_checker.py:166:            quality["issues"].append("⚠️ Description too short")
+Agentic-SEO-Skill\scripts\llms_txt_checker.py:170:        quality["issues"].append("⚠️ Missing description (> blockquote)")
+Agentic-SEO-Skill\scripts\llms_txt_checker.py:189:        quality["issues"].append("⚠️ No links found")
+Agentic-SEO-Skill\scripts\llms_txt_checker.py:217:    print(f"llms.txt Check — {result['url']}")
+Agentic-SEO-Skill\scripts\llms_txt_checker.py:228:        print(f"Status: 🔴 Not found (HTTP {result['status']})")
+Agentic-SEO-Skill\scripts\llms_txt_checker.py:243:            print(f"  💡 {sug}")
+Agentic-SEO-Skill\scripts\pagespeed.py:104:            result["error"] = "API request timed out (60s) — try again later"
+Agentic-SEO-Skill\scripts\pagespeed.py:229:    print(f"PageSpeed Insights — {result['url']}")
+Agentic-SEO-Skill\scripts\pagespeed.py:235:        icon = "🟢"
+Agentic-SEO-Skill\scripts\pagespeed.py:237:        icon = "🟡"
+Agentic-SEO-Skill\scripts\pagespeed.py:239:        icon = "🔴"
+Agentic-SEO-Skill\scripts\pagespeed.py:252:                icon = "🔴"
+Agentic-SEO-Skill\scripts\pagespeed.py:254:                icon = "⚠️"
+Agentic-SEO-Skill\scripts\pagespeed.py:281:            print(f"  💡 {opp['title']} (save ~{display})")
+Agentic-SEO-Skill\scripts\pagespeed.py:286:            print(f"  ⚠️ {diag['title']}: {diag['display']}")
+Agentic-SEO-Skill\scripts\parse_html.py:140:    # Schema (JSON-LD) — enhanced with type validation
+Agentic-SEO-Skill\scripts\readability.py:3:Content readability analysis — pure Python, no external NLP dependencies.
+Agentic-SEO-Skill\scripts\readability.py:171:        result["issues"].append("🔴 No readable text content found")
+Agentic-SEO-Skill\scripts\readability.py:191:        result["issues"].append("🔴 No words found in content")
+Agentic-SEO-Skill\scripts\readability.py:237:            f"⚠️ Average sentence length ({result['avg_sentence_length']} words) is too long — target 15-20"
+Agentic-SEO-Skill\scripts\readability.py:243:            f"⚠️ Content is difficult to read (Flesch: {fre_val}) — may reduce engagement"
+Agentic-SEO-Skill\scripts\readability.py:248:            f"ℹ️ Content readability is moderate (Flesch: {fre_val}) — suitable for educated audience"
+Agentic-SEO-Skill\scripts\readability.py:253:            f"⚠️ {result['complex_word_pct']}% complex words (3+ syllables) — consider simplifying"
+Agentic-SEO-Skill\scripts\readability.py:258:            f"⚠️ Average paragraph length ({result['avg_paragraph_length']} sentences) — aim for 2-4"
+Agentic-SEO-Skill\scripts\readability.py:263:        result["issues"].append(f"⚠️ Thin content ({result['word_count']} words) — may rank poorly")
+Agentic-SEO-Skill\scripts\readability.py:375:    print(f"Flesch Reading Ease: {result['flesch_reading_ease']}/100 — {result['reading_level']}")
+Agentic-SEO-Skill\scripts\readability.py:389:            print(f"  💡 {rec}")
+Agentic-SEO-Skill\scripts\redirect_checker.py:63:                result["issues"].append(f"🔴 Redirect loop detected at: {current}")
+Agentic-SEO-Skill\scripts\redirect_checker.py:82:                    result["issues"].append(f"🔴 Redirect at step {i+1} has no Location header")
+Agentic-SEO-Skill\scripts\redirect_checker.py:110:            result["issues"].append(f"🔴 Too many redirects (>{max_redirects})")
+Agentic-SEO-Skill\scripts\redirect_checker.py:123:        result["issues"].append("⚠️ Mixed HTTP/HTTPS in redirect chain")
+Agentic-SEO-Skill\scripts\redirect_checker.py:128:            f"🔴 Long redirect chain ({result['total_hops']} hops) — degrades crawl efficiency"
+Agentic-SEO-Skill\scripts\redirect_checker.py:132:            f"⚠️ Redirect chain has {result['total_hops']} hops — aim for max 1"
+Agentic-SEO-Skill\scripts\redirect_checker.py:139:                f"⚠️ Temporary redirect (302) at step {hop['step']} — "
+Agentic-SEO-Skill\scripts\redirect_checker.py:167:        print(f"Redirect Chain — {result['url']}")
+Agentic-SEO-Skill\scripts\redirect_checker.py:179:                icon = "✅" if 200 <= status < 300 else "🔴"
+Agentic-SEO-Skill\scripts\redirect_checker.py:180:                print(f"  {icon} [{status}] {hop['url']} ({time_ms}ms) — FINAL")
+Agentic-SEO-Skill\scripts\robots_checker.py:75:            result["issues"].append("🔴 No robots.txt found — all crawlers allowed by default")
+Agentic-SEO-Skill\scripts\robots_checker.py:171:            f"⚠️ {len(unmanaged)} AI crawlers not explicitly managed: {', '.join(unmanaged[:5])}"
+Agentic-SEO-Skill\scripts\robots_checker.py:175:        result["issues"].append("⚠️ No Sitemap directive found in robots.txt")
+Agentic-SEO-Skill\scripts\robots_checker.py:196:    print(f"robots.txt Analysis — {result['url']}")
+Agentic-SEO-Skill\scripts\robots_checker.py:203:            print(f"  • {sm}")
+Agentic-SEO-Skill\scripts\robots_checker.py:218:        icon = "✅" if "blocked" in status else "⚠️" if "not managed" in status else "ℹ️"
+Agentic-SEO-Skill\scripts\security_headers.py:103:            result["issues"].append("🔴 Site not using HTTPS — critical for SEO and trust")
+Agentic-SEO-Skill\scripts\security_headers.py:123:                                    f"⚠️ HSTS max-age is {max_age}s — recommend at least 31536000 (1 year)"
+Agentic-SEO-Skill\scripts\security_headers.py:128:                        result["issues"].append("⚠️ HSTS missing includeSubDomains directive")
+Agentic-SEO-Skill\scripts\security_headers.py:141:            result["issues"].append(f"🔴 {missing_count} security headers missing — poor security posture")
+Agentic-SEO-Skill\scripts\security_headers.py:143:            result["issues"].append(f"⚠️ {missing_count} security header(s) missing")
+Agentic-SEO-Skill\scripts\security_headers.py:167:    print(f"Security Headers — {result['url']}")
+Agentic-SEO-Skill\scripts\security_headers.py:171:    https_icon = "✅" if result["https"] else "🔴"
+Agentic-SEO-Skill\scripts\security_headers.py:194:            print(f"  💡 {rec}")
+Agentic-SEO-Skill\scripts\social_meta.py:124:                    f"⚠️ {tag} is too long ({len(value)} chars, max {rules['max_length']})"
+Agentic-SEO-Skill\scripts\social_meta.py:128:                    f"⚠️ {tag} is too short ({len(value)} chars, min {rules['min_length']})"
+Agentic-SEO-Skill\scripts\social_meta.py:134:                    result["issues"].append("⚠️ og:image should be an absolute URL")
+Agentic-SEO-Skill\scripts\social_meta.py:139:                    result["issues"].append("⚠️ og:url should be an absolute URL")
+Agentic-SEO-Skill\scripts\social_meta.py:143:            result["issues"].append(f"🔴 Missing required: {tag}")
+Agentic-SEO-Skill\scripts\social_meta.py:156:                    f"⚠️ {tag} has invalid value '{value}' — "
+Agentic-SEO-Skill\scripts\social_meta.py:161:                    f"⚠️ {tag} is too long ({len(value)} chars, max {rules['max_length']})"
+Agentic-SEO-Skill\scripts\social_meta.py:165:            result["issues"].append(f"⚠️ Missing: {tag}")
+Agentic-SEO-Skill\scripts\social_meta.py:220:    print(f"Social Meta Tags — {result['url']}")
+Agentic-SEO-Skill\scripts\social_meta.py:233:            icon = "🔴" if req == "required" else "ℹ️"
+Agentic-SEO-Skill\scripts\social_meta.py:244:            icon = "⚠️" if req == "required" else "ℹ️"
+Agentic-SEO-Skill\scripts\social_meta.py:263:            print(f"  💡 {rec}")
+Agentic-SEO-Skill\scripts\validate_schema.py:25:        return []  # No schema found — not an error
+Agentic-SEO-Skill\scripts\validate_schema.py:32:            errors.append(f"Block {i}: Invalid JSON — {e}")
+Agentic-SEO-Skill\scripts\validate_schema.py:85:        "ClaimReview": "retired June 2025 — fact-check rich results discontinued",
+Agentic-SEO-Skill\scripts\validate_schema.py:86:        "VehicleListing": "retired June 2025 — vehicle listing structured data discontinued",
+Agentic-SEO-Skill\scripts\validate_schema.py:87:        "PracticeProblem": "retired late 2025 — rich results discontinued",
+Agentic-SEO-Skill\scripts\validate_schema.py:88:        "Dataset": "retired late 2025 — rich results discontinued",
+Agentic-SEO-Skill\scripts\validate_schema.py:96:        errors.append(f"{prefix}: @type '{schema_type}' is {restricted[schema_type]} — verify site qualifies")
+Agentic-SEO-Skill\scripts\validate_schema.py:132:        print("⚠️  Schema validation warnings:")
+Agentic-SEO-Skill\scripts\validate_schema.py:137:        print("🛑 Schema validation ERRORS (blocking):")
+Agentic-SEO-Skill\scripts\validate_schema.py:142:    sys.exit(1)  # Warnings only — proceed
+book_outputs\ornek-kitap\research\topic_market_research\data\market_analyzer.py:30:        print(f"🔍 Searching Amazon for: '{query}'")
+book_outputs\ornek-kitap\research\topic_market_research\data\market_analyzer.py:483:        print(f"📊 Getting detailed metrics for {len(books)} books...")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:36:    print(f"🎯 OVERALL OPPORTUNITY SCORE: {opp_score}/100")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:41:        print("   ⚡ GOOD OPPORTUNITY - Recommended with Strategy")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:43:        print("   ⚠️  MODERATE OPPORTUNITY - Proceed with Caution")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:50:    print("📊 COMPETITION ANALYSIS")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:62:            print(f"  • {author}: {count} books")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:67:    print("📈 DEMAND ANALYSIS")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:77:    print("🎯 QUALITY OPPORTUNITIES")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:85:            print(f"  • {fmt.title()}")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:91:            print(f"  • {fmt.title()}")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:97:        print("💰 PRICING ANALYSIS")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:104:        print(f"  • Under $3: {price_dist.get('under_3', 0)} books")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:105:        print(f"  • $3-$6: {price_dist.get('3_to_6', 0)} books")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:106:        print(f"  • $6-$10: {price_dist.get('6_to_10', 0)} books")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:107:        print(f"  • Over $10: {price_dist.get('over_10', 0)} books")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:116:                print(f"  • ${gap.get('gap_start', 0):.2f} - ${gap.get('gap_end', 0):.2f} (Gap: ${gap.get('gap_size', 0):.2f})")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:134:        print("🔥 TREND ANALYSIS")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:146:    print("💡 STRATEGIC RECOMMENDATIONS")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:154:            print("  • Low competition - great entry opportunity")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:157:            print(f"  • {gaps['low_rated_opportunities']} poorly rated books to outcompete")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:160:            print(f"  • Missing formats to explore: {', '.join(missing_formats[:3])}")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:163:            print("  • Good timing - not oversaturated with recent releases")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:166:        print("⚠️ CONSIDER ALTERNATIVE NICHES")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:170:            print("  • High competition with established players")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:173:            print("  • Low market demand indicators")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:176:            print("  • Market may be oversaturated")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:179:    print("📋 ACTION ITEMS")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:203:    print("📄 Summary saved to: market_summary.json")
+book_outputs\ornek-kitap\research\topic_market_research\data\report_generator.py:204:    print("📊 Full analysis saved to: market_analysis.json")
+dashboard_server.py:167:    if text.startswith("tr") or text in {"turkish", "türkçe", "turkce", "turk"}:
+dashboard_server.py:176:        "français": "French",
+dashboard_server.py:195:        "lehçe": "Polish",
+dashboard_server.py:203:        "isveççe": "Swedish",
+dashboard_server.py:210:        "norveççe": "Norwegian",
+dashboard_server.py:216:        "čeština": "Czech",
+dashboard_server.py:218:        "çekçe": "Czech",
+dashboard_server.py:221:        "slovenčina": "Slovak",
+dashboard_server.py:223:        "slovakça": "Slovak",
+dashboard_server.py:232:        "русский": "Russian",
+dashboard_server.py:233:        "rusça": "Russian",
+dashboard_server.py:236:        "українська": "Ukrainian",
+dashboard_server.py:239:        "العربية": "Arabic",
+dashboard_server.py:240:        "arapça": "Arabic",
+dashboard_server.py:243:        "日本語": "Japanese",
+dashboard_server.py:246:        "हिन्दी": "Hindi",
+dashboard_server.py:263:    if re.search(r"[çğıöşüÇĞİÖŞÜ]", text):
+dashboard_server.py:269:            r"\b(ve|ile|için|icin|bu|bir|kitap|rehber|oyun|bölüm|bolum|başlangıç|baslangic|nasıl|nasil|neden|çünkü|cunku|oyuncu|adım|adim)\b",
+dashboard_server.py:319:        "Arabic": "الفصل",
+dashboard_server.py:341:        "الفصل",
+dashboard_server.py:386:    return " ".join(words[:max_words]).strip() + "…"
+dashboard_server.py:393:    return " ".join(words[:limit]).strip() + "…", True, limit
+dashboard_server.py:987:        return "Kapak hazır. İlk gerçek bölüm yazılıyor."
+dashboard_server.py:1128:    if any(keyword in topic for keyword in ("çocuk", "cocuk", "kids", "children", "storybook", "bedtime", "picture book")):
+dashboard_server.py:1132:    if any(keyword in topic for keyword in ("education", "lesson", "teach", "teacher", "stem", "course", "öğret", "eğitim", "trainer", "workshop")):
+dashboard_server.py:1134:    if any(keyword in topic for keyword in ("focus", "calm", "discipline", "habit", "kişisel", "personal", "clarte", "ritim", "ritme")):
+dashboard_server.py:2443:                lines.append(" ".join(words[:remaining_words]).strip() + "…")
+dashboard_server.py:2902:    default_title = "Başlangıç" if language == "Turkish" else "Getting Started"
+dashboard_server.py:4436:            "Eksik bölümler üretim kuyruğuna alındı."
+scripts\book_research_data\market_analyzer.py:30:        print(f"🔍 Searching Amazon for: '{query}'")
+scripts\book_research_data\market_analyzer.py:483:        print(f"📊 Getting detailed metrics for {len(books)} books...")
+scripts\book_research_data\report_generator.py:36:    print(f"🎯 OVERALL OPPORTUNITY SCORE: {opp_score}/100")
+scripts\book_research_data\report_generator.py:41:        print("   ⚡ GOOD OPPORTUNITY - Recommended with Strategy")
+scripts\book_research_data\report_generator.py:43:        print("   ⚠️  MODERATE OPPORTUNITY - Proceed with Caution")
+scripts\book_research_data\report_generator.py:50:    print("📊 COMPETITION ANALYSIS")
+scripts\book_research_data\report_generator.py:62:            print(f"  • {author}: {count} books")
+scripts\book_research_data\report_generator.py:67:    print("📈 DEMAND ANALYSIS")
+scripts\book_research_data\report_generator.py:77:    print("🎯 QUALITY OPPORTUNITIES")
+scripts\book_research_data\report_generator.py:85:            print(f"  • {fmt.title()}")
+scripts\book_research_data\report_generator.py:91:            print(f"  • {fmt.title()}")
+scripts\book_research_data\report_generator.py:97:        print("💰 PRICING ANALYSIS")
+scripts\book_research_data\report_generator.py:104:        print(f"  • Under $3: {price_dist.get('under_3', 0)} books")
+scripts\book_research_data\report_generator.py:105:        print(f"  • $3-$6: {price_dist.get('3_to_6', 0)} books")
+scripts\book_research_data\report_generator.py:106:        print(f"  • $6-$10: {price_dist.get('6_to_10', 0)} books")
+scripts\book_research_data\report_generator.py:107:        print(f"  • Over $10: {price_dist.get('over_10', 0)} books")
+scripts\book_research_data\report_generator.py:116:                print(f"  • ${gap.get('gap_start', 0):.2f} - ${gap.get('gap_end', 0):.2f} (Gap: ${gap.get('gap_size', 0):.2f})")
+scripts\book_research_data\report_generator.py:134:        print("🔥 TREND ANALYSIS")
+scripts\book_research_data\report_generator.py:146:    print("💡 STRATEGIC RECOMMENDATIONS")
+scripts\book_research_data\report_generator.py:154:            print("  • Low competition - great entry opportunity")
+scripts\book_research_data\report_generator.py:157:            print(f"  • {gaps['low_rated_opportunities']} poorly rated books to outcompete")
+scripts\book_research_data\report_generator.py:160:            print(f"  • Missing formats to explore: {', '.join(missing_formats[:3])}")
+scripts\book_research_data\report_generator.py:163:            print("  • Good timing - not oversaturated with recent releases")
+scripts\book_research_data\report_generator.py:166:        print("⚠️ CONSIDER ALTERNATIVE NICHES")
+scripts\book_research_data\report_generator.py:170:            print("  • High competition with established players")
+scripts\book_research_data\report_generator.py:173:            print("  • Low market demand indicators")
+scripts\book_research_data\report_generator.py:176:            print("  • Market may be oversaturated")
+scripts\book_research_data\report_generator.py:179:    print("📋 ACTION ITEMS")
+scripts\book_research_data\report_generator.py:203:    print("📄 Summary saved to: market_summary.json")
+scripts\book_research_data\report_generator.py:204:    print("📊 Full analysis saved to: market_analysis.json")
+scripts\compose_cover_text.py:388:            return " • ".join(parts)
+scripts\compose_cover_text.py:611:            "Bu kapak, yapay zeka ile üretilen arka plan sanatını deterministik tipografi yerleşimiyle birleştirir.",
+scripts\compose_cover_text.py:617:        f"{author_name}, bu kitap için konu araştırması ve içerik çerçevesi oluşturan yazar/editördür.",
+scripts\compose_cover_text.py:647:    footer_text = " • ".join(part for part in [publisher, year] if part)
+scripts\generate_book_cover_variants.py:29:    "Turkish": "Türkçe",
+scripts\generate_book_cover_variants.py:32:    "French": "Français",
+scripts\generate_book_cover_variants.py:36:    "Arabic": "العربية",
+scripts\generate_book_cover_variants.py:37:    "Japanese": "日本語",
+scripts\generate_book_cover_variants.py:174:    if any(keyword in source for keyword in ("stem", "teach", "education", "lesson", "course", "öğret", "eğitim")):
+scripts\generate_book_cover_variants.py:178:    if any(keyword in source for keyword in ("focus", "calm", "discipline", "mindset", "kişisel", "habit")):
+scripts\generate_showcase_ai_covers.py:38:# Grok removed â€“ no longer available
+scripts\generate_showcase_ai_covers.py:118:TEXT_RISK_REJECT_THRESHOLD = 0.0  # OCR disabled â€“ no rejection
+scripts\generate_showcase_ai_covers.py:119:TEXT_RISK_REUSE_THRESHOLD = 0.0   # OCR disabled â€“ no rejection
+scripts\generate_showcase_ai_covers.py:456:    if " " in keyword or any(char in keyword for char in "Ã§ÄŸÄ±Ã¶ÅŸÃ¼Ã‡ÄÄ°Ã–ÅÃœ-"):
+scripts\generate_showcase_ai_covers.py:477:    if any(marker in category_or_type for marker in ("children", "Ã§ocuk", "cocuk")):
+scripts\generate_showcase_ai_covers.py:562:        if any(marker in haystack for marker in ("small business", "negocios pequenos", "kÃ¼Ã§Ã¼k", "business")):
+scripts\generate_showcase_ai_covers.py:819:    candidates = [part.strip(" -,:;.") for part in re.split(r"[;:.!?]|(?:\s[-â€“â€”]\s)|,\s", subtitle) if part.strip()]
+scripts\generate_showcase_ai_covers.py:832:        summary_candidates = [part.strip(" -,:;.") for part in re.split(r"[;:.!?]|(?:\s[-â€“â€”]\s)|,\s", summary) if part.strip()]
+scripts\generate_showcase_ai_covers.py:1098:    # OCR disabled â€“ user handles quality via regenerate / manual upload
+scripts\generate_showcase_ai_covers.py:1175:# generate_with_grok removed â€“ Grok no longer available
+scripts\generate_showcase_ai_covers.py:1593:                        # Accept first successful generation â€“ user can regenerate if not satisfied
+scripts\generate_showcase_portfolio.py:45:    "Turkish": "Giriş",
+scripts\generate_showcase_portfolio.py:49:    "Portuguese": "Introdução",
+scripts\generate_showcase_portfolio.py:53:    "Japanese": "はじめに",
+scripts\generate_showcase_portfolio.py:57:    "Turkish": "bir çerçeve, kontrol listesi ya da karar cümlesi",
+scripts\generate_showcase_portfolio.py:64:    "Arabic": "إطاراً عملياً أو قائمة تحقق أو قاعدة قرار",
+scripts\generate_showcase_portfolio.py:65:    "Japanese": "フレーム、チェックリスト、または判断基準",
+scripts\generate_showcase_portfolio.py:84:            "Bu bölüm, {topic} bağlamında {primary_focus} etrafında gerçek bir avantaj kurar. {audience} için güven çoğu zaman tek bir hamlenin tekrar edilebilir hale gelmesiyle büyür. {tone_signal}",
+scripts\generate_showcase_portfolio.py:85:            "Buradaki gizli risk, metni eksiksiz göstermek isterken {secondary_focus} geri plana itmektir. O zaman sayfalar bilgili görünür ama okuru {promise} hedefine yaklaştırmaz.",
+scripts\generate_showcase_portfolio.py:86:            "Bu kısmın pratik hedefi nettir: okurun elinde {reader_output} kalmalıdır. Fikir taslağa, atölyeye ya da müşteri konuşmasına taşınabiliyorsa bölüm görevini yapıyor demektir.",
+scripts\generate_showcase_portfolio.py:87:            "{title} bu yüzden süs değil kaldıraç görevi görür. Mantık daha kolay anlatılır ve gösterilir hale geldiğinde kitabın geri kalanı da daha sıkı ve daha ikna edici görünür.",
+scripts\generate_showcase_portfolio.py:90:            "Okur çoğu zaman emek eksikliğinden değil, sıra hatasından zorlanır. {title}, {primary_focus} unsurunu taslak gereksiz ağırlık kazanmadan yerli yerine koyduğu için önemlidir.",
+scripts\generate_showcase_portfolio.py:91:            "{topic} gibi kitaplarda netlik, {audience} erken cilalamayı bırakıp {secondary_focus} katmanına daha dürüst baktığında belirginleşir. Zayıf anlatım burada kalıcı otoriteye dönüşür.",
+scripts\generate_showcase_portfolio.py:92:            "Bu bölümden iyi bir geçiş, okurun elinde {reader_output} ve vaadin neden çalıştığına dair daha berrak bir kavrayış bırakır. Gürültü azalmalı, kontrol hissi artmalı, sonraki adım görünürleşmelidir.",
+scripts\generate_showcase_portfolio.py:93:            "Bu nedenle bu kısım sürekli aktarılabilirliğe döner. Metot burada öğretilebilir hale gelirse kitap yalnızca uzmanlığı anlatan değil, talebi destekleyen bir varlığa dönüşmeye başlar.",
+scripts\generate_showcase_portfolio.py:140:            "Este capítulo transforma {primary_focus} em uma vantagem utilizável dentro de {topic}. Para {audience}, a confiança costuma crescer quando um movimento fica fácil de repetir. {tone_signal}",
+scripts\generate_showcase_portfolio.py:142:            "O objetivo prático é claro: sair desta seção com {reader_output}. Se a ideia puder ser reutilizada em um rascunho, workshop ou conversa comercial, o capítulo está cumprindo seu papel.",
+scripts\generate_showcase_portfolio.py:143:            "{title} funciona, então, como alavanca e não como enfeite. Quando a lógica fica mais fácil de explicar e demonstrar, o restante do manuscrito ganha firmeza e força comercial.",
+scripts\generate_showcase_portfolio.py:146:            "O leitor raramente trava primeiro por falta de esforço; trava por sequência. {title} importa porque organiza {primary_focus} antes que o rascunho fique mais pesado do que deveria.",
+scripts\generate_showcase_portfolio.py:147:            "Em livros sobre {topic}, a clareza aparece quando {audience} para de polir cedo demais e encara {secondary_focus} com mais honestidade. É aí que uma explicação fraca vira autoridade durável.",
+scripts\generate_showcase_portfolio.py:148:            "Uma boa passagem por este capítulo deixa {reader_output} e uma percepção mais nítida de por que a promessa funciona. O leitor deve sentir menos ruído, mais controle e um próximo passo mais visível.",
+scripts\generate_showcase_portfolio.py:149:            "Por isso esta seção volta sempre à ideia de transferência. Se o método se torna ensinável aqui, o livro começa a agir como um ativo que apoia demanda em vez de apenas descrever experiência.",
+scripts\generate_showcase_portfolio.py:182:            "يحوّل هذا الفصل {primary_focus} إلى أفضلية عملية داخل {topic}. بالنسبة إلى {audience}، تنمو الثقة غالباً حين يصبح أحد التحركات أسهل في التكرار. {tone_signal}",
+scripts\generate_showcase_portfolio.py:183:            "الخطر الخفي هنا هو إهمال {secondary_focus} أثناء محاولة الظهور بصورة مكتملة. عندها تبدو الصفحات مثقفة، لكنها لا تقرّب القارئ من {promise}.",
+scripts\generate_showcase_portfolio.py:184:            "الهدف العملي واضح: يجب أن يخرج القارئ من هذا الجزء ومعه {reader_output}. إذا أمكن إعادة استخدام الفكرة في المسودة أو الورشة أو محادثة بيع، فهذا يعني أن الفصل يؤدي وظيفته.",
+scripts\generate_showcase_portfolio.py:185:            "لهذا يعمل {title} كنقطة رافعة لا كزينة. وعندما تصبح الفكرة أسهل في الشرح والإظهار، يبدو بقية المخطوط أكثر إحكاماً وأكثر إقناعاً من الناحية التجارية.",
+scripts\generate_showcase_portfolio.py:188:            "نادراً ما يتعثر القارئ أولاً بسبب نقص الجهد؛ بل يتعثر بسبب الترتيب. تبرز أهمية {title} لأنه ينظم {primary_focus} قبل أن تصبح المسودة أثقل مما ينبغي.",
+scripts\generate_showcase_portfolio.py:189:            "في الكتب التي تدور حول {topic}، يظهر الوضوح عندما يتوقف {audience} عن التلميع المبكر وينظرون إلى {secondary_focus} بصدق أكبر. هنا بالذات تتحول الشروحات الضعيفة إلى سلطة قابلة للاستمرار.",
+scripts\generate_showcase_portfolio.py:190:            "المرور الجيد على هذا الفصل يجب أن يترك لدى القارئ {reader_output} وفهماً أوضح لسبب نجاح الوعد. المطلوب ضجيج أقل، وتحكم أكبر، وخطوة تالية أكثر ظهوراً.",
+scripts\generate_showcase_portfolio.py:191:            "ولهذا يعود هذا الجزء دائماً إلى قابلية النقل والتعليم. فإذا أصبحت الطريقة قابلة للتعليم هنا، بدأ الكتاب يتصرف كأصل يدعم الطلب بدلاً من مجرد وصف الخبرة.",
+scripts\generate_showcase_portfolio.py:196:            "この章は、{primary_focus} を {topic} の中で使える強みに変えるための章です。{audience} にとって信頼は、一つの動きが繰り返しやすくなったときに大きく育ちます。{tone_signal}",
+scripts\generate_showcase_portfolio.py:197:            "ここで見落とされやすいのは、全体を整えようとするあまり {secondary_focus} を後回しにすることです。すると情報量はあっても、読者を {promise} に近づけないページになります。",
+scripts\generate_showcase_portfolio.py:198:            "実務的な目標は明快です。この節を読み終える頃には、読者の手元に {reader_output} が残っていること。草稿、ワークショップ、商談で再利用できるなら、この章は役割を果たしています。",
+scripts\generate_showcase_portfolio.py:199:            "だからこそ {title} は飾りではなくレバレッジとして機能します。論理が説明しやすく、見せやすくなるほど、原稿全体は引き締まり、商業的な説得力も高まります。",
+scripts\generate_showcase_portfolio.py:202:            "読者が最初につまずく理由は、努力不足より順序の乱れであることが少なくありません。{title} が重要なのは、原稿が不必要に重くなる前に {primary_focus} を整理できるからです。",
+scripts\generate_showcase_portfolio.py:203:            "{topic} を扱う本では、{audience} が早すぎる磨き込みをやめ、{secondary_focus} をもう一段正直に見直したときに明瞭さが生まれます。弱い説明が持続する権威に変わるのはその地点です。",
+scripts\generate_showcase_portfolio.py:204:            "この章をしっかり通過すると、読者の手元には {reader_output} と、なぜ約束が機能するのかという理解が残ります。ノイズが減り、コントロール感が増し、次の一手が見えやすくなるべきです。",
+scripts\generate_showcase_portfolio.py:205:            "そのためこのパートは何度も再利用性へ戻ってきます。ここで方法が教えられる形になれば、本は知識を述べるだけでなく、需要を支える資産として振る舞い始めます。",
+scripts\generate_showcase_portfolio.py:348:            "okurun tek cümlede tekrarlayacağı vaadi",
+scripts\generate_showcase_portfolio.py:349:            "hedef kitlenin zaten yaşadığı görünmez sürtünmeyi",
+scripts\generate_showcase_portfolio.py:350:            "dikkati yükselten dar dönüşüm alanını",
+scripts\generate_showcase_portfolio.py:351:            "muğlak kalmanın gerçek maliyetini",
+scripts\generate_showcase_portfolio.py:352:            "inancı değiştiren ilk kanıt katmanını",
+scripts\generate_showcase_portfolio.py:355:            "güven oluşturan ilk hızlı kazanımı",
+scripts\generate_showcase_portfolio.py:356:            "okurun ertelediği temel kararı",
+scripts\generate_showcase_portfolio.py:358:            "bu metodun gerçek başlangıç çizgisini",
+scripts\generate_showcase_portfolio.py:359:            "kitabın merkez dönüşüm nedenini",
+scripts\generate_showcase_portfolio.py:362:            "okurun sensiz de uygulayabileceği çerçeveyi",
+scripts\generate_showcase_portfolio.py:363:            "temponun düşmesini engelleyen bölüm mimarisini",
+scripts\generate_showcase_portfolio.py:364:            "metodu öğretilebilir kılan tekrar ritmini",
+scripts\generate_showcase_portfolio.py:365:            "okur kafa karışıklığını azaltan karar sırasını",
+scripts\generate_showcase_portfolio.py:367:            "notları pazarlanabilir bir varlığa çeviren yapıyı",
+scripts\generate_showcase_portfolio.py:368:            "yarım kalan taslakları önleyen çalışma düzenini",
+scripts\generate_showcase_portfolio.py:369:            "içgörüden eyleme ilerleyen öğrenme akışını",
+scripts\generate_showcase_portfolio.py:370:            "soyutluğu azaltan yöntem katmanını",
+scripts\generate_showcase_portfolio.py:371:            "örnekleri somut tutan açıklama sistemini",
+scripts\generate_showcase_portfolio.py:372:            "sürekli okumayı ödüllendiren öğretim ritmini",
+scripts\generate_showcase_portfolio.py:376:            "metodu yaşayan örneklerle görünür kılan sahneleri",
+scripts\generate_showcase_portfolio.py:377:            "algılanan değeri keskinleştiren dil tercihlerini",
+scripts\generate_showcase_portfolio.py:379:            "sessiz itirazları çözen vaka notlarını",
+scripts\generate_showcase_portfolio.py:380:            "düşünceyi harekete çeviren promptları",
+scripts\generate_showcase_portfolio.py:381:            "okurun standardına güvenmesini sağlayan kanıt anlarını",
+scripts\generate_showcase_portfolio.py:382:            "bölümün değerini uzatan yardımcı varlıkları",
+scripts\generate_showcase_portfolio.py:385:            "dersi daha kolay taşıyan anlatı vuruşlarını",
+scripts\generate_showcase_portfolio.py:386:            "zaman kazandıran ama kalite düşürmeyen araçları",
+scripts\generate_showcase_portfolio.py:390:            "kitabı gerçek gelire bağlayan teklif köprülerini",
+scripts\generate_showcase_portfolio.py:391:            "varlığın ömrünü uzatan dağıtım alışkanlıklarını",
+scripts\generate_showcase_portfolio.py:392:            "gelen talebin kalitesini yükselten konum ipuçlarını",
+scripts\generate_showcase_portfolio.py:393:            "sonraki adımı doğal kılan takip yolunu",
+scripts\generate_showcase_portfolio.py:395:            "mesajın çalışıp çalışmadığını gösteren ölçümleri",
+scripts\generate_showcase_portfolio.py:396:            "konuşma, sayfa ve atölyeye açılan yeniden kullanım planını",
+scripts\generate_showcase_portfolio.py:398:            "premium fiyatı koruyan paketleme yaklaşımını",
+scripts\generate_showcase_portfolio.py:399:            "talebin nerede büyüdüğünü gösteren okur kilometre taşlarını",
+scripts\generate_showcase_portfolio.py:404:            "kitabı her çeyrek daha keskin yapan revizyon alışkanlığını",
+scripts\generate_showcase_portfolio.py:405:            "lansman haftasını aşan uzun kuyruk avantajını",
+scripts\generate_showcase_portfolio.py:406:            "sonraki baskıyı güçlendiren okur geri bildirimini",
+scripts\generate_showcase_portfolio.py:407:            "bu kitabın tetiklemesi gereken sonraki varlığı",
+scripts\generate_showcase_portfolio.py:408:            "okurun sonra da hatırlayacağı kapanış vaadini",
+scripts\generate_showcase_portfolio.py:409:            "yayından sonra kaliteyi yüksek tutan davranışları",
+scripts\generate_showcase_portfolio.py:410:            "güveni en hızlı yükselten küçük iyileştirmeleri",
+scripts\generate_showcase_portfolio.py:411:            "inandırıcılığı koruyan bakım ritüelini",
+scripts\generate_showcase_portfolio.py:412:            "dönüşüm üreten kitabın son testini",
+scripts\generate_showcase_portfolio.py:413:            "pazar gürültüsünde netliği korumanın yolunu",
+scripts\generate_showcase_portfolio.py:414:            "editoryal disiplinin bıraktığı kalıcı avantajı",
+scripts\generate_showcase_portfolio.py:415:            "varlığın satmaya devam etmesini sağlayan sessiz devamlılığı",
+scripts\generate_showcase_portfolio.py:418:            "{focus} netleştir",
+scripts\generate_showcase_portfolio.py:425:            "Bu bölüm kritik çünkü {title_lower}, {topic} konusunun fikir düzeyinden çıkıp okurun gözünde gerçek değere dönüşmesini sağlar. {audience} için asıl farkı yaratan şey çoğu zaman daha fazla bilgi değil, daha iyi yerleştirilmiş bir yapı olur. {tone_signal} Bölüm ilerledikçe okur hem neyi bırakması gerektiğini hem de neyi görünür kılması gerektiğini daha net görür.",
+scripts\generate_showcase_portfolio.py:426:            "Birçok okur aslında {promise} istediğini bilir; fakat işe yanlış taraftan başlar. Daha çok not toplar, daha çok açıklama ekler ve güven oluşturan editoryal kararları geciktirir. Bu bölümün görevi, o gizli sürtünmeyi erken teşhis etmek, adıyla çağırmak ve yerine bugün uygulanabilecek daha küçük ama daha etkili bir hareket koymaktır.",
+scripts\generate_showcase_portfolio.py:427:            "İyi çalışan bir bölüm yalnızca motive etmez; kararları doğru sıraya dizer. Önce vazgeçilmez olanı sabitler. Sonra vaadi bulanıklaştıran yükleri temizler. Ardından yarın da aynı berraklıkla tekrar edilebilecek bir akış kurar. Böylece kitap, ilginç fikir yığınından çıkıp gerçek bir çalışma sistemi gibi davranmaya başlar.",
+scripts\generate_showcase_portfolio.py:428:            "Bu kısmı doğru uygulayan okur soyut bir farkındalıkla kalmaz. Elinde hemen kullanabileceği bir sayfa, cümle, kontrol listesi ya da bölüm kararı olur. Asıl dönüşüm burada gerçekleşir: okur sadece düşünmez, taslağa, müşteri konuşmasına ya da sonraki revizyona doğrudan taşınabilecek bir çıktı üretir.",
+scripts\generate_showcase_portfolio.py:429:            "Bölümün derin mesajı şudur: güven, emekten önce netlik görünür olduğunda birikir. Okur bugün tek bir somut iyileştirme yaptığında sonraki bölüm hafifler ve kitabın tamamı daha ikna edici hale gelir. Bu yüzden bu bölüm temiz kararlara, gözle görülen kanıta ve bitmeden önce hissedilebilen sonuca doğru iter.",
+scripts\generate_showcase_portfolio.py:433:            "Mentor Guide": "Ton bilinçli olarak rehberlik eder; okur baskı değil yön hisseder.",
+scripts\generate_showcase_portfolio.py:434:            "Systems Manual": "Tonun net kalması gerekir; okur fikre değil sıraya güvenmelidir.",
+scripts\generate_showcase_portfolio.py:435:            "Story-led Manifesto": "Ton biraz daha anlatı taşır; çünkü önce inanç değişir, sonra davranış.",
+scripts\generate_showcase_portfolio.py:436:            "Workbook": "Ton sürekli uygulamaya döner; çünkü kullanılmayan içgörü hızla buharlaşır.",
+scripts\generate_showcase_portfolio.py:617:            "Ein nützliches Kapitel motiviert nicht nur, es sortiert Entscheidungen. Zuerst wird fixiert, was nicht verwässert werden darf. Danach wird entfernt, was das Versprechen trübt. Anschließend entsteht eine Abfolge, die morgen mit derselben Klarheit wiederholt werden kann. So beginnt das Buch, wie ein Betriebssystem zu wirken und nicht wie ein Stapel interessanter Seiten.",
+scripts\generate_showcase_portfolio.py:618:            "Wenn der Leser diesen Abschnitt sauber umsetzt, bleibt er nicht bei einer bloßen Einsicht stehen. Er nimmt eine Formulierung, eine Liste, eine Entscheidung oder ein konkretes Asset mit, das direkt in den Entwurf, in ein Kundengespräch oder in die nächste Überarbeitung wandern kann. Genau diese Übertragbarkeit macht aus einem starken Kapitel ein Vertrauensasset.",
+scripts\generate_showcase_portfolio.py:662:            "des choix de langage qui haussent la valeur perçue",
+scripts\generate_showcase_portfolio.py:670:            "des battements narratifs qui rendent la leçon portable",
+scripts\generate_showcase_portfolio.py:677:            "des signaux de positionnement qui améliorent la demande reçue",
+scripts\generate_showcase_portfolio.py:710:            "Ce chapitre compte parce que {title_lower} est l'endroit où {topic} cesse d'être séduisant en théorie pour devenir crédible dans la pratique. Pour {audience}, l'écart entre une bonne idée et une vraie autorité tient souvent à une couche de structure supplémentaire. {tone_signal} À la fin de cette partie, le lecteur doit sentir plus de direction, moins de bruit et un mouvement plus net.",
+scripts\generate_showcase_portfolio.py:714:            "La leçon profonde est simple: l'autorité grandit quand la clarté se voit avant l'effort. Si le lecteur obtient une amélioration visible maintenant, le chapitre suivant devient plus léger et l'ensemble du livre gagne en crédibilité. Voilà pourquoi cette partie pousse vers des décisions nettes, des preuves concrètes et un résultat déjà sensible avant la fin.",
+scripts\generate_showcase_portfolio.py:729:            "a fricção que sua audiência já sente toda semana",
+scripts\generate_showcase_portfolio.py:730:            "a transformação específica que realmente chama atenção",
+scripts\generate_showcase_portfolio.py:732:            "a primeira prova que muda a percepção",
+scripts\generate_showcase_portfolio.py:735:            "a vitória rápida que gera confiança cedo",
+scripts\generate_showcase_portfolio.py:739:            "a urgência por trás da mudança central do livro",
+scripts\generate_showcase_portfolio.py:749:            "um fluxo didático que conecta ideia e ação",
+scripts\generate_showcase_portfolio.py:759:            "notas de caso que removem objeções silenciosas",
+scripts\generate_showcase_portfolio.py:761:            "momentos de prova que reforçam seu padrão",
+scripts\generate_showcase_portfolio.py:764:            "rodadas de edição que mantêm a mensagem firme",
+scripts\generate_showcase_portfolio.py:765:            "batidas narrativas que tornam a lição mais carregável",
+scripts\generate_showcase_portfolio.py:767:            "ações do leitor que tornam o avanço visível",
+scripts\generate_showcase_portfolio.py:771:            "hábitos de distribuição que prolongam a vida do ativo",
+scripts\generate_showcase_portfolio.py:777:            "o ciclo de prova que acumula confiança ao longo do tempo",
+scripts\generate_showcase_portfolio.py:778:            "uma lógica de embalagem que protege preço premium",
+scripts\generate_showcase_portfolio.py:785:            "vantagens duradouras que passam da semana de lançamento",
+scripts\generate_showcase_portfolio.py:786:            "o retorno do leitor que fortalece a próxima edição",
+scripts\generate_showcase_portfolio.py:790:            "os pequenos ajustes que elevam confiança mais rápido",
+scripts\generate_showcase_portfolio.py:791:            "o ritual de manutenção que protege credibilidade",
+scripts\generate_showcase_portfolio.py:805:            "Este capítulo importa porque {title_lower} é o ponto em que {topic} deixa de parecer apenas uma boa ideia e começa a funcionar na prática. Para {audience}, a diferença entre conteúdo interessante e autoridade percebida normalmente nasce de uma camada extra de estrutura. {tone_signal} Ao fim desta parte, o leitor deve sentir mais direção, menos ruído e um movimento mais concreto.",
+scripts\generate_showcase_portfolio.py:806:            "A maioria dos leitores já sabe que quer {promise}, mas costuma começar pelo lado errado. Junta mais notas, acrescenta mais explicações e adia decisões editoriais que realmente criam confiança. Aqui o objetivo é revelar essa fricção cedo, nomeá-la com clareza e substituí-la por um passo menor, mais leve e aplicável ainda hoje.",
+scripts\generate_showcase_portfolio.py:808:            "Quando o leitor aplica esta seção de verdade, ele não sai apenas com um insight agradável. Sai com uma frase, uma lista, uma decisão ou um pequeno ativo que pode usar imediatamente no rascunho, numa conversa comercial ou na próxima revisão. Essa transferência prática é o que transforma um bom capítulo em um ativo de confiança.",
+scripts\generate_showcase_portfolio.py:809:            "A lição mais profunda é simples: autoridade cresce quando a clareza aparece antes do esforço. Se o leitor conquista uma melhoria visível agora, o próximo capítulo fica mais leve e o livro inteiro ganha credibilidade. Por isso esta parte insiste em decisões limpas, provas concretas e um resultado que já pode ser sentido antes do fim.",
+scripts\generate_showcase_portfolio.py:815:            "Story-led Manifesto": "O tom carrega mais narrativa porque a crença costuma mudar antes do comportamento.",
+scripts\generate_showcase_portfolio.py:816:            "Workbook": "O tom volta sempre para a prática, porque insight sem uso perde força rapidamente.",
+scripts\generate_showcase_portfolio.py:1013:            "الوعد الذي يستطيع القارئ تكراره في جملة واحدة",
+scripts\generate_showcase_portfolio.py:1014:            "الاحتكاك الذي يعيشه جمهورك كل أسبوع",
+scripts\generate_showcase_portfolio.py:1015:            "التحول المحدد الذي يجذب الانتباه فعلاً",
+scripts\generate_showcase_portfolio.py:1016:            "كلفة البقاء غامضاً",
+scripts\generate_showcase_portfolio.py:1017:            "أول دليل يغيّر القناعة",
+scripts\generate_showcase_portfolio.py:1018:            "السؤال الذي يستحق الصفحة الأولى",
+scripts\generate_showcase_portfolio.py:1019:            "صياغة التموضع التي تنظف الضجيج",
+scripts\generate_showcase_portfolio.py:1020:            "المكسب السريع الذي يبني الثقة مبكراً",
+scripts\generate_showcase_portfolio.py:1021:            "القرار الذي يؤجله القارئ منذ وقت طويل",
+scripts\generate_showcase_portfolio.py:1022:            "الخرافة التي تضعف السلطة بهدوء",
+scripts\generate_showcase_portfolio.py:1023:            "خط البداية الحقيقي لهذه المنهجية",
+scripts\generate_showcase_portfolio.py:1024:            "الإلحاح الكامن خلف التحول المركزي في الكتاب",
+scripts\generate_showcase_portfolio.py:1027:            "إطاراً يستطيع القارئ تطبيقه من دون وجودك",
+scripts\generate_showcase_portfolio.py:1028:            "هندسة فصول تحفظ الإيقاع",
+scripts\generate_showcase_portfolio.py:1029:            "روتيناً قابلاً للتكرار يجعل المنهج قابلاً للتعليم",
+scripts\generate_showcase_portfolio.py:1030:            "تسلسلاً من القرارات يقلل الالتباس",
+scripts\generate_showcase_portfolio.py:1031:            "سلسلة منطقية تجعل الحجة أكثر موثوقية",
+scripts\generate_showcase_portfolio.py:1032:            "بنية تحول الملاحظات إلى أصل قابل للبيع",
+scripts\generate_showcase_portfolio.py:1033:            "إيقاع عمل يمنع المسودات المتوقفة",
+scripts\generate_showcase_portfolio.py:1034:            "تدفقاً تعليمياً يربط الفكرة بالفعل",
+scripts\generate_showcase_portfolio.py:1035:            "طبقة منهجية تبدو عملية لا مجردة",
+scripts\generate_showcase_portfolio.py:1036:            "نظاماً يحافظ على الأمثلة ملموسة وسهلة التذكر",
+scripts\generate_showcase_portfolio.py:1037:            "إيقاعاً تعليمياً يكافئ الاستمرار",
+scripts\generate_showcase_portfolio.py:1038:            "عموداً فقرياً يمنح الكتاب إحساساً مهنياً",
+scripts\generate_showcase_portfolio.py:1041:            "أمثلة تجعل المنهج محسوساً",
+scripts\generate_showcase_portfolio.py:1042:            "اختيارات لغوية ترفع القيمة المدركة",
+scripts\generate_showcase_portfolio.py:1043:            "تمارين تصنع التزاماً لا حشواً",
+scripts\generate_showcase_portfolio.py:1044:            "ملاحظات حالة تزيل الاعتراضات الصامتة",
+scripts\generate_showcase_portfolio.py:1045:            "موجهات تحول التأمل إلى حركة",
+scripts\generate_showcase_portfolio.py:1046:            "لحظات إثبات تعزز معيارك المهني",
+scripts\generate_showcase_portfolio.py:1047:            "أصولاً داعمة تطيل فائدة الفصل",
+scripts\generate_showcase_portfolio.py:1048:            "نقاط فحص توقف الانحراف مبكراً",
+scripts\generate_showcase_portfolio.py:1049:            "جولات تحرير تبقي الرسالة مشدودة",
+scripts\generate_showcase_portfolio.py:1050:            "نبضات سردية تجعل الدرس أسهل حملاً",
+scripts\generate_showcase_portfolio.py:1051:            "أدوات توفر الوقت من دون خفض الجودة",
+scripts\generate_showcase_portfolio.py:1052:            "أفعالاً للقارئ تصنع تقدماً مرئياً",
+scripts\generate_showcase_portfolio.py:1055:            "جسوراً تربط الكتاب بعروض حقيقية وإيراد أفضل",
+scripts\generate_showcase_portfolio.py:1056:            "عادات توزيع تطيل عمر الأصل",
+scripts\generate_showcase_portfolio.py:1057:            "إشارات تموضع ترفع جودة الطلب الوارد",
+scripts\generate_showcase_portfolio.py:1058:            "مسار متابعة يجعل الخطوة التالية واضحة",
+scripts\generate_showcase_portfolio.py:1059:            "إشارات سلطة يلاحظها المشتري قبل أن يسأل",
+scripts\generate_showcase_portfolio.py:1060:            "مقاييس تكشف هل الرسالة تصل فعلاً",
+scripts\generate_showcase_portfolio.py:1061:            "خطة إعادة استخدام للمحاضرات والصفحات والورش",
+scripts\generate_showcase_portfolio.py:1062:            "حلقة إثبات تراكم الثقة مع الوقت",
+scripts\generate_showcase_portfolio.py:1063:            "طريقة تغليف تحمي السعر المرتفع",
+scripts\generate_showcase_portfolio.py:1064:            "محطات للقارئ تكشف أين ينمو الطلب",
+scripts\generate_showcase_portfolio.py:1065:            "تسليمات فريق تحفظ المعيار التحريري",
+scripts\generate_showcase_portfolio.py:1066:            "نظام ظهور يحافظ على القيمة التجارية للكتاب",
+scripts\generate_showcase_portfolio.py:1069:            "عادات مراجعة تجعل الكتاب أكثر حدة كل ربع سنة",
+scripts\generate_showcase_portfolio.py:1070:            "مزايا طويلة الأثر تتجاوز أسبوع الإطلاق",
+scripts\generate_showcase_portfolio.py:1071:            "تغذية راجعة من القراء تقوي النسخة التالية",
+scripts\generate_showcase_portfolio.py:1072:            "الأصل التالي الذي يجب أن يطلقه هذا الكتاب",
+scripts\generate_showcase_portfolio.py:1073:            "الوعد الختامي الذي سيبقى مع القارئ",
+scripts\generate_showcase_portfolio.py:1074:            "العادات التي تحافظ على الجودة بعد النشر",
+scripts\generate_showcase_portfolio.py:1075:            "التحسينات الصغيرة التي ترفع الثقة بسرعة",
+scripts\generate_showcase_portfolio.py:1076:            "طقس الصيانة الذي يحمي المصداقية",
+scripts\generate_showcase_portfolio.py:1077:            "الاختبار النهائي لكتاب يحقق التحويل حقاً",
+scripts\generate_showcase_portfolio.py:1078:            "طريقة الحفاظ على الوضوح حين يعلو ضجيج السوق",
+scripts\generate_showcase_portfolio.py:1079:            "الميزة الدائمة للانضباط التحريري",
+scripts\generate_showcase_portfolio.py:1080:            "الاستمرارية الهادئة التي تبقي الأصل يبيع",
+scripts\generate_showcase_portfolio.py:1085:            "ابنِ {focus}",
+scripts\generate_showcase_portfolio.py:1086:            "فعّل {focus}",
+scripts\generate_showcase_portfolio.py:1087:            "احمِ {focus}",
+scripts\generate_showcase_portfolio.py:1090:            "تكمن أهمية هذا الفصل في أن {title_lower} هي اللحظة التي يتوقف فيها {topic} عن الظهور كفكرة جميلة فقط، ويبدأ في أخذ شكل يمكن الوثوق به عملياً. بالنسبة إلى {audience}، فإن الفارق بين فكرة جيدة وأصل سلطة واضح يظهر غالباً من طبقة إضافية من البنية. {tone_signal} وعند نهاية هذا الجزء يجب أن يشعر القارئ بمزيد من الاتجاه، وضجيج أقل، وخطوة تالية أوضح.",
+scripts\generate_showcase_portfolio.py:1091:            "يعرف كثير من القراء أنهم يريدون {promise}، لكنهم يبدأون من الجهة الخطأ. يجمعون ملاحظات أكثر، ويضيفون شروحاً أكثر، ويؤجلون القرارات التحريرية التي تبني الثقة فعلاً. هدف هذا الفصل هو كشف ذلك الاحتكاك مبكراً، وتسميته بوضوح، واستبداله بحركة أصغر لكنها أكثر قابلية للتنفيذ اليوم.",
+scripts\generate_showcase_portfolio.py:1092:            "الفصل المفيد لا يكتفي بإلهام القارئ، بل يرتب القرارات. أولاً يثبت ما يجب ألا يضيع. ثم يزيل ما يخفف الوعد. وبعد ذلك يبني تسلسلاً يمكن تكراره غداً بالوضوح نفسه. عندها يبدأ الكتاب في التصرف كنظام عمل لا كمجموعة صفحات مثيرة للاهتمام فقط.",
+scripts\generate_showcase_portfolio.py:1093:            "إذا طبق القارئ هذا الجزء جيداً فلن يغادر بمجرد فكرة لطيفة. سيخرج بجملة، أو قائمة، أو قرار، أو أصل صغير يمكن استخدامه فوراً في المسودة، أو في محادثة بيع، أو في جولة المراجعة التالية. وهذه القابلية للنقل هي ما يحوّل الفصل الجيد إلى أصل يبني الثقة فعلاً.",
+scripts\generate_showcase_portfolio.py:1094:            "الرسالة الأعمق بسيطة: السلطة تنمو عندما يظهر الوضوح قبل الجهد. فإذا حقق القارئ تحسناً مرئياً الآن، صار الفصل التالي أخف وأصبح الكتاب كله أكثر إقناعاً. ولهذا يدفع هذا الجزء نحو قرارات نظيفة، وأدلة ملموسة، ونتيجة يمكن الشعور بها قبل الوصول إلى النهاية.",
+scripts\generate_showcase_portfolio.py:1097:            "Operator Playbook": "النبرة عملية عن قصد: كل صفحة يجب أن تساعد القارئ على اتخاذ قرار تجاري أوضح.",
+scripts\generate_showcase_portfolio.py:1098:            "Mentor Guide": "النبرة هادئة ومساندة حتى يشعر القارئ بأنه مُرشد لا مُلام.",
+scripts\generate_showcase_portfolio.py:1099:            "Systems Manual": "النبرة دقيقة لأن القارئ يحتاج أن يثق بالتسلسل لا بالفكرة وحدها.",
+scripts\generate_showcase_portfolio.py:1100:            "Story-led Manifesto": "النبرة تحمل قدراً أكبر من السرد لأن القناعة تتغير غالباً قبل السلوك.",
+scripts\generate_showcase_portfolio.py:1101:            "Workbook": "النبرة تعود دائماً إلى التطبيق لأن الفكرة غير المستخدمة تفقد قوتها سريعاً.",
+scripts\generate_showcase_portfolio.py:1102:            "Calm Executive Brief": "النبرة تقلل الضجيج عمداً حتى تصبح الخطوة التالية أكثر وضوحاً.",
+scripts\generate_showcase_portfolio.py:1108:            "読者が一文で言い直せる約束",
+scripts\generate_showcase_portfolio.py:1109:            "読者がすでに毎週感じている摩擦",
+scripts\generate_showcase_portfolio.py:1110:            "本当に注意を引く限定された変化",
+scripts\generate_showcase_portfolio.py:1111:            "曖昧なままでいることの静かな代償",
+scripts\generate_showcase_portfolio.py:1112:            "見方を変える最初の証拠",
+scripts\generate_showcase_portfolio.py:1113:            "一ページ目で答えるべき問い",
+scripts\generate_showcase_portfolio.py:1114:            "ノイズを取り除くポジショニングの一文",
+scripts\generate_showcase_portfolio.py:1115:            "早い段階で信頼を得る小さな勝ち",
+scripts\generate_showcase_portfolio.py:1116:            "読者が長く先送りしてきた判断",
+scripts\generate_showcase_portfolio.py:1117:            "権威を弱める思い込み",
+scripts\generate_showcase_portfolio.py:1118:            "この方法の本当の出発点",
+scripts\generate_showcase_portfolio.py:1119:            "本の中心変化を支える切迫感",
+scripts\generate_showcase_portfolio.py:1122:            "読者があなた抜きでも使える枠組み",
+scripts\generate_showcase_portfolio.py:1123:            "勢いを保つ章構成",
+scripts\generate_showcase_portfolio.py:1124:            "方法を再現可能にする反復リズム",
+scripts\generate_showcase_portfolio.py:1125:            "迷いを減らす意思決定の順番",
+scripts\generate_showcase_portfolio.py:1126:            "主張を信頼しやすくする論理の連鎖",
+scripts\generate_showcase_portfolio.py:1127:            "メモを売れる資産に変える構造",
+scripts\generate_showcase_portfolio.py:1128:            "途中離脱を防ぐ作業リズム",
+scripts\generate_showcase_portfolio.py:1129:            "気づきと行動を結ぶ学習フロー",
+scripts\generate_showcase_portfolio.py:1130:            "抽象ではなく実務に見える方法層",
+scripts\generate_showcase_portfolio.py:1131:            "例を具体的で覚えやすく保つ仕組み",
+scripts\generate_showcase_portfolio.py:1132:            "継続を報いる教え方のリズム",
+scripts\generate_showcase_portfolio.py:1133:            "本全体をプロらしく感じさせる背骨",
+scripts\generate_showcase_portfolio.py:1136:            "方法が生きて見える具体例",
+scripts\generate_showcase_portfolio.py:1137:            "価値認識を鋭くする言葉選び",
+scripts\generate_showcase_portfolio.py:1138:            "やった感ではなく前進を生む演習",
+scripts\generate_showcase_portfolio.py:1139:            "静かな反論を消すケースノート",
+scripts\generate_showcase_portfolio.py:1140:            "内省を行動に変える問い",
+scripts\generate_showcase_portfolio.py:1141:            "基準への信頼を高める証明の瞬間",
+scripts\generate_showcase_portfolio.py:1142:            "章の価値を延ばす補助アセット",
+scripts\generate_showcase_portfolio.py:1143:            "脱線を早く止める確認ポイント",
+scripts\generate_showcase_portfolio.py:1144:            "メッセージを締める編集ラウンド",
+scripts\generate_showcase_portfolio.py:1145:            "学びを保持しやすくする物語の打点",
+scripts\generate_showcase_portfolio.py:1146:            "品質を落とさず時間を節約する道具",
+scripts\generate_showcase_portfolio.py:1147:            "進捗を見える形にする読者アクション",
+scripts\generate_showcase_portfolio.py:1150:            "本を実際の提案や収益につなぐ橋",
+scripts\generate_showcase_portfolio.py:1151:            "資産の寿命を延ばす配布習慣",
+scripts\generate_showcase_portfolio.py:1152:            "問い合わせの質を高める位置づけの合図",
+scripts\generate_showcase_portfolio.py:1153:            "次の一歩を自然にするフォロー導線",
+scripts\generate_showcase_portfolio.py:1154:            "相談前に伝わる権威シグナル",
+scripts\generate_showcase_portfolio.py:1155:            "メッセージが届いているかを示す指標",
+scripts\generate_showcase_portfolio.py:1156:            "講演・ページ・講座への再利用計画",
+scripts\generate_showcase_portfolio.py:1157:            "時間とともに信頼を増やす証拠ループ",
+scripts\generate_showcase_portfolio.py:1158:            "高価格を守るパッケージ設計",
+scripts\generate_showcase_portfolio.py:1159:            "需要が伸びる地点を示す読者マイルストーン",
+scripts\generate_showcase_portfolio.py:1160:            "編集基準を守るチーム引き継ぎ",
+scripts\generate_showcase_portfolio.py:1161:            "本を商業的に生かし続ける可視化の仕組み",
+scripts\generate_showcase_portfolio.py:1164:            "四半期ごとに本を研ぎ澄ます見直し習慣",
+scripts\generate_showcase_portfolio.py:1165:            "発売週を超えて残る長期優位",
+scripts\generate_showcase_portfolio.py:1166:            "次版を強くする読者の反応",
+scripts\generate_showcase_portfolio.py:1167:            "この本が次に生むべき資産",
+scripts\generate_showcase_portfolio.py:1168:            "あとで思い出される締めの約束",
+scripts\generate_showcase_portfolio.py:1169:            "出版後も品質を保つ行動",
+scripts\generate_showcase_portfolio.py:1170:            "信頼を最速で高める小さな修正",
+scripts\generate_showcase_portfolio.py:1171:            "信用を守る保守リチュアル",
+scripts\generate_showcase_portfolio.py:1172:            "本当に機能する本かを測る最終テスト",
+scripts\generate_showcase_portfolio.py:1173:            "市場が騒がしくても明確さを保つ方法",
+scripts\generate_showcase_portfolio.py:1174:            "編集規律が残す長い優位",
+scripts\generate_showcase_portfolio.py:1175:            "資産を静かに売り続ける継続動作",
+scripts\generate_showcase_portfolio.py:1178:            "{focus}を明確にする",
+scripts\generate_showcase_portfolio.py:1179:            "{focus}を設計する",
+scripts\generate_showcase_portfolio.py:1180:            "{focus}を組み立てる",
+scripts\generate_showcase_portfolio.py:1181:            "{focus}を動かす",
+scripts\generate_showcase_portfolio.py:1185:            "この章が重要なのは、{title_lower}が、{topic}を単なる魅力的な発想から、実際に信頼できる仕組みへ変える地点だからです。{audience}にとって、面白い知識と権威ある資産の差は、情報量ではなく配置の精度から生まれます。{tone_signal} 読み終える頃には、次に何を決め、何を削り、何を残すべきかが前よりもはっきり見えているはずです。",
+scripts\generate_showcase_portfolio.py:1186:            "多くの読者はすでに{promise}したいと思っています。けれど、仕事への入り口を誤り、ノートを増やし、説明を足し、信頼を生む編集判断を後回しにします。この章の役割は、その見えにくい摩擦を早めに表面化し、言語化し、今日のうちに実行できるより小さな一手へ置き換えることです。",
+scripts\generate_showcase_portfolio.py:1187:            "強い章は、読者を励ますだけではありません。意思決定の順序を整えます。まず、失ってはいけない核を固定します。次に、約束を濁らせる要素を取り除きます。そのうえで、明日も同じ精度で繰り返せる流れを作ります。こうして本は、興味深い断片の集まりではなく、動く運用システムとして振る舞い始めます。",
+scripts\generate_showcase_portfolio.py:1188:            "この節をうまく使えた読者は、気分の良い理解だけを持ち帰りません。原稿、商談、次の見直しにそのまま移せる一文、リスト、判断、または小さな資産を持ち帰ります。この転用可能性こそが、良い章を信頼を生む章へ変える本質です。",
+scripts\generate_showcase_portfolio.py:1189:            "より深い教訓は単純です。努力より先に明確さが見えるとき、信頼は積み上がります。今ここで一つでも目に見える改善が起きれば、次の章は軽くなり、本全体の説得力も上がります。だからこの章は、曖昧な励ましではなく、きれいな判断、具体的な証拠、そして終盤前でも感じられる結果へと読者を押し進めます。",
+scripts\generate_showcase_portfolio.py:1192:            "Operator Playbook": "この章のトーンは実務寄りです。各ページがより良い意思決定につながるよう設計されています。",
+scripts\generate_showcase_portfolio.py:1193:            "Mentor Guide": "この章のトーンは穏やかです。読者が責められるのではなく導かれていると感じられることを重視します。",
+scripts\generate_showcase_portfolio.py:1194:            "Systems Manual": "この章のトーンは精密です。発想だけでなく順序そのものを信頼できる形に整えます。",
+scripts\generate_showcase_portfolio.py:1195:            "Story-led Manifesto": "この章のトーンには少し物語性があります。行動の前に確信が動くことが多いからです。",
+scripts\generate_showcase_portfolio.py:1196:            "Workbook": "この章のトーンは実践重視です。使われない洞察はすぐに熱を失うからです。",
+scripts\generate_showcase_portfolio.py:1197:            "Calm Executive Brief": "この章のトーンは静かです。ノイズを減らし、次の一手を見えやすくするためです。",
+scripts\test_cover_gen.py:8:# ── Load env ────────────────────────────────────────────────
+scripts\test_cover_gen.py:20:# ── Try Gemini API Key from other project if not set ────────
+scripts\test_cover_gen.py:26:# ── Config ──────────────────────────────────────────────────
+scripts\test_cover_gen.py:38:# ── Books ───────────────────────────────────────────────────
+scripts\test_cover_gen.py:56:# ── Prompt builder ──────────────────────────────────────────
+scripts\test_cover_gen.py:69:# ── Vertex Imagen 4.0 via AI Platform ───────────────────────
+scripts\test_cover_gen.py:127:# ── Gemini 2.0 Flash Image Generation ──────────────────────
+scripts\test_cover_gen.py:185:# ── Nano Banana via Codefast ────────────────────────────────
+scripts\test_cover_gen.py:268:# ── Main ────────────────────────────────────────────────────
+tmp\apply_marketing_patches.py:8:        lines[idx] = '              text: "EPUB ve PDF her planda dahil. Ek export seçenekleri üst planlarda açılır. Teslim dosyaları yayın öncesi kontrol etmeyi kolaylaştıracak şekilde hazırlanır.",' 
+tmp\apply_marketing_patches.py:10:        lines[idx] = '            Outline ve kapak önizlemesi ücretsiz. Tam kitap + EPUB/PDF için $4 — bir kez öde, senindir.'
+tmp\apply_marketing_patches.py:12:        lines[idx] = '            Aylık planlarda uygun paketi seçip ödemeyi doğrudan başlatabilirsin.'
+tmp\apply_marketing_patches.py:13:    if 'checkout&apos;u direkt aç' in line:
+tmp\apply_marketing_patches.py:14:        lines[idx] = '              ödemeyi direkt başlat →'
+tmp\apply_marketing_patches.py:24:            badge="Preview nasıl çalışır?"
+tmp\apply_marketing_patches.py:25:            title="Önce preview görürsün, tam kitaba sonra geçersin."
+tmp\apply_marketing_patches.py:26:            description="Ücretsiz kısım karar vermek içindir; tam erişim ise düzenleme ve teslim dosyalarını açar. Kullanıcı neyi ücretsiz gördüğünü, neyi ödeme sonrası açtığını ilk bakışta anlar."
+tmp\apply_marketing_patches.py:32:                <h3 className="text-xl font-semibold tracking-tight text-foreground">Karar vermek için yeterli görünürlük</h3>
+tmp\apply_marketing_patches.py:34:                  <li>• Konu özeti ve kitap yönü</li>
+tmp\apply_marketing_patches.py:35:                  <li>• Bölüm planı ve ilk yapı</li>
+tmp\apply_marketing_patches.py:36:                  <li>• Kapak yönü / önizleme</li>
+tmp\apply_marketing_patches.py:37:                  <li>• İlk içerik örneğini görme</li>
+tmp\apply_marketing_patches.py:43:                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary/80">Tam erişim</p>
+tmp\apply_marketing_patches.py:44:                <h3 className="text-xl font-semibold tracking-tight text-foreground">Kitabı tamamlama ve dışa aktarma</h3>
+tmp\apply_marketing_patches.py:46:                  <li>• Tüm bölümleri açma ve düzenleme</li>
+tmp\apply_marketing_patches.py:47:                  <li>• Kapak ve kitap bilgilerini netleştirme</li>
+tmp\apply_marketing_patches.py:48:                  <li>• EPUB + PDF teslim dosyaları</li>
+tmp\apply_marketing_patches.py:49:                  <li>• Aynı kitap üzerinde çalışmaya devam etme</li>
+tmp\apply_marketing_patches.py:62:    '        description={`Konunu gir, bölüm planını gör, önizlemeyi aç — aynı akışta kapağın ve yayın dosyan hazır olur. ${NO_API_COST_CLAIM}, kredi kartı gerekmez ve kitaplar ${KDP_GUARANTEE_CLAIM} ile hazırlanır.`}',
+tmp\apply_marketing_patches.py:63:    '        description={`Konunu gir, bölüm planını gör, önizlemeyi aç — aynı akışta kapağın ve yayın dosyan hazır olur. ${NO_API_COST_CLAIM}, kredi kartı gerekmez ve teslim paketi ${KDP_GUARANTEE_CLAIM} odağında hazırlanır.`}'
+tmp\apply_marketing_patches.py:70:text = text.replace('          En doğru ilk adım sihirbaz. Konunu gir, sistem seni yönlendirsin; kısa sürede bölüm planın, kapak yönün ve ilk önizlemen hazır olsun.', '          En doğru ilk adım sihirbaz. 5 kısa soruyla başlarsın; sistem seni yönlendirir, bölüm planın ve ilk preview hızlıca görünür olur.')
+tmp\apply_marketing_patches.py:71:text = text.replace('          Kayıt şartsız başla', '          5 soruda başla')
+tmp\apply_marketing_patches.py:75:        <span className="rounded-full border border-border/80 bg-card px-3 py-1">Yaklaşık 2 dakika</span>
+tmp\apply_marketing_patches.py:85:text = text.replace('    label: "Önerilen başlangıç: sihirbaz",', '    label: "Önerilen başlangıç: 5 soruluk sihirbaz",')
+tmp\apply_marketing_patches.py:86:text = text.replace('    description: "Konunu gir, sistem seni adım adım yönlendirsin. Önce bölüm planını ve önizlemeyi gör, sonra tam kitabı açmaya karar ver.",', '    description: "Konunu gir, sistem seni adım adım yönlendirsin. Yaklaşık 5 kısa soruda bölüm planını ve preview’yi gör; tam kitabı açma kararını sonra ver.",')
+tmp\apply_marketing_patches.py:87:text = text.replace('    cta: "Sihirbazı Başlat",', '    cta: "Şimdi Sihirbazı Başlat",')
+tmp\apply_marketing_patches.py:93:text = text.replace('    subtitle = "Konunu yaz, wizard seni yönlendirsin. Outline, kapak ve ilk preview aynı akışta oluşsun. ChatGPT, Canva ve export araçları arasında dağılma.",', '    subtitle = "Konunu yaz, wizard seni yönlendirsin. 5 kısa soruda outline, kapak yönü ve ilk preview aynı akışta oluşsun; farklı araçlar arasında dağılma.",')
+tmp\apply_marketing_patches.py:94:text = text.replace('    ctaText = "Ücretsiz Preview Başlat",', '    ctaText = "5 Soruda Ücretsiz Preview",')
+tmp\apply_marketing_patches.py:95:text = text.replace('    trustNote = `Önce ücretsiz preview gör. Beğenirsen tam kitabı aç. · ${FULL_TRUST_CLAIM}`', '    trustNote = `Önce ücretsiz preview gör. Kredi kartı gerekmez; beğenirsen tam kitabı aç. · ${FULL_TRUST_CLAIM}`')
+tmp\apply_marketing_patches.py:106:              title: "Sadece kapak değil",
+tmp\apply_marketing_patches.py:110:              title: "Gerçek içerik preview",
+tmp\apply_marketing_patches.py:111:              text: "Hızlı bak modunda içindekiler ve ilk bölüm metni yer alır; kaliteyi sadece görselden değil metinden de değerlendirirsin.",
+tmp\apply_marketing_patches.py:114:              title: "Aynı akış sana da açık",
+tmp\apply_marketing_patches.py:115:              text: "Beğendiğin örneğe benzer bir kitabı aynı start akışında kendi konunla başlatabilirsin.",
+tmp\apply_marketing_patches.py:133:text = text.replace('      <section className="shell py-12">\n', '      <section className="shell py-12">\n        <div className="mb-8 grid gap-4 md:grid-cols-3">\n          {[\n            { title: "Genel yanıt süresi", text: "Çoğu mesajı aynı iş günü içinde yanıtlamayı hedefliyoruz." },\n            { title: "En hızlı çözüm için", text: "Kitap slug’ı, preview linki veya ekran görüntüsü paylaş." },\n            { title: "Konu seçimi önemli", text: "Faturalama, erişim ve teknik destek için doğru konu başlığı seçimi süreci hızlandırır." },\n          ].map(({ title, text }) => (\n            <Card key={title}>\n              <CardContent className="space-y-2">\n                <h3 className="text-sm font-semibold text-foreground">{title}</h3>\n                <p className="text-xs leading-6 text-muted-foreground">{text}</p>\n              </CardContent>\n            </Card>\n          ))}\n        </div>\n')
+tmp\apply_marketing_patches.py:139:text = text.replace('              <h4 className="font-semibold text-foreground">Yanıt süresi</h4>\n              <p className="mt-1 text-sm text-muted-foreground">Genelde 2 saat içinde yanıt</p>', '              <h4 className="font-semibold text-foreground">Yanıt süresi</h4>\n              <p className="mt-1 text-sm text-muted-foreground">Çoğu mesaj aynı iş günü içinde yanıtlanır</p>')
+tmp\apply_marketing_patches.py:140:text = text.replace('              <li>• Konu başlığı net olsun</li>\n              <li>• Kitap slug\'ını veya preview linkini ekleyin</li>\n              <li>• Gerekirse ekran görüntüsü paylaşın</li>', '              <li>• Konu başlığı net olsun</li>\n              <li>• Faturalama / erişim / teknik desteği doğru seçin</li>\n              <li>• Kitap slug\'ını veya preview linkini ekleyin</li>\n              <li>• Gerekirse ekran görüntüsü paylaşın</li>')
+tmp\apply_marketing_patches.py:146:text = text.replace('          Önizleme, kütüphane ve ödeme akışı aynı hesapta kalır. Giriş yap, kitabın kaldığı yerden devam etsin.', '          Bu ekran ödeme duvarı değildir. Preview, kütüphane ve ödeme akışı aynı hesapta kalır; giriş yapınca kitabın kaldığı yerden devam eder.')
+tmp\apply_marketing_patches.py:147:text = text.replace('        <div className="rounded-2xl border border-border/70 bg-card/60 px-4 py-3 text-center text-sm text-muted-foreground">', '        <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-center text-sm text-muted-foreground">\n          Preview hazır olduğunda aynı hesapta saklanır.\n        </div>\n        <div className="rounded-2xl border border-border/70 bg-card/60 px-4 py-3 text-center text-sm text-muted-foreground">', 1)
+tmp\apply_marketing_patches.py:152:text = text.replace('          Bu adım ödeme için değil. Hazırlanan kitabını hesabına kaydetmek ve önizleme hazır olduğunda aynı yerden devam etmek için.', '          Bu adım ödeme için değil. Hazırlanan kitabını hesabına kaydetmek, preview’yi saklamak ve aynı yerden devam etmek için.')
+tmp\apply_marketing_patches.py:153:text = text.replace('        <div className="rounded-2xl border border-border/70 bg-card/60 px-4 py-3 text-center text-sm text-muted-foreground">', '        <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-center text-sm text-muted-foreground">\n          Hesabı açtıktan sonra preview ve satın alma akışı aynı yerde kalır.\n        </div>\n        <div className="rounded-2xl border border-border/70 bg-card/60 px-4 py-3 text-center text-sm text-muted-foreground">', 1)
+tmp\patch_pricing.py:5:    '              text: "EPUB ve PDF her planda dahil. HTML ve Markdown Yazar planından itibaren. Tüm formatlar KDP ve e-kitap platformlarına uyumlu.",': '              text: "EPUB ve PDF her planda dahil. Ek export seçenekleri üst planlarda açılır. Teslim dosyaları yayın öncesi kontrol etmeyi kolaylaştıracak şekilde hazırlanır.",',
+tmp\patch_pricing.py:6:    '            Outline ve kapak önizlemesi ücretsiz. Tam kitap + EPUB/PDF için $4 — bir kez öde, senindir.\n            Aylık planlarda checkout\u0026apos;u doğrudan açıp hemen satın alabilirsin.': '            Outline ve kapak önizlemesi ücretsiz. Tam kitap + EPUB/PDF için $4 — bir kez öde, senindir.\n            Aylık planlarda uygun paketi seçip ödemeyi doğrudan başlatabilirsin.',
+tmp\patch_pricing.py:7:    '              checkout\u0026apos;u direkt aç →': '              ödemeyi direkt başlat →',
+tmp\read_pricing.py:4:    if any(key in line for key in ['30 kitap/ay', 'Kanıtlanmış süreç', 'KDP onaylı kitap canlıda', 'soru sormadan', 'HTML ve Markdown', 'checkout', 'HTML çıktısı dahil', 'KDP_LIVE_BOOK_COUNT']):
+tmp\summarize_changes.py:19:needles = ['preview','Preview','KDP','iade','ödeme','Ücretsiz','ücretsiz','5 kısa soru','5 soruda','Süreç netliği','Ek export','Aynı akışta üretim','Bu ekran ödeme duvarı değildir']
+translate_bot.py:19:TURKISH_RE = re.compile(r'[ğüşıöçĞÜŞİÖÇ]')
+translate_bot.py:92:    # ── Strategy 1: Simple string literal replacement ──
+translate_bot.py:95:    for m in re.finditer(r'"([^"]*[ğüşıöçĞÜŞİÖÇ][^"]*)"', new_line):
+translate_bot.py:103:    for m in re.finditer(r"'([^']*[ğüşıöçĞÜŞİÖÇ][^']*)'", new_line):
+translate_bot.py:111:    for m in re.finditer(r'`([^`]*[ğüşıöçĞÜŞİÖÇ][^`]*)`', new_line):
+translate_bot.py:118:    # ── Strategy 2: JSX text nodes (text between > and <) ──
+translate_bot.py:121:        for m in re.finditer(r'>([^<{}]*[ğüşıöçĞÜŞİÖÇ][^<{}]*)<', new_line):
+translate_bot.py:134:    # ── Strategy 3: JSX text-only lines (bare text in JSX) ──
+translate_bot.py:143:    # ── Strategy 4: Comments ──
+translate_bot.py:209:# ─── SCANNING ────────────────────────────────────────────
+translate_bot.py:240:# ─── MAIN ────────────────────────────────────────────────
+translate_bot.py:295:            "Kitap Oluşturucu ile kitabını oluştur",
+translate_bot.py:296:            "Bölüm 1: Giriş",
+translate_bot.py:298:            'const msg = "Hoş geldiniz";',
+translate_bot_v5.py:17:# ── Config ──────────────────────────────────────────────
+translate_bot_v5.py:23:TR_CHARS = set("ğüşöçıĞÜŞÖÇİ")
+translate_bot_v5.py:77:    for m in re.finditer(r'(?<!\\)["\']([^"\']*[ğüşöçıĞÜŞÖÇİ][^"\']*)["\']', line):
+translate_bot_v5.py:86:    for m in re.finditer(r'`([^`]*[ğüşöçıĞÜŞÖÇİ][^`]*)`', line):
+translate_bot_v5.py:94:    # Match JSX text: >Türkçe metin<
+translate_bot_v5.py:95:    for m in re.finditer(r'>([^<>{]*[ğüşöçıĞÜŞÖÇİ][^<>{]*)<', line):
+translate_bot_v5.py:106:    # Match comments: // Türkçe
+translate_bot_v5.py:107:    for m in re.finditer(r'(//[^\n]*[ğüşöçıĞÜŞÖÇİ][^\n]*)', line):
+translate_bot_v6.py:16:# ── Config ──────────────────────────────────────────────
+translate_bot_v6.py:21:TR_CHARS = set("ğüşöçıĞÜŞÖÇİ")
+translate_bot_v6.py:31:    "Nasıl Çalışır": "How It Works",
+translate_bot_v6.py:34:    "Karşılaştır": "Compare",
+translate_bot_v6.py:36:    "Araçlar": "Tools",
+translate_bot_v6.py:39:    "Giriş Yap": "Log In",
+translate_bot_v6.py:45:    "Menüyü aç": "Open menu",
+translate_bot_v6.py:46:    "Ana içeriğe geç": "Skip to main content",
+translate_bot_v6.py:50:    "Oluşturucu": "Creator",
+translate_bot_v6.py:51:    "oluşturucu": "creator",
+translate_bot_v6.py:52:    "Başlık": "Title",
+translate_bot_v6.py:53:    "başlık": "title",
+translate_bot_v6.py:54:    "Açıklama": "Description",
+translate_bot_v6.py:55:    "açıklama": "description",
+translate_bot_v6.py:58:    "İçindekiler": "Table of Contents",
+translate_bot_v6.py:59:    "Giriş": "Introduction",
+translate_bot_v6.py:60:    "Sonuç": "Conclusion",
+translate_bot_v6.py:89:    "İletişim": "Contact",
+translate_bot_v6.py:90:    "iletişim": "contact",
+translate_bot_v6.py:93:    "Şartlar": "Terms",
+translate_bot_v6.py:94:    "şartlar": "terms",
+translate_bot_v6.py:103:    "Şifre": "Password",
+translate_bot_v6.py:104:    "şifre": "password",
+translate_bot_v6.py:120:    "Başlangıç": "Starter",
+translate_bot_v6.py:121:    "başlangıç": "starter",
+translate_bot_v6.py:192:- Only translate Turkish text (words with ğ,ü,ş,ö,ç,ı,İ characters)
+update_blog_posts.py:14:    '    intro: "Kitabın hazır, yükleme zamanı geldi. Ama KDP yükleme ekranına geçmeden önce birkaç dakika harcayıp temel kontrolleri yapmak, ilerleyen günlerde düzeltme döngüsünden seni kurtarır. Reddedilen başvurular ve düşük dönüşüm oranları çoğunlukla önlenebilir hatalardan kaynaklanır. Bu yazı uzun bir kontrol listesi değil — yükleme öncesi yapman gereken en kritik beş kontrol.",'
+update_blog_posts.py:17:    '    intro: "Kitabın hazır, yükleme zamanı geldi. Ama KDP yükleme ekranına geçmeden önce birkaç dakika harcayıp temel kontrolleri yapmak, ilerleyen günlerde düzeltme döngüsünden seni kurtarır. Reddedilen başvurular ve düşük dönüşüm oranları çoğunlukla önlenebilir hatalardan kaynaklanır — başlık yanlış kategoride, kapak boyutu hatalı, açıklama ilk cümlede okuru kaybediyor. Bu yazı uzun bir kontrol listesi değil; yükleme öncesi yapman gereken en kritik beş kontrolü, her birinin neden önemli olduğunu ve nasıl düzeltileceğini pratik örneklerle anlatıyor. Bu kontrolleri yapan yayıncılar, yayın sonrası \'neden satış yok?\' sorusunu çok daha az soruyor.",'
+update_blog_posts.py:22:    '      ["Metadata net mi?", "KDP\'de başlık, alt başlık ve kitap açıklaması en kritik alandır. '
+update_blog_posts.py:23:    'Başlık kitabın ne hakkında olduğunu tek cümlede anlatmalı. Alt başlık varsa hedef kitleyi veya vaadi netleştirmeli. '
+update_blog_posts.py:24:    'Açıklama ise okura şunu sormalı: bu kitap benim için mi? İlk iki cümle en önemli — çünkü birçok platformda açıklamanın '
+update_blog_posts.py:25:    'tamamı görünmez, sadece ilk birkaç satır görünür. Keyword olarak kullandığın anahtar kelimelerin başlık ve açıklamada '
+update_blog_posts.py:26:    'doğal biçimde geçtiğinden emin ol."],'
+update_blog_posts.py:29:    '      ["Metadata net mi?", "KDP\'de başlık, alt başlık ve kitap açıklaması en kritik alandır çünkü Amazon algoritması '
+update_blog_posts.py:30:    'bu alanlardaki kelimelere bakarak kitabı sınıflandırıyor ve potansiyel okurlarına gösteriyor. Başlık kitabın ne hakkında '
+update_blog_posts.py:31:    'olduğunu tek cümlede anlatmalı — belirsiz ya da sadece yaratıcı başlıklar arama trafiğini öldürür. Örneğin \'Dijital '
+update_blog_posts.py:32:    'Özgürlük\' yerine \'Freelance Hayata Geçiş: 90 Günde Kurumsal İşten Bağımsız Kariyere\' çok daha güçlü bir başlıktır. '
+update_blog_posts.py:33:    'Alt başlık varsa hedef kitleyi veya vaadi netleştirmeli; okura \'bu kitap senin için mi?\' sorusunu yanıtlatmalı. '
+update_blog_posts.py:34:    'Açıklamanın ilk iki cümlesi en kritik alan: birçok platformda açıklamanın tamamı görünmez, yalnızca ilk kırk-elli kelime '
+update_blog_posts.py:35:    'ekranda yer alır. \'Bu kitapta X öğreneceksin\' ile başlamak yerine okurda bir tanıma anı yaratan bir cümle dene: '
+update_blog_posts.py:36:    '\'Her sabah işe gitmeye zorlanıyorsan, bu kitap tam senin için.\' Kullandığın anahtar kelimelerin başlık ve açıklamada '
+update_blog_posts.py:37:    'doğal biçimde geçmesi hem arama sıralamasına hem de okur güvenine katkı sağlar."],'
+update_blog_posts.py:42:    '      ["Kategori ve anahtar kelimeler seçildi mi?", "KDP iki kategori ve yedi anahtar kelime seçmenize izin veriyor. '
+update_blog_posts.py:43:    'Kategori seçimi hem keşfedilirliği hem de en çok satanlar sıralamasını etkiliyor. Rekabeti düşük, ilgili bir alt '
+update_blog_posts.py:44:    'kategoride yer almak ana kategoride kaybolmaktan çok daha değerlidir. Anahtar kelimeler için gerçek okur aramalarını '
+update_blog_posts.py:45:    'düşün — jargon değil, birinin Amazon arama kutusuna ne yazacağını tahmin et. Bu alanda küçük bir araştırma, organik '
+update_blog_posts.py:46:    'erişimde büyük fark yaratır."],'
+update_blog_posts.py:49:    '      ["Kategori ve anahtar kelimeler seçildi mi?", "KDP iki kategori ve yedi anahtar kelime seçmenize izin veriyor — '
+update_blog_posts.py:50:    'bu alanları boş bırakmak ya da rastgele doldurmak ciddi bir keşfedilirlik kaybıdır. Kategori seçimi hem organik arama '
+update_blog_posts.py:51:    'görünürlüğünü hem de \'En Çok Satanlar\' rozet olasılığını doğrudan etkiliyor. Ana kategoride yüzlerce kitabın arasında '
+update_blog_posts.py:52:    'kaybolmak yerine, daha küçük ama ilgili bir alt kategoride yer almak çok daha değerlidir. Örneğin \'İş ve Kariyer\' gibi '
+update_blog_posts.py:53:    'geniş bir kategori yerine \'Serbest Çalışma ve Fiyatlandırma Stratejileri\' gibi niş bir alt kategori, ilk aylarda '
+update_blog_posts.py:54:    'rakiplerinden sıyrılmana yardımcı olur. Anahtar kelimeler için jargon değil, gerçek okur aramaları düşün: bir kişi Amazon '
+update_blog_posts.py:55:    'arama kutusuna ne yazar? Bu soruyu yanıtlamak için Amazon\'un otomatik tamamlama önerilerini kullan — ücretsiz ve doğrudan '
+update_blog_posts.py:56:    'gerçek kullanıcı davranışından besleniyor. Bu alanda on dakika harcamak, kitabın aylarca organik erişim farkı yaratabilir."],'
+update_blog_posts.py:59:# Section: İçerik akışı temiz mi?
+update_blog_posts.py:61:    '      ["İçerik akışı temiz mi?", "Bölüm sırası mantıklı mı? Her bölüm öncekinin üzerine inşa ediyor mu? Tekrar eden '
+update_blog_posts.py:62:    'paragraflar, yarım kalan başlıklar veya bağlamdan kopuk bölümler var mı? Kitabı en başından sonuna hızlıca tarayarak '
+update_blog_posts.py:63:    'yapısal sorunları yakala. Cümle cümle okumak gerekmez — sadece bölüm başlıklarını ve her bölümün ilk cümlesini kontrol '
+update_blog_posts.py:64:    'etmek bile akış sorunlarını görmenizi sağlar. Özellikle AI taslağından gelen içeriklerde aynı fikrin farklı bölümlerde '
+update_blog_posts.py:65:    'tekrar ettiği görülebilir."],'
+update_blog_posts.py:68:    '      ["İçerik akışı temiz mi?", "Yükleme öncesi içerik kontrolü kelime kelime düzeltme anlamına gelmiyor — asıl hedef '
+update_blog_posts.py:69:    'yapısal sorunları yakalamak. Önce bölüm başlıklarına bak: sırayla okuyunca bir mantık akışı görüyor musun? Her bölüm bir '
+update_blog_posts.py:70:    'öncekinin üzerine inşa ediyor mu, yoksa birbirinden bağımsız parçalar mı sıralanmış? Sonra her bölümün yalnızca ilk '
+update_blog_posts.py:71:    'cümlesini oku: bölüm ne hakkında olduğunu ilk cümlede net söylüyor mu? Bu hızlı tarama, bağlamdan kopuk bölümleri ve '
+update_blog_posts.py:72:    'gereksiz tekrarları çoğu zaman saniyeler içinde ortaya çıkarır. Özellikle AI taslağından üretilen içeriklerde aynı fikrin '
+update_blog_posts.py:73:    'farklı bölümlerde farklı kelimelerle yinelendiği sık görülür. Bir de \'bunu çıkarırsam okur ne kaybeder?\' testini uygula: '
+update_blog_posts.py:74:    'eğer bir bölümü çıkardığında kitap daha akıcı okunuyorsa o bölüm muhtemelen gereksizdir. Temiz bir akış iade oranını '
+update_blog_posts.py:75:    'düşürür ve olumlu yorum alma ihtimalini artırır."],'
+update_blog_posts.py:80:    '      ["Kapak KDP gereksinimlerini karşılıyor mu?", "KDP dijital kitap kapağı için minimum 1000 piksel genişlik, ideal '
+update_blog_posts.py:81:    '2560x1600 piksel ve 1.6:1 en boy oranı istiyor. Baskılı kitap için ise ön kapak, arka kapak ve sırt birleşik tek PDF '
+update_blog_posts.py:82:    'olarak hazırlanmalı — boyutlar sayfa sayısına göre değişiyor. Kapağın küçük thumbnail görünümünde bile başlığın okunabilir '
+update_blog_posts.py:83:    'olması kritik: Kindle listelerinde kitabın küçücük bir kare olarak göründüğünü unutma. Kapak türe uygun mu? Rehber, iş veya '
+update_blog_posts.py:84:    'eğitim kitabı görünümü profesyonellik sinyali veriyor."],'
+update_blog_posts.py:87:    '      ["Kapak KDP gereksinimlerini karşılıyor mu?", "KDP dijital kitap kapağı için minimum 1000 piksel genişlik, ideal '
+update_blog_posts.py:88:    '2560x1600 piksel çözünürlük ve 1.6:1 en boy oranı gerektiriyor. Bu şartları karşılamayan kapaklar ya yükleme sırasında '
+update_blog_posts.py:89:    'reddediliyor ya da platformda bulanık ve pikselleşmiş görünüyor — her iki durum da profesyonellik algısını anında zedeliyor. '
+update_blog_posts.py:90:    'Baskılı kitap için ön kapak, arka kapak ve sırt birleşik tek PDF olarak hazırlanmalı; sırt genişliği sayfa sayısına göre '
+update_blog_posts.py:91:    'değişiyor ve KDP\'nin şablon hesap aracını kullanmak zorunlu. Kapağı yüklemeden önce küçük thumbnail boyutuna indirip '
+update_blog_posts.py:92:    'başlığın hâlâ okunabilir olup olmadığını test et. Kindle mağazasında kitaplar liste görünümünde küçücük bir kare olarak '
+update_blog_posts.py:93:    'görünüyor; bu boyutta başlık seçilemeyen kapaklar tıklanma almıyor. Kapak türle de uyuşmalı: rehber ve iş kitabı görünümü '
+update_blog_posts.py:94:    '— temiz zemin, tipografi ağırlıklı, minimal ikon — güven sinyali verirken kurgu kapağı gibi tasarlanmış bir non-fiction '
+update_blog_posts.py:95:    'kapak okuru şaşırtır ve dönüşümü düşürür."],'
+update_blog_posts.py:100:    '      ["Dosya teknik olarak sorunsuz mu?", "EPUB yüklemeden önce bir doğrulama aracıyla kontrol etmek iyi bir alışkanlık. '
+update_blog_posts.py:101:    'KDP kendi önizleme aracına sahip — Kindle Previewer veya tarayıcı tabanlı önizleme. İçindekiler tablosu doğru linkleri '
+update_blog_posts.py:103:    'bildirimi almak süreci uzatır. Book Generator çıktıları platform uyumlu üretir ama son kontrolü yine de yapmak iyi pratik."],'
+update_blog_posts.py:107:    'tarayıcı tabanlı KDP önizleme aracıyla test etmek ciddi sorunları erkenden yakalamanı sağlar. Kontrol edilmesi gereken '
+update_blog_posts.py:108:    'başlıca noktalar: İçindekiler tablosu doğru bölümlere link veriyor mu? Her bölüm başlığı gerçekten yeni bir sayfada '
+update_blog_posts.py:109:    'başlıyor mu? Görseller varsa tüm cihazlarda düzgün görünüyor mu? Fontlar EPUB dosyasına gömülü mü? Bu son nokta özellikle '
+update_blog_posts.py:110:    'önemli: gömülü olmayan fontlar farklı cihazlarda öngörülemeyen görünümler üretiyor ve okuma deneyimini bozuyor. Eğer '
+update_blog_posts.py:111:    'baskılı kitap için PDF yüklüyorsan kenar boşluklarının, trim size ayarının ve bleed değerlerinin KDP şartname sayfasındaki '
+update_blog_posts.py:112:    'ölçülerle uyuştuğundan emin ol. Book Generator çıktıları platform uyumlu üretir ama son doğrulamayı yapmak iyi pratik — '
+update_blog_posts.py:113:    'bu beş dakikalık kontrol, ilerleyen dönemde saatlik düzeltme turlarının önüne geçer."],'
+update_blog_posts.py:118:    '      ["Yayın öncesi son tur", "Yukarıdaki beş kontrol tamamsa bir adım daha: kitabı KDP önizleyicisinde gözden geçir. '
+update_blog_posts.py:119:    'Asıl okuma deneyimini simüle eder. Sayfa geçişleri, bölüm başları ve genel görünüm burada netleşir. Küçük sorunlar '
+update_blog_posts.py:120:    'düzeltme döngüsü gerektirmez — direkt güncelleme yükleyebilirsin. Ama büyük yapısal sorunları yayın sonrası fark etmek '
+update_blog_posts.py:121:    'hem zaman kaybettirir hem de ilk izlenimleri bozabilir. Beş dakika harcayıp kontrol et, sonra yayınla."],'
+update_blog_posts.py:124:    '      ["Yayın öncesi son tur", "Beş kontrol tamamlandıktan sonra bir adım daha: kitabı KDP\'nin Kindle Previewer aracında '
+update_blog_posts.py:125:    'baştan sona gözden geçir. Bu araç üç farklı cihaz görünümü sunuyor — telefon, tablet ve e-ink okuyucu. Kitabın üç '
+update_blog_posts.py:126:    'görünümde de okunabilir ve tutarlı görünmesi yayın kalitesinin temel ölçütü. Sayfa geçişlerinde garip atlama oluyor mu? '
+update_blog_posts.py:127:    'Bölüm başları her zaman yeni sayfada mı açılıyor? Özel karakterler ya da liste maddeleri doğru görünüyor mu? Bu turda '
+update_blog_posts.py:128:    'gördüğün küçük sorunları düzeltmek için kitabı tekrar yüklemene gerek yok — dosyayı düzeltip yeni sürümü yükleyebilirsin, '
+update_blog_posts.py:129:    'yayınlanmış kitabı da sonradan güncelleyebilirsin. Ama büyük yapısal sorunları yayın sonrası fark etmek hem erken alınan '
+update_blog_posts.py:130:    'olumsuz yorumlar hem de ilk izlenim kaybı açısından maliyetlidir. Bu son tura on dakika ayır; mükemmel olmak zorunda '
+update_blog_posts.py:131:    'değil, yayınlanmaya hazır olmak yeterli."],'
+update_blog_posts.py:156:    'belki de herkese göre değildir. Ama gerçekte çoğu insan yazarlıktan değil, başlamaktan korkuyor. Ve başlamak için '
+update_blog_posts.py:161:    'belki de herkese göre değildir. Oysa rehber kitap ve bilgi kitabı yazmak, edebi roman yazmaktan bambayla farklı bir iştir. '
+update_blog_posts.py:162:    'Burada güzel cümleler değil, net bilgi ve doğru yapı önemlidir. Gerçekte çoğu insan yazarlıktan değil, başlamaktan '
+update_blog_posts.py:163:    'korkuyor — ve başlamak için mükemmel bir yazar olmana hiç gerek yok. Doğru bir araç ve net bir konu, seni beklediğinden '
+update_blog_posts.py:164:    'çok daha hızlı bir kitap sahibi yapabilir.",'
+update_blog_posts.py:168:    '      ["Yazarlık korkusu gerçek mi?", "Evet, gerçek — ama çoğu zaman yanlış kaynaktan geliyor. İnsanlar \'iyi bir yazar '
+update_blog_posts.py:169:    'olmam lazım\' diye düşünür. Oysa bilgi kitabı yazarlığı edebi bir roman yazmaktan çok farklıdır. Rehber kitapta okur '
+update_blog_posts.py:170:    'senden güzel cümleler değil, net bilgi ve pratik yönlendirme bekler. Zaten bildiğin bir konuda birikimini aktarıyorsun '
+update_blog_posts.py:171:    '— bu konuşmaktan pek farklı değil. Farklılık sadece yapıda: kitap, konuşmayı belirli bir sıraya sokar."],'
+update_blog_posts.py:174:    '      ["Yazarlık korkusu gerçek mi?", "Evet, gerçek — ama çoğu zaman yanlış kaynaktan geliyor. İnsanlar \'iyi bir yazar '
+update_blog_posts.py:175:    'olmam lazım\' diye düşünür; bu düşünce başlamalarını engelleyen en büyük mentol bloğa dönüşür. Oysa bilgi kitabı '
+update_blog_posts.py:176:    'yazarlığı edebi bir roman yazmaktan tamamen farklıdır. Bir romanda üslup, dil zenginliği ve kurgusal yaratıcılık '
+update_blog_posts.py:177:    'merkezde yer alır. Rehber kitapta ise okur senden güzel cümleler değil, net bilgi ve pratik yönlendirme bekler. '
+update_blog_posts.py:178:    'Zaten bildiğin bir konuda birikimini aktarıyorsun — bu bir arkadaşına bir şeyi anlatmaktan pek farklı değil. Bir '
+update_blog_posts.py:179:    'koç, danışman ya da deneyimli bir uygulayıcı olarak zaten sahip olduğun bilgiyi kağıda dökmek yazarlık değil, '
+update_blog_posts.py:180:    'aktarım becerisidir. Farklılık sadece yapıda: kitap, konuşmayı belirli bir sıraya sokar ve okura adım adım ilerler. '
+update_blog_posts.py:181:    'Bu yapıyı kurmak için de çok güçlü bir yazar olmak gerekmez."],'
+update_blog_posts.py:186:    'üretiminde ise rolün değişiyor: sen yönlendiriyorsun, sistem taslak üretiyor, sen düzenliyorsun. Bu süreçte yazarlık '
+update_blog_posts.py:187:    'becerisi değil, içerik kararları alabilmek önemli. Konu ne olacak? Hangi bölümler olacak? Hangi örnekler verilecek? '
+update_blog_posts.py:188:    'Bu soruları cevaplayabiliyorsan kitap yazabilirsin. Cümleleri mükemmel kurmak zorunda değilsin — taslağı görüp \'bu '
+update_blog_posts.py:189:    'doğru mu, eksik mi, değişmeli mi\' diyebilmek yeterli."],'
+update_blog_posts.py:192:    '      ["Yazmak ile yönlendirmek farkı", "Geleneksel kitap yazımında her kelimeyi sen üretirsin — boş sayfayla başlarsın, '
+update_blog_posts.py:193:    'her cümle senden çıkar, her paragraf senin emeğindir. AI destekli kitap üretiminde ise rolün köklü biçimde değişiyor: '
+update_blog_posts.py:194:    'sen yönlendiriyorsun, sistem taslak üretiyor, sen düzenliyorsun. Bu süreçte yazarlık becerisi değil, içerik kararları '
+update_blog_posts.py:196:    'cevaplayabiliyorsan kitap üretebilirsin. Cümleleri mükemmel kurmak zorunda değilsin — taslağı görüp \'bu doğru mu, eksik '
+update_blog_posts.py:197:    'mi, değişmeli mi?\' diyebilmek yeterli. Bu rol bir editöre ya da proje yöneticisine benziyor: nihai kararlar sende, '
+update_blog_posts.py:198:    'üretim ağırlığı araçta. Yazarlık korkusunu bu zihinsel çerçeve ile ele almak, çoğu insanın ilk adımı atmasını kolaylaştırıyor."],'
+update_blog_posts.py:202:    '      ["AI aracın rolü nedir?", "Book Generator gibi araçlar seni boş sayfayla başa başa bırakmaz. Konu, hedef okur ve '
+update_blog_posts.py:203:    'ton bilgilerini girdiğinde sistem bir outline önerir. Outline\'ı onayladığında bölüm içeriklerini üretir. Her aşamada '
+update_blog_posts.py:204:    'sana düzenleme, yeniden üretim veya elle yazma seçeneği sunar. Araç bir taslak makinesidir — kaba heykel seni bekliyor, '
+update_blog_posts.py:205:    'sen son şekli veriyorsun. Bu süreçte \'yazarlık\' değil, içerik editörlüğü yapıyorsun."],'
+update_blog_posts.py:208:    '      ["AI aracın rolü nedir?", "Book Generator gibi araçlar seni boş sayfayla başa başa bırakmaz. Konu, hedef okur ve '
+update_blog_posts.py:209:    'ton bilgilerini girdiğinde sistem bir outline önerir — bölüm başlıkları, önerilen sıralama ve genel yapıyla birlikte. '
+update_blog_posts.py:210:    'Outline\'ı onayladığında bölüm içeriklerini üretir; her bölümü ayrı ayrı gözden geçirip düzenleyebilirsin. Her aşamada '
+update_blog_posts.py:211:    'sana düzenleme, yeniden üretim veya elle yazma seçeneği sunar. Araç bir taslak makinesidir — heykel kaba halde seni '
+update_blog_posts.py:212:    'bekliyor, sen son şekli veriyorsun. Bu süreçte \'yazarlık\' değil, içerik editörlüğü yapıyorsun: hangi bölüm kalacak, '
+update_blog_posts.py:213:    'hangi cümle değişecek, hangi örnek daha somut hale getirilecek? Bu kararlar senin uzmanlığını yansıtıyor. Araç sadece '
+update_blog_posts.py:214:    'taslağı hızlı kuruyor; kitabın kalitesi senin düzenleme gözüne ve konu bilgine bağlı."],'
+update_blog_posts.py:218:    '      ["Sihirbaz akışı neden fark yaratıyor?", "İlk kullanıcının en büyük engeli boş ekrandır. Neyi soracağını '
+update_blog_posts.py:219:    'bilmeden, nereden başlayacağını bilmeden geçen her dakika motivasyonu düşürür. Wizard akışı bu engeli ortadan kaldırır: '
+update_blog_posts.py:220:    'sana sırayla sorular sorar, cevaplarına göre ilerler. Konu ne? Hedef okur kim? Kitap kaç bölüm olsun? Ton nasıl olsun? '
+update_blog_posts.py:221:    'Bu soruları cevapladığında zaten bir taslağın var. Boş ekranda sıfırdan başlamak yerine hazır bir yapıyla başlamak, '
+update_blog_posts.py:225:    '      ["Sihirbaz akışı neden fark yaratıyor?", "İlk kullanıcının en büyük engeli boş ekrandır. \'Nereden başlayayım?\' '
+update_blog_posts.py:226:    'sorusu cevapsız kaldığında insanlar ya mükemmeliyetçilikle felç oluyor ya da süreci sonsuza erteliyor. Neyi soracağını '
+update_blog_posts.py:227:    'bilmeden, nereden başlayacağını bilmeden geçen her dakika motivasyonu düşürür. Wizard akışı bu engeli ortadan kaldırır: '
+update_blog_posts.py:228:    'sana sırayla yönlendirilmiş sorular sorar, cevaplarına göre ilerler. Konu ne? Hedef okur kim? Kitap kaç bölüm olsun? '
+update_blog_posts.py:229:    'Ton nasıl olsun? Bu soruları cevapladığında sistemin elinde bir brief var — ve kısa sürede sana bir taslak sunuyor. '
+update_blog_posts.py:230:    'Boş ekranda sıfırdan başlamak yerine hazır bir yapıyla başlamak, özellikle ilk kitabında devasa bir fark yaratır. '
+update_blog_posts.py:231:    'Düzeltmek, sıfırdan kurmaktan her zaman daha kolaydır. Wizard seni bu noktaya taşıyor."],'
+update_blog_posts.py:235:    '      ["Net amaç mükemmel prompttan üstündür", "AI araçlarıyla çalışırken en sık duyulan tavsiye daha iyi prompt '
+update_blog_posts.py:236:    'yazmak olur. Ama gerçekte asıl fark yaratan şey prompt kalitesi değil, içerik netliğidir. Ne anlatmak istediğini '
+update_blog_posts.py:237:    'biliyorsan, kime yazıyorsun biliyorsan, kitabın sonunda okur ne kazanacak biliyorsan — sistem bunu çok daha iyi bir '
+update_blog_posts.py:238:    'çıktıya dönüştürebilir. Teknik prompt becerisine ihtiyaç duymadan, sadece konunu ve amacını net biçimde ifade ederek '
+update_blog_posts.py:239:    'çok iyi sonuçlar alabilirsin."],'
+update_blog_posts.py:242:    '      ["Net amaç mükemmel prompttan üstündür", "AI araçlarıyla çalışırken en sık duyulan tavsiye daha iyi prompt '
+update_blog_posts.py:243:    'yazmak olur — \'doğru prompt yazmasını bilmiyorum\' kaygısı, başlamayı engelleyen bir başka duvar haline gelir. Ama '
+update_blog_posts.py:244:    'gerçekte asıl fark yaratan şey teknik prompt becerisi değil, içerik netliğidir. Şu üç soruya cevap verebildiğinde '
+update_blog_posts.py:245:    'sistem zaten çok daha iyi çalışır: Ne anlatmak istiyorum? Kime yazıyorum? Kitabı bitiren okur ne yapabilecek ya da '
+update_blog_posts.py:246:    'ne bilecek? Bu sorulara net cevabın varsa, sistem bunu işlevsel bir kitap yapısına dönüştürebilir. Teknik prompt '
+update_blog_posts.py:247:    'becerisine ihtiyaç duymadan, sadece konunu ve amacını samimi biçimde ifade ederek çok iyi sonuçlar alabilirsin. '
+update_blog_posts.py:248:    'Prompt mühendisliği değil, içerik sahibi olmak asıl güç kaynağı."],'
+update_blog_posts.py:252:    '      ["İlk adımı atmak için ne lazım?", "Sadece bir konu. Ve o konuda başkasına anlatabilecek bir şeyin olması. '
+update_blog_posts.py:254:    'Türkçe arayüzle çalışır ve kitabı istediğin dilde üretir. Kayıt olmadan başlayabilirsin — konu girişi yap, 30 '
+update_blog_posts.py:255:    'saniyede outline ve kapak önizlemeni gör. Beğenmediysen geri dön ve değiştir. Risk yok, boş sayfa yok."],'
+update_blog_posts.py:258:    '      ["İlk adımı atmak için ne lazım?", "Sadece bir konu. Ve o konuda başkasına anlatabilecek bir şeyin olması — '
+update_blog_posts.py:259:    'yıllar içinde öğrendiğin bir beceri, defalarca yaşadığın bir süreç, sürekli soru aldığın bir alan. Yazarlık '
+update_blog_posts.py:260:    'deneyimine, akıcı bir İngilizceye ya da yayıncılık sektörü hakkında uzmanlığa ihtiyacın yok. Book Generator Türkçe '
+update_blog_posts.py:261:    'arayüzle çalışır ve kitabı istediğin dilde üretir — Türkçe brief gir, İngilizce kitap çıkar. Kayıt olmadan '
+update_blog_posts.py:262:    'başlayabilirsin: konu girişi yap, 30 saniyede outline ve kapak önizlemeni gör. Beğenmediysen geri dön, konuyu '
+update_blog_posts.py:263:    'değiştir, farklı bir yön dene. Risk yok, boş sayfa yok, ön bilgi şartı yok. Yazarlık korkusunu aşmanın en iyi '
+update_blog_posts.py:264:    'yolu tartışmak değil, bir taslak görmektir — ve bunu görmek için sadece bir konu girmen yeterli."],'
+update_blog_posts.py:287:    '    intro: "Kitap fikri bulmak çoğu zaman ilham beklemek gibi hissettirir — bir gün doğru konu kendiliğinden gelecek. '
+update_blog_posts.py:288:    'Ama en iyi kitap fikirleri ilhamdan değil, net bir okur ihtiyacıyla örtüşen gerçek bir uzmanlıktan doğar. Bu yazı, '
+update_blog_posts.py:289:    'konu seçimini sezgiden çıkarıp sistematik bir karar sürecine taşımanı sağlıyor.",'
+update_blog_posts.py:292:    '    intro: "Kitap fikri bulmak çoğu zaman ilham beklemek gibi hissettirir — bir gün doğru konu kendiliğinden gelecek. '
+update_blog_posts.py:293:    'Bu bekleme, çoğu zaman kitabın hiç yazılmamasıyla sonuçlanır. Oysa en iyi kitap fikirleri ilhamdan değil, net bir okur '
+update_blog_posts.py:294:    'ihtiyacıyla örtüşen gerçek bir uzmanlıktan doğar. Konu seçimi bir estetik karar değil, stratejik bir karardır: doğru '
+update_blog_posts.py:295:    'konuyu seçen yazar hem yazmakta zorlanmaz hem de kitabını satmakta. Bu yazı, konu seçimini sezgiden çıkarıp somut '
+update_blog_posts.py:296:    'verilere dayanan sistematik bir karar sürecine taşımanı sağlıyor.",'
+update_blog_posts.py:300:    '      ["Neden konu seçimi bu kadar önemli?", "Yanlış konuyla başlamak, kitabın her aşamasını zorlaştırır. İçerik '
+update_blog_posts.py:301:    'dağınık olur, okur kitlesi belirsizleşir, pazarlama mesajı tutarsızlaşır. Öte yandan doğru konu seçimi her şeyi '
+update_blog_posts.py:302:    'kolaylaştırır: bölüm yapısı kendiliğinden oturur, örnekler aklına daha hızlı gelir, okura hitap etmek kolaylaşır. '
+update_blog_posts.py:303:    'Konu seçiminde iki temel soru var: bu konuda gerçekten bir şeyler biliyor musun, ve bu konuyu arayan gerçek bir '
+update_blog_posts.py:307:    '      ["Neden konu seçimi bu kadar önemli?", "Yanlış konuyla başlamak, kitabın her aşamasını zorlaştırır. İçerik '
+update_blog_posts.py:308:    'dağınık olur çünkü sınırları belli olmayan bir konuyu yapılandırmak güçtür; okur kitlesi belirsizleşir çünkü herkese '
+update_blog_posts.py:309:    'hitap etmeye çalışan kitap kimseye tam olarak hitap edemez; pazarlama mesajı tutarsızlaşır çünkü kitabın ne vaddettiği '
+update_blog_posts.py:310:    'net değildir. Öte yandan doğru konu seçimi her şeyi kolaylaştırır: bölüm yapısı kendiliğinden oturur, örnekler aklına '
+update_blog_posts.py:311:    'daha hızlı gelir, okura hitap etmek kolaylaşır, ve kitabı bitirme motivasyonu yüksek kalır. Konu seçiminde iki temel '
+update_blog_posts.py:312:    'soru sorulmalı: Bu konuda gerçekten derinlemesine bir şeyler biliyor musun? Ve bu konuyu arayan, bu soruya para harcamaya '
+update_blog_posts.py:313:    'hazır gerçek bir kitle var mı? Her ikisine de evet diyebiliyorsan sağlam bir başlangıç noktasındasın."],'
+update_blog_posts.py:317:    '      ["Bildiğin şeyi seç", "Uzmanlık ya da deneyim temeli olmayan konular, içerik derinliğini hızla düşürür. Genel '
+update_blog_posts.py:318:    'bilgilerden oluşan bir kitap okuyucuya değer katmaz — çünkü okur aynı bilgiyi internette ücretsiz bulabilir. Ama kendi '
+update_blog_posts.py:319:    'deneyiminden süzülmüş, gerçek örneklerle desteklenmiş, bir alanda defalarca karşılaşılan sorunlara verilen cevaplardan '
+update_blog_posts.py:320:    'oluşan bir kitap çok daha değerlidir. Yazmak istediğin konuda başkasına öğretebileceğin, danışılan biri olduğun, gerçek '
+update_blog_posts.py:321:    'sonuçlar ürettiğin bir alanı seç."],'
+update_blog_posts.py:324:    '      ["Bildiğin şeyi seç", "Uzmanlık ya da deneyim temeli olmayan konular, içerik derinliğini hızla düşürür. Genel '
+update_blog_posts.py:325:    'bilgilerden oluşan, internette zaten bulunan bilgileri tekrar eden bir kitap okuyucuya değer katmaz. Okur neden parasını '
+update_blog_posts.py:326:    've zamanını harcasın? Ama kendi deneyiminden süzülmüş, gerçek örneklerle desteklenmiş, bir alanda defalarca karşılaşılan '
+update_blog_posts.py:327:    'sorunlara gerçek cevaplar veren bir kitap çok daha güçlüdür. Örneğin, yıllarca e-ticaret işleten biri \'Dropshipping '
+update_blog_posts.py:328:    'Nedir?\' değil, \'İlk Siparişten Önce Yapmanız Gereken 7 Tedarikçi Testi\' gibi spesifik ve deneyim temelli bir kitap '
+update_blog_posts.py:329:    'yazabilir — bu kitabın değeri, birinin araştırıp derlediği bilgiden çok daha yüksektir. Yazmak istediğin konuda '
+update_blog_posts.py:330:    'başkasına öğretebileceğin, insanların sana danıştığı, gerçek sonuçlar ürettiğin bir alanı seç. Bu alan senin '
+update_blog_posts.py:335:    '      ["Sorun odaklı düşün", "İnsanlar kitap satın alırken genellikle bir sorunu çözmeye ya da bir hedefe ulaşmaya '
+update_blog_posts.py:336:    'çalışıyorlar. \'Fotoğrafçılık üzerine kitap\' yerine \'ışık koşulları zor olan mekânlarda doğal portre fotoğrafı nasıl '
+update_blog_posts.py:337:    'çekilir\' çok daha güçlü bir konu. Konu ne kadar spesifik ve ne kadar somut bir sorunu çözüyorsa hedef okurla o kadar '
+update_blog_posts.py:338:    'hızlı bağ kurar. Konunu belirlerken şu soruyu sor: \'Bu kitabı kim okur ve okuduktan sonra ne yapabilecek?\'"],'
+update_blog_posts.py:341:    '      ["Sorun odaklı düşün", "İnsanlar kitap satın alırken genellikle iki şeyden biri için ödeme yapıyor: bir sorunu '
+update_blog_posts.py:342:    'çözmek ya da bir hedefe ulaşmak. Bu yüzden en çok satan non-fiction kitaplar çoğunlukla net bir problemi ele alan '
+update_blog_posts.py:343:    'kitaplardır. \'Fotoğrafçılık üzerine bir kitap\' geniş ve belirsizdir — ama \'Düşük Işıkta Çekim: Ekstra Ekipman '
+update_blog_posts.py:344:    'Olmadan Profesyonel Sonuç\' çok daha güçlü ve hedefe yönelik bir konudur. Konu ne kadar spesifik ve ne kadar somut '
+update_blog_posts.py:345:    'bir sorunu çözüyorsa hedef okurla o kadar hızlı bağ kurar. Konunu belirlerken şu iki soruyu sor: \'Bu kitabı kim '
+update_blog_posts.py:346:    'okur?\' ve \'Okuduktan sonra ne yapabilecek ya da ne bilecek?\' Bu iki soruya net cevap verebildiğinde konu hem '
+update_blog_posts.py:347:    'içerik üretimi hem de pazarlama açısından çok daha güçlü hale gelir. Belirsiz konu, belirsiz okur, belirsiz satış '
+update_blog_posts.py:352:    '      ["Pazar talebini nasıl ölçersin?", "İyi bir fikrin gerçek talep bulduğundan emin olmak için birkaç pratik '
+update_blog_posts.py:353:    'yöntem var. Amazon\'da konuya yakın kitaplara bak: kaç başlık var, en iyi satanların yorumları ne diyor, okurların '
+update_blog_posts.py:354:    'beğendiği ve şikayet ettiği noktalar neler? Bu yorumlar hem konunun ilgi gördüğünü kanıtlar hem de kitabında neye '
+update_blog_posts.py:355:    'odaklanman gerektiğini gösterir. Google Trends\'te konunun arama trendini kontrol et. Reddit ve Quora\'da insanların '
+update_blog_posts.py:356:    'bu konuda hangi soruları sorduğuna bak."],'
+update_blog_posts.py:359:    '      ["Pazar talebini nasıl ölçersin?", "İyi bir fikrin gerçek talep bulduğundan emin olmak için harcayabileceğin '
+update_blog_posts.py:360:    'iki-üç saat, sonraki aylardaki satış hayal kırıklığının önüne geçer. Amazon\'da konuya yakın kitaplara bak: kaç '
+update_blog_posts.py:361:    'başlık var, bu kitaplar ne zaman yayınlandı, en iyi satanların yorumlarında okurlar neyi beğeniyor ve neyi '
+update_blog_posts.py:362:    'eleştiriyor? Yorumlar son derece değerli bir veri kaynağıdır: okurların beğenmediği eksiklikler senin kitabının '
+update_blog_posts.py:363:    'fırsatıdır. Google Trends\'te konunun arama hacmini ve trend yönünü kontrol et — artıyor mu, azalıyor mu, mevsimsel '
+update_blog_posts.py:364:    'mi? Reddit ve Quora\'da insanların bu konuda hangi soruları sorduğuna bak: insanların sormaktan çekinmediği sorular, '
+update_blog_posts.py:365:    'gerçek bilgi açığını gösterir. Bu araştırmayı yapmadan konuna karar vermek, gözleri kapalı bir işe girişmek gibidir."],'
+update_blog_posts.py:369:    '      ["KDP keyword araştırması", "Amazon KDP\'de yayın yapmayı düşünüyorsan keyword araştırması kritik öneme '
+update_blog_posts.py:370:    'sahip. KDP\'de anahtar kelimeler hem arama sonuçlarında görünürlüğü hem de kategori sıralamasını etkiler. Ücretsiz '
+update_blog_posts.py:371:    'araçlar için Amazon\'un kendi arama çubuğunu kullan: bir konu girdiğinde önerilen aramalar, gerçek kullanıcıların '
+update_blog_posts.py:372:    'ne aradığını gösterir. Publisher Rocket veya Book Bolt gibi ücretli araçlar daha detaylı hacim ve rekabet verisi '
+update_blog_posts.py:373:    'sunar. Hedef, düşük rekabetli ama yeterli hacme sahip anahtar kelimeleri bulmaktır."],'
+update_blog_posts.py:376:    '      ["KDP keyword araştırması", "Amazon KDP\'de yayın yapmayı düşünüyorsan keyword araştırması, konu seçimi '
+update_blog_posts.py:377:    'sürecinin ayrılmaz bir parçası olmalı. KDP\'de anahtar kelimeler hem arama sonuçlarında görünürlüğü hem de kategori '
+update_blog_posts.py:378:    'sıralamasını doğrudan etkiler. Ücretsiz ve etkili bir başlangıç için Amazon\'un kendi arama çubuğunu kullan: '
+update_blog_posts.py:379:    'konuyla ilgili bir kelime girdiğinde çıkan otomatik tamamlama önerileri, gerçek kullanıcıların ne aradığını '
+update_blog_posts.py:380:    'yansıtır. Bu öneriler hem popüler aramaları hem de henüz kitapların az olduğu niş alıları gösterebilir. Daha '
+update_blog_posts.py:381:    'derinlemesine araştırma için Publisher Rocket, Book Bolt veya Helium 10 gibi araçlar aylık arama hacmi ve rekabet '
+update_blog_posts.py:382:    'yoğunluğu verisi sunar. Hedef şudur: yeterince aranıyor ama yeterince rakip kitap yok. Bu kesişim noktası, yeni '
+update_blog_posts.py:383:    'bir kitabın en hızlı ivme kazanabileceği alandır. Keyword araştırmasını konu seçiminin önüne koymak yerine '
+update_blog_posts.py:384:    'seçimin teyidi olarak kullanmak en sağlıklı yaklaşımdır."],'
+update_blog_posts.py:388:    '      ["Rekabeti doğru değerlendirmek", "Yüzlerce kitabın olduğu bir niş kötü işaret değildir — aksine talebin '
+update_blog_posts.py:389:    'kanıtıdır. Ama bu nişte sıyrılmak için farklı bir açı sunman gerekir. Rakip kitaplardaki en sık şikayetlere bak: '
+update_blog_posts.py:390:    'okurlar ne eksik buluyor, hangi soruları cevaplanmamış kalıyor, hangi örnekler çok teorik kalıyor? Bu boşluklar '
+update_blog_posts.py:391:    'senin fırsatın. Hiç rakibin olmayan niş ise tehlikeli olabilir — ya talep yok ya da kimse o konuya para harcamak '
+update_blog_posts.py:395:    '      ["Rekabeti doğru değerlendirmek", "Yüzlerce kitabın olduğu bir niş kötü işaret değildir — aksine talebin '
+update_blog_posts.py:396:    'güçlü kanıtıdır. İnsanlar o konuya para harcıyor demektir. Ama bu nişte sıyrılmak için farklı bir açı sunman '
+update_blog_posts.py:398:    'hangi sorular cevaplanmamış kalıyor, hangi bölümler çok teorik ya da çok yüzeysel bulunuyor? Bu şikayetler '
+update_blog_posts.py:399:    'senin kitabının vaat cümlesi haline gelir: \'Rakiplerin üç yıldız aldığı sorunu ben çözüyorum.\' Örneğin, '
+update_blog_posts.py:400:    'muhasebe yazılımları hakkında çok kitap var ama hepsi teorik kalıyorsa, sen \'Serbest Çalışanlar İçin '
+update_blog_posts.py:401:    'Pratik Muhasebe: Yazılım Adım Adım\' başlığıyla o boşluğu doldurabilirsin. Hiç rakibin olmayan niş ise '
+update_blog_posts.py:402:    'gerçekten tehlikeli olabilir — ya talep yok ya da kimse o konuya para harcamak istemiyor. İkisi de iyi '
+update_blog_posts.py:403:    'senaryo değil."],'
+update_blog_posts.py:407:    '      ["Son karar: sezgi mi, veri mi?", "İkisi birden. Veri talep olduğunu kanıtlar, sezgi ise gerçekten iyi '
+update_blog_posts.py:408:    'bir kitap yazıp yazamayacağını gösterir. Verisi güçlü ama hiç ilgini çekmeyen bir konuyu seçersen içerik süreci '
+update_blog_posts.py:409:    'zorlanır. İlgini çeken ama talebini doğrulayamadığın bir konuyu seçersen satış hayal kırıklığı yaratır. İkisinin '
+update_blog_posts.py:410:    'kesiştiği nokta, bilgi ve tutku sahibi olduğun ve gerçek bir okur kitlesinin aradığı konudur. Book Generator '
+update_blog_posts.py:411:    'araştırma merkezi bu süreçte konu ve keyword analizinde destek sunar."],'
+update_blog_posts.py:414:    '      ["Son karar: sezgi mi, veri mi?", "İkisi birden — ama ikisi de tek başına yeterli değil. Veri talep '
+update_blog_posts.py:415:    'olduğunu kanıtlar ve hangi konunun daha fazla potansiyel taşıdığını gösterir. Sezgi ise o konuyu yazarken '
+update_blog_posts.py:416:    'gerçekten katma değer üretip üretemeyeceğini, süreçte motivasyonu koruyup koruyamayacağını ortaya koyar. '
+update_blog_posts.py:417:    'Verisi güçlü ama hiç ilgini çekmeyen bir konuyu seçersen içerik üretimi sıkıcı ve zorlayıcı bir hal alır — '
+update_blog_posts.py:418:    'çoğunlukla yarım kalır. İlgini çeken ama talebini doğrulayamadığın bir konuyu seçersen aylarca emek ver, '
+update_blog_posts.py:419:    'satış hayal kırıklığıyla karşılaşırsın. İkisinin kesiştiği nokta, hem bilgi ve deneyim sahibi olduğun hem '
+update_blog_posts.py:420:    'de gerçek bir okur kitlesinin arayıp para harcadığı konudur. Bu kesişimi bulmak için zaman harcamak, her '
+update_blog_posts.py:421:    'şeyin geri kalanını kolaylaştırır. Book Generator araştırma merkezi bu süreçte konu belirleme ve keyword '

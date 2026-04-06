@@ -27,7 +27,7 @@ export async function POST(
   ).catch(() => null);
 
   if (!response?.ok) {
-    return Response.json({ ok: false, error: "Preview pipeline yeniden başlatılamadı." }, { status: 502 });
+    return Response.json({ ok: false, error: "Failed to restart the preview pipeline." }, { status: 502 });
   }
 
   await audit({

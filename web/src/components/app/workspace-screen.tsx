@@ -336,6 +336,8 @@ export function WorkspaceScreen({
   const [showReferralDialog, setShowReferralDialog] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const frontCoverInputRef = useRef<HTMLInputElement | null>(null);
+  const backCoverInputRef = useRef<HTMLInputElement | null>(null);
 
   function addToast(message: string, type: ToastType): number {
     const id = ++toastCounter;
@@ -494,6 +496,32 @@ export function WorkspaceScreen({
       updateToast(toastId, "Logo yüklendi ve markaya bağlandı.", "success");
     } catch (error) {
       updateToast(toastId, error instanceof Error ? error.message : "Logo yüklenemedi.", "error");
+    }
+  }
+
+  async function handleCoverUpload(file: File, kind: "cover_image" | "back_cover_image") {
+    if (!file.type.startsWith("image/")) {
+      addToast("Kapak için yalnızca görsel dosyası yükleyebilirsin.", "error");
+      return;
+    }
+    if (file.size > 12 * 1024 * 1024) {
+      addToast("Kapak dosyası 12 MB'den küçük olmalı.", "error");
+      return;
+    }
+
+    const toastId = addToast(kind === "cover_image" ? "Ön kapak yükleniyor..." : "Arka kapak yükleniyor...", "loading");
+    try {
+      const uploaded = await uploadBookAsset(slug, file, kind);
+      setBook(uploaded.book);
+      setDraft(uploaded.book);
+      setIsDirty(false);
+      updateToast(
+        toastId,
+        kind === "cover_image" ? "Ön kapak yüklendi." : "Arka kapak yüklendi.",
+        "success",
+      );
+    } catch (error) {
+      updateToast(toastId, error instanceof Error ? error.message : "Kapak yüklenemedi.", "error");
     }
   }
 
@@ -772,6 +800,40 @@ export function WorkspaceScreen({
                       <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
                         <ImagePlus className="mr-2 size-4" />
                         Logo Yükle
+                      </Button>
+                      <input
+                        ref={frontCoverInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) {
+                            void handleCoverUpload(file, "cover_image");
+                          }
+                          event.currentTarget.value = "";
+                        }}
+                      />
+                      <input
+                        ref={backCoverInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) {
+                            void handleCoverUpload(file, "back_cover_image");
+                          }
+                          event.currentTarget.value = "";
+                        }}
+                      />
+                      <Button type="button" variant="outline" onClick={() => frontCoverInputRef.current?.click()}>
+                        <Upload className="mr-2 size-4" />
+                        Ön Kapak Yükle
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => backCoverInputRef.current?.click()}>
+                        <Upload className="mr-2 size-4" />
+                        Arka Kapak Yükle
                       </Button>
                       <Button
                         type="button"

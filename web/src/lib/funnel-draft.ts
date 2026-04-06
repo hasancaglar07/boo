@@ -617,9 +617,47 @@ function buildChapterGenerationBrief(item: FunnelOutlineItem, bookLength: Funnel
   return `${item.summary.trim()} Bölüm rolü: ${chapterRoleLabel(item.role, language)}. Önerilen derinlik: ${chapterLengthLabel(item.length, language)}. Hedef uzunluk: ${words.min}-${words.max} kelime.`;
 }
 
+function derivedBookSlug(draft: FunnelDraft, resolvedTitle: string) {
+  const preferred = slugify(resolvedTitle || draft.topic || "");
+  const persisted = slugify(draft.generatedSlug || "");
+  if (!preferred) {
+    return persisted || "book";
+  }
+  if (persisted && (persisted === preferred || persisted.startsWith(`${preferred}-`))) {
+    return persisted;
+  }
+  return preferred;
+}
+
+function buildCoverPromptFromDraft(draft: FunnelDraft, resolvedTitle: string, resolvedSubtitle: string) {
+  const direction =
+    draft.coverDirection === "tech"
+      ? "futuristic AI systems aesthetic with precise geometric depth"
+      : draft.coverDirection === "minimal"
+        ? "minimal, elegant composition with disciplined whitespace"
+        : draft.coverDirection === "energetic"
+          ? "high-energy motion cues with premium contrast"
+          : "premium editorial bookstore composition";
+  const audience = draft.audience.trim();
+  const brief = draft.coverBrief.trim();
+  const promptParts = [
+    `Create premium portrait book cover background artwork for "${resolvedTitle}".`,
+    resolvedSubtitle ? `Subtitle context: ${resolvedSubtitle}.` : "",
+    audience ? `Target reader: ${audience}.` : "",
+    brief ? `Art direction brief: ${brief}.` : "",
+    `Style direction: ${direction}.`,
+    "Background artwork only. Do not include text, letters, numbers, or logos. Leave generous top and bottom space for typography overlay.",
+  ].filter(Boolean);
+  return promptParts.join(" ");
+}
+
 export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
   const plannedOutline = draft.outline.length ? draft.outline : localOutlineSuggestions(draft);
   const totalWords = outlineWordRange(plannedOutline, draft.bookLength);
+  const resolvedTitle = (draft.title || titleCase(draft.topic) || "Kitap").trim();
+  const resolvedSubtitle = draft.subtitle.trim();
+  const resolvedSlug = derivedBookSlug(draft, resolvedTitle);
+  const coverBrief = draft.coverBrief.trim();
   const chapters = plannedOutline.map((item, index) => {
     const words = chapterWordRange(item.length, draft.bookLength);
     return {
@@ -635,9 +673,9 @@ export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
   });
 
   return {
-    slug: slugify(draft.generatedSlug || draft.title || draft.topic),
-    title: (draft.title || titleCase(draft.topic)).trim(),
-    subtitle: draft.subtitle.trim(),
+    slug: resolvedSlug,
+    title: resolvedTitle,
+    subtitle: resolvedSubtitle,
     language: draft.language,
     author: draft.authorName.trim() || author.trim() || "Kitap Sahibi",
     publisher: draft.imprint.trim() || "Book Generator",
@@ -646,7 +684,8 @@ export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
     author_bio: draft.authorBio.trim(),
     branding_mark: draft.logoText.trim(),
     branding_logo_url: draft.logoUrl.trim(),
-    cover_brief: draft.coverBrief.trim(),
+    cover_brief: coverBrief,
+    cover_prompt: buildCoverPromptFromDraft(draft, resolvedTitle, resolvedSubtitle),
     generate_cover: true,
     fast: draft.depth === "hizli",
     book_length_tier: draft.bookLength,

@@ -17,7 +17,7 @@ export async function GET(
   if (session instanceof Response) return session;
   const record = await getAdminBillingRecord((await params).id);
   if (!record) {
-    return Response.json({ ok: false, error: "Fatura bulunamadı." }, { status: 404 });
+    return Response.json({ ok: false, error: "Invoice not found." }, { status: 404 });
   }
   return detailResponse({
     item: {
@@ -49,7 +49,7 @@ export async function PATCH(
   if (session instanceof Response) return session;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return Response.json({ ok: false, error: "Geçersiz fatura işlemi." }, { status: 400 });
+    return Response.json({ ok: false, error: "Invalid invoice action." }, { status: 400 });
   }
 
   const id = (await params).id;
@@ -58,7 +58,7 @@ export async function PATCH(
     include: { entitlement: true },
   });
   if (!record) {
-    return Response.json({ ok: false, error: "Fatura bulunamadı." }, { status: 404 });
+    return Response.json({ ok: false, error: "Invoice not found." }, { status: 404 });
   }
 
   const updated = await prisma.$transaction(async (tx) => {

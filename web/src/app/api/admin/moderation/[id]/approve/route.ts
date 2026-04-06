@@ -17,7 +17,7 @@ export async function POST(
   if (session instanceof Response) return session;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return Response.json({ ok: false, error: "Geçersiz moderasyon isteği." }, { status: 400 });
+    return Response.json({ ok: false, error: "Invalid moderation request." }, { status: 400 });
   }
 
   const id = (await params).id;

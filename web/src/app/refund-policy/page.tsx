@@ -7,33 +7,33 @@ import { Card, CardContent } from "@/components/ui/card";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Book Generator İade Politikası | Plan ve Ödeme Süreci",
+  title: "Book Generator Refund Policy | Plan and Payment Process",
   description:
-    "Book Generator iade politikasını inceleyin. Plan değişikliği, destek talebi ve kullanım durumuna göre iade değerlendirme sürecini adım adım öğrenin.",
+    "Review the Book Generator refund policy. Learn step by step about plan changes, support requests, and the refund evaluation process based on usage.",
   path: "/refund-policy",
-  keywords: ["iade politikası", "book generator ödeme", "abonelik değişikliği"],
+  keywords: ["refund policy", "book generator payment", "subscription change"],
 });
 
 export default function RefundPolicyPage() {
   return (
     <MarketingPage>
       <section className="shell py-20">
-        <Badge>İade</Badge>
-        <h1 className="mt-4 text-5xl font-semibold tracking-tight text-foreground">İade politikası</h1>
+        <Badge>Refund</Badge>
+        <h1 className="mt-4 text-5xl font-semibold tracking-tight text-foreground">Refund policy</h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-          Kitap Oluşturucu&apos;yu risk almadan denemen için iade akışını açık tutuyoruz. Önce önizlemeyi görür, sonra tam kitabı açarsın; memnun kalmazsan ilk 30 gün içinde iade isteyebilirsin.
+          We keep the refund process open so you can try Book Generator risk-free. You see the preview first, then unlock the full book; if you&apos;re not satisfied, you can request a refund within the first 30 days.
         </p>
         <div className="mt-8 rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_7%,var(--card)),var(--card))] px-6 py-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Kısa cevap</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Short answer</p>
           <p className="mt-2 max-w-3xl text-sm leading-7 text-foreground">
-            Tek Kitap dahil tüm planlarda, satın alma tarihinden itibaren ilk 30 gün içinde memnun kalmazsan destek üzerinden iade talebi açabilirsin. Bu sayfa, pricing ve checkout dilindeki güven mesajını netleştirmek içindir; muğlak bırakmak için değil.
+            For all plans including the Single Book plan, you can open a refund request through support within the first 30 days from the date of purchase if you are not satisfied. This page is meant to clarify the trust message in pricing and checkout language — not to leave things ambiguous.
           </p>
         </div>
         <div className="mt-12 grid gap-4 md:grid-cols-3">
           {[
-            ["30 gün pencere", "Satın alma tarihinden itibaren ilk 30 gün içinde iade talebi oluşturabilirsin. $4 Tek Kitap dahil tüm planlar bu pencereye dahildir."],
-            ["Destek üzerinden talep", "Ödeme, yanlış plan seçimi veya memnuniyetsizlik durumunda destek ekibine kısa ve net bir iade talebi ile yazman yeterlidir."],
-            ["Hızlı ve açık süreç", "İade sürecini uzatmak yerine netleştiriyoruz. Önizleme mantığı zaten riski düşürür; iade politikası da bu yaklaşımı tamamlar."],
+            ["30-day window", "You can create a refund request within the first 30 days from the date of purchase. All plans including the $4 Single Book plan are covered by this window."],
+            ["Request via support", "In case of billing issues, wrong plan selection, or dissatisfaction, simply send a brief and clear refund request to our support team."],
+            ["Fast and transparent process", "We focus on clarity rather than dragging out the refund process. The preview logic already reduces risk; the refund policy complements this approach."],
           ].map(([title, text]) => (
             <Card key={title}>
               <CardContent>
@@ -44,15 +44,15 @@ export default function RefundPolicyPage() {
           ))}
         </div>
         <div className="mt-10 text-sm leading-7 text-muted-foreground">
-          Önce ürün akışını görmek istersen{" "}
+          If you&apos;d like to see the product flow first,{" "}
           <Link href="/start/topic" className="text-foreground underline-offset-4 hover:underline">
-            ücretsiz önizlemeyi başlat
+            start the free preview
           </Link>
-          , plan karşılaştırması görmek istersen{" "}
+          , or to compare plans, go to the{" "}
           <Link href="/pricing" className="text-foreground underline-offset-4 hover:underline">
-            fiyatlar
+            pricing
           </Link>{" "}
-          sayfasına dön.
+          page.
         </div>
       </section>
     </MarketingPage>

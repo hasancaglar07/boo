@@ -8,8 +8,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Giriş | Kitap Oluşturucu",
-  description: "Kitap Oluşturucu oturumunu aç, sihirbaz akışına geç ve kitap üretimine kaldığın yerden devam et.",
+  title: "Introduction | Book Creator",
+  description: "Open the Book Creator session, go to the wizard flow, and continue book production from where you left off.",
   path: "/login",
   noIndex: true,
 });
@@ -42,7 +42,7 @@ export default async function LoginPage({
           <div className="mb-6 flex items-center gap-3 rounded-lg bg-emerald-500/10 px-4 py-3 text-sm">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <p className="font-medium text-emerald-700 dark:text-emerald-400">
-              E-posta doğrulandı. Giriş yapabilirsin.
+              Email verified. You can log in.
             </p>
           </div>
         ) : null}
@@ -52,10 +52,12 @@ export default async function LoginPage({
           {/* Header Section */}
           <div className="border-b border-border/40 px-8 pt-8 pb-6">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Tekrar Hoş Geldin
+              Email verified. You can log in.
+
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Kitabına kaldığın yerden devam et
+              Welcome Back
+
             </p>
           </div>
 
@@ -67,12 +69,14 @@ export default async function LoginPage({
           {/* Footer Link - Minimal */}
           <div className="border-t border-border/40 px-8 py-4">
             <p className="text-center text-sm text-muted-foreground">
-              Hesabın yok mu?{" "}
+              Continue your book where you left off
+
               <Link 
                 href={signupHref} 
                 className="font-medium text-foreground hover:text-primary transition-colors"
               >
-                Kayıt ol
+              Don't have an account?{" "}
+
               </Link>
             </p>
           </div>
@@ -80,7 +84,8 @@ export default async function LoginPage({
 
         {/* Trust Indicator - Optional, subtle */}
         <p className="mt-6 text-center text-xs text-muted-foreground/70">
-          Güvenli giriş • 256-bit SSL şifreleme
+              Email verified. You can log in.
+
         </p>
       </div>
     </div>

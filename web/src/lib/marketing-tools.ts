@@ -163,7 +163,7 @@ const AUDIENCE_PATTERN =
 const METHOD_PATTERN =
   /\b(system|framework|method|playbook|blueprint|map)\b/iu;
 const BROAD_TOPIC_PATTERN =
-  /\b(iş|business|marketing|pazarlama|başarı|verimlilik|productivity|kişisel gelişim|health|sağlık|growth)\b/iu;
+  /\b(business|marketing|success|productivity|personal development|health|growth)\b/iu;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -477,7 +477,7 @@ function contentToBookMapperEvaluation(values: MarketingToolValues): MarketingTo
     [
       dimensions[1].score >= 74 ? "The current content type provides a natural skeleton for bookification." : "",
       dimensions[0].score >= 72 ? "There is enough material available; the book does not have to be written from scratch." : "",
-      dimensions[3].score >= 70 ? "Kitap, içeriği yalnız toparlamaz; aynı zamanda dönüşüm üretir." : "",
+      dimensions[3].score >= 70 ? "The book doesn't just organize content; it also generates conversions." : "",
     ].filter(Boolean),
     [
       dimensions[4].score < 64 ? "Transition, case, and closing sections should also be designed." : "",
@@ -598,7 +598,7 @@ function kdpNicheScoreEvaluation(values: MarketingToolValues): MarketingToolEval
     recommendedFormat: "KDP micro-niche nonfiction",
     recommendedAngle: `Instead of leaving ${nicheCore} as a general topic, ${
       audience || "belirli bir okur segmenti"
-    } için ${promise.toLocaleLowerCase("tr-TR") || "a single main result"} odağıyla mikro nişleştirmek daha doğru olur.`,
+    } focusing on micro-niching with ${promise.toLocaleLowerCase("tr-TR") || "a single main result"} focus would be more accurate.`,
     strongestPoints: strengths,
     risks,
     nextStep: "Move this micro niche to the preview flow and test the first subtitle set.",
@@ -704,7 +704,7 @@ function leadMagnetBookAngleFinderEvaluation(values: MarketingToolValues): Marke
     recommendedFormat: "Client-converting short guide",
     recommendedAngle: `Instead of presenting ${expertiseCore} knowledge like a general expertise book, ${
       client || "ideal customer"
-    } için ${outcome.toLocaleLowerCase("tr-TR") || "single main result"} odaklı kısa rehbere çevirmek daha fazla lead üretir.`,
+    } converting to a short guide focused on ${outcome.toLocaleLowerCase("tr-TR") || "single main result"} generates more leads.`,
     strongestPoints: strengths,
     risks,
     nextStep: "Move this angle to the preview flow and test the CTA you will place at the end of the book.",
@@ -777,18 +777,18 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
     {
       title: "Enhanced subtitle directions",
       items: [
-        `${audience || "Correct reader"} için ${goal.toLocaleLowerCase("tr-TR") || "measurable result"} sağlayan kısa yol haritası`,
-        `Dağınık denemeler yerine net bir ${titleCore.toLocaleLowerCase("tr-TR")} sistemi`,
+        `${audience || "Correct reader"} short roadmap delivering ${goal.toLocaleLowerCase("tr-TR") || "measurable result"}`,
+        `A clear ${titleCore.toLocaleLowerCase("tr-TR")} system instead of scattered attempts`,
         `İlk uygulamadan sürdürülebilir sonuca kadar karar rehberi`,
-        `${intent === "kdp_publish" ? "Amazon KDP için" : "Gerçek dünyada"} uygulanabilir adım adım çerçeve`,
+        `${intent === "kdp_publish" ? "Amazon KDP" : "Real world"} applicable step-by-step framework`,
       ],
     },
     {
       title: "Konumlandırma notları",
       items: [
-        "Başlıkta konu, subtitle'da sonuç ve kitle görünmeli.",
+        "The title should show the topic, the subtitle should show the result and audience.",
         "Genel kavram yerine yöntem, segment veya kullanım durumu ekle.",
-        "Subtitle içinde zaman, hata azaltma veya çıktı sinyali kullan.",
+        "The title should show the topic, the subtitle should show the result and audience.",
         "Başlık akılda kalmalı; subtitle ikna etmeli.",
       ],
     },

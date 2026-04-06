@@ -6,27 +6,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Book Generator Kullanım Şartları | Hizmet Koşulları",
+  title: "Book Generator Terms of Use | Service Terms",
   description:
-    "Book Generator kullanım şartlarını okuyun. Hizmet kapsamı, kullanıcı sorumluluğu, plan limitleri ve yayın süreçlerinde geçerli temel koşulları inceleyin.",
+    "Read the Book Generator terms of use. Review the service scope, user responsibilities, plan limits, and key conditions applicable to publishing processes.",
   path: "/terms",
-  keywords: ["kullanım şartları", "book generator koşullar", "hizmet sözleşmesi"],
+  keywords: ["terms of use", "book generator terms", "service agreement"],
 });
 
 export default function TermsPage() {
   return (
     <MarketingPage>
       <section className="shell py-20">
-        <Badge>Şartlar</Badge>
-        <h1 className="mt-4 text-5xl font-semibold tracking-tight text-foreground">Kullanım şartları</h1>
+        <Badge>Terms</Badge>
+        <h1 className="mt-4 text-5xl font-semibold tracking-tight text-foreground">Terms of use</h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-          Ürün sana kitap üretimini hızlandıran araçlar sunar; yayın kararı ve son kalite sorumluluğu ise kullanıcıda kalır.
+          The product provides tools to accelerate your book production; the publishing decision and final quality responsibility remain with the user.
         </p>
         <div className="mt-12 grid gap-4 md:grid-cols-3">
           {[
-            ["Hizmet kapsamı", "Araç, outline, bölüm üretimi, araştırma ve çıktı akışları gibi üretim yardımcıları sağlar."],
-            ["Kullanıcı sorumluluğu", "İçerik doğruluğu, hak uygunluğu, yayın kararı ve platform uyumu kullanıcı tarafından kontrol edilmelidir."],
-            ["Plan ve limitler", "Kullanım hakları plan bazında tanımlanır, ay bazında yenilenir ve tek hesap için geçerlidir."],
+            ["Service scope", "The tool provides production assistants such as outline, chapter generation, research, and output workflows."],
+            ["User responsibility", "Content accuracy, rights compliance, publishing decisions, and platform compatibility must be verified by the user."],
+            ["Plans and limits", "Usage rights are defined per plan, renewed monthly, and apply to a single account."],
           ].map(([title, text]) => (
             <Card key={title}>
               <CardContent>

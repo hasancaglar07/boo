@@ -32,7 +32,7 @@ function MobileLangToggle() {
     <button
       onClick={() => setLang(next)}
       className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[14px] font-medium text-muted-foreground transition-all duration-150 hover:bg-accent/70 hover:text-foreground"
-      aria-label={lang === "en" ? "Switch to Turkish" : "Türkçe'ye geç"}
+      aria-label={lang === "en" ? "Switch to Turkish" : "Switch to English"}
     >
       <Globe className="h-4 w-4" aria-hidden="true" />
       {lang === "en" ? "Türkçe" : "English"}

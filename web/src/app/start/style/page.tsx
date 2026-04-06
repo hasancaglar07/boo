@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-
 import { GuidedWizardScreen } from "@/components/funnel/guided-wizard-screen";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Stil | Book Generator",
-  description: "Dil, ton ve kapak yönünü seçerek preview kalitesini belirle.",
+  title: "Style | Book Generator",
+  description: "Choose language, tone, and cover direction to set preview quality.",
   path: "/start/style",
   noIndex: true,
 });

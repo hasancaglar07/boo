@@ -98,6 +98,20 @@ function bonusDeadlineLabel(iso?: string | null) {
   return `${days} gün kaldı`;
 }
 
+function formatRemainingDuration(seconds: number) {
+  const safe = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const secs = safe % 60;
+  if (hours > 0) {
+    return `${hours}sa ${String(minutes).padStart(2, "0")}dk`;
+  }
+  if (minutes > 0) {
+    return `${minutes}dk ${String(secs).padStart(2, "0")}sn`;
+  }
+  return `${secs}sn`;
+}
+
 function readableGenerationError(error?: string) {
   const value = String(error || "").trim();
   if (!value) return "";
@@ -125,8 +139,28 @@ function GenerationBanner({
   const fullActive = Boolean(fullGeneration.active);
   const fullStage = String(fullGeneration.stage || "");
   const fullError = String(fullGeneration.error || "").trim();
+  const etaFromServer = Math.max(0, Number(fullGeneration.eta_seconds || 0));
+  const etaUpdatedAt = String(fullGeneration.eta_updated_at || "");
   const usingFullGeneration =
     fullTargetCount > 1 || fullActive || fullComplete || (fullStage && fullStage !== "idle");
+  const [etaSecondsLeft, setEtaSecondsLeft] = useState(etaFromServer);
+
+  useEffect(() => {
+    if (!usingFullGeneration || fullComplete || etaFromServer <= 0) {
+      setEtaSecondsLeft(0);
+      return;
+    }
+    let nextEta = etaFromServer;
+    if (etaUpdatedAt) {
+      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - new Date(etaUpdatedAt).getTime()) / 1000));
+      nextEta = Math.max(0, etaFromServer - elapsedSeconds);
+    }
+    setEtaSecondsLeft(nextEta);
+    const timer = window.setInterval(() => {
+      setEtaSecondsLeft((value) => Math.max(0, value - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [etaFromServer, etaUpdatedAt, fullComplete, usingFullGeneration]);
 
   if (generation.stage === "error" && !fullError) return null;
 
@@ -193,6 +227,11 @@ function GenerationBanner({
           {usingFullGeneration && fullGeneration.message ? (
             <p className="mt-1.5 max-w-2xl text-xs leading-5 text-muted-foreground">
               {String(fullGeneration.message)}
+            </p>
+          ) : null}
+          {usingFullGeneration && !fullComplete && etaSecondsLeft > 0 ? (
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+              Tahmini kalan süre: {formatRemainingDuration(etaSecondsLeft)}
             </p>
           ) : null}
         </div>
@@ -978,16 +1017,6 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         trackedRef.current = true;
         trackEvent("preview_viewed", { slug });
       }
-      void loadBooks()
-        .then((bookList) => {
-          setBooks(bookList);
-        })
-        .catch((error) => {
-          if (isBackendUnavailableError(error)) {
-            return;
-          }
-          console.error(error);
-        });
     } catch (error) {
       if (isBackendUnavailableError(error)) {
         setBackendUnavailable(true);
@@ -998,6 +1027,18 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       hydrateInFlightRef.current = false;
     }
   }, [slug]);
+
+  const hydrateBooksShelf = useCallback(async () => {
+    try {
+      const bookList = await loadBooks();
+      setBooks(bookList);
+    } catch (error) {
+      if (isBackendUnavailableError(error)) {
+        return;
+      }
+      console.error(error);
+    }
+  }, []);
 
   const draftMeta = useMemo(() => {
     const stored = loadFunnelDraft();
@@ -1057,6 +1098,10 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     }, 0);
     return () => window.clearTimeout(frame);
   }, [hydrate]);
+
+  useEffect(() => {
+    void hydrateBooksShelf();
+  }, [hydrateBooksShelf, slug]);
 
   useEffect(() => {
     if (!backendUnavailable) return;

@@ -222,6 +222,13 @@ def load_entry(book_dir: Path) -> dict[str, Any]:
     summary = str(meta.get("description") or "").strip() or subtitle or title
     category = detect_category(meta, title, subtitle, summary)
     palette = pick_palette(category, book_dir.name)
+    cover_prompt = str(meta.get("cover_prompt") or "").strip()
+    cover_brief = str(meta.get("cover_brief") or "").strip() or f"Premium {category.lower()} cover with strong bookstore presence."
+    if cover_prompt:
+        normalized_prompt = cover_prompt.lower()
+        normalized_brief = cover_brief.lower()
+        if normalized_prompt not in normalized_brief:
+            cover_brief = f"{cover_prompt}. {cover_brief}".strip()
     entry = {
         "slug": book_dir.name,
         "title": title,
@@ -230,14 +237,14 @@ def load_entry(book_dir: Path) -> dict[str, Any]:
         "publisher": str(meta.get("publisher") or "").strip() or "Studio Press",
         "summary": summary,
         "authorBio": str(meta.get("author_bio") or "").strip(),
-        "coverBrief": str(meta.get("cover_brief") or "").strip() or f"Premium {category.lower()} cover with strong bookstore presence.",
+        "coverBrief": cover_brief,
         "brandingMark": str(meta.get("branding_mark") or "").strip() or str(meta.get("publisher") or "SP")[:3].upper(),
         "languageCode": language,
         "languageLabel": language_label(language),
         "category": category,
         "toneArchetype": str(meta.get("tone_archetype") or "").strip() or default_tone(category),
         "topic": summary,
-        "coverPrompt": str(meta.get("cover_prompt") or "").strip(),
+        "coverPrompt": cover_prompt,
         "coverGradient": palette["coverGradient"],
         "accentColor": palette["accentColor"],
         "textAccent": palette["textAccent"],

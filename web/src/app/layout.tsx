@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: absoluteUrl("/"),
     languages: {
-      "tr-TR": absoluteUrl("/"),
+      "en-US": absoluteUrl("/"),
     },
   },
   applicationName: siteConfig.name,
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
         url: absoluteUrl(siteConfig.defaultOgImage),
         width: 1200,
         height: 630,
-        alt: `${siteConfig.name} kapak görseli`,
+        alt: `${siteConfig.name} cover image`,
       },
     ],
   },
@@ -88,13 +88,13 @@ export default function RootLayout(props: LayoutProps<"/">) {
         "@type": "ContactPoint",
         contactType: "customer support",
         email: PUBLIC_SUPPORT_EMAIL,
-        availableLanguage: ["tr", "en"],
+        availableLanguage: ["en", "tr"],
       },
       {
         "@type": "ContactPoint",
         contactType: "billing support",
         email: PUBLIC_BILLING_EMAIL,
-        availableLanguage: ["tr", "en"],
+        availableLanguage: ["en", "tr"],
       },
     ],
   };
@@ -105,7 +105,7 @@ export default function RootLayout(props: LayoutProps<"/">) {
     name: siteConfig.name,
     alternateName: siteConfig.alternateName,
     url: siteConfig.siteUrl,
-    inLanguage: "tr-TR",
+    inLanguage: "en-US",
     description: siteConfig.description,
   };
 
@@ -119,18 +119,18 @@ export default function RootLayout(props: LayoutProps<"/">) {
     applicationCategory: "BusinessApplication",
     applicationSubCategory: "AI publishing studio",
     operatingSystem: "Web",
-    inLanguage: "tr-TR",
+    inLanguage: "en-US",
     offers: [
       {
         "@type": "Offer",
-        name: "Tek Kitap",
+        name: "Single Book",
         price: "4",
         priceCurrency: "USD",
         priceSpecification: {
           "@type": "UnitPriceSpecification",
           price: "4",
           priceCurrency: "USD",
-          unitText: "tek seferlik",
+          unitText: "one-time",
         },
       },
       {
@@ -142,7 +142,7 @@ export default function RootLayout(props: LayoutProps<"/">) {
           "@type": "UnitPriceSpecification",
           price: "19",
           priceCurrency: "USD",
-          unitText: "aylık",
+          unitText: "monthly",
           billingDuration: "P1M",
         },
       },
@@ -155,7 +155,7 @@ export default function RootLayout(props: LayoutProps<"/">) {
           "@type": "UnitPriceSpecification",
           price: "39",
           priceCurrency: "USD",
-          unitText: "aylık",
+          unitText: "monthly",
           billingDuration: "P1M",
         },
       },
@@ -168,7 +168,7 @@ export default function RootLayout(props: LayoutProps<"/">) {
           "@type": "UnitPriceSpecification",
           price: "79",
           priceCurrency: "USD",
-          unitText: "aylık",
+          unitText: "monthly",
           billingDuration: "P1M",
         },
       },
@@ -182,7 +182,7 @@ export default function RootLayout(props: LayoutProps<"/">) {
 
   return (
     <html
-      lang="tr"
+      lang="en"
       suppressHydrationWarning
       className={`${publicSans.variable} ${libreBodoni.variable} h-full antialiased`}
       data-scroll-behavior="smooth"
@@ -193,7 +193,7 @@ export default function RootLayout(props: LayoutProps<"/">) {
           href="#main-content"
           className="skip-link"
         >
-          Ana içeriğe geç
+          Skip to main content
         </a>
         <script
           type="application/ld+json"

@@ -105,7 +105,7 @@ clear_stale_next_lock() {
       active_pid="$(find_repo_next_pid dev)"
       ;;
     *)
-      echo "Bilinmeyen Next lock modu: $mode"
+      echo "Unknown Next lock mode: $mode"
       exit 1
       ;;
   esac

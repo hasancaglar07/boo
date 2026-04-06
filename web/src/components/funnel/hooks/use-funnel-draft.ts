@@ -159,6 +159,9 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
 
   function updateDraft(changes: Partial<FunnelDraft>) {
     setDraft((current) => {
+      const currentTopic = current.topic.trim();
+      const incomingTopic = typeof changes.topic === "string" ? changes.topic.trim() : currentTopic;
+      const topicChanged = typeof changes.topic === "string" && incomingTopic !== currentTopic;
       const hasLanguageChange =
         typeof changes.language === "string" && changes.language !== current.language;
       const nextLanguageLocked =
@@ -167,9 +170,25 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
           : hasLanguageChange
             ? true
             : current.languageLocked;
+      const shouldResetTopicDependents =
+        topicChanged &&
+        !Object.prototype.hasOwnProperty.call(changes, "title") &&
+        !Object.prototype.hasOwnProperty.call(changes, "subtitle") &&
+        !Object.prototype.hasOwnProperty.call(changes, "outline");
       return {
         ...current,
         ...changes,
+        ...(shouldResetTopicDependents
+          ? {
+              title: "",
+              subtitle: "",
+              outline: [],
+              generatedSlug: "",
+              status: "draft" as const,
+            }
+          : topicChanged
+            ? { generatedSlug: "" }
+            : {}),
         languageLocked: nextLanguageLocked,
         updatedAt: new Date().toISOString(),
       };

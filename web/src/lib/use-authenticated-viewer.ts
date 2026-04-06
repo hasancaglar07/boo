@@ -9,11 +9,15 @@ import {
 } from "@/lib/preview-auth";
 
 export function useAuthenticatedViewer(enabled = true) {
-  const [viewer, setViewer] = useState<PreviewViewer | null>(() => getViewer());
+  const [viewer, setViewer] = useState<PreviewViewer | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
     let active = true;
+    const cachedViewer = getViewer();
+    if (cachedViewer) {
+      setViewer(cachedViewer);
+    }
 
     void syncPreviewAuthState().then((payload) => {
       if (!active) return;

@@ -36,8 +36,8 @@ function LangToggle() {
     <button
       onClick={() => setLang(next)}
       className="inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-      aria-label={lang === "en" ? "Switch to Turkish" : "Türkçe'ye geç"}
-      title={lang === "en" ? "Türkçe'ye geç" : "Switch to English"}
+      aria-label={lang === "en" ? "Switch to Turkish" : "Switch to English"}
+      title={lang === "en" ? "Switch to Turkish" : "Switch to English"}
     >
       <Globe className="h-4 w-4" aria-hidden="true" />
       <span className="uppercase">{next}</span>

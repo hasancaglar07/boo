@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-
 import { GuidedWizardScreen } from "@/components/funnel/guided-wizard-screen";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Oluştur | Book Generator",
-  description: "Kitap önizlemesini üret ve signup bridge ile hesabına bağla.",
+  title: "Generate | Book Generator",
+  description: "Generate your book preview and link it to your account via the signup bridge.",
   path: "/start/generate",
   noIndex: true,
 });

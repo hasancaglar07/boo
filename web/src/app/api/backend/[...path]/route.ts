@@ -31,9 +31,9 @@ const BACKEND_ORIGIN =
   process.env.DASHBOARD_ORIGIN ||
   process.env.NEXT_PUBLIC_DASHBOARD_ORIGIN ||
   "http://127.0.0.1:8765";
-const BACKEND_FETCH_TIMEOUT_MS = 60_000;
-const BACKEND_BOOKS_FETCH_TIMEOUT_MS = 45_000;
-const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = 130_000;
+const BACKEND_FETCH_TIMEOUT_MS = 20_000;
+const BACKEND_BOOKS_FETCH_TIMEOUT_MS = 10_000;
+const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = 15_000;
 const BACKEND_WORKFLOW_FETCH_TIMEOUT_MS = 240_000;
 const BACKEND_UNREACHABLE_LOG_THROTTLE_MS = 5_000;
 const BACKEND_UNAVAILABLE_BACKOFF_MS = 5_000;
@@ -266,10 +266,12 @@ async function forwardToBackend(
   const url = new URL(upstreamPath, BACKEND_ORIGIN);
   url.search = request.nextUrl.search;
 
+  const isPreviewPath = /^\/api\/books\/[^/]+\/preview(?:-bootstrap)?$/.test(upstreamPath);
+  const isFullBootstrapPath = /^\/api\/books\/[^/]+\/full-bootstrap$/.test(upstreamPath);
   const timeoutMs =
     upstreamPath === "/api/books" && request.method === "GET"
       ? BACKEND_BOOKS_FETCH_TIMEOUT_MS
-      : /^\/api\/books\/[^/]+\/preview(?:-bootstrap)?$/.test(upstreamPath) && request.method === "GET"
+      : isPreviewPath || isFullBootstrapPath
         ? BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS
       : upstreamPath === "/api/workflows" && request.method === "POST"
         ? BACKEND_WORKFLOW_FETCH_TIMEOUT_MS
@@ -593,8 +595,6 @@ async function handleBookScopedRoute(
     if (action === "preview") {
       const payload = (await response.json()) as Record<string, unknown>;
       const enriched = await enrichPreviewEntitlements(payload, userId, slug);
-      const entitlements = (enriched.entitlements || {}) as Record<string, unknown>;
-      const canViewFullBook = Boolean(entitlements.can_view_full_book);
       const generation = (enriched.generation && typeof enriched.generation === "object")
         ? (enriched.generation as Record<string, unknown>)
         : {};
@@ -605,7 +605,6 @@ async function handleBookScopedRoute(
       const fullGenerationComplete = Boolean(fullGeneration.complete);
       const fullGenerationStage = String(fullGeneration.stage || "").trim().toLowerCase();
       const shouldBootstrapFullGeneration =
-        canViewFullBook &&
         !fullGenerationComplete &&
         fullGenerationStage !== "queued" &&
         fullGenerationStage !== "running";
@@ -622,6 +621,24 @@ async function handleBookScopedRoute(
     }
 
     return NextResponse.json(await response.json(), { status: response.status });
+  }
+
+  if (action === "asset" && request.method === "POST") {
+    const payload = await readJsonBody(body);
+    const kind = typeof payload?.kind === "string" ? payload.kind.trim() : "";
+    const isCoverAsset = kind === "cover_image" || kind === "back_cover_image";
+    if (isCoverAsset) {
+      const denied = await requirePreviewAccess({
+        request,
+        slug,
+        userId,
+        guestIdentityId,
+      });
+      if (denied) {
+        return denied;
+      }
+      return forwardResponse(request, upstreamPath, body);
+    }
   }
 
   const denied = await requireFullAccess({

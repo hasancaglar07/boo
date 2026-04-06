@@ -12,7 +12,7 @@ const profileSchema = z.object({
     .trim()
     .max(120)
     .refine((value) => value.length === 0 || value.length >= 2, {
-      message: "Ad en az 2 karakter olmalı.",
+      message: "Name must be at least 2 characters.",
     }),
   goal: z.string().trim().max(500),
   publisherImprint: z.string().trim().max(120).optional().default(""),
@@ -22,27 +22,27 @@ const profileSchema = z.object({
 export async function PATCH(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ ok: false, error: "Oturum gerekli." }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "Session required." }, { status: 401 });
   }
 
   const body = await request.json().catch(() => null);
   const parsed = profileSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { ok: false, error: parsed.error.issues[0]?.message || "Geçersiz profil alanları." },
+      { ok: false, error: parsed.error.issues[0]?.message || "Invalid profile fields." },
       { status: 400 },
     );
   }
 
   const currentState = await getAuthStateForUser(session.user.id, session.user.email || null);
   if (!currentState.authenticated) {
-    return NextResponse.json({ ok: false, error: "Profil durumu yüklenemedi." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Failed to load profile state." }, { status: 500 });
   }
 
   const wantsBrandingUpdate = Boolean(parsed.data.publisherImprint || parsed.data.publisherLogoUrl);
   if (wantsBrandingUpdate && currentState.planId !== "pro") {
     return NextResponse.json(
-      { ok: false, error: "Özel yayınevi logosu yalnızca Pro planında kullanılabilir." },
+      { ok: false, error: "Custom publisher logo is only available on the Pro plan." },
       { status: 403 },
     );
   }
@@ -67,7 +67,7 @@ export async function PATCH(request: NextRequest) {
 
   const state = await getAuthStateForUser(updatedUser.id, updatedUser.email);
   if (!state.authenticated) {
-    return NextResponse.json({ ok: false, error: "Profil durumu yüklenemedi." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Failed to load profile state." }, { status: 500 });
   }
 
   await audit({

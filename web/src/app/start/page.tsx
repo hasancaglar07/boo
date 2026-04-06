@@ -6,8 +6,8 @@ import { buildPageMetadata } from "@/lib/seo";
 import { StartOptionCards } from "@/components/site/start-option-cards";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Kitabını Başlat | Book Generator",
-  description: "Konunu yaz, dakikalar içinde kitabının önizlemesini al. Ücretsiz başla, kredi kartı gerekmez.",
+  title: "Start Your Book | Book Generator",
+  description: "Write your topic and get a preview of your book in minutes. Start for free, no credit card required.",
   path: "/start",
   noIndex: true,
 });
@@ -21,18 +21,18 @@ export default function StartPage() {
           Book Generator
         </p>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight mb-4">
-          Konunu yaz. Kitabını başlat.
+          Write your topic. Start your book.
         </h1>
         <p className="text-lg text-muted-foreground">
-          En doğru ilk adım sihirbaz. 5 kısa soruyla başlarsın; sistem seni yönlendirir, bölüm planın ve ilk preview hızlıca görünür olur.
+          The best first step is the wizard. Answer 5 quick questions and the system guides you — your chapter plan and first preview appear in no time.
         </p>
       </div>
 
 
       <div className="mb-8 flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-muted-foreground">
-        <span className="rounded-full border border-border/80 bg-card px-3 py-1">Önerilen yol: sihirbaz</span>
-        <span className="rounded-full border border-border/80 bg-card px-3 py-1">Yaklaşık 2 dakika</span>
-        <span className="rounded-full border border-border/80 bg-card px-3 py-1">Önce preview, sonra karar</span>
+        <span className="rounded-full border border-border/80 bg-card px-3 py-1">Recommended path: wizard</span>
+        <span className="rounded-full border border-border/80 bg-card px-3 py-1">About 2 minutes</span>
+        <span className="rounded-full border border-border/80 bg-card px-3 py-1">Preview first, decide later</span>
       </div>
       {/* 3-Option Cards */}
       <StartOptionCards />
@@ -41,25 +41,25 @@ export default function StartPage() {
       <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 text-sm text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-          Önce ücretsiz önizleme gör
+          See a free preview first
         </span>
         <span className="hidden sm:inline text-border">•</span>
         <span className="flex items-center gap-1.5">
           <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-          Kredi kartı gerekmez
+          No credit card required
         </span>
         <span className="hidden sm:inline text-border">•</span>
         <span className="flex items-center gap-1.5">
           <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-          5 soruda başla
+          Start in 5 questions
         </span>
       </div>
 
       {/* Secondary link */}
       <div className="mt-8 text-sm text-muted-foreground">
-        Nasıl çalışır?{" "}
+        How does it work?{" "}
         <Link href="/how-it-works" className="underline underline-offset-4 hover:text-foreground transition-colors">
-          Adım adım gör <ArrowRight className="inline h-3 w-3" />
+          See step by step <ArrowRight className="inline h-3 w-3" />
         </Link>
       </div>
     </main>

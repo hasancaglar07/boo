@@ -10,15 +10,15 @@ import { loadExamplesShowcaseData } from "@/lib/examples-data";
 import { absoluteUrl, buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Örnek Kitaplar ve Gerçek Çıktılar | Kitap Oluşturucu",
+  title: "Example Books and Real Outputs | Book Creator",
   description:
-    "Gerçek kapaklar, bölüm planları, ilk bölüm önizlemeleri ve EPUB/PDF/HTML çıktılarıyla örnek kitapları inceleyin. Sonra aynı akışla kendi kitabınızı başlatın.",
+    "Explore example books with real covers, chapter plans, first chapter previews, and EPUB/PDF/HTML outputs. Then start your own book with the same workflow.",
   path: "/examples",
   keywords: [
-    "örnek kitaplar",
-    "ai kitap örnekleri",
-    "epub pdf html kitap örnekleri",
-    "kitap oluşturucu örnekler",
+    "example books",
+    "ai book examples",
+    "epub pdf html book examples",
+    "book creator examples",
   ],
 });
 
@@ -26,24 +26,24 @@ export const revalidate = 86400;
 
 const faqs = [
   {
-    question: "Buradaki örnekler gerçek mi, yoksa demo tasarımlar mı?",
+    question: "Are these examples real, or just demo designs?",
     answer:
-      "Bu sayfadaki örnekler; konu özeti, taslak, bölüm üretimi, kapak ve çıktı akışının gerçek ürün akışından gelen örnekleridir. Amaç sadece görsel göstermek değil, ortaya çıkan yapıyı görünür kılmaktır.",
+      "The examples on this page come from the real production workflow — topic summary, outline, chapter generation, cover, and output. The goal is not just visual display, but making the resulting structure visible.",
   },
   {
-    question: "Her örnekte neyi inceleyebilirim?",
+    question: "What can I examine in each example?",
     answer:
-      "Kapak, kategori, dil, bölüm sayısı, özet, hızlı bak önizlemesi, ilk bölümden metin örneği ve uygun olan örneklerde HTML/PDF/EPUB çıktıları inceleyebilirsin.",
+      "You can explore the cover, category, language, chapter count, summary, quick-look preview, text sample from the first chapter, and — where available — HTML/PDF/EPUB outputs.",
   },
   {
-    question: "Bu örnekler benim sonucumla birebir aynı olur mu?",
+    question: "Will my results be exactly the same as these examples?",
     answer:
-      "Hayır, birebir aynı olmaz. Ama bu sayfa sana bekleyebileceğin kalite seviyesini, yapı mantığını ve teslim biçimini gösterir. Kendi konu özeti ve hedef kitlenle sana özel bir kitap akışı oluşur.",
+      "No, they won't be identical. But this page shows you the quality level, structural logic, and delivery format you can expect. Your own topic summary and target audience will generate a unique book workflow.",
   },
   {
-    question: "Beğendiğim bir örneğe benzer kitap başlatabilir miyim?",
+    question: "Can I start a book similar to an example I like?",
     answer:
-      "Evet. Her örnekten sonra aynı başlangıç akışına geçebilir, kendi konunla benzer bir üretim süreci başlatabilirsin.",
+      "Yes. From any example, you can jump into the same starting workflow and begin a similar production process with your own topic.",
   },
 ] as const;
 
@@ -52,9 +52,9 @@ export default async function ExamplesPage() {
   const collectionSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Örnek Kitaplar ve Gerçek Çıktılar",
+    name: "Example Books and Real Outputs",
     description:
-      "Gerçek kapaklar, görünür bölüm planları, ilk bölüm önizlemeleri ve çıktı dosyalarıyla örnek kitap vitrini.",
+      "An example book showcase with real covers, visible chapter plans, first chapter previews, and output files.",
     url: absoluteUrl("/examples"),
     mainEntity: {
       "@type": "ItemList",
@@ -89,37 +89,37 @@ export default async function ExamplesPage() {
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell">
           <SectionHeading
-            badge="Örnekler neyi kanıtlıyor?"
-            title="Bu sayfa sadece vitrin değil, karar verme aracı"
-            description="İlk kez gelen bir ziyaretçi burada yalnızca kapaklara bakmaz. Her örnek; yapının, metnin ve teslim biçiminin gerçek seviyesini daha hızlı anlaman için vardır."
+            badge="What do the examples prove?"
+            title="This page is not just a showcase — it's a decision-making tool"
+            description="A first-time visitor doesn't just look at covers here. Every example exists to help you quickly understand the real level of structure, content, and delivery format."
           />
 
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
             <div className="rounded-[28px] border border-border/80 bg-card p-6 md:p-8">
               <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                Bu örnekler sana 4 şeyi gösterir
+                These examples show you 4 things
               </h2>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 {[
                   {
                     icon: Layers3,
-                    title: "Yapı kalitesi",
-                    text: "Bölüm planı gerçekten okunabilir mi, konu mantıklı bir omurgaya oturuyor mu?",
+                    title: "Structural quality",
+                    text: "Is the chapter plan actually readable? Does the topic fit a logical backbone?",
                   },
                   {
                     icon: Sparkles,
-                    title: "Metin seviyesi",
-                    text: "İlk bölüm önizlemeleri sayesinde yalnızca kapak değil, gerçek içerik hissi de görünür olur.",
+                    title: "Content level",
+                    text: "Thanks to first chapter previews, you see not just covers but also a real sense of the content.",
                   },
                   {
                     icon: BookOpen,
-                    title: "Kapak ve konumlandırma",
-                    text: "Kapak, başlık ve kategori uyumu sana yayınlanabilirlik hissi verir mi, bunu test edersin.",
+                    title: "Cover and positioning",
+                    text: "Does the cover, title, and category alignment give you a sense of publishability? That's what you test.",
                   },
                   {
                     icon: Globe,
-                    title: "Teslim biçimi",
-                    text: "Uygun örneklerde HTML, PDF ve EPUB çıktılarının gerçekten hazır olup olmadığını görürsün.",
+                    title: "Delivery format",
+                    text: "Where available, you can see whether HTML, PDF, and EPUB outputs are truly ready.",
                   },
                 ].map((item) => {
                   const Icon = item.icon;
@@ -137,14 +137,14 @@ export default async function ExamplesPage() {
             <div className="rounded-[28px] border border-border/80 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_6%,var(--background)),var(--background))] p-6 md:p-8">
               <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
                 <CheckCircle2 className="size-3.5 text-primary" />
-                Bu sayfa nasıl kullanılır?
+                How to use this page?
               </div>
               <ol className="mt-5 space-y-4">
                 {[
-                  "Önce konuna yakın örnekleri bulmak için kategori, dil ve aramayı kullan.",
-                  "Hızlı bak ile içindekiler, ilk bölüm ve çıktı sekmelerini incele.",
-                  "Uygun gördüğün örneğin tam sayfasını açıp daha derin oku.",
-                  "Sonra aynı akışla kendi konunla kitabını başlat.",
+                  "First, use category, language, and search filters to find examples close to your topic.",
+                  "Use quick look to explore the table of contents, first chapter, and output tabs.",
+                  "Open the full page of any example that catches your eye for a deeper look.",
+                  "Then start your own book with the same workflow using your topic.",
                 ].map((item, index) => (
                   <li key={item} className="flex items-start gap-3">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-semibold text-primary">
@@ -159,13 +159,13 @@ export default async function ExamplesPage() {
                   href="#ornek-vitrini"
                   className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-95"
                 >
-                  Örnekleri keşfet
+                  Explore examples
                 </Link>
                 <Link
                   href="/start/topic"
                   className="inline-flex items-center justify-center rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-accent"
                 >
-                  Kendi kitabını başlat
+                  Start your own book
                 </Link>
               </div>
             </div>
@@ -177,20 +177,20 @@ export default async function ExamplesPage() {
         <div className="shell grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
             {
-              title: `${items.length}+ gerçek örnek`,
-              text: "Galeri mantığıyla değil, gerçek teslim seviyesini gösterecek şekilde seçilmiş örnekler.",
+              title: `${items.length}+ real examples`,
+              text: "Not a gallery approach — examples selected to show the real delivery level.",
             },
             {
-              title: `${Math.max(0, categories.length - 1)} kategori`,
-              text: "Farklı kullanım alanları arasında karşılaştırma yapabilir, sana yakın örnekleri daha hızlı bulabilirsin.",
+              title: `${Math.max(0, categories.length - 1)} categories`,
+              text: "Compare across different use cases and find examples closer to your needs faster.",
             },
             {
-              title: `${Math.max(0, languages.length - 1)} dil görünümü`,
-              text: "Çok dilli üretim seviyesini yalnızca sözle değil, örnek kitaplar üzerinden görürsün.",
+              title: `${Math.max(0, languages.length - 1)} languages shown`,
+              text: "See multilingual production levels not just in words, but through actual example books.",
             },
             {
-              title: "Önce önizleme, sonra karar",
-              text: "Bu sayfa, üretime geçmeden önce kaliteyi ve yapıyı görüp daha rahat karar vermen için var.",
+              title: "Preview first, then decide",
+              text: "This page exists so you can see quality and structure before committing to production, making your decision easier.",
             },
           ].map((item) => (
             <div key={item.title} className="rounded-[24px] border border-border/80 bg-card/80 px-5 py-5 shadow-sm">
@@ -207,17 +207,17 @@ export default async function ExamplesPage() {
         <div className="shell grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
           <div>
             <SectionHeading
-              badge="Neden güven verir?"
-              title="Yalnızca güzel görünen kapaklar değil"
-              description="Örnek sayfası ikna edici olmak istiyorsa sadece estetik değil, içerik ve teslim seviyesini de göstermelidir."
+              badge="Why does it build trust?"
+              title="Not just good-looking covers"
+              description="If an examples page wants to be convincing, it must show not only aesthetics but also content and delivery level."
             />
 
             <div className="space-y-3">
               {[
-                "Her örnekte görünür bir kitap kimliği vardır: başlık, kategori, dil ve özet.",
-                "Hızlı bak akışı sayesinde sayfadan kopmadan önce içindekiler ve ilk bölüm hissi alınır.",
-                "Uygun örneklerde çıktı formatları açıkça gösterilir; yalnızca vaat edilmez.",
-                "Beğendiğin örnekten sonra aynı başlangıç akışına geçebilirsin.",
+                "Every example has a visible book identity: title, category, language, and summary.",
+                "The quick-look workflow lets you get a sense of the table of contents and first chapter before leaving the page.",
+                "Where available, output formats are clearly shown — not just promised.",
+                "After an example you like, you can jump into the same starting workflow.",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-3 rounded-2xl border border-border/80 bg-card px-4 py-4">
                   <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
@@ -229,9 +229,9 @@ export default async function ExamplesPage() {
 
           <div>
             <SectionHeading
-              badge="Karar öncesi kısa cevaplar"
-              title="Örnekleri incelerken en çok sorulan sorular"
-              description="Bu bölüm, sayfada dolaşırken kalan belirsizlikleri azaltır ve neye baktığını daha netleştirir."
+              badge="Quick answers before you decide"
+              title="Most frequently asked questions while browsing examples"
+              description="This section reduces remaining uncertainties as you browse the page and clarifies what you're looking at."
             />
 
             <div className="grid gap-4">
@@ -252,33 +252,33 @@ export default async function ExamplesPage() {
             <div className="mx-auto max-w-3xl text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/70 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                Bir sonraki adım
+                Next step
               </div>
               <h2 className="mt-6 text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-                Örnekler yeterince iyi görünüyorsa, <span className="text-primary">şimdi kendi konunu dene.</span>
+                If the examples look good enough, <span className="text-primary">try your own topic now.</span>
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-muted-foreground">
-                Aynı akışla başlarsın: konu özeti, bölüm planı, önizleme, kapak ve çıktı. Önce örnekleri gördün;
-                şimdi aynı mantığı kendi kitabın için çalıştırabilirsin.
+                You start with the same workflow: topic summary, chapter plan, preview, cover, and output. You've seen the examples;
+                now you can run the same process for your own book.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
                   href="/start/topic"
                   className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-95"
                 >
-                  Kendi kitabını başlat
+                  Start your own book
                 </Link>
                 <Link
                   href="/how-it-works"
                   className="inline-flex items-center justify-center rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-accent"
                 >
-                  Önce nasıl çalıştığını gör
+                  See how it works first
                 </Link>
                 <Link
                   href="/pricing"
                   className="inline-flex items-center justify-center rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-accent"
                 >
-                  Fiyatları incele
+                  View pricing
                 </Link>
               </div>
             </div>

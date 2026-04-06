@@ -103,6 +103,9 @@ export type BookStatus = {
     ready_count?: number;
     target_count?: number;
     failed_count?: number;
+    eta_seconds?: number;
+    avg_chapter_seconds?: number;
+    eta_updated_at?: string;
     complete?: boolean;
     started_at?: string;
     updated_at?: string;
