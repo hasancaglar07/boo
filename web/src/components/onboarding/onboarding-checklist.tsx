@@ -15,7 +15,7 @@ const DEFAULT_CHECKLIST_ITEMS = [
   { id: 1, text: "Set your first book topic", completed: false },
   { id: 2, text: "Generate outline with AI", completed: false },
   { id: 3, text: "Select cover style", completed: false },
-  { id: 4, text: "Preview gör", completed: false },
+  { id: 4, text: "See preview", completed: false },
   { id: 5, text: "Link to your account", completed: false },
 ];
 
@@ -86,7 +86,7 @@ export function OnboardingChecklist() {
           {isComplete
             ? "Congratulations! Your first book is ready!"
             : isLoggedIn
-              ? "İlerlemeni takip et"
+              ? "Track your progress"
               : "Track your progress and link to your account"}
         </p>
       </div>
@@ -141,7 +141,7 @@ export function OnboardingChecklist() {
                 Now continue with the full book and export features.
               </p>
               <Button size="sm" className="mt-3" onClick={handleGetStarted}>
-                Upgrade to Premium&apos;a Geç
+                Upgrade to Premium
               </Button>
             </div>
           </div>
@@ -165,7 +165,7 @@ export function OnboardingChecklist() {
         }}
         className="mt-3 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        Sıfırla
+        Reset
       </button>
     </div>
   );

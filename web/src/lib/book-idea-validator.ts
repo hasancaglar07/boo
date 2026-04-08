@@ -262,7 +262,12 @@ function buildTitleIdeas(input: BookIdeaValidatorInput) {
   const goalCore = input.goal.trim();
 
   return [
-    `${topicCore}: ${titleCase(audienceCore.split(/\s+/).slice(0, 4).join(" First 90 Days ").trim());
+    `${topicCore}: ${titleCase(audienceCore.split(/\s+/).slice(0, 4).join(" "))} — First 90 Days Blueprint`,
+    `${topicCore} for ${titleCase(audienceCore.split(/\s+/).slice(0, 3).join(" "))}`,
+    `The ${topicCore} Playbook: ${titleCase(goalCore.split(/\s+/).slice(0, 4).join(" "))}`,
+    `${topicCore}: A Step-by-Step Guide for ${titleCase(audienceCore.split(/\s+/).slice(0, 3).join(" "))}`,
+    `From Zero to ${topicCore} — ${titleCase(audienceCore.split(/\s+/).slice(0, 2).join(" "))} Edition`,
+  ];
 }
 
 function buildMiniOutline(input: BookIdeaValidatorInput) {
@@ -274,10 +279,10 @@ function buildMiniOutline(input: BookIdeaValidatorInput) {
     "The core problem and misconceptions the target reader faces",
     `${topicCore} core approach or framework`,
     "Most common mistakes and why they don't produce results",
-    Step-by-step implementation plan,
+    "Step-by-step implementation plan",
     "Real scenario, example, or mini case study set",
-    First 7-day quick win action plan,
-    Next step: full outline and preview generation,
+    "First 7-day quick win action plan",
+    "Next step: full outline and preview generation",
   ];
 }
 

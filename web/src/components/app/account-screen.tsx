@@ -59,42 +59,42 @@ function buildChecklistItems(
     {
       id: "set_goal",
       label: "Set goal",
-      description: hasGoal ? account.goal.slice(0, 60) + (account.goal.length > 60 ? "…" : "") : "Ne yazmak istediğini tarif et",
+      description: hasGoal ? account.goal.slice(0, 60) + (account.goal.length > 60 ? "…" : "") : "Describe what you want to write",
       icon: <Target className="size-4" />,
       completed: hasGoal,
-      action: hasGoal ? undefined : { label: "Hedef Ekle", href: "/app/settings/profile" },
+      action: hasGoal ? undefined : { label: "Add Goal", href: "/app/settings/profile" },
     },
     {
       id: "first_book",
-      label: "İlk kitabı oluştur",
-      description: hasBook ? `${books.length} books created` : "Wizard ile ilk kitabını yaz",
+      label: "Create your first book",
+      description: hasBook ? `${books.length} books created` : "Write your first book with the wizard",
       icon: <BookOpen className="size-4" />,
       completed: hasBook,
-      action: hasBook ? undefined : { label: "Başla", href: "/app/new" },
+      action: hasBook ? undefined : { label: "Start", href: "/app/new" },
     },
     {
       id: "cover_generated",
-      label: "Kapak tasarla",
-      description: "AI ile kitap kapağı oluştur",
+      label: "Design cover",
+      description: "AI-powcover with AI",
       icon: <ImageIcon className="size-4" />,
       completed: hasBook, // proxy: if they have a book they've seen cover step
       action: hasBook ? undefined : { label: "Create Book", href: "/app/new" },
     },
     {
       id: "first_export",
-      label: "PDF / EPUB dışa aktar",
-      description: hasExport ? `${exports} dışa aktarım yaptın` : "Kitabını indirilebilir formata çevir",
+      label: "PDF / EPUB Export",
+      description: hasExport ? `${exports} exports completed` : "Convert your book to a downloadable format",
       icon: <Download className="size-4" />,
       completed: hasExport,
-      action: hasExport ? undefined : { label: "Kütüphaneye Git", href: "/app/library" },
+      action: hasExport ? undefined : { label: "Go to Library Git", href: "/app/library" },
     },
     {
       id: "upgrade_plan",
-      label: "Premium'a geç",
-      description: hasPremium ? `${plan} planındasın` : "Tam erişim için planını yükselt",
+      label: "Upgrade to Premium",
+      description: hasPremium ? `${plan} plan` : "Upgrade your plan for full access",
       icon: <Sparkles className="size-4" />,
       completed: hasPremium,
-      action: hasPremium ? undefined : { label: "Planları Gör", href: "/pricing" },
+      action: hasPremium ? undefined : { label: "View Plans", href: "/pricing" },
     },
   ];
 }
@@ -124,7 +124,7 @@ function ProfileProgressBar({ pct }: { pct: number }) {
   return (
     <div className="mb-2">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-muted-foreground">Profil tamamlanma</span>
+        <span className="text-xs font-medium text-muted-foreground">Profile completion</span>
         <span className="text-xs font-semibold text-foreground">{pct}%</span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -163,16 +163,16 @@ function CelebrationBanner({ onDismiss }: { onDismiss: () => void }) {
       <div className="flex items-start gap-4">
         <div className="text-3xl select-none">🎉</div>
         <div className="flex-1">
-          <p className="text-base font-bold text-foreground">Profilin %100 tamamlandı!</p>
+          <p className="text-base font-bold text-foreground">Profilin %100 completed!</p>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
             Great job! All steps completed. You are now fully ready for your book writing journey.
           </p>
           <div className="mt-3 flex gap-2">
             <Button size="sm" onClick={() => void 0}>
-              Kitap Yaz
+              Write Book
             </Button>
             <Button size="sm" variant="ghost" onClick={onDismiss}>
-              Kapat
+              Close
             </Button>
           </div>
         </div>
@@ -190,7 +190,7 @@ function NextStepSuggestions({ items }: { items: ChecklistItem[] }) {
 
   return (
     <div className="mt-6">
-      <h3 className="mb-3 text-sm font-semibold text-foreground">Sıradaki adımlar</h3>
+      <h3 className="mb-3 text-sm font-semibold text-foreground">Next steps</h3>
       <div className="flex flex-col gap-2">
         {next.map((item) => (
           <button
@@ -337,7 +337,7 @@ export function AccountScreen() {
   if (!ready) return null;
   if (backendUnavailable) {
     return (
-      <AppFrame current="account" title="Hesap" subtitle="Bağlantı sorunu oluştu." books={[]}>
+      <AppFrame current="account" title="Account" subtitle="Connection issue occurred." books={[]}>
         <BackendUnavailableState onRetry={() => void refreshBooks()} />
       </AppFrame>
     );
@@ -359,11 +359,11 @@ export function AccountScreen() {
   return (
     <AppFrame
       current="account"
-      title="Hesap"
-      subtitle="Profil ve kullanım özeti."
+      title="Account"
+      subtitle="Profile and usage usage summary."
       books={books}
       primaryAction={{
-        label: "Çıkış yap",
+        label: "Sign out yap",
         onClick: async () => {
           await signOut({ redirect: false, callbackUrl: "/" });
           clearClientAuthState();
@@ -375,19 +375,19 @@ export function AccountScreen() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent>
-            <div className="text-sm text-muted-foreground">Ad</div>
+            <div className="text-sm text-muted-foreground">Name</div>
             {account.name && account.name !== "Book Creator" ? (
               <div className="mt-3 text-xl font-medium text-foreground">{account.name}</div>
             ) : (
               <div className="mt-3">
-                <EmptyStateMessage label="Add namenmemiş." actionLabel="Ekle" href="/app/settings/profile" />
+                <EmptyStateMessage label="No name added.." actionLabel="Add" href="/app/settings/profile" />
               </div>
             )}
           </CardContent>
         </Card>
         <Card>
           <CardContent>
-            <div className="text-sm text-muted-foreground">E-posta</div>
+            <div className="text-sm text-muted-foreground">Email</div>
             <div className="mt-3 text-xl font-medium text-foreground">{account.email}</div>
           </CardContent>
         </Card>
@@ -405,9 +405,9 @@ export function AccountScreen() {
             <div className="text-4xl font-semibold text-foreground">{books.length}</div>
             <div className="mt-2 text-sm text-muted-foreground">
               {books.length === 0 ? (
-                <EmptyStateMessage label="Henüz kitap yok." actionLabel="İlk kitabını oluştur →" href="/app/new" />
+                <EmptyStateMessage label="No books yet." actionLabel="Create your first book →" href="/app/new" />
               ) : (
-                "Toplam kitap"
+                "Total books"
               )}
             </div>
           </CardContent>
@@ -417,21 +417,21 @@ export function AccountScreen() {
             <div className="text-4xl font-semibold text-foreground">{compactNumber(exports)}</div>
             <div className="mt-2 text-sm text-muted-foreground">
               {exports === 0 ? (
-                <EmptyStateMessage label="Henüz dışa aktarım yok." actionLabel="PDF oluştur →" href="/app/library" />
+                <EmptyStateMessage label="Not yet Exports yet." actionLabel="Create PDF →" href="/app/library" />
               ) : (
-                "Toplam çıktı"
+                "Total output"
               )}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent>
-            <div className="text-sm text-muted-foreground">Hedef</div>
+            <div className="text-sm text-muted-foreground">Goal</div>
             {account.goal ? (
               <div className="mt-3 text-base leading-7 text-foreground">{account.goal}</div>
             ) : (
               <div className="mt-3">
-                <EmptyStateMessage label="Set goalnmemiş." actionLabel="Hedef ekle →" href="/app/settings/profile" />
+                <EmptyStateMessage label="No goal set.." actionLabel="Hedef ekle →" href="/app/settings/profile" />
               </div>
             )}
           </CardContent>
@@ -441,9 +441,9 @@ export function AccountScreen() {
       {/* ── Profile Completion Section ── */}
       <div className="mt-8">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground">Profil Tamamlama</h2>
+          <h2 className="text-base font-bold text-foreground">Profile Completion</h2>
           <span className="rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
-            {completedCount}/{items.length} tamamlandı
+            {completedCount}/{items.length} completed
           </span>
         </div>
 
@@ -458,10 +458,10 @@ export function AccountScreen() {
           <div className="mb-4 mt-2 rounded-[12px] border border-border/50 bg-background/40 px-3 py-2">
             <p className="text-xs text-muted-foreground">
               {completedCount === 0
-                ? "Profil tamamlamaya başlamak için aşağıdaki adımları takip et."
+                ? "PROFIL_completed complete your profile below."
                 : completedCount < 4
-                ? `İyi gidiyorsun! ${items.length - completedCount} adım kaldı.`
-                : `Neredeyse bitti! Son ${items.length - completedCount} adımı tamamla.`}
+                ? `Great progress!! ${items.length - completedCount} steps left.`
+                : `Neredeyse bitti! Son ${items.length - completedCount} steps to complete.`}
             </p>
           </div>
         )}

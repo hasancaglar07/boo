@@ -61,7 +61,7 @@ const intentOptions: Array<{ value: BookIdeaIntent; label: string; hint: string 
 
 const languageOptions: Array<{ value: BookIdeaLanguage; label: string }> = [
   { value: "english", label: "English" },
-  { value: "turkish", label: "Türkçe" },
+  { value: "turkish", label: "Turkish" },
   { value: "multilingual", label: "Multilingual" },
   { value: "other", label: "Other" },
 ];

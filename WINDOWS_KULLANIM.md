@@ -1,107 +1,107 @@
-# Windows Kullanim
+# Windows Usage
 
-Bu repo artik Windows tarafindan da kolay calissin diye bir batch dosyasi ile geliyor:
+This repo now includes batch files for easy Windows usage:
 
 - [book-generator.bat](/mnt/c/Users/ihsan/Desktop/BOOK/book-generator.bat)
 - [start-dashboard.bat](/mnt/c/Users/ihsan/Desktop/BOOK/start-dashboard.bat)
 - [start-web.bat](/mnt/c/Users/ihsan/Desktop/BOOK/start-web.bat)
 
-Kullanim:
+Usage:
 
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 book-generator.bat
 ```
 
-Web kontrol panelini ac:
+Open the web dashboard:
 
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 book-generator.bat ui
 ```
 
-veya
+or
 
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 start-dashboard.bat
 ```
 
-Yeni shadcn tabanli web arayuzunu ac:
+Open the new shadcn-based web interface:
 
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 book-generator.bat web
 ```
 
-veya
+or
 
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 start-web.bat
 ```
 
-Not:
+Notes:
 
-- `start-web.bat` varsayilan olarak `serve` modunda calisir.
-- Yani pencere acik kaldigi surece sunucu calisir, pencereyi kapatinca sunucu durur.
-- `book-generator.bat web` artik eski web ve dashboard sureclerini kapatip temiz yeniden baslatma yapar.
-- Gerekirse `start-web.bat reset` komutunu kullan.
+- `start-web.bat` runs in `serve` mode by default.
+- The server runs as long as the window stays open; closing the window stops the server.
+- `book-generator.bat web` now cleanly shuts down old web and dashboard processes and restarts fresh.
+- Use `start-web.bat reset` if needed.
 
-Adres:
+Address:
 
 ```text
 http://localhost:3000
 ```
 
-Durdurmak icin:
+To stop:
 
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 start-web.bat stop
 ```
 
-Temiz yeniden baslatmak icin:
+To clean restart:
 
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 start-web.bat reset
 ```
 
-Next.js bagimliliklarini onarip tekrar acmak icin:
+To repair Next.js dependencies and restart:
 
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 start-web.bat repair
 ```
 
-Canli log izlemek icin:
+To watch live logs:
 
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 start-web.bat logs-live
 ```
 
-Tek komutla ornek kitap olustur:
+Generate a sample book with a single command:
 
 ```bat
 book-generator.bat sample
 ```
 
-Tek komutla EPUB uret:
+Generate EPUB with a single command:
 
 ```bat
 book-generator.bat epub "Ihsan"
 ```
 
-Tek komutla PDF uret:
+Generate PDF with a single command:
 
 ```bat
 book-generator.bat pdf "Ihsan"
 ```
 
-Windows'ta olusan ornek kitap klasoru:
+Sample book output folder on Windows:
 
 ```text
-C:\Users\ihsan\Desktop\BOOK\book_outputs\ornek-kitap
+C:\Users\ihsan\Desktop\BOOK\book_outputs\sample-book
 ```

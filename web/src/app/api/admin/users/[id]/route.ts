@@ -10,7 +10,7 @@ export async function GET(
 
   const detail = await getAdminUserDetail((await params).id, session.user.role);
   if (!detail) {
-    return Response.json({ ok: false, error: User not found. }, { status: 404 });
+    return Response.json({ ok: false, error: "User not found." }, { status: 404 });
   }
 
   return detailResponse(detail);

@@ -1,15 +1,15 @@
 ﻿import { slugify, titleCase } from "@/lib/utils";
 
 export type FunnelStep = "topic" | "title" | "outline" | "style" | "generate";
-export type FunnelBookType = "rehber" | "is" | "egitim" | "cocuk" | "diger";
-export type FunnelDepth = "hizli" | "dengeli" | "detayli";
+export type FunnelBookType = "guide" | "business" | "education" | "children" | "other";
+export type FunnelDepth = "quick" | "balanced" | "detailed";
 export type FunnelTone = "clear" | "professional" | "warm" | "inspiring";
 export type FunnelCoverDirection = "editorial" | "tech" | "minimal" | "energetic";
 export type FunnelBookLength = "compact" | "standard" | "extended";
 export type FunnelChapterRole = "opening" | "foundation" | "core" | "case" | "advanced" | "closing";
 export type FunnelChapterLength = "short" | "medium" | "long";
 export const SUPPORTED_LANGUAGES = [
-  { value: "Turkish", label: "Türkçe", description: "Local reader tone, Turkish chapter flow, and natural title structure." },
+  { value: "Turkish", label: "Turkish", description: "Local reader tone, Turkish chapter flow, and natural title structure." },
   { value: "English", label: "English", description: "Clean, clear, and fluent English structure for international readers." },
   { value: "German", label: "Deutsch", description: "Output suited for more technical and systematic German reader expectations." },
   { value: "French", label: "Français", description: "More editorial and fluent French reader rhythm." },
@@ -147,7 +147,7 @@ export function createDefaultFunnelDraft(): FunnelDraft {
     status: "draft",
     generatedSlug: "",
     topic: "",
-    bookType: "rehber",
+    bookType: "guide",
     audience: "",
     language: "Turkish",
     languageLocked: false,
@@ -162,7 +162,7 @@ export function createDefaultFunnelDraft(): FunnelDraft {
     outline: [],
     bookLength: "standard",
     tone: "professional",
-    depth: "dengeli",
+    depth: "balanced",
     coverDirection: "editorial",
   };
 }
@@ -184,7 +184,7 @@ function suggestedChapterRole(index: number, total: number, bookType: FunnelBook
   if (index === total - 1) return "closing";
   if (index === 1) return "foundation";
   if (total >= 6 && index === total - 2) return "advanced";
-  if (bookType === "egitim" && index === Math.floor(total / 2)) return "case";
+  if (bookType === "education" && index === Math.floor(total / 2)) return "case";
   if (bookType === "is" && index % 3 === 0) return "case";
   return "core";
 }
@@ -492,12 +492,12 @@ export function outlineWordRange(outline: FunnelOutlineItem[], bookLength: Funne
 
 export function suggestedStyleProfile(draft: FunnelDraft) {
   const topic = draft.topic.toLowerCase();
-  const techLike = /ai|yapay zeka|minecraft|oyun|kod|coding|software|teknoloji/.test(topic);
-  const warmLike = draft.bookType === "cocuk";
+  const techLike = /ai|artificial intelligence|minecraft|game|code|coding|software|technology|tech/i.test(topic);
+  const warmLike = draft.bookType === "children";
 
   return {
     tone: warmLike ? "warm" : techLike ? "clear" : "professional",
-    depth: techLike ? "dengeli" : draft.bookType === "egitim" ? "detayli" : "dengeli",
+    depth: techLike ? "balanced" : draft.bookType === "education" ? "detailed" : "balanced",
     coverDirection: warmLike ? "energetic" : techLike ? "tech" : "editorial",
   } satisfies Pick<FunnelDraft, "tone" | "depth" | "coverDirection">;
 }
@@ -687,7 +687,7 @@ export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
     cover_brief: coverBrief,
     cover_prompt: buildCoverPromptFromDraft(draft, resolvedTitle, resolvedSubtitle),
     generate_cover: true,
-    fast: draft.depth === "hizli",
+    fast: draft.depth === "quick",
     book_length_tier: draft.bookLength,
     target_word_count_min: totalWords.min,
     target_word_count_max: totalWords.max,
@@ -705,8 +705,8 @@ export function buildGuidedBookPayload(draft: FunnelDraft, author: string) {
 }
 
 export function workflowStyleLabel(depth: FunnelDepth) {
-  if (depth === "hizli") return "clear and concise";
-  if (depth === "detayli") return "detailed and example-driven";
+  if (depth === "quick") return "clear and concise";
+  if (depth === "detailed") return "detailed and example-driven";
   return "clear and practical";
 }
 
@@ -718,23 +718,23 @@ export function workflowToneLabel(tone: FunnelTone) {
 }
 
 export function workflowGenreLabel(bookType: FunnelBookType) {
-  if (bookType === "rehber") return "guide";
-  if (bookType === "is") return "business";
-  if (bookType === "egitim") return "education";
-  if (bookType === "cocuk") return "children";
+  if (bookType === "guide") return "guide";
+  if (bookType === "business") return "business";
+  if (bookType === "education") return "education";
+  if (bookType === "children") return "children";
   return "non-fiction";
 }
 
 export function bookTypeLabel(bookType: FunnelBookType) {
   switch (bookType) {
-    case "rehber":
-      return "Rehber";
-    case "is":
-      return "Business book";
-    case "egitim":
+    case "guide":
+      return "Guide";
+    case "business":
+      return "Business Book";
+    case "education":
       return "Education";
-    case "cocuk":
-      return "Children's book";
+    case "children":
+      return "Children's Book";
     default:
       return "Book";
   }
@@ -756,14 +756,14 @@ export function toneLabel(tone: FunnelTone, language: FunnelLanguage) {
       ? "Inspiring"
       : tone === "clear"
         ? "Clear and instructive"
-        : "Profesyonel";
+        : "Professional";
 }
 
 export function depthLabel(depth: FunnelDepth, language: FunnelLanguage) {
   if (!isTurkishLanguage(language)) {
-    return depth === "hizli" ? "Fast" : depth === "detayli" ? "Detailed" : "Balanced";
+    return depth === "quick" ? "Fast" : depth === "detailed" ? "Detailed" : "Balanced";
   }
-  return depth === "hizli" ? "Short and fast" : depth === "detayli" ? "More detailed" : "Balanced";
+  return depth === "quick" ? "Short and fast" : depth === "detailed" ? "More detailed" : "Balanced";
 }
 
 export function coverDirectionLabel(direction: FunnelCoverDirection, language: FunnelLanguage) {

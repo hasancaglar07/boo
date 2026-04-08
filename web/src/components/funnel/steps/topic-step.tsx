@@ -14,14 +14,14 @@ import {
 } from "@/lib/funnel-draft";
 import { ChoiceGrid } from "@/components/funnel/shared/choice-grid";
 
-const BOOK_TYPES: FunnelBookType[] = ["rehber", "is", "egitim", "cocuk", "diger"];
+const BOOK_TYPES: FunnelBookType[] = ["guide", "business", "education", "children", "other"];
 
 const BOOK_TYPE_DESCRIPTIONS: Record<FunnelBookType, string> = {
-  rehber: "Step-by-step, clear and actionable flow.",
-  is: "Strong narrative for expertise, consulting, or brand authority.",
-  egitim: "Instructive, example-based and more systematic approach.",
-  cocuk: "Warmer, rhythmic and simpler narrative style.",
-  diger: "Flexible space for custom topics or hybrid narratives.",
+  guide: "Step-by-step, clear and actionable flow.",
+  business: "Strong narrative for expertise, consulting, or brand authority.",
+  education: "Instructive, example-based and more systematic approach.",
+  children: "Warmer, rhythmic and simpler narrative style.",
+  other: "Flexible space for custom topics or hybrid narratives.",
 };
 
 export function TopicStep({

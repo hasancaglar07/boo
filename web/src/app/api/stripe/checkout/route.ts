@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     stripe = getStripe();
   } catch (error) {
     return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : Stripe configuration is missing. },
+      { ok: false, error: error instanceof Error ? error.message : "Stripe configuration is missing." },
       { status: 503 },
     );
   }

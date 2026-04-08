@@ -13,7 +13,7 @@ export interface Cta4Props {
 
 const defaultItems = [
   "5-question quick start wizard",
-  "EPUB önce, PDF sonra",
+  "EPUB first, PDF second",
   "Cover and metadata flow",
   "Editable chapter structure",
   "AI-powered research layer",

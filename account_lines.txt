@@ -1,0 +1,438 @@
+1:"use client";
+3:import { useEffect, useState } from "react";
+4:import { useRouter } from "next/navigation";
+5:import { Check, ChevronRight, BookOpen, Image as ImageIcon, Download, Target, User, Sparkles, ArrowRight } from "lucide-react";
+6:import { signOut } from "next-auth/react";
+8:import { AppFrame } from "@/components/app/app-frame";
+9:import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
+10:import { Card, CardContent } from "@/components/ui/card";
+11:import { Button } from "@/components/ui/button";
+12:import { clearClientAuthState, getAccount, getPlan, hasPremiumAccess } from "@/lib/preview-auth";
+13:import { useSessionGuard } from "@/lib/use-session-guard";
+14:import { isBackendUnavailableError, loadBooks, type Book } from "@/lib/dashboard-api";
+15:import { compactNumber, cn } from "@/lib/utils";
+16:import { trackEvent } from "@/lib/analytics";
+18:// ─── Profile Completion Checklist ────────────────────────────────────────────
+20:const PROFILE_STORAGE_KEY = "book_generator_profile_checklist";
+22:type ChecklistItem = {
+23:  id: string;
+24:  label: string;
+25:  description: string;
+26:  icon: React.ReactNode;
+27:  completed: boolean;
+28:  action?: { label: string; href: string };
+29:};
+31:function buildChecklistItems(
+32:  account: { name: string; email: string; goal: string },
+33:  books: Book[],
+34:  plan: string,
+35:): ChecklistItem[] {
+36:  const exports = books.reduce((t, b) => t + Number(b.status?.export_count || 0), 0);
+37:  const hasBook = books.length > 0;
+38:  const hasExport = exports > 0;
+39:  const hasPremium = hasPremiumAccess(plan);
+40:  const hasGoal = !!account.goal && account.goal.trim().length > 0;
+41:  const hasName = !!account.name && account.name !== "Book Creator";
+43:  return [
+44:    {
+45:      id: "account_created",
+46:      label: "Create account",
+47:      description: "Signed up with email",
+48:      icon: <User className="size-4" />,
+49:      completed: true, // always true if viewing this page
+50:    },
+51:    {
+52:      id: "profile_name",
+53:      label: "Add name",
+54:      description: hasName ? account.name : "Add your real name to your profile",
+55:      icon: <User className="size-4" />,
+56:      completed: hasName,
+57:      action: hasName ? undefined : { label: "Edit", href: "/app/settings/profile" },
+58:    },
+59:    {
+60:      id: "set_goal",
+61:      label: "Set goal",
+62:      description: hasGoal ? account.goal.slice(0, 60) + (account.goal.length > 60 ? "…" : "") : "Describe what you want to write",
+63:      icon: <Target className="size-4" />,
+64:      completed: hasGoal,
+65:      action: hasGoal ? undefined : { label: "Hedef Ekle", href: "/app/settings/profile" },
+66:    },
+67:    {
+68:      id: "first_book",
+69:      label: "İlk kitabı oluştur",
+70:      description: hasBook ? `${books.length} books created` : "Write your first book with the wizard",
+71:      icon: <BookOpen className="size-4" />,
+72:      completed: hasBook,
+73:      action: hasBook ? undefined : { label: "Başla", href: "/app/new" },
+74:    },
+75:    {
+76:      id: "cover_generated",
+77:      label: "Design cover",
+78:      description: "AI ile kitap kapağı oluştur",
+79:      icon: <ImageIcon className="size-4" />,
+80:      completed: hasBook, // proxy: if they have a book they've seen cover step
+81:      action: hasBook ? undefined : { label: "Create Book", href: "/app/new" },
+82:    },
+83:    {
+84:      id: "first_export",
+85:      label: "PDF / EPUB dışa aktar",
+86:      description: hasExport ? `${exports} dışa aktarım yaptın` : "Kitabını indirilebilir formata çevir",
+87:      icon: <Download className="size-4" />,
+88:      completed: hasExport,
+89:      action: hasExport ? undefined : { label: "Kütüphaneye Git", href: "/app/library" },
+90:    },
+91:    {
+92:      id: "upgrade_plan",
+93:      label: "Upgrade to Premium",
+94:      description: hasPremium ? `${plan} planındasın` : "Tam erişim için planını yükselt",
+95:      icon: <Sparkles className="size-4" />,
+96:      completed: hasPremium,
+97:      action: hasPremium ? undefined : { label: "View Plans", href: "/pricing" },
+98:    },
+99:  ];
+100:}
+102:function loadStoredCompletions(): Record<string, boolean> {
+103:  if (typeof window === "undefined") return {};
+104:  try {
+105:    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+106:    return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+107:  } catch {
+108:    return {};
+109:  }
+110:}
+112:function saveStoredCompletions(data: Record<string, boolean>) {
+113:  if (typeof window === "undefined") return;
+114:  try {
+115:    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data));
+116:  } catch {
+117:    // ignore
+118:  }
+119:}
+121:// ─── Sub-components ───────────────────────────────────────────────────────────
+123:function ProfileProgressBar({ pct }: { pct: number }) {
+124:  return (
+125:    <div className="mb-2">
+126:      <div className="flex items-center justify-between mb-1">
+127:        <span className="text-xs font-medium text-muted-foreground">Profile completion</span>
+128:        <span className="text-xs font-semibold text-foreground">{pct}%</span>
+129:      </div>
+130:      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+131:        <div
+132:          className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
+133:          style={{ width: `${pct}%` }}
+134:        />
+135:      </div>
+136:    </div>
+137:  );
+138:}
+140:function EmptyStateMessage({ label, actionLabel, href }: { label: string; actionLabel?: string; href?: string }) {
+141:  const router = useRouter();
+142:  return (
+143:    <span className="text-muted-foreground italic text-sm">
+144:      {label}
+145:      {actionLabel && href && (
+146:        <>
+147:          {" "}
+148:          <button
+149:            onClick={() => router.push(href)}
+150:            className="text-primary underline-offset-2 hover:underline font-medium not-italic"
+151:          >
+152:            {actionLabel}
+153:          </button>
+154:        </>
+155:      )}
+156:    </span>
+157:  );
+158:}
+160:function CelebrationBanner({ onDismiss }: { onDismiss: () => void }) {
+161:  return (
+162:    <div className="rounded-[20px] border border-primary/30 bg-gradient-to-br from-primary/15 to-primary/5 px-5 py-5">
+163:      <div className="flex items-start gap-4">
+164:        <div className="text-3xl select-none">🎉</div>
+165:        <div className="flex-1">
+166:          <p className="text-base font-bold text-foreground">Profilin %100 tamamlandı!</p>
+167:          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+168:            Great job! All steps completed. You are now fully ready for your book writing journey.
+169:          </p>
+170:          <div className="mt-3 flex gap-2">
+171:            <Button size="sm" onClick={() => void 0}>
+172:              Write Book
+173:            </Button>
+174:            <Button size="sm" variant="ghost" onClick={onDismiss}>
+175:              Close
+176:            </Button>
+177:          </div>
+178:        </div>
+179:      </div>
+180:    </div>
+181:  );
+182:}
+184:function NextStepSuggestions({ items }: { items: ChecklistItem[] }) {
+185:  const router = useRouter();
+186:  const incomplete = items.filter((i) => !i.completed && i.action);
+187:  if (incomplete.length === 0) return null;
+189:  const next = incomplete.slice(0, 2);
+191:  return (
+192:    <div className="mt-6">
+193:      <h3 className="mb-3 text-sm font-semibold text-foreground">Sıradaki adımlar</h3>
+194:      <div className="flex flex-col gap-2">
+195:        {next.map((item) => (
+196:          <button
+197:            key={item.id}
+198:            onClick={() => {
+199:              trackEvent("profile_next_step_clicked", { step_id: item.id });
+200:              if (item.action?.href) router.push(item.action.href);
+201:            }}
+202:            className="group flex items-center gap-3 rounded-[14px] border border-border/60 bg-background/60 px-4 py-3 text-left transition-all hover:border-primary/30 hover:bg-accent/40"
+203:          >
+204:            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+205:              {item.icon}
+206:            </div>
+207:            <div className="flex-1 min-w-0">
+208:              <div className="text-sm font-medium text-foreground">{item.label}</div>
+209:              <div className="text-xs text-muted-foreground truncate">{item.description}</div>
+210:            </div>
+211:            <ArrowRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+212:          </button>
+213:        ))}
+214:      </div>
+215:    </div>
+216:  );
+217:}
+219:function ProfileChecklist({ items, onToggle }: { items: ChecklistItem[]; onToggle: (id: string) => void }) {
+220:  const router = useRouter();
+222:  return (
+223:    <div className="space-y-2">
+224:      {items.map((item) => (
+225:        <div
+226:          key={item.id}
+227:          className={cn(
+228:            "group flex w-full items-center gap-3 rounded-[16px] border px-4 py-3 transition-all",
+229:            item.completed
+230:              ? "border-primary/20 bg-primary/6"
+231:              : "border-border/60 bg-background/60",
+232:          )}
+233:        >
+234:          <button
+235:            onClick={() => onToggle(item.id)}
+236:            className={cn(
+237:              "flex size-5 shrink-0 items-center justify-center rounded-full border transition-all",
+238:              item.completed
+239:                ? "border-primary bg-primary text-primary-foreground"
+240:                : "border-border bg-card text-muted-foreground hover:border-primary/50",
+241:            )}
+242:          >
+243:            {item.completed ? <Check className="size-3" /> : null}
+244:          </button>
+246:          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+247:            {item.icon}
+248:          </div>
+250:          <div className="flex-1 min-w-0">
+251:            <div
+252:              className={cn(
+253:                "text-sm font-medium",
+254:                item.completed ? "text-foreground line-through opacity-50" : "text-foreground",
+255:              )}
+256:            >
+257:              {item.label}
+258:            </div>
+259:            <div className="text-xs text-muted-foreground truncate">{item.description}</div>
+260:          </div>
+262:          {!item.completed && item.action && (
+263:            <button
+264:              onClick={() => {
+265:                trackEvent("profile_next_step_clicked", { step_id: item.id });
+266:                router.push(item.action!.href);
+267:              }}
+268:              className="flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+269:            >
+270:              {item.action.label}
+271:              <ChevronRight className="size-3" />
+272:            </button>
+273:          )}
+274:        </div>
+275:      ))}
+276:    </div>
+277:  );
+278:}
+280:// ─── Main Component ───────────────────────────────────────────────────────────
+282:export function AccountScreen() {
+283:  const ready = useSessionGuard();
+284:  const router = useRouter();
+285:  const [books, setBooks] = useState<Book[]>([]);
+286:  const [backendUnavailable, setBackendUnavailable] = useState(false);
+287:  const [manualCompletions, setManualCompletions] = useState<Record<string, boolean>>({});
+288:  const [celebrationDismissed, setCelebrationDismissed] = useState(false);
+289:  const [prevPct, setPrevPct] = useState<number | null>(null);
+291:  async function refreshBooks() {
+292:    try {
+293:      const loaded = await loadBooks();
+294:      setBooks(loaded);
+295:      setBackendUnavailable(false);
+296:    } catch (error) {
+297:      if (isBackendUnavailableError(error)) {
+298:        setBackendUnavailable(true);
+299:        return;
+300:      }
+301:      console.error(error);
+302:    }
+303:  }
+305:  useEffect(() => {
+306:    if (!ready) return;
+307:    void refreshBooks();
+308:    setManualCompletions(loadStoredCompletions());
+309:  }, [ready]);
+311:  // Compute derived values unconditionally (before early returns)
+312:  const account = getAccount();
+313:  const plan = getPlan();
+314:  const exports = books.reduce((total, book) => total + Number(book.status?.export_count || 0), 0);
+316:  const baseItems = buildChecklistItems(account, books, plan);
+317:  const items: ChecklistItem[] = baseItems.map((item) => ({
+318:    ...item,
+319:    completed: item.completed || !!manualCompletions[item.id],
+320:  }));
+322:  const completedCount = items.filter((i) => i.completed).length;
+323:  const pct = Math.round((completedCount / items.length) * 100);
+324:  const isComplete = completedCount === items.length;
+326:  // Track completion rate when pct changes — must be before early returns
+327:  useEffect(() => {
+328:    if (!ready || pct === prevPct) return;
+329:    setPrevPct(pct);
+330:    trackEvent("profile_completion_rate", { rate: pct, completed: completedCount, total: items.length });
+331:    if (isComplete) {
+332:      trackEvent("profile_celebration_shown", {});
+333:    }
+334:    // eslint-disable-next-line react-hooks/exhaustive-deps
+335:  }, [pct, ready]);
+337:  if (!ready) return null;
+338:  if (backendUnavailable) {
+339:    return (
+340:      <AppFrame current="account" title="Account" subtitle="Bağlantı sorunu oluştu." books={[]}>
+341:        <BackendUnavailableState onRetry={() => void refreshBooks()} />
+342:      </AppFrame>
+343:    );
+344:  }
+346:  function handleToggle(id: string) {
+347:    const item = items.find((i) => i.id === id);
+348:    if (!item) return;
+349:    // Only allow manual toggle for non-auto-detected items
+350:    if (item.completed && !manualCompletions[id]) return; // auto-completed, can't untoggle
+351:    const newCompletions = { ...manualCompletions, [id]: !manualCompletions[id] };
+352:    setManualCompletions(newCompletions);
+353:    saveStoredCompletions(newCompletions);
+354:    if (!item.completed) {
+355:      trackEvent("profile_checklist_item_completed", { step_id: id });
+356:    }
+357:  }
+359:  return (
+360:    <AppFrame
+361:      current="account"
+362:      title="Account"
+363:      subtitle="Profil ve kullanım özeti."
+364:      books={books}
+365:      primaryAction={{
+366:        label: "Çıkış yap",
+367:        onClick: async () => {
+368:          await signOut({ redirect: false, callbackUrl: "/" });
+369:          clearClientAuthState();
+370:          router.push("/");
+371:        },
+372:      }}
+373:    >
+374:      {/* ── Stats Row ── */}
+375:      <div className="grid gap-4 md:grid-cols-3">
+376:        <Card>
+377:          <CardContent>
+378:            <div className="text-sm text-muted-foreground">Name</div>
+379:            {account.name && account.name !== "Book Creator" ? (
+380:              <div className="mt-3 text-xl font-medium text-foreground">{account.name}</div>
+381:            ) : (
+382:              <div className="mt-3">
+383:                <EmptyStateMessage label="Add namenmemiş." actionLabel="Add" href="/app/settings/profile" />
+384:              </div>
+385:            )}
+386:          </CardContent>
+387:        </Card>
+388:        <Card>
+389:          <CardContent>
+390:            <div className="text-sm text-muted-foreground">Email</div>
+391:            <div className="mt-3 text-xl font-medium text-foreground">{account.email}</div>
+392:          </CardContent>
+393:        </Card>
+394:        <Card>
+395:          <CardContent>
+396:            <div className="text-sm text-muted-foreground">Plan</div>
+397:            <div className="mt-3 text-xl font-medium text-foreground capitalize">{plan}</div>
+398:          </CardContent>
+399:        </Card>
+400:      </div>
+402:      <div className="mt-4 grid gap-4 md:grid-cols-3">
+403:        <Card>
+404:          <CardContent>
+405:            <div className="text-4xl font-semibold text-foreground">{books.length}</div>
+406:            <div className="mt-2 text-sm text-muted-foreground">
+407:              {books.length === 0 ? (
+408:                <EmptyStateMessage label="No books yet." actionLabel="İlk kitabını oluştur →" href="/app/new" />
+409:              ) : (
+410:                "Total books"
+411:              )}
+412:            </div>
+413:          </CardContent>
+414:        </Card>
+415:        <Card>
+416:          <CardContent>
+417:            <div className="text-4xl font-semibold text-foreground">{compactNumber(exports)}</div>
+418:            <div className="mt-2 text-sm text-muted-foreground">
+419:              {exports === 0 ? (
+420:                <EmptyStateMessage label="Henüz dışa aktarım yok." actionLabel="PDF oluştur →" href="/app/library" />
+421:              ) : (
+422:                "Toplam çıktı"
+423:              )}
+424:            </div>
+425:          </CardContent>
+426:        </Card>
+427:        <Card>
+428:          <CardContent>
+429:            <div className="text-sm text-muted-foreground">Goal</div>
+430:            {account.goal ? (
+431:              <div className="mt-3 text-base leading-7 text-foreground">{account.goal}</div>
+432:            ) : (
+433:              <div className="mt-3">
+434:                <EmptyStateMessage label="Set goalnmemiş." actionLabel="Hedef ekle →" href="/app/settings/profile" />
+435:              </div>
+436:            )}
+437:          </CardContent>
+438:        </Card>
+439:      </div>
+441:      {/* ── Profile Completion Section ── */}
+442:      <div className="mt-8">
+443:        <div className="mb-5 flex items-center justify-between">
+444:          <h2 className="text-base font-bold text-foreground">Profile Completion</h2>
+445:          <span className="rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
+446:            {completedCount}/{items.length} tamamlandı
+447:          </span>
+448:        </div>
+450:        <ProfileProgressBar pct={pct} />
+452:        {/* Celebration */}
+453:        {isComplete && !celebrationDismissed ? (
+454:          <div className="mt-4 mb-4">
+455:            <CelebrationBanner onDismiss={() => setCelebrationDismissed(true)} />
+456:          </div>
+457:        ) : (
+458:          <div className="mb-4 mt-2 rounded-[12px] border border-border/50 bg-background/40 px-3 py-2">
+459:            <p className="text-xs text-muted-foreground">
+460:              {completedCount === 0
+461:                ? "Profil tamamlamaya başlamak için aşağıdaki adımları takip et."
+462:                : completedCount < 4
+463:                ? `İyi gidiyorsun! ${items.length - completedCount} adım kaldı.`
+464:                : `Neredeyse bitti! Son ${items.length - completedCount} steps to complete.`}
+465:            </p>
+466:          </div>
+467:        )}
+469:        <ProfileChecklist items={items} onToggle={handleToggle} />
+471:        {/* Next Steps */}
+472:        {!isComplete && <NextStepSuggestions items={items} />}
+473:      </div>
+474:    </AppFrame>
+475:  );
+476:}

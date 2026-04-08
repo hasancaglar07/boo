@@ -393,7 +393,7 @@ button {
   text-wrap: pretty;
 }
 
-/* Tema geçişi sırasında flash engelle */
+/* Prevent flash during theme transition */
 html.theme-transitioning *,
 html.theme-transitioning *::before,
 html.theme-transitioning *::after {

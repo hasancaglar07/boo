@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import html
 import json
@@ -16,12 +17,13 @@ import threading
 import time
 import textwrap
 import urllib.parse
+import weakref
 import zipfile
 from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, TypeVar
 
 
 ROOT_DIR = Path(__file__).resolve().parent
@@ -50,27 +52,247 @@ FULL_CHAPTER_PIPELINE_CONCURRENCY = max(
     1,
     min(4, int(os.environ.get("BOOK_FULL_CHAPTER_PIPELINE_CONCURRENCY", "2") or "2")),
 )
+
+# Retry configuration for subprocess operations
+SUBPROCESS_MAX_RETRIES = int(os.environ.get("SUBPROCESS_MAX_RETRIES", "3"))
+SUBPROCESS_INITIAL_BACKOFF_MS = int(os.environ.get("SUBPROCESS_INITIAL_BACKOFF_MS", "700"))
+SUBPROCESS_TIMEOUT_MULTIPLIER = float(os.environ.get("SUBPROCESS_TIMEOUT_MULTIPLIER", "1.5"))
+
+# Timeout configuration for environment detection
+ENV_DETECTION_TIMEOUT_SECONDS = int(os.environ.get("ENV_DETECTION_TIMEOUT_SECONDS", "10"))
+
+# Dynamic timeout calculation
+def calculate_timeout(base_timeout: int) -> int:
+    """Calculate dynamic timeout based on multiplier and base value."""
+    return int(base_timeout * SUBPROCESS_TIMEOUT_MULTIPLIER)
+
+
+# Global thread pool for pipeline management
+PIPELINE_THREAD_POOL_MAX_WORKERS = int(os.environ.get("PIPELINE_THREAD_POOL_MAX_WORKERS", "8"))
+_pipeline_thread_pool: ThreadPoolExecutor | None = None
+_pipeline_thread_pool_lock = threading.Lock()
+_active_threads: weakref.WeakSet[threading.Thread] = weakref.WeakSet()
+_active_threads_lock = threading.Lock()
+
+
+def get_pipeline_thread_pool() -> ThreadPoolExecutor:
+    """Get or create the global pipeline thread pool."""
+    global _pipeline_thread_pool
+    with _pipeline_thread_pool_lock:
+        if _pipeline_thread_pool is None or _pipeline_thread_pool._shutdown:
+            _pipeline_thread_pool = ThreadPoolExecutor(
+                max_workers=PIPELINE_THREAD_POOL_MAX_WORKERS,
+                thread_name_prefix="pipeline_worker",
+            )
+            append_log(f"Created pipeline thread pool with {PIPELINE_THREAD_POOL_MAX_WORKERS} workers")
+        return _pipeline_thread_pool
+
+
+def submit_pipeline_task(task_func: Callable[..., None], *args: Any, **kwargs: Any) -> threading.Thread:
+    """Submit a task to the pipeline thread pool and track the thread."""
+    pool = get_pipeline_thread_pool()
+    future = pool.submit(task_func, *args, **kwargs)
+
+    # Track the thread for monitoring
+    with _active_threads_lock:
+        # We can't directly get the thread from future, so we'll track completion
+        pass
+
+    # Add callback to track completion
+    def task_completed(_: Any) -> None:
+        with _active_threads_lock:
+            pass  # Task completed, weakref will handle cleanup
+
+    future.add_done_callback(task_completed)
+    return future
+
+
+def shutdown_pipeline_thread_pool(wait: bool = True, timeout: float | None = 30.0) -> None:
+    """Gracefully shutdown the pipeline thread pool."""
+    global _pipeline_thread_pool
+    with _pipeline_thread_pool_lock:
+        if _pipeline_thread_pool is not None and not _pipeline_thread_pool._shutdown:
+            append_log("Shutting down pipeline thread pool...")
+            _pipeline_thread_pool.shutdown(wait=wait, timeout=timeout)
+            _pipeline_thread_pool = None
+            append_log("Pipeline thread pool shutdown complete")
+
+
+# LRU Cache implementation to prevent memory leaks
+K = TypeVar("K")
+V = TypeVar("V")
+
+
+class LRUCache:
+    """Thread-safe LRU cache with TTL and size limits."""
+
+    def __init__(self, max_size: int = 100, default_ttl_seconds: float = 60.0):
+        self._cache: OrderedDict[K, tuple[V, float]] = OrderedDict()
+        self._max_size = max_size
+        self._default_ttl = default_ttl_seconds
+        self._lock = threading.Lock()
+
+    def get(self, key: K, default: V | None = None) -> V | None:
+        """Get a value from the cache, returning None if not found or expired."""
+        with self._lock:
+            if key not in self._cache:
+                return default
+
+            value, expires_at = self._cache[key]
+
+            # Check if expired
+            if time.time() > expires_at:
+                del self._cache[key]
+                return default
+
+            # Move to end (most recently used)
+            self._cache.move_to_end(key)
+            return value
+
+    def put(self, key: K, value: V, ttl_seconds: float | None = None) -> None:
+        """Put a value in the cache with optional TTL override."""
+        with self._lock:
+            expires_at = time.time() + (ttl_seconds or self._default_ttl)
+
+            if key in self._cache:
+                # Update existing entry
+                self._cache[key] = (value, expires_at)
+                self._cache.move_to_end(key)
+            else:
+                # Add new entry, evict oldest if at capacity
+                if len(self._cache) >= self._max_size:
+                    self._cache.popitem(last=False)
+                self._cache[key] = (value, expires_at)
+
+    def invalidate(self, key: K) -> None:
+        """Remove a specific key from the cache."""
+        with self._lock:
+            self._cache.pop(key, None)
+
+    def clear(self) -> None:
+        """Clear all entries from the cache."""
+        with self._lock:
+            self._cache.clear()
+
+    def cleanup_expired(self) -> int:
+        """Remove all expired entries, returning count of removed items."""
+        with self._lock:
+            now = time.time()
+            expired_keys = [k for k, (_, expires_at) in self._cache.items() if now > expires_at]
+            for key in expired_keys:
+                del self._cache[key]
+            return len(expired_keys)
+
+    def size(self) -> int:
+        """Return current cache size."""
+        with self._lock:
+            return len(self._cache)
+
+    def stats(self) -> dict[str, Any]:
+        """Return cache statistics."""
+        with self._lock:
+            now = time.time()
+            active_count = sum(1 for _, expires_at in self._cache.values() if now <= expires_at)
+            expired_count = len(self._cache) - active_count
+            return {
+                "total_entries": len(self._cache),
+                "active_entries": active_count,
+                "expired_entries": expired_count,
+                "max_size": self._max_size,
+                "utilization_percent": round((len(self._cache) / self._max_size) * 100, 2) if self._max_size > 0 else 0,
+            }
+
+
+# Global cache instances with proper LRU eviction
 BOOK_SUMMARY_CACHE_TTL_SECONDS = int(os.environ.get("BOOK_SUMMARY_CACHE_TTL_SECONDS", "15"))
 BOOK_SUMMARY_CACHE_LOCK = threading.Lock()
 BOOK_SUMMARY_REFRESH_LOCK = threading.Lock()
-BOOK_SUMMARY_CACHE: dict[str, Any] = {
-    "books": None,
-    "expires_at": 0.0,
-}
+BOOK_SUMMARY_CACHE = LRUCache(max_size=50, default_ttl_seconds=float(BOOK_SUMMARY_CACHE_TTL_SECONDS))
+
 SETTINGS_CACHE_LOCK = threading.Lock()
-SETTINGS_CACHE: dict[str, Any] = {
-    "mtime_ns": None,
-    "settings": None,
-}
+SETTINGS_CACHE = LRUCache(max_size=10, default_ttl_seconds=300.0)  # 5 minutes default
+
 PYTHON_LAUNCHER_CACHE: list[str] | None = None
 PYTHON_LAUNCHER_LOCK = threading.Lock()
 BASH_PATH_STYLE_CACHE: str | None = None
 BASH_PATH_STYLE_LOCK = threading.Lock()
+
+# Cache statistics endpoint
+def get_cache_stats() -> dict[str, Any]:
+    """Get statistics for all global caches."""
+    return {
+        "book_summary_cache": BOOK_SUMMARY_CACHE.stats(),
+        "settings_cache": SETTINGS_CACHE.stats(),
+    }
 ROUTE_ALIASES = {
     "/": "index.html",
     "/kitap-olustur.html": "app/new/index.html",
     "/kullanim.html": "how-it-works/index.html",
 }
+
+# Authentication configuration
+API_AUTH_ENABLED = os.environ.get("API_AUTH_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+API_AUTH_KEY = os.environ.get("API_AUTH_KEY", "")
+API_AUTH_HEADER = os.environ.get("API_AUTH_HEADER", "X-API-Key").strip()
+
+# Trusted proxy configuration (for Next.js backend proxy)
+TRUSTED_PROXIES = os.environ.get("TRUSTED_PROXIES", "127.0.0.1,::1").split(",")
+
+
+def check_authentication(request_handler: BaseHTTPRequestHandler) -> bool:
+    """
+    Check if the request is authenticated.
+
+    Returns True if authentication is disabled or valid credentials are provided.
+    Returns False if authentication fails.
+    """
+    if not API_AUTH_ENABLED:
+        return True
+
+    if not API_AUTH_KEY:
+        # Authentication enabled but no key configured - deny all
+        append_log("API authentication enabled but no API_AUTH_KEY configured")
+        return False
+
+    # Check if request comes from trusted proxy (bypass auth)
+    client_ip = request_handler.client_address[0]
+    if client_ip in TRUSTED_PROXIES:
+        return True
+
+    # Check API key from header
+    auth_header = request_handler.headers.get(API_AUTH_HEADER, "")
+    if auth_header == API_AUTH_KEY:
+        return True
+
+    # Check API key from query parameter (less secure, for compatibility)
+    # Note: This is less secure as the key may be logged
+    from urllib.parse import urlparse, parse_qs
+    parsed_url = urlparse(request_handler.path)
+    query_params = parse_qs(parsed_url.query)
+    api_key_param = query_params.get("api_key", [""])[0]
+    if api_key_param == API_AUTH_KEY:
+        return True
+
+    append_log(f"Authentication failed for {client_ip} to {request_handler.path}")
+    return False
+
+
+def require_authentication(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Decorator to require authentication for an endpoint."""
+    def wrapper(self: DashboardHandler, *args: Any, **kwargs: Any) -> Any:
+        if not check_authentication(self):
+            self.send_response(HTTPStatus.UNAUTHORIZED)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("WWW-Authenticate", f'{API_AUTH_HEADER} realm="Dashboard API"')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "ok": False,
+                "error": "Authentication required",
+                "code": "AUTH_REQUIRED"
+            }).encode("utf-8"))
+            return
+        return func(self, *args, **kwargs)
+    return wrapper
 
 TEXT_EXTENSIONS = {
     ".csv",
@@ -585,22 +807,22 @@ def read_json_file(path: Path, defaults: dict[str, Any]) -> dict[str, Any]:
 
 
 def read_settings() -> dict[str, Any]:
+    """Read settings with LRU cache based on file modification time."""
     settings_path = ROOT_DIR / SETTINGS_FILE_NAME
     try:
         mtime_ns: int | None = settings_path.stat().st_mtime_ns
     except OSError:
         mtime_ns = None
 
-    with SETTINGS_CACHE_LOCK:
-        cached_settings = SETTINGS_CACHE.get("settings")
-        cached_mtime_ns = SETTINGS_CACHE.get("mtime_ns")
-        if cached_settings is not None and cached_mtime_ns == mtime_ns:
-            return cached_settings.copy()
+    # Create composite cache key with mtime
+    cache_key = f"settings_{mtime_ns or 'none'}"
+    cached_settings = SETTINGS_CACHE.get(cache_key)
+    if cached_settings is not None:
+        return cached_settings.copy()
 
     fresh_settings = read_json_file(settings_path, DEFAULT_SETTINGS)
-    with SETTINGS_CACHE_LOCK:
-        SETTINGS_CACHE["settings"] = fresh_settings
-        SETTINGS_CACHE["mtime_ns"] = mtime_ns
+    # Cache with longer TTL since we use mtime-based invalidation
+    SETTINGS_CACHE.put(cache_key, fresh_settings, ttl_seconds=300.0)
     return fresh_settings.copy()
 
 
@@ -617,6 +839,7 @@ def public_settings(settings: dict[str, Any] | None = None) -> dict[str, Any]:
 
 
 def save_settings(payload: dict[str, Any]) -> dict[str, Any]:
+    """Save settings and invalidate cache."""
     settings = read_settings()
     for key, default in DEFAULT_SETTINGS.items():
         if key in SECRET_SETTING_KEYS:
@@ -633,14 +856,10 @@ def save_settings(payload: dict[str, Any]) -> dict[str, Any]:
         json.dumps(settings, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    try:
-        mtime_ns: int | None = (ROOT_DIR / SETTINGS_FILE_NAME).stat().st_mtime_ns
-    except OSError:
-        mtime_ns = None
-    with SETTINGS_CACHE_LOCK:
-        SETTINGS_CACHE["settings"] = settings.copy()
-        SETTINGS_CACHE["mtime_ns"] = mtime_ns
-    append_log("Updated dashboard settings.")
+
+    # Invalidate all settings cache entries
+    SETTINGS_CACHE.clear()
+    append_log("Updated dashboard settings and invalidated cache.")
     return settings
 
 
@@ -1278,15 +1497,42 @@ def chapter_generation_progress(book_dir: Path, metadata: dict[str, Any] | None 
     }
 
 
-def build_full_generation_status(book_dir: Path, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
+def build_full_generation_status(
+    book_dir: Path,
+    metadata: dict[str, Any] | None = None,
+    *,
+    lightweight: bool = False,
+) -> dict[str, Any]:
     metadata = metadata or read_metadata(book_dir)
     slug = book_dir.name
-    progress = chapter_generation_progress(book_dir, metadata)
-    target_count = int(progress["target_count"])
-    ready_count = int(progress["ready_count"])
-    complete = bool(progress["complete"])
-
     stage = str(metadata.get("full_generation_stage") or "idle").strip() or "idle"
+
+    if lightweight:
+        def parse_int(value: Any, fallback: int = 0) -> int:
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return fallback
+
+        target_count = max(0, parse_int(metadata.get("full_generation_target_count"), 0))
+        ready_count = max(0, parse_int(metadata.get("full_generation_ready_count"), 0))
+        if target_count <= 0:
+            target_count = len(normalize_chapter_plan(metadata.get("chapter_plan")))
+        if target_count <= 0:
+            target_count = summary_chapter_count(book_dir)
+        if target_count > 0:
+            ready_count = min(ready_count, target_count)
+        complete = (
+            stage == "ready"
+            or bool(str(metadata.get("full_generation_completed_at") or "").strip())
+            or (target_count > 0 and ready_count >= target_count)
+        )
+    else:
+        progress = chapter_generation_progress(book_dir, metadata)
+        target_count = int(progress["target_count"])
+        ready_count = int(progress["ready_count"])
+        complete = bool(progress["complete"])
+
     message = str(metadata.get("full_generation_message") or "").strip()
     error = str(metadata.get("full_generation_error") or "").strip()
     failed_count = int(metadata.get("full_generation_failed_count") or 0)
@@ -1714,7 +1960,47 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
     if not book_dir.exists():
         raise FileNotFoundError("Book not found.")
 
-    progress = chapter_generation_progress(book_dir)
+    metadata = read_metadata(book_dir)
+
+    with ACTIVE_FULL_CHAPTER_PIPELINES_LOCK:
+        if slug in ACTIVE_FULL_CHAPTER_PIPELINES and not force:
+            return {
+                "ok": True,
+                "started": False,
+                "slug": slug,
+                "full_generation": build_full_generation_status(book_dir, metadata, lightweight=True),
+            }
+
+    if not force:
+        lightweight_status = build_full_generation_status(book_dir, metadata, lightweight=True)
+        if bool(lightweight_status.get("complete")):
+            target_count = int(lightweight_status.get("target_count") or 0)
+            ready_count = int(lightweight_status.get("ready_count") or target_count)
+            save_metadata(
+                book_dir,
+                {
+                    "full_generation_stage": "ready",
+                    "full_generation_message": "Tüm bölümler hazır.",
+                    "full_generation_error": "",
+                    "full_generation_progress": 100,
+                    "full_generation_target_count": target_count,
+                    "full_generation_ready_count": ready_count,
+                    "full_generation_failed_count": 0,
+                    "full_generation_eta_seconds": 0,
+                    "full_generation_avg_chapter_seconds": 0,
+                    "full_generation_eta_updated_at": now_utc_iso(),
+                    "full_generation_updated_at": now_utc_iso(),
+                    "full_generation_completed_at": now_utc_iso(),
+                },
+            )
+            return {
+                "ok": True,
+                "started": False,
+                "slug": slug,
+                "full_generation": build_full_generation_status(book_dir, lightweight=True),
+            }
+
+    progress = chapter_generation_progress(book_dir, metadata)
     if progress["complete"] and not force:
         save_metadata(
             book_dir,
@@ -1736,8 +2022,8 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
         return {
             "ok": True,
             "started": False,
-            "book": read_book(book_dir),
-            "full_generation": build_full_generation_status(book_dir),
+            "slug": slug,
+            "full_generation": build_full_generation_status(book_dir, lightweight=True),
         }
 
     with ACTIVE_FULL_CHAPTER_PIPELINES_LOCK:
@@ -1745,8 +2031,8 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
             return {
                 "ok": True,
                 "started": False,
-                "book": read_book(book_dir),
-                "full_generation": build_full_generation_status(book_dir),
+                "slug": slug,
+                "full_generation": build_full_generation_status(book_dir, lightweight=True),
             }
         ACTIVE_FULL_CHAPTER_PIPELINES.add(slug)
 
@@ -1771,13 +2057,14 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
             "full_generation_completed_at": "",
         },
     )
-    worker = threading.Thread(target=run_full_chapter_pipeline, args=(slug, force), daemon=True)
-    worker.start()
+    # Submit to thread pool instead of creating raw thread
+    submit_pipeline_task(run_full_chapter_pipeline, slug, force)
+    append_log(f"Submitted full chapter pipeline for book '{slug}' to thread pool")
     return {
         "ok": True,
         "started": True,
-        "book": read_book(book_dir),
-        "full_generation": build_full_generation_status(book_dir),
+        "slug": slug,
+        "full_generation": build_full_generation_status(book_dir, lightweight=True),
     }
 
 
@@ -1998,11 +2285,11 @@ def start_preview_pipeline(slug: str) -> dict[str, Any]:
 
     generation = build_generation_status(book_dir)
     if generation["product_ready"]:
-        return {"ok": True, "started": False, "book": read_book(book_dir), "generation": generation}
+        return {"ok": True, "started": False, "slug": slug, "generation": generation}
 
     with ACTIVE_PREVIEW_PIPELINES_LOCK:
         if slug in ACTIVE_PREVIEW_PIPELINES:
-            return {"ok": True, "started": False, "book": read_book(book_dir), "generation": build_generation_status(book_dir)}
+            return {"ok": True, "started": False, "slug": slug, "generation": build_generation_status(book_dir)}
         ACTIVE_PREVIEW_PIPELINES.add(slug)
 
     save_metadata(
@@ -2017,9 +2304,10 @@ def start_preview_pipeline(slug: str) -> dict[str, Any]:
             "preview_updated_at": now_utc_iso(),
         },
     )
-    worker = threading.Thread(target=run_preview_pipeline, args=(slug,), daemon=True)
-    worker.start()
-    return {"ok": True, "started": True, "book": read_book(book_dir), "generation": build_generation_status(book_dir)}
+    # Submit to thread pool instead of creating raw thread
+    submit_pipeline_task(run_preview_pipeline, slug)
+    append_log(f"Submitted preview pipeline for book '{slug}' to thread pool")
+    return {"ok": True, "started": True, "slug": slug, "generation": build_generation_status(book_dir)}
 
 
 def resolve_shared_ai_key(settings: dict[str, Any] | None = None, env: dict[str, str] | None = None) -> str:
@@ -2240,7 +2528,7 @@ def detect_bash_path_style(force_refresh: bool = False) -> str:
                 capture_output=True,
                 encoding="utf-8",
                 errors="replace",
-                timeout=5,
+                timeout=ENV_DETECTION_TIMEOUT_SECONDS,
             )
             probe_pwd = str(probe.stdout or "").strip().lower()
             if probe.returncode == 0 and probe_pwd.startswith("/mnt/"):
@@ -2274,7 +2562,7 @@ def detect_python_launcher(force_refresh: bool = False) -> list[str] | None:
                 capture_output=True,
                 encoding="utf-8",
                 errors="replace",
-                timeout=8,
+                timeout=ENV_DETECTION_TIMEOUT_SECONDS,
             )
         except (OSError, subprocess.TimeoutExpired):
             continue
@@ -2716,7 +3004,7 @@ def read_book(book_dir: Path) -> dict[str, Any]:
     language = infer_book_language(book_dir, metadata, [title, subtitle, metadata.get("description", "")])
     latest_export = latest_export_dir(book_dir)
     exports = collect_exports(book_dir)
-    full_generation = build_full_generation_status(book_dir, effective_metadata)
+    full_generation = build_full_generation_status(book_dir, effective_metadata, lightweight=True)
 
     return {
         "slug": book_dir.name,
@@ -2784,7 +3072,7 @@ def read_book(book_dir: Path) -> dict[str, Any]:
             "extra_count": len(collect_extra_files(book_dir)),
             "research_count": len(collect_research_files(book_dir)),
             "export_count": len(exports),
-            **build_generation_status(book_dir, effective_metadata),
+            **build_generation_status(book_dir, effective_metadata, lightweight=True),
             "full_generation": full_generation,
         },
     }
@@ -2804,8 +3092,8 @@ def read_book_preview_payload(book_dir: Path) -> dict[str, Any]:
     language = infer_book_language(book_dir, metadata, [title, subtitle, metadata.get("description", "")])
     root_index = book_root_index(book_dir)
     root_entries = set(root_index.keys())
-    generation = build_generation_status(book_dir, effective_metadata)
-    full_generation = build_full_generation_status(book_dir, effective_metadata)
+    generation = build_generation_status(book_dir, effective_metadata, lightweight=True)
+    full_generation = build_full_generation_status(book_dir, effective_metadata, lightweight=True)
     full_stage = str(full_generation.get("stage") or "").strip().lower()
     full_active = bool(full_generation.get("active"))
     full_complete = bool(full_generation.get("complete"))
@@ -2955,36 +3243,33 @@ def invalidate_books_cache() -> None:
 
 
 def list_books_cached(force: bool = False) -> list[dict[str, Any]]:
-    now = time.monotonic()
-    with BOOK_SUMMARY_CACHE_LOCK:
-        cached_books = BOOK_SUMMARY_CACHE["books"]
-        expires_at = float(BOOK_SUMMARY_CACHE["expires_at"] or 0.0)
-
-    if not force and cached_books is not None and now < expires_at:
+    """Get list of books with LRU caching."""
+    # Try to get from cache first
+    cached_books = BOOK_SUMMARY_CACHE.get("books")
+    if cached_books is not None and not force:
         return cached_books
 
+    # Acquire refresh lock to prevent cache stamping
     acquired_refresh_lock = BOOK_SUMMARY_REFRESH_LOCK.acquire(blocking=False)
     if not acquired_refresh_lock:
+        # Another thread is refreshing, return stale data if available
         if cached_books is not None and not force:
             return cached_books
+        # Wait for refresh and retry
         with BOOK_SUMMARY_REFRESH_LOCK:
-            with BOOK_SUMMARY_CACHE_LOCK:
-                refreshed_books = BOOK_SUMMARY_CACHE["books"]
-                refreshed_expires_at = float(BOOK_SUMMARY_CACHE["expires_at"] or 0.0)
-            now = time.monotonic()
-            if refreshed_books is not None and not force and now < refreshed_expires_at:
-                return refreshed_books
+            cached_books = BOOK_SUMMARY_CACHE.get("books")
+            if cached_books is not None and not force:
+                return cached_books
         acquired_refresh_lock = True
         BOOK_SUMMARY_REFRESH_LOCK.acquire()
 
     try:
-        with BOOK_SUMMARY_CACHE_LOCK:
-            cached_books = BOOK_SUMMARY_CACHE["books"]
-            expires_at = float(BOOK_SUMMARY_CACHE["expires_at"] or 0.0)
-        now = time.monotonic()
-        if not force and cached_books is not None and now < expires_at:
+        # Double-check after acquiring lock
+        cached_books = BOOK_SUMMARY_CACHE.get("books")
+        if cached_books is not None and not force:
             return cached_books
 
+        # Refresh cache
         try:
             fresh = list_books()
         except Exception:
@@ -2993,13 +3278,17 @@ def list_books_cached(force: bool = False) -> list[dict[str, Any]]:
                 return cached_books
             raise
 
-        with BOOK_SUMMARY_CACHE_LOCK:
-            BOOK_SUMMARY_CACHE["books"] = fresh
-            BOOK_SUMMARY_CACHE["expires_at"] = time.monotonic() + max(3, BOOK_SUMMARY_CACHE_TTL_SECONDS)
+        # Store in cache with TTL
+        BOOK_SUMMARY_CACHE.put("books", fresh, ttl_seconds=float(BOOK_SUMMARY_CACHE_TTL_SECONDS))
         return fresh
     finally:
         if acquired_refresh_lock:
             BOOK_SUMMARY_REFRESH_LOCK.release()
+
+
+def invalidate_books_cache() -> None:
+    """Invalidate the books cache."""
+    BOOK_SUMMARY_CACHE.invalidate("books")
 
 
 def write_outline(
@@ -3250,8 +3539,88 @@ def run_process(
     cwd: Path,
     env: dict[str, str] | None = None,
     timeout_seconds: int | None = None,
+    max_retries: int = 0,
+    initial_backoff_ms: int = 700,
 ) -> subprocess.CompletedProcess[str]:
+    """
+    Run a subprocess with optional retry and exponential backoff.
+
+    Args:
+        command: Command to execute
+        cwd: Working directory
+        env: Environment variables
+        timeout_seconds: Timeout for each attempt
+        max_retries: Maximum number of retry attempts (0 = no retry)
+        initial_backoff_ms: Initial backoff in milliseconds
+
+    Returns:
+        CompletedProcess result
+    """
     append_log(f"RUN cwd={cwd} cmd={' '.join(shlex.quote(part) for part in command)}")
+
+    if max_retries <= 0:
+        return _run_process_once(command, cwd, env, timeout_seconds)
+
+    # Retry with exponential backoff
+    last_error: Exception | None = None
+    for attempt in range(max_retries + 1):
+        try:
+            result = _run_process_once(command, cwd, env, timeout_seconds)
+            if result.returncode == 0:
+                if attempt > 0:
+                    append_log(f"Command succeeded on attempt {attempt + 1}/{max_retries + 1}")
+                return result
+            # Non-zero return code, don't retry
+            return result
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            last_error = exc
+            if attempt < max_retries:
+                # Exponential backoff with jitter
+                backoff_ms = initial_backoff_ms * (2 ** attempt)
+                jitter_ms = int(backoff_ms * 0.1)  # 10% jitter
+                total_backoff = backoff_ms + (hash(id(exc)) % (2 * jitter_ops + 1)) - jitter_ops
+                append_log(f"Attempt {attempt + 1}/{max_retries + 1} failed, retrying in {total_backoff}ms: {exc}")
+                time.sleep(total_backoff / 1000.0)
+            else:
+                append_log(f"All {max_retries + 1} attempts failed")
+
+    # All retries exhausted
+    if isinstance(last_error, subprocess.TimeoutExpired):
+        stdout = _process_output_as_text(last_error.stdout)
+        stderr = _process_output_as_text(last_error.stderr)
+        timeout_message = (
+            f"Command timed out after {int(timeout_seconds or 0)} seconds (all {max_retries + 1} attempts)."
+            if timeout_seconds
+            else f"Command timed out (all {max_retries + 1} attempts)."
+        )
+        combined_stderr = f"{stderr}\n{timeout_message}".strip()
+        append_log("EXIT 124 (timeout after retries)")
+        return subprocess.CompletedProcess(
+            command,
+            124,
+            stdout=stdout,
+            stderr=combined_stderr,
+        )
+    elif isinstance(last_error, OSError):
+        append_log(f"EXIT 127 (oserror after retries: {last_error})")
+        return subprocess.CompletedProcess(
+            command,
+            127,
+            stdout="",
+            stderr=str(last_error),
+        )
+    else:
+        # Should not reach here
+        return subprocess.CompletedProcess(command, 1, stdout="", stderr="All retry attempts failed")
+
+
+def _run_process_once(
+    command: list[str],
+    cwd: Path,
+    env: dict[str, str] | None,
+    timeout_seconds: int | None,
+) -> subprocess.CompletedProcess[str]:
+    """Single attempt at running a subprocess."""
     try:
         result = subprocess.run(
             command,
@@ -3267,28 +3636,24 @@ def run_process(
         return result
     except OSError as exc:
         append_log(f"EXIT 127 (oserror: {exc})")
-        return subprocess.CompletedProcess(
-            command,
-            127,
-            stdout="",
-            stderr=str(exc),
-        )
+        raise
     except subprocess.TimeoutExpired as exc:
-        stdout = _process_output_as_text(exc.stdout)
-        stderr = _process_output_as_text(exc.stderr)
-        timeout_message = (
-            f"Command timed out after {int(timeout_seconds or 0)} seconds."
-            if timeout_seconds
-            else "Command timed out."
-        )
-        combined_stderr = f"{stderr}\n{timeout_message}".strip()
-        append_log("EXIT 124 (timeout)")
-        return subprocess.CompletedProcess(
-            command,
-            124,
-            stdout=stdout,
-            stderr=combined_stderr,
-        )
+        raise
+
+
+def run_process(
+    command: list[str],
+    *,
+    cwd: Path,
+    env: dict[str, str] | None = None,
+    timeout_seconds: int | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Legacy wrapper for backward compatibility. Use run_process_with_retry instead."""
+    return _run_process_once(command, cwd, env, timeout_seconds)
+
+
+# Jitter calculation for retry backoff
+jitter_ops = 50
 
 
 def has_any_ai_provider(settings: dict[str, Any] | None = None) -> bool:
@@ -4905,22 +5270,40 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
         try:
             if path == "/api/health":
+                # Health check is always public
                 self.respond_json({"ok": True, "host": HOST, "port": PORT, "time": now_iso()})
                 return
             if path == "/api/books":
+                # Public endpoint - data is filtered by Next.js layer
                 self.respond_json({"books": list_books_cached()})
                 return
             if path == "/api/settings":
+                # Settings endpoint requires auth
+                if not check_authentication(self):
+                    self.respond_error_json(HTTPStatus.UNAUTHORIZED, "Authentication required")
+                    return
                 self.respond_json(public_settings())
                 return
             if path == "/api/logs":
+                # Logs endpoint requires auth
+                if not check_authentication(self):
+                    self.respond_error_json(HTTPStatus.UNAUTHORIZED, "Authentication required")
+                    return
                 limit = int(query.get("limit", ["400"])[0])
                 self.respond_json({"lines": read_log_lines(limit)})
                 return
             if path.startswith("/api/books/"):
+                # Book API requires auth
+                if not check_authentication(self):
+                    self.respond_error_json(HTTPStatus.UNAUTHORIZED, "Authentication required")
+                    return
                 self.handle_book_get(path, query)
                 return
             if path.startswith("/workspace/"):
+                # Workspace files require auth
+                if not check_authentication(self):
+                    self.respond_error_json(HTTPStatus.UNAUTHORIZED, "Authentication required")
+                    return
                 self.serve_workspace_file(path.removeprefix("/workspace/"))
                 return
             self.serve_static_file(path)
@@ -4933,6 +5316,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
+
+        # All POST endpoints require authentication
+        if not check_authentication(self):
+            self.respond_error_json(HTTPStatus.UNAUTHORIZED, "Authentication required")
+            return
+
         try:
             payload = self.read_json_body()
             if parsed.path == "/api/books":
@@ -5115,7 +5504,25 @@ def main() -> None:
     BOOK_OUTPUTS_DIR.mkdir(exist_ok=True)
     server = ThreadingHTTPServer((HOST, PORT), DashboardHandler)
     print(f"Book dashboard running at http://{HOST}:{PORT}")
-    server.serve_forever()
+
+    # Setup graceful shutdown handlers
+    def shutdown_handler(signum: int, frame: Any) -> None:
+        print(f"\nReceived signal {signum}, shutting down gracefully...")
+        server.shutdown()
+        shutdown_pipeline_thread_pool(wait=True, timeout=30.0)
+        print("Shutdown complete")
+        import sys
+        sys.exit(0)
+
+    import signal
+    signal.signal(signal.SIGINT, shutdown_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler)
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nKeyboard interrupt received")
+        shutdown_handler(signal.SIGINT, None)
 
 
 if __name__ == "__main__":

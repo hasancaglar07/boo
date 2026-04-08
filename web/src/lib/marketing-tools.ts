@@ -190,7 +190,7 @@ function titleCase(value: string) {
     .join(" ");
 }
 
-function shortCore(value: string, fallback = "Konu") {
+function shortCore(value: string, fallback = "Topic") {
   const words = uniqueWords(value);
   return titleCase(words.slice(0, 4).join(" ")) || fallback;
 }
@@ -233,15 +233,15 @@ function formatBookType(bookType: string) {
 function mapBookTypeToPreview(bookType: string) {
   switch (bookType) {
     case "authority_book":
-      return "is";
+      return "business";
     case "lead_magnet":
-      return "rehber";
+      return "guide";
     case "paid_guide":
-      return "egitim";
+      return "education";
     case "kdp_publish":
-      return "is";
+      return "business";
     default:
-      return "rehber";
+      return "guide";
   }
 }
 
@@ -303,7 +303,7 @@ function outlineStarterEvaluation(values: MarketingToolValues): MarketingToolEva
   const audience = values.audience || "";
   const goal = values.goal || "";
   const bookType = values.bookType || "authority_book";
-  const topicCore = shortCore(topic, "Kitap konusu");
+  const topicCore = shortCore(topic, "Book topic");
   const goalCore = goal.trim() || "a clear result";
 
   const dimensions: MarketingToolDimension[] = [
@@ -315,7 +315,7 @@ function outlineStarterEvaluation(values: MarketingToolValues): MarketingToolEva
     },
     {
       key: "reader_fit",
-      label: "Okur uyumu",
+      label: "Reader fit",
       score: clamp(46 + wordsBonus(audience, 6, 6) + regexBonus(audience, AUDIENCE_PATTERN, 12), 34, 95),
       summary: "When the target reader is clear, chapter order and example type are easier to determine.",
     },
@@ -333,7 +333,7 @@ function outlineStarterEvaluation(values: MarketingToolValues): MarketingToolEva
     },
     {
       key: "completion",
-      label: "Tamamlama ihtimali",
+      label: "Completion likelihood",
       score: clamp(50 + (bookType === "lead_magnet" ? 10 : 6) + (values.language === "multilingual" ? -2 : 4), 36, 92),
       summary: "Keeping the scope under control reduces the risk of the book being left unfinished.",
     },
@@ -348,13 +348,13 @@ function outlineStarterEvaluation(values: MarketingToolValues): MarketingToolEva
     `Most common errors and how to prevent them`,
     `Real example or mini case flow`,
     `Making the system sustainable`,
-    `Next step: call for ${goalCore.toLocaleLowerCase("tr-TR")}`,
+    `Next step: call for ${goalCore}`,
   ];
 
   const reportSections: MarketingToolReportSection[] = [
     { title: "Suggested chapter outline", ordered: true, items: outlineItems },
     {
-      title: "Editoryal notlar",
+      title: "Editorial notes",
       items: [
         "In the first chapter, quantify or make the problem cost visible.",
         "In the middle chapters, show not only theory but also a decision tree and example flow.",
@@ -373,7 +373,7 @@ function outlineStarterEvaluation(values: MarketingToolValues): MarketingToolEva
     ].filter(Boolean),
     [
       dimensions[0].score < 65 ? "Narrow down the topic a bit more; in its current state, chapters could become too generic." : "",
-      dimensions[2].score < 65 ? "Okur sonunda hangi sonucu alacak, bunu daha keskin yaz." : "",
+      dimensions[2].score < 65 ? "Write more sharply what result the reader will get at the end." : "",
       dimensions[3].score < 64 ? "Add method, stage, or decision tree layer; the outline comes out more easily." : "",
     ].filter(Boolean),
   );
@@ -382,9 +382,7 @@ function outlineStarterEvaluation(values: MarketingToolValues): MarketingToolEva
     overallScore,
     verdict: verdictFromScore(overallScore),
     recommendedFormat: formatBookType(bookType),
-    recommendedAngle: `${topicCore} topic for ${audience || "a clear segment"} ${goalCore.toLocaleLowerCase(
-      "tr-TR",
-    )} focusing on an 8-chapter flow would be the strongest start.`,
+    recommendedAngle: `${topicCore} topic for ${audience || "a clear segment"} focusing on ${goalCore} within an 8-chapter flow would be the strongest start.`,
     strongestPoints: strengths,
     risks,
     nextStep: "Move this draft to the preview flow and test the tone of the first chapter.",
@@ -458,7 +456,7 @@ function contentToBookMapperEvaluation(values: MarketingToolValues): MarketingTo
         `The most powerful ${clusterLabel} and their reordering`,
         `Consolidation of frequently repeated content into a single central section`,
         `Adding example case and application section`,
-        `In the last chapter, a call to action for ${goal.toLocaleLowerCase("tr-TR") || "next action"}`,
+        `In the last chapter, a call to action for ${goal || "next action"}`,
       ],
     },
     {
@@ -490,9 +488,7 @@ function contentToBookMapperEvaluation(values: MarketingToolValues): MarketingTo
     overallScore,
     verdict: verdictFromScore(overallScore),
     recommendedFormat: "Repurposed authority guide",
-    recommendedAngle: `Instead of copying ${assetCore} content as is, for ${audience || "target reader"} ${
-      goal.toLocaleLowerCase("tr-TR") || "clear conversion"
-    }converting into a focused guide yields stronger results.`,
+    recommendedAngle: `Instead of copying ${assetCore} content as is, converting into a focused guide for ${audience || "target reader"} targeting ${goal || "clear conversion"} yields stronger results.`,
     strongestPoints: strengths,
     risks,
     nextStep: "Move these sets to the wizard and test the first three chapters in the preview.",
@@ -536,7 +532,7 @@ function kdpNicheScoreEvaluation(values: MarketingToolValues): MarketingToolEval
     },
     {
       key: "series",
-      label: "Seri potansiyeli",
+      label: "Series potential",
       score: clamp(46 + wordsBonus(`${niche} ${promise}`, 6, 4) + (competition === "low" ? 10 : 4), 34, 94),
       summary: "A good micro niche often also carries subheading or series opportunities.",
     },
@@ -548,8 +544,8 @@ function kdpNicheScoreEvaluation(values: MarketingToolValues): MarketingToolEval
       title: "Subtitle angles",
       items: [
         `Practical getting started guide for ${nicheCore}`,
-        `Step by step ${nicheCore.toLocaleLowerCase("tr-TR")} for ${audience || "Beginners"}`,
-        `${promise || `Clear result on ${nicheCore.toLocaleLowerCase("tr-TR")}`}`,
+        `Step by step ${nicheCore} for ${audience || "Beginners"}`,
+        `${promise || `Clear result on ${nicheCore}`}`,
         `Field guide to reducing ${nicheCore} errors`,
         `Applicable short system for ${nicheCore}`,
       ],
@@ -596,9 +592,7 @@ function kdpNicheScoreEvaluation(values: MarketingToolValues): MarketingToolEval
     overallScore,
     verdict: verdictFromScore(overallScore),
     recommendedFormat: "KDP micro-niche nonfiction",
-    recommendedAngle: `Instead of leaving ${nicheCore} as a general topic, ${
-      audience || "belirli bir okur segmenti"
-    } focusing on micro-niching with ${promise.toLocaleLowerCase("tr-TR") || "a single main result"} focus would be more accurate.`,
+    recommendedAngle: `Instead of leaving ${nicheCore} as a general topic, micro-niching for ${audience || "a specific reader segment"} with a focus on ${promise || "a single main result"} would be more accurate.`,
     strongestPoints: strengths,
     risks,
     nextStep: "Move this micro niche to the preview flow and test the first subtitle set.",
@@ -631,7 +625,7 @@ function leadMagnetBookAngleFinderEvaluation(values: MarketingToolValues): Marke
     },
     {
       key: "offer",
-      label: "Teklif uyumu",
+      label: "Offer fit",
       score: clamp(48 + offerBonus, 40, 96),
       summary: "The clearer the prompt you feed at the end of the book, the more powerfully the tool will work.",
     },
@@ -654,7 +648,7 @@ function leadMagnetBookAngleFinderEvaluation(values: MarketingToolValues): Marke
     {
       title: "Angle suggestions",
       items: [
-        `${client || "Ideal customer"} ${outcome.toLocaleLowerCase("tr-TR") || "quick gain"} guide`,
+        `${client || "Ideal customer"} ${outcome || "quick gain"} guide`,
         `${expertiseCore} getting the first result faster with`,
         `Short playbook that reduces ${client || "Right customer"} errors`,
         `30-day progress plan using ${expertiseCore}`,
@@ -676,7 +670,7 @@ function leadMagnetBookAngleFinderEvaluation(values: MarketingToolValues): Marke
     {
       title: "CTA opportunities",
       items: [
-        "Checklist veya worksheet indirimi",
+        "Checklist or worksheet download",
         "Diagnosis interview or demo call",
         "Mini training or webinar transition",
         "Redirect to case study or proposal page",
@@ -702,9 +696,7 @@ function leadMagnetBookAngleFinderEvaluation(values: MarketingToolValues): Marke
     overallScore,
     verdict: verdictFromScore(overallScore),
     recommendedFormat: "Client-converting short guide",
-    recommendedAngle: `Instead of presenting ${expertiseCore} knowledge like a general expertise book, ${
-      client || "ideal customer"
-    } converting to a short guide focused on ${outcome.toLocaleLowerCase("tr-TR") || "single main result"} generates more leads.`,
+    recommendedAngle: `Instead of presenting ${expertiseCore} knowledge like a general expertise book, converting to a short guide for ${client || "ideal customer"} focused on ${outcome || "single main result"} generates more leads.`,
     strongestPoints: strengths,
     risks,
     nextStep: "Move this angle to the preview flow and test the CTA you will place at the end of the book.",
@@ -734,7 +726,7 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
     },
     {
       key: "promise",
-      label: "Subtitle vaadi",
+      label: "Subtitle promise",
       score: clamp(42 + wordsBonus(`${subtitle} ${goal}`, 6, 5) + regexBonus(`${subtitle} ${goal}`, GENERIC_OUTCOME_PATTERN, 16), 34, 95),
       summary: "The subtitle should explain in a single sentence why the reader should be interested.",
     },
@@ -760,7 +752,7 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
 
   const overallScore = averageScore(dimensions);
   const recommendedFormat = formatBookType(intent);
-  const audienceCore = shortCore(audience, "Okur");
+  const audienceCore = shortCore(audience, "Reader");
   const goalCore = goal.trim() || "concrete result";
 
   const reportSections: MarketingToolReportSection[] = [
@@ -770,26 +762,26 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
         `${titleCore} for ${audienceCore}`,
         `${titleCore}: ${goalCore}`,
         `${titleCore} Playbook`,
-        `${titleCore} Rehberi`,
+        `${titleCore} Guide`,
         `${audienceCore} ${goalCore} System`,
       ],
     },
     {
       title: "Enhanced subtitle directions",
       items: [
-        `${audience || "Correct reader"} short roadmap delivering ${goal.toLocaleLowerCase("tr-TR") || "measurable result"}`,
-        `A clear ${titleCore.toLocaleLowerCase("tr-TR")} system instead of scattered attempts`,
-        `İlk uygulamadan sürdürülebilir sonuca kadar karar rehberi`,
+        `${audience || "Correct reader"} short roadmap delivering ${goal || "measurable result"}`,
+        `A clear ${titleCore} system instead of scattered attempts`,
+        `A decision guide from first application to sustainable result`,
         `${intent === "kdp_publish" ? "Amazon KDP" : "Real world"} applicable step-by-step framework`,
       ],
     },
     {
-      title: "Konumlandırma notları",
+      title: "Positioning notes",
       items: [
         "The title should show the topic, the subtitle should show the result and audience.",
-        "Genel kavram yerine yöntem, segment veya kullanım durumu ekle.",
+        "Add method, segment, or use case instead of generic concept.",
         "The title should show the topic, the subtitle should show the result and audience.",
-        "Başlık akılda kalmalı; subtitle ikna etmeli.",
+        "Title should be memorable; subtitle should convince.",
       ],
     },
   ];
@@ -797,9 +789,9 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
   const { strengths, risks } = buildStrengthsAndRisks(
     dimensions,
     [
-      dimensions[0].score >= 74 ? "Başlık uzunluk olarak iyi çalışıyor; bu ilk bakış netliği sağlar." : "",
-      dimensions[1].score >= 72 ? "Subtitle vaat taşıyor; dönüşüm cümlesi kurulabiliyor." : "",
-      dimensions[4].score >= 70 ? "Başlık ritim açısından akılda kalmaya yakın." : "",
+      dimensions[0].score >= 74 ? "Title works well in length; this provides first-glance clarity." : "",
+      dimensions[1].score >= 72 ? "Subtitle carries a promise; conversion sentence can be built." : "",
+      dimensions[4].score >= 70 ? "Title is close to memorable in terms of rhythm." : "",
     ].filter(Boolean),
     [
       dimensions[0].score < 66 ? "Shorten the title or reduce generic words." : "",
@@ -812,9 +804,7 @@ function titleSubtitleCriticEvaluation(values: MarketingToolValues): MarketingTo
     overallScore,
     verdict: verdictFromScore(overallScore),
     recommendedFormat,
-    recommendedAngle: `Başlığı yalnız kulağa iyi gelen bir etiket gibi bırakma. ${audience || "reads correctly"} için ${
-      goalCore.toLocaleLowerCase("tr-TR")
-    } result in a more promising title + subtitle pair.`,
+    recommendedAngle: `Don't leave the title as just a nice-sounding label. For ${audience || "the right reader"} build a more promising title + subtitle pair around ${goalCore}.`,
     strongestPoints: strengths,
     risks,
     nextStep: "Move the best title pair to the preview flow and fix the book position around it.",
@@ -828,11 +818,11 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
     slug: "book-idea-validator",
     id: "book_idea_validator",
     name: "Book Idea Evaluator",
-    badge: "Fikir",
+    badge: "Idea",
     path: "/tools/book-idea-validator",
     description: "Scores your idea's strength, suggests a format, and provides a draft starting point.",
-    shortLabel: "Fikir Testi",
-    ctaLabel: "Fikri Test Et",
+    shortLabel: "Idea Test",
+    ctaLabel: "Test Idea",
     icon: "sparkles",
     experience: "custom",
   },
@@ -854,29 +844,29 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
     name: "Content to Book Converter",
     badge: "Conversion",
     path: "/tools/content-to-book-mapper",
-    description: "Mevcut kurs, blog veya podcast içeriğini kitap omurgasına çevirir.",
-    shortLabel: "İçerik Dönüştürücü",
-    ctaLabel: "Dönüştür",
+    description: "Converts existing course, blog, or podcast content into a book backbone.",
+    shortLabel: "Content Converter",
+    ctaLabel: "Convert",
     icon: "book",
     experience: "generic",
   },
   {
     slug: "kdp-niche-score",
     id: "kdp_niche_score",
-    name: "KDP Niş Puanlayıcı",
-    badge: "Pazar",
+    name: "KDP Niche Scorer",
+    badge: "Market",
     path: "/tools/kdp-niche-score",
-    description: "KDP mikro nişini puanlar, alt başlık açısı ve metadata önerir.",
-    shortLabel: "KDP Niş Analizi",
-    ctaLabel: "Nişi Puanla",
+    description: "Scores your KDP micro niche, suggests subtitle angles and metadata.",
+    shortLabel: "KDP Niche Analysis",
+    ctaLabel: "Score Niche",
     icon: "search",
     experience: "generic",
   },
   {
     slug: "lead-magnet-book-angle-finder",
     id: "lead_magnet_book_angle_finder",
-    name: "Müşteri Çeken Kitap Açısı Bulucu",
-    badge: "Hedef",
+    name: "Client-Attracting Book Angle Finder",
+    badge: "Target",
     path: "/tools/lead-magnet-book-angle-finder",
     description: "Turns your expertise into a short book hook that attracts customers.",
     shortLabel: "Angle Finder",
@@ -888,11 +878,11 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
     slug: "title-subtitle-critic",
     id: "title_subtitle_critic",
     name: "Title and Subtitle Critic",
-    badge: "Kopya",
+    badge: "Copy",
     path: "/tools/title-subtitle-critic",
-    description: "Başlık çiftini netlik, vaat ve konumlandırma açısından eleştirir.",
-    shortLabel: "Başlık Eleştirisi",
-    ctaLabel: "Başlığı Test Et",
+    description: "Critiques title pair for clarity, promise, and positioning.",
+    shortLabel: "Title Critique",
+    ctaLabel: "Test Title",
     icon: "pen",
     experience: "generic",
   },
@@ -902,55 +892,55 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
   {
     slug: "book-outline-starter",
     id: "book_outline_starter",
-    name: "Kitap Taslak Oluşturucu",
-    badge: "Ücretsiz Araç",
+    name: "Book Outline Generator",
+    badge: "Free Tool",
     path: "/tools/book-outline-starter",
-    description: "Konunu 8 bölümlük net bir omurgaya çevirir ve önizleme akışına hazırlar.",
-    shortLabel: "Taslak Oluşturucu",
-    ctaLabel: "Taslağı Oluştur",
+    description: "Converts your topic into a clear 8-chapter backbone and prepares it for the preview flow.",
+    shortLabel: "Outline Creator",
+    ctaLabel: "Generate Outline",
     icon: "layers",
     experience: "generic",
-    metaTitle: "Kitap Taslak Oluşturucu | Kitap Oluşturucu",
-    metaDescription: "Konunu, hedef okurunu ve amacını gir. Kitap Taslak Oluşturucu; 8 bölümlük bir kitap omurgası ve editoryal notlarla hızlı başlangıç versin.",
-    keywords: ["kitap taslak oluşturucu", "kitap taslak oluşturucu", "kitap bölüm planı", "nonfiction taslak aracı"],
-    heroTitle: "Konun dağılmadan önce kitap omurgasını çıkar.",
+    metaTitle: "Book Outline Generator | Book Generator",
+    metaDescription: "Enter your topic, target reader, and goal. Book Outline Generator provides an 8-chapter backbone and editorial notes for a quick start.",
+    keywords: ["book outline generator", "book chapter planner", "nonfiction outline tool", "book structure tool"],
+    heroTitle: "Extract the book backbone before your topic scatters.",
     heroDescription:
-      "Topic, audience ve goal bilgilerini gir. Araç; konuyu 8 bölümlük bir iskelete çevirsin, zayıf halkaları işaretlesin ve seni önizleme akışına hazırlasın.",
-    formIntro: "90 saniyelik taslak testi",
-    placeholderTitle: "İlk taslak sinyali burada görünecek",
-    placeholderText: "Konunu doldur, analyze et ve bölümleşme sinyalini gör. Tam rapor açıldığında önerilen omurga ve editoryal notlar görünür.",
-    gateTitle: "Tam bölüm omurgasını aç",
-    gateDescription: "8 bölümlük taslak, editoryal notlar ve preview'e taşınacak net açı e-posta ile açılsın.",
-    nextStepTitle: "Taslak hazırsa sıradaki iş önizlemeye geçmek.",
-    nextStepDescription: "Bu iskeleti sihirbaza taşı, ilk bölümün tonunu gör ve kitabın gerçekten yürüyüp yürümediğini karar yüzeyinde test et.",
-    previewCtaLabel: "Taslak ile Önizleme Başlat",
+      "Enter topic, audience, and goal. The tool converts the topic into an 8-chapter skeleton, flags weak links, and prepares you for the preview flow.",
+    formIntro: "90-second outline test",
+    placeholderTitle: "First draft signal will appear here",
+    placeholderText: "Fill in your topic, analyze it, and see the chapter signal. When the full report opens, the suggested backbone and editorial notes appear.",
+    gateTitle: "Unlock the full chapter backbone",
+    gateDescription: "8-chapter outline, editorial notes, and clear angle for preview delivered via email.",
+    nextStepTitle: "If the outline is ready, the next step is to move to preview.",
+    nextStepDescription: "Move this skeleton to the wizard, see the tone of the first chapter, and test whether the book really works on the decision surface.",
+    previewCtaLabel: "Start Preview with Outline",
     samples: [
       {
-        label: "Danışmanlık kitabı",
+        label: "Consulting book",
         values: {
-          topic: "LinkedIn üzerinden inbound lead üreten danışmanlık sistemi",
-          audience: "B2B danışmanlar ve butik ajans sahipleri",
-          goal: "Daha kaliteli satış görüşmeleri üretmek",
+          topic: "Consulting system generating inbound leads via LinkedIn",
+          audience: "B2B consultants and boutique agency owners",
+          goal: "Generate higher-quality sales meetings",
           bookType: "authority_book",
           language: "turkish",
         },
       },
       {
-        label: "Lead magnet rehberi",
+        label: "Lead magnet guide",
         values: {
-          topic: "Koçlar için ilk 30 günde e-posta listesi kurma sistemi",
-          audience: "Koçlar ve solo eğitim üreticileri",
-          goal: "Lead magnet kitabı ile danışmanlık talebi toplamak",
+          topic: "Email list building system for coaches in the first 30 days",
+          audience: "Coaches and solo education creators",
+          goal: "Collect consulting requests with a lead magnet book",
           bookType: "lead_magnet",
           language: "turkish",
         },
       },
       {
-        label: "KDP bilgi kitabı",
+        label: "KDP guide",
         values: {
-          topic: "Renters için mini greenhouse kurulum rehberi",
-          audience: "ABD'de küçük alanda yetiştiricilik yapan yeni başlayanlar",
-          goal: "KDP için net mikro niş rehber çıkarmak",
+          topic: "Mini greenhouse setup guide for renters",
+          audience: "Beginners doing small-space gardening in the US",
+          goal: "Produce a clear micro-niche guide for KDP",
           bookType: "kdp_publish",
           language: "english",
         },
@@ -959,27 +949,27 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
     benefits: [
       {
         icon: "layers",
-        title: "Bölüm omurgası",
-        description: "Konu başlıklarını sıralamak değil, okunur bir akış kurmak için.",
+        title: "Chapter backbone",
+        description: "Not just listing topic headings, but building a readable flow.",
       },
       {
         icon: "compass",
-        title: "Editoryal yön",
-        description: "Hangi bölümün ne iş yaptığını ve neden orada olduğunu gör.",
+        title: "Editorial direction",
+        description: "See what each chapter does and why it's there.",
       },
       {
         icon: "trending",
-        title: "Tamamlama sinyali",
-        description: "Kitabın yarım kalma riskini daha taslak aşamasında gör.",
+        title: "Completion signal",
+        description: "See the risk of the book being left unfinished at the outline stage.",
       },
     ],
     fields: [
-      { name: "topic", label: "Kitabın konusu", type: "textarea", placeholder: "Örn. içerik üreticileri için paid newsletter büyütme sistemi", minLength: 10, required: true },
-      { name: "audience", label: "Bu kitabı kim okuyacak?", type: "input", placeholder: "Örn. solo creator'lar, danışmanlar, eğitmenler", minLength: 6, required: true },
-      { name: "goal", label: "Kitabın sonunda ne sağlanmalı?", type: "input", placeholder: "Örn. net bir süreç, daha fazla lead veya KDP satış sinyali", minLength: 8, required: true },
+      { name: "topic", label: "Book topic", type: "textarea", placeholder: "E.g. paid newsletter growth system for content creators", minLength: 10, required: true },
+      { name: "audience", label: "Who will read this book?", type: "input", placeholder: "E.g. solo creators, consultants, educators", minLength: 6, required: true },
+      { name: "goal", label: "What should the book deliver at the end?", type: "input", placeholder: "E.g. a clear process, more leads or KDP sales signals", minLength: 8, required: true },
       {
         name: "bookType",
-        label: "Hangi formatı hedefliyorsun?",
+        label: "Which format are you targeting?",
         type: "select",
         required: true,
         options: [
@@ -991,19 +981,19 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
       },
       {
         name: "language",
-        label: "Üretim dili",
+        label: "Production language",
         type: "select",
         required: true,
         options: [
-          { value: "turkish", label: "Türkçe" },
+          { value: "turkish", label: "Turkish" },
           { value: "english", label: "English" },
-          { value: "multilingual", label: "Çok dilli" },
+          { value: "multilingual", label: "Multilingual" },
         ],
       },
     ],
     buildPreviewHref: (values) =>
       buildPreviewHref({
-        topic: values.topic || "Kitap konusu",
+        topic: values.topic || "Book topic",
         audience: values.audience,
         language: values.language,
         bookType: values.bookType,
@@ -1013,47 +1003,47 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
   {
     slug: "content-to-book-mapper",
     id: "content_to_book_mapper",
-    name: "İçerikten Kitaba Dönüştürücü",
-    badge: "Ücretsiz Araç",
+    name: "Content to Book Converter",
+    badge: "Free Tool",
     path: "/tools/content-to-book-mapper",
-    description: "Mevcut kurs, blog, podcast veya framework içeriğini kitaba dönüştürür.",
-    shortLabel: "İçerik Dönüştürücü",
-    ctaLabel: "Haritayı Çıkar",
+    description: "Converts existing course, blog, podcast or framework content into a book.",
+    shortLabel: "Content Converter",
+    ctaLabel: "Generate Map",
     icon: "book",
     experience: "generic",
-    metaTitle: "İçerikten Kitaba Dönüştürücü | Kitap Oluşturucu",
-    metaDescription: "Elindeki kurs, podcast, blog veya framework içeriğinin kitaba nasıl çevrileceğini saniyeler içinde gör. İçerik kümeleri ve dönüşüm planı al.",
-    keywords: ["content to book", "kursu kitaba çevirme", "podcast to book", "content repurposing book"],
-    heroTitle: "Dağınık içeriği kitaba çevirecek haritayı çıkar.",
+    metaTitle: "Content to Book Converter | Book Generator",
+    metaDescription: "See how your course, podcast, blog or framework content can be converted into a book in seconds. Get content clusters and a conversion plan.",
+    keywords: ["content to book", "convert course to book", "podcast to book", "content repurposing book"],
+    heroTitle: "Extract the map that turns scattered content into a book.",
     heroDescription:
-      "Elindeki kurs, workshop, podcast veya newsletter içeriğini yaz. Araç; hangi kümelerin kitapta yaşayacağını, hangi boşlukların doldurulacağını ve nasıl konumlandırılacağını göstersin.",
-    formIntro: "Dönüşüm testi",
-    placeholderTitle: "Kitaplaştırma haritası burada belirecek",
-    placeholderText: "İçerik tipini ve amacını gir. Araç; kümelenebilir parçaları, eksik halkaları ve kitaplaştırma sırasını anında gösterir.",
-    gateTitle: "Tam kitaplaştırma planını aç",
-    gateDescription: "İçerik kümeleri, eksik parça uyarıları ve preview'e taşınacak net dönüşüm planı e-posta ile açılsın.",
-    nextStepTitle: "Haritayı çıkardıktan sonra ilk bölümü test et.",
-    nextStepDescription: "En iyi içerik kümesini sihirbaza taşı, ilk bölümü preview içinde gör ve repurpose akışının gerçekten işleyip işlemediğini doğrula.",
-    previewCtaLabel: "Harita ile Önizleme Başlat",
+      "Enter your course, workshop, podcast or newsletter content. The tool shows which clusters will live in the book, which gaps need filling, and how to position it.",
+    formIntro: "Conversion test",
+    placeholderTitle: "Bookification map will appear here",
+    placeholderText: "Enter content type and purpose. The tool instantly shows clusterable parts, missing links, and bookification order.",
+    gateTitle: "Unlock the full bookification plan",
+    gateDescription: "Content clusters, missing piece warnings, and a clear conversion plan for preview delivered via email.",
+    nextStepTitle: "After generating the map, test the first chapter.",
+    nextStepDescription: "Move the best content cluster to the wizard, see the first chapter in preview, and verify whether the repurpose flow actually works.",
+    previewCtaLabel: "Start Preview with Map",
     samples: [
       {
-        label: "Workshop seti",
+        label: "Workshop set",
         values: {
           sourceType: "course_workshop",
-          assetSummary: "3 modüllük workshop serisi: freelance tasarımcıların paket teklif ve fiyatlandırma sistemi",
-          audience: "Freelance tasarımcılar ve yaratıcı servis veren uzmanlar",
-          goal: "Workshop içeriğini authority kitabına dönüştürmek",
+          assetSummary: "3-module workshop series: packaging and pricing system for freelance designers",
+          audience: "Freelance designers and creative service professionals",
+          goal: "Convert workshop content into an authority book",
           materialDepth: "rich",
           language: "turkish",
         },
       },
       {
-        label: "Podcast arşivi",
+        label: "Podcast archive",
         values: {
           sourceType: "blog_podcast",
-          assetSummary: "20 bölümlük podcast: solo founder'lar için calm operations ve team rituals",
-          audience: "Solo founder'lar ve küçük ekip liderleri",
-          goal: "Podcast'ten kısa bir ücretli rehber çıkarmak",
+          assetSummary: "20-episode podcast: calm operations and team rituals for solo founders",
+          audience: "Solo founders and small team leaders",
+          goal: "Turn podcast into a short paid guide",
           materialDepth: "medium",
           language: "english",
         },
@@ -1062,9 +1052,9 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
         label: "Consulting framework",
         values: {
           sourceType: "consulting_framework",
-          assetSummary: "Revenue ops teşhis framework'ü, müşteri onboarding checklist'leri ve audit deck'leri",
-          audience: "B2B SaaS kurucuları ve revenue liderleri",
-          goal: "Lead toplamak için kısa authority book üretmek",
+          assetSummary: "Revenue ops diagnostic framework, client onboarding checklists and audit decks",
+          audience: "B2B SaaS founders and revenue leaders",
+          goal: "Produce a short authority book for lead generation",
           materialDepth: "rich",
           language: "turkish",
         },
@@ -1073,62 +1063,62 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
     benefits: [
       {
         icon: "book",
-        title: "İçerik kümeleri",
-        description: "Hangi modül, bölüm veya seri kitapta birleşmeli netleşir.",
+        title: "Content clusters",
+        description: "Clarifies which module, section or series should merge in the book.",
       },
       {
         icon: "layers",
-        title: "Boşluk analizi",
-        description: "Eksik vaka, geçiş ve kapanış parçalarını önden görürsün.",
+        title: "Gap analysis",
+        description: "Spot missing cases, transitions and closing pieces in advance.",
       },
       {
         icon: "target",
-        title: "Yeni amaç",
-        description: "İçeriği yalnız arşivlemek değil, yeni dönüşüm amacıyla konumlarsın.",
+        title: "New purpose",
+        description: "Position content not just for archiving, but with a new conversion purpose.",
       },
     ],
     fields: [
       {
         name: "sourceType",
-        label: "Hangi içerik tipinden geliyorsun?",
+        label: "Which content type are you coming from?",
         type: "select",
         required: true,
         options: [
-          { value: "course_workshop", label: "Kurs / workshop" },
-          { value: "blog_podcast", label: "Blog / podcast serisi" },
-          { value: "consulting_framework", label: "Danışmanlık framework'ü" },
-          { value: "newsletter_content", label: "Newsletter / içerik serisi" },
+          { value: "course_workshop", label: "Course / workshop" },
+          { value: "blog_podcast", label: "Blog / podcast series" },
+          { value: "consulting_framework", label: "Consulting framework" },
+          { value: "newsletter_content", label: "Newsletter / content series" },
         ],
       },
-      { name: "assetSummary", label: "Elindeki içerik ne?", type: "textarea", placeholder: "Örn. 12 derslik kurs, 30 newsletter, 8 case study ve satış deck'i", minLength: 12, required: true },
-      { name: "audience", label: "Kitap kime dönecek?", type: "input", placeholder: "Örn. ilk kez uygulayacak founder'lar, danışmanlar, ekip liderleri", minLength: 6, required: true },
-      { name: "goal", label: "Bu kitap ne üretmeli?", type: "input", placeholder: "Örn. authority, demo talebi, course sale veya KDP geliri", minLength: 8, required: true },
+      { name: "assetSummary", label: "What content do you have?", type: "textarea", placeholder: "E.g. 12-lesson course, 30 newsletters, 8 case studies and sales deck", minLength: 12, required: true },
+      { name: "audience", label: "Who is the book for?", type: "input", placeholder: "E.g. first-time founders, consultants, team leaders", minLength: 6, required: true },
+      { name: "goal", label: "What should this book produce?", type: "input", placeholder: "E.g. authority, demo requests, course sales or KDP revenue", minLength: 8, required: true },
       {
         name: "materialDepth",
-        label: "Malzeme derinliği",
+        label: "Material depth",
         type: "select",
         required: true,
         options: [
-          { value: "light", label: "Dağınık / hafif" },
-          { value: "medium", label: "Orta seviye" },
-          { value: "rich", label: "Derin ve tekrar eden" },
+          { value: "light", label: "Scattered / light" },
+          { value: "medium", label: "Medium" },
+          { value: "rich", label: "Deep and repetitive" },
         ],
       },
       {
         name: "language",
-        label: "Üretim dili",
+        label: "Production language",
         type: "select",
         required: true,
         options: [
-          { value: "turkish", label: "Türkçe" },
+          { value: "turkish", label: "Turkish" },
           { value: "english", label: "English" },
-          { value: "multilingual", label: "Çok dilli" },
+          { value: "multilingual", label: "Multilingual" },
         ],
       },
     ],
     buildPreviewHref: (values) =>
       buildPreviewHref({
-        topic: values.assetSummary || "Mevcut içerik",
+        topic: values.assetSummary || "Current content",
         audience: values.audience,
         language: values.language,
         bookType: "authority_book",
@@ -1138,55 +1128,55 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
   {
     slug: "kdp-niche-score",
     id: "kdp_niche_score",
-    name: "KDP Niş Puanlayıcı",
-    badge: "Ücretsiz Araç",
+    name: "KDP Niche Scorer",
+    badge: "Free Tool",
     path: "/tools/kdp-niche-score",
-    description: "Mikro niş, subtitle açısı ve metadata başlangıcı vererek KDP başlığını netleştirir.",
-    shortLabel: "KDP Niş Analizi",
-    ctaLabel: "Nişi Puanla",
+    description: "Clarifies your KDP title by providing micro niche, subtitle angle and metadata starters.",
+    shortLabel: "KDP Niche Analysis",
+    ctaLabel: "Score Niche",
     icon: "search",
     experience: "generic",
-    metaTitle: "KDP Niş Puanlayıcı | Kitap Oluşturucu",
-    metaDescription: "Amazon KDP için düşündüğün nişin ne kadar savunulabilir olduğunu puanla. Subtitle açıları, metadata başlangıcı ve mini bölüm yolu al.",
-    keywords: ["kdp niche score", "amazon kdp niş aracı", "kdp title ideas", "nonfiction kdp niche tool"],
-    heroTitle: "KDP'de boğulmadan mikro nişi seç.",
+    metaTitle: "KDP Niche Scorer | Book Generator",
+    metaDescription: "Score how defensible your niche is for Amazon KDP. Get subtitle angles, metadata starters and a mini chapter path.",
+    keywords: ["kdp niche score", "amazon kdp niche tool", "kdp title ideas", "nonfiction kdp niche tool"],
+    heroTitle: "Pick a micro niche in KDP without drowning.",
     heroDescription:
-      "Nişini, hedef okurunu ve vaat cümleni gir. Araç; nişin ne kadar dar olduğunu, rekabetin yönetilip yönetilemeyeceğini ve subtitle yönlerini hızlıca ortaya çıkarsın.",
-    formIntro: "Micro-niche testi",
-    placeholderTitle: "Niş raporu burada görünecek",
-    placeholderText: "Nişini, okuyucuyu ve vaat cümlesini gir. Araç; mikro niş sinyalini, rekabet yönetilebilirliğini ve seri fırsatını açıklar.",
-    gateTitle: "Subtitle ve metadata setini aç",
-    gateDescription: "Subtitle açıları, metadata başlangıçları ve mini bölüm yolu e-posta ile açılsın.",
-    nextStepTitle: "Doğru mikro niş, hızlı preview ile doğrulanır.",
-    nextStepDescription: "En güçlü subtitle yönünü sihirbaza taşı, örnek bölüm akışını gör ve nişin gerçekten kitap olacak kadar savunulabilir olup olmadığını test et.",
-    previewCtaLabel: "Niş ile Preview Başlat",
+      "Enter your niche, target reader and promise sentence. The tool reveals how narrow your niche is, whether competition is manageable, and subtitle directions.",
+    formIntro: "Micro-niche test",
+    placeholderTitle: "Niche report will appear here",
+    placeholderText: "Enter your niche, audience and promise sentence. The tool explains the micro niche signal, competition manageability and series opportunity.",
+    gateTitle: "Unlock subtitle and metadata set",
+    gateDescription: "Subtitle angles, metadata starters and mini chapter path delivered via email.",
+    nextStepTitle: "The right micro niche is verified with a quick preview.",
+    nextStepDescription: "Move the strongest subtitle direction to the wizard, see the sample chapter flow, and test whether the niche is truly defensible enough to become a book.",
+    previewCtaLabel: "Start Preview with Niche",
     samples: [
       {
         label: "Micro niche",
         values: {
-          niche: "ADHD'li yetişkinler için analog planning systems",
-          audience: "ABD'de üretkenlik araçlarını basit tutmak isteyen yetişkinler",
-          promise: "dağınık görev listesini sürdürülebilir haftalık ritme çevirmek",
+          niche: "Analog planning systems for adults with ADHD",
+          audience: "US adults who want to keep productivity tools simple",
+          promise: "turn a scattered task list into a sustainable weekly rhythm",
           competition: "medium",
           language: "english",
         },
       },
       {
-        label: "TR niş",
+        label: "TR niche",
         values: {
-          niche: "Yeni başlayanlar için balkon serası kurma rehberi",
-          audience: "Küçük şehir dairelerinde yetiştiriciliğe başlayan okurlar",
-          promise: "ilk hasadı 60 günde almak",
+          niche: "Balcony greenhouse setup guide for beginners",
+          audience: "Readers starting to grow in small city apartments",
+          promise: "get the first harvest in 60 days",
           competition: "low",
           language: "turkish",
         },
       },
       {
-        label: "Yoğun rekabet",
+        label: "High competition",
         values: {
           niche: "productivity for founders",
-          audience: "Seed-stage SaaS founder'lar",
-          promise: "dağınık takvim yerine sakin operasyon sistemi",
+          audience: "Seed-stage SaaS founders",
+          promise: "calm operations system instead of a scattered calendar",
           competition: "high",
           language: "english",
         },
@@ -1195,44 +1185,44 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
     benefits: [
       {
         icon: "search",
-        title: "Mikro niş daraltma",
-        description: "Genel kategoriyi bırakıp savunulabilir bir başlık alanı bulur.",
+        title: "Micro niche narrowing",
+        description: "Drops the general category and finds a defensible title space.",
       },
       {
         icon: "trending",
-        title: "Rekabet sinyali",
-        description: "Başlığı daha da sıkılaştırman gerekip gerekmediğini görürsün.",
+        title: "Competition signal",
+        description: "See if you need to narrow the title further.",
       },
       {
         icon: "pen",
-        title: "Subtitle yönleri",
-        description: "KDP listing için ilk subtitle ve metadata setini çıkarır.",
+        title: "Subtitle directions",
+        description: "Produces the first subtitle and metadata set for KDP listing.",
       },
     ],
     fields: [
-      { name: "niche", label: "Düşündüğün niş", type: "textarea", placeholder: "Örn. renters için miniature greenhouse gardening", minLength: 10, required: true },
-      { name: "audience", label: "Bu nişi kim satın alacak?", type: "input", placeholder: "Örn. ilk kez küçük alanda yetiştiricilik yapan ABD'li okurlar", minLength: 6, required: true },
-      { name: "promise", label: "Kitap hangi sonucu vaat edecek?", type: "input", placeholder: "Örn. ilk hasadı 60 günde almak, daha az hata yapmak", minLength: 8, required: true },
+      { name: "niche", label: "Your niche idea", type: "textarea", placeholder: "E.g. miniature greenhouse gardening for renters", minLength: 10, required: true },
+      { name: "audience", label: "Who will buy this niche?", type: "input", placeholder: "E.g. first-time small-space growers in the US", minLength: 6, required: true },
+      { name: "promise", label: "What result will the book promise?", type: "input", placeholder: "E.g. get the first harvest in 60 days, make fewer mistakes", minLength: 8, required: true },
       {
         name: "competition",
-        label: "Rekabet hissi",
+        label: "Competition feel",
         type: "select",
         required: true,
         options: [
-          { value: "low", label: "Düşük / niş" },
-          { value: "medium", label: "Orta" },
-          { value: "high", label: "Yüksek / kalabalık" },
+          { value: "low", label: "Low / niche" },
+          { value: "medium", label: "Medium" },
+          { value: "high", label: "High / crowded" },
         ],
       },
       {
         name: "language",
-        label: "Yayın dili",
+        label: "Publication language",
         type: "select",
         required: true,
         options: [
           { value: "english", label: "English" },
-          { value: "turkish", label: "Türkçe" },
-          { value: "multilingual", label: "Çok dilli" },
+          { value: "turkish", label: "Turkish" },
+          { value: "multilingual", label: "Multilingual" },
         ],
       },
     ],
@@ -1248,35 +1238,35 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
   {
     slug: "lead-magnet-book-angle-finder",
     id: "lead_magnet_book_angle_finder",
-    name: "Müşteri Çeken Kitap Açısı Bulucu",
-    badge: "Ücretsiz Araç",
+    name: "Client-Attracting Book Angle Finder",
+    badge: "Free Tool",
     path: "/tools/lead-magnet-book-angle-finder",
-    description: "Uzmanlığını müşteri çeken kısa kitap açısına dönüştürür.",
-    shortLabel: "Açı Bulucu",
-    ctaLabel: "Açıyı Bul",
+    description: "Turns your expertise into a short book angle that attracts customers.",
+    shortLabel: "Angle Finder",
+    ctaLabel: "Find the Angle",
     icon: "magnet",
     experience: "generic",
-    metaTitle: "Müşteri Çeken Kitap Açısı Bulucu | Kitap Oluşturucu",
-    metaDescription: "Uzmanlığını lead üreten kısa kitap açısına çevir. Hedef müşteri, teklif ve sonuç bilgisiyle doğru angle ve mini rehber omurgasını bul.",
-    keywords: ["lead magnet book", "authority book angle", "client attracting book", "müşteri çeken kitap"],
-    heroTitle: "Uzmanlığını müşteri çeken kısa kitaba çevir.",
+    metaTitle: "Client-Attracting Book Angle Finder | Book Generator",
+    metaDescription: "Turn your expertise into a lead-generating short book angle. Find the right angle and mini guide backbone with target client, offer and outcome info.",
+    keywords: ["lead magnet book", "authority book angle", "client attracting book", "client attracting book"],
+    heroTitle: "Turn your expertise into a client-attracting short book.",
     heroDescription:
-      "Ne sattığını, kime sattığını ve hangi sonucu hızlandırdığını yaz. Araç; hangi kitap açısının daha fazla güven ve görüşme talebi üreteceğini çıkarsın.",
-    formIntro: "Açı testi",
-    placeholderTitle: "Lead magnet açısı burada görünecek",
-    placeholderText: "Uzmanlık alanını ve ideal müşterini gir. Araç; kısa kitabın doğru vaat cümlesini, taslak yönünü ve CTA fırsatlarını gösterir.",
-    gateTitle: "Tam açı setini aç",
-    gateDescription: "Açı önerileri, kısa rehber taslağı ve CTA fırsatları e-posta ile açılsın.",
-    nextStepTitle: "Açıyı bulduysan kısa rehberi üretmeye geç.",
-    nextStepDescription: "Seçtiğin açıyı önizleme akışına taşı, ilk bölüm ve CTA tonunu gör, sonra kitabı tam müşteri çekici pakete çevir.",
-    previewCtaLabel: "Angle ile Preview Başlat",
+      "Write what you sell, who you sell to, and what result you accelerate. The tool infers which book angle will generate more trust and meeting requests.",
+    formIntro: "Angle test",
+    placeholderTitle: "Lead magnet angle will appear here",
+    placeholderText: "Enter your expertise area and ideal client. The tool shows the right promise sentence, outline direction and CTA opportunities for the short book.",
+    gateTitle: "Unlock the full angle set",
+    gateDescription: "Angle suggestions, short guide outline and CTA opportunities delivered via email.",
+    nextStepTitle: "Once you find the angle, move to producing the short guide.",
+    nextStepDescription: "Move the chosen angle to the preview flow, see the first chapter and CTA tone, then convert the book into a full client-attracting package.",
+    previewCtaLabel: "Start Preview with Angle",
     samples: [
       {
         label: "Consulting",
         values: {
-          expertise: "B2B SaaS onboarding audit ve retention framework'ü",
-          client: "PLG sonrası activation sorunu yaşayan SaaS kurucuları",
-          outcome: "ilk 30 günde aktivasyon düşüşünü fark edip düzeltmek",
+          expertise: "B2B SaaS onboarding audit and retention framework",
+          client: "SaaS founders struggling with activation after PLG",
+          outcome: "detect and fix activation drop in the first 30 days",
           offerType: "consulting",
           language: "turkish",
         },
@@ -1284,9 +1274,9 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
       {
         label: "Coaching",
         values: {
-          expertise: "ICF koçları için premium package positioning sistemi",
-          client: "Teklifini ucuz sattığını düşünen koçlar",
-          outcome: "daha yüksek fiyatlı seans paketi satmak",
+          expertise: "Premium package positioning system for ICF coaches",
+          client: "Coaches who feel they're selling their offer too cheap",
+          outcome: "sell higher-priced session packages",
           offerType: "coaching",
           language: "turkish",
         },
@@ -1295,8 +1285,8 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
         label: "Course",
         values: {
           expertise: "Newsletter growth engine for niche creators",
-          client: "Audience'ı var ama email listesi yavaş büyüyen creator'lar",
-          outcome: "lead magnet ile ilk 1000 email subscriber'a ulaşmak",
+          client: "Creators who have an audience but their email list is growing slowly",
+          outcome: "reach the first 1000 email subscribers with a lead magnet",
           offerType: "course",
           language: "english",
         },
@@ -1305,27 +1295,27 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
     benefits: [
       {
         icon: "magnet",
-        title: "Lead odaklı açı",
-        description: "Kitabın satış değil güven ve talep üretmesini sağlar.",
+        title: "Lead-focused angle",
+        description: "Ensures the book generates trust and demand, not sales.",
       },
       {
         icon: "target",
-        title: "Doğru müşteri",
-        description: "Kime konuşacağını netleştirir, herkese yazma riskini azaltır.",
+        title: "Right customer",
+        description: "Clarifies who to speak to, reduces the risk of writing for everyone.",
       },
       {
         icon: "book",
-        title: "Kısa rehber omurgası",
-        description: "Kitabı uzun authority metni değil, dönüşüm odaklı rehber yapar.",
+        title: "Short guide backbone",
+        description: "Makes the book a conversion-focused guide, not a long authority text.",
       },
     ],
     fields: [
-      { name: "expertise", label: "Hangi uzmanlığı paketliyorsun?", type: "textarea", placeholder: "Örn. premium pricing, retention audit, webinar conversion system", minLength: 10, required: true },
-      { name: "client", label: "Bu kitabı hangi müşteri okuyacak?", type: "input", placeholder: "Örn. SaaS founder'lar, koçlar, danışmanlar, creator'lar", minLength: 6, required: true },
-      { name: "outcome", label: "Kitap hangi sonucu hızlandırmalı?", type: "input", placeholder: "Örn. daha çok demo, daha iyi pricing, daha hızlı email growth", minLength: 8, required: true },
+      { name: "expertise", label: "Which expertise are you packaging?", type: "textarea", placeholder: "E.g. premium pricing, retention audit, webinar conversion system", minLength: 10, required: true },
+      { name: "client", label: "Which client will read this book?", type: "input", placeholder: "E.g. SaaS founders, coaches, consultants, creators", minLength: 6, required: true },
+      { name: "outcome", label: "What result should the book accelerate?", type: "input", placeholder: "E.g. more demos, better pricing, faster email growth", minLength: 8, required: true },
       {
         name: "offerType",
-        label: "Sonunda hangi teklif var?",
+        label: "What offer is at the end?",
         type: "select",
         required: true,
         options: [
@@ -1338,13 +1328,13 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
       },
       {
         name: "language",
-        label: "Üretim dili",
+        label: "Production language",
         type: "select",
         required: true,
         options: [
-          { value: "turkish", label: "Türkçe" },
+          { value: "turkish", label: "Turkish" },
           { value: "english", label: "English" },
-          { value: "multilingual", label: "Çok dilli" },
+          { value: "multilingual", label: "Multilingual" },
         ],
       },
     ],
@@ -1360,36 +1350,36 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
   {
     slug: "title-subtitle-critic",
     id: "title_subtitle_critic",
-    name: "Başlık ve Alt Başlık Eleştirmeni",
-    badge: "Ücretsiz Araç",
+    name: "Title and Subtitle Critic",
+    badge: "Free Tool",
     path: "/tools/title-subtitle-critic",
-    description: "Başlık ve subtitle çiftini netlik, vaat ve konumlandırma açısından eleştirir.",
-    shortLabel: "Başlık Eleştirisi",
-    ctaLabel: "Başlığı Test Et",
+    description: "Critiques title and subtitle pair for clarity, promise and positioning.",
+    shortLabel: "Title Critique",
+    ctaLabel: "Test Title",
     icon: "pen",
     experience: "generic",
-    metaTitle: "Başlık ve Alt Başlık Eleştirmeni | Kitap Oluşturucu",
-    metaDescription: "Kitap başlığını ve subtitle'ını netlik, vaat ve akılda kalıcılık açısından puanla. Alternatif başlıklar ve subtitle yönleri al.",
-    keywords: ["book title critic", "subtitle generator", "kitap başlığı analizi", "nonfiction title ideas"],
-    heroTitle: "Başlık kulağa iyi geliyor diye yetinme.",
+    metaTitle: "Title and Subtitle Critic | Book Generator",
+    metaDescription: "Score your book title and subtitle for clarity, promise and memorability. Get alternative titles and subtitle directions.",
+    keywords: ["book title critic", "subtitle generator", "book title analysis", "nonfiction title ideas"],
+    heroTitle: "Don't settle for a title that just sounds good.",
     heroDescription:
-      "Başlığını, subtitle'ını ve hedef okurunu gir. Araç; çiftin ne kadar net olduğunu puanlasın, daha güçlü varyasyonlar ve subtitle yönleri önerisin.",
-    formIntro: "Title fit testi",
-    placeholderTitle: "Başlık eleştirisi burada görünecek",
-    placeholderText: "Başlık ve subtitle'ı gir. Araç; ilk bakış netliğini, vaat gücünü ve kitle sinyalini anında puanlar.",
-    gateTitle: "Alternatif başlık setini aç",
-    gateDescription: "Alternatif başlıklar, subtitle yönleri ve konumlandırma notları e-posta ile açılsın.",
-    nextStepTitle: "Güçlü başlık seçildiyse kitabı onun etrafında kur.",
-    nextStepDescription: "Kazanan başlık çiftini önizleme akışına taşı, ilk bölüm ve satış sayfası tonunu aynı positioning etrafında sabitle.",
-    previewCtaLabel: "Başlıkla Preview Başlat",
+      "Enter your title, subtitle and target reader. The tool scores how clear the pair is, suggests stronger variations and subtitle directions.",
+    formIntro: "Title fit test",
+    placeholderTitle: "Title critique will appear here",
+    placeholderText: "Enter title and subtitle. The tool instantly scores first-glance clarity, promise power and audience signal.",
+    gateTitle: "Unlock alternative title set",
+    gateDescription: "Alternative titles, subtitle directions and positioning notes delivered via email.",
+    nextStepTitle: "If a strong title is chosen, build the book around it.",
+    nextStepDescription: "Move the winning title pair to the preview flow, fix the first chapter and sales page tone around the same positioning.",
+    previewCtaLabel: "Start Preview with Title",
     samples: [
       {
         label: "Authority",
         values: {
           title: "Silent Offers",
           subtitle: "How boutique consultants turn trust into inbound pipeline without daily content chaos",
-          audience: "B2B danışmanlar ve solo ajans sahipleri",
-          goal: "inbound lead üretmek",
+          audience: "B2B consultants and solo agency owners",
+          goal: "generate inbound leads",
           intent: "authority_book",
         },
       },
@@ -1398,8 +1388,8 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
         values: {
           title: "First 1000 Emails",
           subtitle: "A calm newsletter growth guide for niche creators who hate growth hacks",
-          audience: "Niş creator'lar",
-          goal: "email listesi büyütmek",
+          audience: "Niche creators",
+          goal: "grow email list",
           intent: "lead_magnet",
         },
       },
@@ -1408,8 +1398,8 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
         values: {
           title: "Balcony Harvest",
           subtitle: "A starter system for renters who want to grow food in tiny urban spaces",
-          audience: "Küçük alanda yetiştiricilik yapan yeni başlayanlar",
-          goal: "mikro nişte KDP satışı",
+          audience: "Beginners doing small-space gardening",
+          goal: "KDP sales in a micro niche",
           intent: "kdp_publish",
         },
       },
@@ -1417,25 +1407,25 @@ export const genericMarketingToolDefinitions: GenericMarketingToolDefinition[] =
     benefits: [
       {
         icon: "pen",
-        title: "Netlik puanı",
-        description: "Başlık gerçekten ne söylediğini ilk bakışta belli ediyor mu görürsün.",
+        title: "Clarity score",
+        description: "See if the title really shows what it's about at first glance.",
       },
       {
         icon: "trending",
-        title: "Vaat gücü",
-        description: "Subtitle'ın sonuç cümlesi kurup kurmadığını ölçer.",
+        title: "Promise power",
+        description: "Measures whether the subtitle builds a result sentence.",
       },
       {
         icon: "target",
         title: "Audience signal",
-        description: "Doğru okuru çağırıp çağırmadığını hızlıca okursun.",
+        description: "Quickly read whether it's calling the right reader.",
       },
     ],
     fields: [
-      { name: "title", label: "Başlık", type: "input", placeholder: "Örn. Silent Offers", minLength: 3, required: true },
-      { name: "subtitle", label: "Subtitle", type: "textarea", placeholder: "Örn. How boutique consultants turn trust into inbound pipeline without daily content chaos", minLength: 8, required: true },
-      { name: "audience", label: "Target reader", type: "input", placeholder: "Örn. danışmanlar, creator'lar, KDP okurları", minLength: 6, required: true },
-      { name: "goal", label: "Başlık hangi sonucu satmalı?", type: "input", placeholder: "Örn. lead, authority, satış veya net bir dönüşüm", minLength: 8, required: true },
+      { name: "title", label: "Title", type: "input", placeholder: "E.g. Silent Offers", minLength: 3, required: true },
+      { name: "subtitle", label: "Subtitle", type: "textarea", placeholder: "E.g. How boutique consultants turn trust into inbound pipeline without daily content chaos", minLength: 8, required: true },
+      { name: "audience", label: "Target reader", type: "input", placeholder: "E.g. consultants, creators, KDP readers", minLength: 6, required: true },
+      { name: "goal", label: "What result should the title sell?", type: "input", placeholder: "E.g. leads, authority, sales or a clear conversion", minLength: 8, required: true },
       {
         name: "intent",
         label: "Book type",

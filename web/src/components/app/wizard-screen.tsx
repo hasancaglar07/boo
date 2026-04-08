@@ -28,42 +28,42 @@ const questions = [
     title: "What kind of book do you want to write?",
     stepLabel: "Genre",
     options: [
-      { value: "rehber", label: "Rehber" },
-      { value: "is", label: "Business" },
-      { value: "egitim", label: "Education" },
-      { value: "cocuk", label: "Children's Book" },
-      { value: "diger", label: "Other" },
+      { value: "guide", label: "Guide" },
+      { value: "business", label: "Business" },
+      { value: "education", label: "Education" },
+      { value: "children", label: "Children's Book" },
+      { value: "other", label: "Other" },
     ],
   },
   {
     key: "topic",
-    title: "Topic ne?",
+    title: "What is the topic?",
     stepLabel: "Topic",
     placeholder: "e.g.: practical prompting for small teams",
   },
   {
     key: "audience",
     title: "Who are you writing for?",
-    stepLabel: "Hedef",
+    stepLabel: "Audience",
     placeholder: "e.g.: first-time founders and operators",
   },
   {
     key: "language",
     title: "Which language to produce in?",
-    stepLabel: "Dil",
+    stepLabel: "Language",
     options: [
       { value: "English", label: "English" },
-      { value: "Turkish", label: "Türkçe" },
+      { value: "Turkish", label: "Turkish" },
     ],
   },
   {
     key: "depth",
-    title: "Ne kadar detay istiyorsun?",
-    stepLabel: "Derinlik",
+    title: "How much detail do you want?",
+    stepLabel: "Depth",
     options: [
-      { value: "hizli", label: "Short & Fast" },
-      { value: "dengeli", label: "Dengeli" },
-      { value: "detayli", label: "More Detailed" },
+      { value: "quick", label: "Short & Fast" },
+      { value: "balanced", label: "Balanced" },
+      { value: "detailed", label: "More Detailed" },
     ],
   },
 ] as const;
@@ -76,11 +76,11 @@ export function WizardScreen() {
   const [fieldError, setFieldError] = useState("");
   const [creating, setCreating] = useState(false);
   const [answers, setAnswers] = useState({
-    type: "rehber",
+    type: "guide",
     topic: "",
     audience: "",
     language: "Turkish",
-    depth: "dengeli",
+    depth: "balanced",
   });
   const [backendUnavailable, setBackendUnavailable] = useState(false);
 
@@ -160,10 +160,10 @@ export function WizardScreen() {
         author: payload.author,
         publisher: payload.publisher,
         description: payload.description,
-        genre: answers.type === "is" ? "business" : answers.type === "rehber" ? "guide" : "non-fiction",
+        genre: answers.type === "business" ? "business" : answers.type === "guide" ? "guide" : "non-fiction",
         audience: answers.audience,
-        style: answers.depth === "hizli" ? "clear and concise" : answers.depth === "detayli" ? "detailed and example-driven" : "clear and practical",
-        tone: answers.type === "cocuk" ? "warm" : "professional",
+        style: answers.depth === "quick" ? "clear and concise" : answers.depth === "detailed" ? "detailed and example-driven" : "clear and practical",
+        tone: answers.type === "children" ? "warm" : "professional",
         year: payload.year,
       });
       const book = response.book as Book | undefined;

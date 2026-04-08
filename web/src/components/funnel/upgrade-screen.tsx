@@ -224,7 +224,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3">
                   <p className="text-xs font-semibold text-muted-foreground text-center">
-                    {NO_API_COST_CLAIM}. After seeing the cover and preview&apos;i gördükten sonra <strong className="text-foreground">payment decision</strong> verirsin
+                    {NO_API_COST_CLAIM}. After seeing the cover and preview, make your <strong className="text-foreground">payment decision</strong>
                   </p>
                 </div>
               </div>

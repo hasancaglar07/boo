@@ -57,7 +57,7 @@ const NAV_ITEMS = [
   { key: "new", href: "/app/new/topic", label: "Start Book", icon: Plus },
   { key: "account", href: "/app/settings/profile", label: "Settings", icon: User2 },
   { key: "billing", href: "/app/settings/billing", label: "Plans", icon: CreditCard },
-  { key: "affiliate", href: "/app/affiliate", label: "Affiliate %30", icon: DollarSign },
+  { key: "affiliate", href: "/app/affiliate", label: "Affiliate 30%", icon: DollarSign },
 ] as const;
 
 const PLAN_LABELS: Record<string, string> = {
@@ -271,7 +271,7 @@ function SidebarContent({
       {actions.length > 0 && (
         <div className="mt-3 shrink-0">
           <div className="flex w-full items-center justify-between rounded-[18px] border border-sidebar-border/55 bg-sidebar-accent/55 px-3 py-2.5 text-[11px] text-sidebar-foreground/54">
-            <span>Komut paleti</span>
+            <span>Command palette</span>
             <kbd className="flex items-center gap-0.5 rounded border border-sidebar-border bg-sidebar px-1.5 py-0.5 font-mono text-[10px]">
               <Command className="size-2.5" />K
             </kbd>
@@ -494,7 +494,7 @@ export function AppFrame({
               type="button"
               className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent transition hover:bg-sidebar-accent/80"
               onClick={() => setDrawerOpen(false)}
-              aria-label="Menuyü kapat"
+              aria-label="Close menu"
             >
               <X className="size-3.5" />
             </button>

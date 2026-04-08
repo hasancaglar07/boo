@@ -1,0 +1,858 @@
+[
+  {
+    "line": 782,
+    "text": "        `İlk uygulamadan sürdürülebilir sonuca kadar karar rehberi`,"
+  },
+  {
+    "line": 787,
+    "text": "      title: \"Konumlandırma notları\","
+  },
+  {
+    "line": 790,
+    "text": "        \"Genel kavram yerine yöntem, segment veya kullanım durumu ekle.\","
+  },
+  {
+    "line": 792,
+    "text": "        \"Başlık akılda kalmalı; subtitle ikna etmeli.\","
+  },
+  {
+    "line": 800,
+    "text": "      dimensions[0].score >= 74 ? \"Başlık uzunluk olarak iyi çalışıyor; bu ilk bakış netliği sağlar.\" : \"\","
+  },
+  {
+    "line": 801,
+    "text": "      dimensions[1].score >= 72 ? \"Subtitle vaat taşıyor; dönüşüm cümlesi kurulabiliyor.\" : \"\","
+  },
+  {
+    "line": 802,
+    "text": "      dimensions[4].score >= 70 ? \"Başlık ritim açısından akılda kalmaya yakın.\" : \"\","
+  },
+  {
+    "line": 815,
+    "text": "    recommendedAngle: `Başlığı yalnız kulağa iyi gelen bir etiket gibi bırakma. ${audience || \"reads correctly\"} için ${"
+  },
+  {
+    "line": 857,
+    "text": "    description: \"Mevcut kurs, blog veya podcast içeriğini kitap omurgasına çevirir.\","
+  },
+  {
+    "line": 858,
+    "text": "    shortLabel: \"İçerik Dönüştürücü\","
+  },
+  {
+    "line": 859,
+    "text": "    ctaLabel: \"Dönüştür\","
+  },
+  {
+    "line": 866,
+    "text": "    name: \"KDP Niş Puanlayıcı\","
+  },
+  {
+    "line": 869,
+    "text": "    description: \"KDP mikro nişini puanlar, alt başlık açısı ve metadata önerir.\","
+  },
+  {
+    "line": 870,
+    "text": "    shortLabel: \"KDP Niş Analizi\","
+  },
+  {
+    "line": 871,
+    "text": "    ctaLabel: \"Nişi Puanla\","
+  },
+  {
+    "line": 878,
+    "text": "    name: \"Müşteri Çeken Kitap Açısı Bulucu\","
+  },
+  {
+    "line": 893,
+    "text": "    description: \"Başlık çiftini netlik, vaat ve konumlandırma açısından eleştirir.\","
+  },
+  {
+    "line": 894,
+    "text": "    shortLabel: \"Başlık Eleştirisi\","
+  },
+  {
+    "line": 895,
+    "text": "    ctaLabel: \"Başlığı Test Et\","
+  },
+  {
+    "line": 905,
+    "text": "    name: \"Kitap Taslak Oluşturucu\","
+  },
+  {
+    "line": 906,
+    "text": "    badge: \"Ücretsiz Araç\","
+  },
+  {
+    "line": 908,
+    "text": "    description: \"Konunu 8 bölümlük net bir omurgaya çevirir ve önizleme akışına hazırlar.\","
+  },
+  {
+    "line": 909,
+    "text": "    shortLabel: \"Taslak Oluşturucu\","
+  },
+  {
+    "line": 910,
+    "text": "    ctaLabel: \"Taslağı Oluştur\","
+  },
+  {
+    "line": 913,
+    "text": "    metaTitle: \"Kitap Taslak Oluşturucu | Kitap Oluşturucu\","
+  },
+  {
+    "line": 914,
+    "text": "    metaDescription: \"Konunu, hedef okurunu ve amacını gir. Kitap Taslak Oluşturucu; 8 bölümlük bir kitap omurgası ve editoryal notlarla hızlı başlangıç versin.\","
+  },
+  {
+    "line": 915,
+    "text": "    keywords: [\"kitap taslak oluşturucu\", \"kitap taslak oluşturucu\", \"kitap bölüm planı\", \"nonfiction taslak aracı\"],"
+  },
+  {
+    "line": 916,
+    "text": "    heroTitle: \"Konun dağılmadan önce kitap omurgasını çıkar.\","
+  },
+  {
+    "line": 918,
+    "text": "      \"Topic, audience ve goal bilgilerini gir. Araç; konuyu 8 bölümlük bir iskelete çevirsin, zayıf halkaları işaretlesin ve seni önizleme akışına hazırlasın.\","
+  },
+  {
+    "line": 920,
+    "text": "    placeholderTitle: \"İlk taslak sinyali burada görünecek\","
+  },
+  {
+    "line": 921,
+    "text": "    placeholderText: \"Konunu doldur, analyze et ve bölümleşme sinyalini gör. Tam rapor açıldığında önerilen omurga ve editoryal notlar görünür.\","
+  },
+  {
+    "line": 922,
+    "text": "    gateTitle: \"Tam bölüm omurgasını aç\","
+  },
+  {
+    "line": 923,
+    "text": "    gateDescription: \"8 bölümlük taslak, editoryal notlar ve preview'e taşınacak net açı e-posta ile açılsın.\","
+  },
+  {
+    "line": 924,
+    "text": "    nextStepTitle: \"Taslak hazırsa sıradaki iş önizlemeye geçmek.\","
+  },
+  {
+    "line": 925,
+    "text": "    nextStepDescription: \"Bu iskeleti sihirbaza taşı, ilk bölümün tonunu gör ve kitabın gerçekten yürüyüp yürümediğini karar yüzeyinde test et.\","
+  },
+  {
+    "line": 926,
+    "text": "    previewCtaLabel: \"Taslak ile Önizleme Başlat\","
+  },
+  {
+    "line": 929,
+    "text": "        label: \"Danışmanlık kitabı\","
+  },
+  {
+    "line": 931,
+    "text": "          topic: \"LinkedIn üzerinden inbound lead üreten danışmanlık sistemi\","
+  },
+  {
+    "line": 932,
+    "text": "          audience: \"B2B danışmanlar ve butik ajans sahipleri\","
+  },
+  {
+    "line": 933,
+    "text": "          goal: \"Daha kaliteli satış görüşmeleri üretmek\","
+  },
+  {
+    "line": 941,
+    "text": "          topic: \"Koçlar için ilk 30 günde e-posta listesi kurma sistemi\","
+  },
+  {
+    "line": 942,
+    "text": "          audience: \"Koçlar ve solo eğitim üreticileri\","
+  },
+  {
+    "line": 943,
+    "text": "          goal: \"Lead magnet kitabı ile danışmanlık talebi toplamak\","
+  },
+  {
+    "line": 949,
+    "text": "        label: \"KDP bilgi kitabı\","
+  },
+  {
+    "line": 951,
+    "text": "          topic: \"Renters için mini greenhouse kurulum rehberi\","
+  },
+  {
+    "line": 952,
+    "text": "          audience: \"ABD'de küçük alanda yetiştiricilik yapan yeni başlayanlar\","
+  },
+  {
+    "line": 953,
+    "text": "          goal: \"KDP için net mikro niş rehber çıkarmak\","
+  },
+  {
+    "line": 962,
+    "text": "        title: \"Bölüm omurgası\","
+  },
+  {
+    "line": 963,
+    "text": "        description: \"Konu başlıklarını sıralamak değil, okunur bir akış kurmak için.\","
+  },
+  {
+    "line": 967,
+    "text": "        title: \"Editoryal yön\","
+  },
+  {
+    "line": 968,
+    "text": "        description: \"Hangi bölümün ne iş yaptığını ve neden orada olduğunu gör.\","
+  },
+  {
+    "line": 973,
+    "text": "        description: \"Kitabın yarım kalma riskini daha taslak aşamasında gör.\","
+  },
+  {
+    "line": 977,
+    "text": "      { name: \"topic\", label: \"Kitabın konusu\", type: \"textarea\", placeholder: \"Örn. içerik üreticileri için paid newsletter büyütme sistemi\", minLength: 10, required: true },"
+  },
+  {
+    "line": 978,
+    "text": "      { name: \"audience\", label: \"Bu kitabı kim okuyacak?\", type: \"input\", placeholder: \"Örn. solo creator'lar, danışmanlar, eğitmenler\", minLength: 6, required: true },"
+  },
+  {
+    "line": 979,
+    "text": "      { name: \"goal\", label: \"Kitabın sonunda ne sağlanmalı?\", type: \"input\", placeholder: \"Örn. net bir süreç, daha fazla lead veya KDP satış sinyali\", minLength: 8, required: true },"
+  },
+  {
+    "line": 982,
+    "text": "        label: \"Hangi formatı hedefliyorsun?\","
+  },
+  {
+    "line": 994,
+    "text": "        label: \"Üretim dili\","
+  },
+  {
+    "line": 998,
+    "text": "          { value: \"turkish\", label: \"Türkçe\" },"
+  },
+  {
+    "line": 1000,
+    "text": "          { value: \"multilingual\", label: \"Çok dilli\" },"
+  },
+  {
+    "line": 1016,
+    "text": "    name: \"İçerikten Kitaba Dönüştürücü\","
+  },
+  {
+    "line": 1017,
+    "text": "    badge: \"Ücretsiz Araç\","
+  },
+  {
+    "line": 1019,
+    "text": "    description: \"Mevcut kurs, blog, podcast veya framework içeriğini kitaba dönüştürür.\","
+  },
+  {
+    "line": 1020,
+    "text": "    shortLabel: \"İçerik Dönüştürücü\","
+  },
+  {
+    "line": 1021,
+    "text": "    ctaLabel: \"Haritayı Çıkar\","
+  },
+  {
+    "line": 1024,
+    "text": "    metaTitle: \"İçerikten Kitaba Dönüştürücü | Kitap Oluşturucu\","
+  },
+  {
+    "line": 1025,
+    "text": "    metaDescription: \"Elindeki kurs, podcast, blog veya framework içeriğinin kitaba nasıl çevrileceğini saniyeler içinde gör. İçerik kümeleri ve dönüşüm planı al.\","
+  },
+  {
+    "line": 1026,
+    "text": "    keywords: [\"content to book\", \"kursu kitaba çevirme\", \"podcast to book\", \"content repurposing book\"],"
+  },
+  {
+    "line": 1027,
+    "text": "    heroTitle: \"Dağınık içeriği kitaba çevirecek haritayı çıkar.\","
+  },
+  {
+    "line": 1029,
+    "text": "      \"Elindeki kurs, workshop, podcast veya newsletter içeriğini yaz. Araç; hangi kümelerin kitapta yaşayacağını, hangi boşlukların doldurulacağını ve nasıl konumlandırılacağını göstersin.\","
+  },
+  {
+    "line": 1030,
+    "text": "    formIntro: \"Dönüşüm testi\","
+  },
+  {
+    "line": 1031,
+    "text": "    placeholderTitle: \"Kitaplaştırma haritası burada belirecek\","
+  },
+  {
+    "line": 1032,
+    "text": "    placeholderText: \"İçerik tipini ve amacını gir. Araç; kümelenebilir parçaları, eksik halkaları ve kitaplaştırma sırasını anında gösterir.\","
+  },
+  {
+    "line": 1033,
+    "text": "    gateTitle: \"Tam kitaplaştırma planını aç\","
+  },
+  {
+    "line": 1034,
+    "text": "    gateDescription: \"İçerik kümeleri, eksik parça uyarıları ve preview'e taşınacak net dönüşüm planı e-posta ile açılsın.\","
+  },
+  {
+    "line": 1035,
+    "text": "    nextStepTitle: \"Haritayı çıkardıktan sonra ilk bölümü test et.\","
+  },
+  {
+    "line": 1036,
+    "text": "    nextStepDescription: \"En iyi içerik kümesini sihirbaza taşı, ilk bölümü preview içinde gör ve repurpose akışının gerçekten işleyip işlemediğini doğrula.\","
+  },
+  {
+    "line": 1037,
+    "text": "    previewCtaLabel: \"Harita ile Önizleme Başlat\","
+  },
+  {
+    "line": 1043,
+    "text": "          assetSummary: \"3 modüllük workshop serisi: freelance tasarımcıların paket teklif ve fiyatlandırma sistemi\","
+  },
+  {
+    "line": 1044,
+    "text": "          audience: \"Freelance tasarımcılar ve yaratıcı servis veren uzmanlar\","
+  },
+  {
+    "line": 1045,
+    "text": "          goal: \"Workshop içeriğini authority kitabına dönüştürmek\","
+  },
+  {
+    "line": 1051,
+    "text": "        label: \"Podcast arşivi\","
+  },
+  {
+    "line": 1054,
+    "text": "          assetSummary: \"20 bölümlük podcast: solo founder'lar için calm operations ve team rituals\","
+  },
+  {
+    "line": 1055,
+    "text": "          audience: \"Solo founder'lar ve küçük ekip liderleri\","
+  },
+  {
+    "line": 1056,
+    "text": "          goal: \"Podcast'ten kısa bir ücretli rehber çıkarmak\","
+  },
+  {
+    "line": 1065,
+    "text": "          assetSummary: \"Revenue ops teşhis framework'ü, müşteri onboarding checklist'leri ve audit deck'leri\","
+  },
+  {
+    "line": 1066,
+    "text": "          audience: \"B2B SaaS kurucuları ve revenue liderleri\","
+  },
+  {
+    "line": 1067,
+    "text": "          goal: \"Lead toplamak için kısa authority book üretmek\","
+  },
+  {
+    "line": 1076,
+    "text": "        title: \"İçerik kümeleri\","
+  },
+  {
+    "line": 1077,
+    "text": "        description: \"Hangi modül, bölüm veya seri kitapta birleşmeli netleşir.\","
+  },
+  {
+    "line": 1081,
+    "text": "        title: \"Boşluk analizi\","
+  },
+  {
+    "line": 1082,
+    "text": "        description: \"Eksik vaka, geçiş ve kapanış parçalarını önden görürsün.\","
+  },
+  {
+    "line": 1086,
+    "text": "        title: \"Yeni amaç\","
+  },
+  {
+    "line": 1087,
+    "text": "        description: \"İçeriği yalnız arşivlemek değil, yeni dönüşüm amacıyla konumlarsın.\","
+  },
+  {
+    "line": 1093,
+    "text": "        label: \"Hangi içerik tipinden geliyorsun?\","
+  },
+  {
+    "line": 1099,
+    "text": "          { value: \"consulting_framework\", label: \"Danışmanlık framework'ü\" },"
+  },
+  {
+    "line": 1100,
+    "text": "          { value: \"newsletter_content\", label: \"Newsletter / içerik serisi\" },"
+  },
+  {
+    "line": 1103,
+    "text": "      { name: \"assetSummary\", label: \"Elindeki içerik ne?\", type: \"textarea\", placeholder: \"Örn. 12 derslik kurs, 30 newsletter, 8 case study ve satış deck'i\", minLength: 12, required: true },"
+  },
+  {
+    "line": 1104,
+    "text": "      { name: \"audience\", label: \"Kitap kime dönecek?\", type: \"input\", placeholder: \"Örn. ilk kez uygulayacak founder'lar, danışmanlar, ekip liderleri\", minLength: 6, required: true },"
+  },
+  {
+    "line": 1105,
+    "text": "      { name: \"goal\", label: \"Bu kitap ne üretmeli?\", type: \"input\", placeholder: \"Örn. authority, demo talebi, course sale veya KDP geliri\", minLength: 8, required: true },"
+  },
+  {
+    "line": 1108,
+    "text": "        label: \"Malzeme derinliği\","
+  },
+  {
+    "line": 1112,
+    "text": "          { value: \"light\", label: \"Dağınık / hafif\" },"
+  },
+  {
+    "line": 1119,
+    "text": "        label: \"Üretim dili\","
+  },
+  {
+    "line": 1123,
+    "text": "          { value: \"turkish\", label: \"Türkçe\" },"
+  },
+  {
+    "line": 1125,
+    "text": "          { value: \"multilingual\", label: \"Çok dilli\" },"
+  },
+  {
+    "line": 1131,
+    "text": "        topic: values.assetSummary || \"Mevcut içerik\","
+  },
+  {
+    "line": 1141,
+    "text": "    name: \"KDP Niş Puanlayıcı\","
+  },
+  {
+    "line": 1142,
+    "text": "    badge: \"Ücretsiz Araç\","
+  },
+  {
+    "line": 1144,
+    "text": "    description: \"Mikro niş, subtitle açısı ve metadata başlangıcı vererek KDP başlığını netleştirir.\","
+  },
+  {
+    "line": 1145,
+    "text": "    shortLabel: \"KDP Niş Analizi\","
+  },
+  {
+    "line": 1146,
+    "text": "    ctaLabel: \"Nişi Puanla\","
+  },
+  {
+    "line": 1149,
+    "text": "    metaTitle: \"KDP Niş Puanlayıcı | Kitap Oluşturucu\","
+  },
+  {
+    "line": 1150,
+    "text": "    metaDescription: \"Amazon KDP için düşündüğün nişin ne kadar savunulabilir olduğunu puanla. Subtitle açıları, metadata başlangıcı ve mini bölüm yolu al.\","
+  },
+  {
+    "line": 1151,
+    "text": "    keywords: [\"kdp niche score\", \"amazon kdp niş aracı\", \"kdp title ideas\", \"nonfiction kdp niche tool\"],"
+  },
+  {
+    "line": 1152,
+    "text": "    heroTitle: \"KDP'de boğulmadan mikro nişi seç.\","
+  },
+  {
+    "line": 1154,
+    "text": "      \"Nişini, hedef okurunu ve vaat cümleni gir. Araç; nişin ne kadar dar olduğunu, rekabetin yönetilip yönetilemeyeceğini ve subtitle yönlerini hızlıca ortaya çıkarsın.\","
+  },
+  {
+    "line": 1156,
+    "text": "    placeholderTitle: \"Niş raporu burada görünecek\","
+  },
+  {
+    "line": 1157,
+    "text": "    placeholderText: \"Nişini, okuyucuyu ve vaat cümlesini gir. Araç; mikro niş sinyalini, rekabet yönetilebilirliğini ve seri fırsatını açıklar.\","
+  },
+  {
+    "line": 1158,
+    "text": "    gateTitle: \"Subtitle ve metadata setini aç\","
+  },
+  {
+    "line": 1159,
+    "text": "    gateDescription: \"Subtitle açıları, metadata başlangıçları ve mini bölüm yolu e-posta ile açılsın.\","
+  },
+  {
+    "line": 1160,
+    "text": "    nextStepTitle: \"Doğru mikro niş, hızlı preview ile doğrulanır.\","
+  },
+  {
+    "line": 1161,
+    "text": "    nextStepDescription: \"En güçlü subtitle yönünü sihirbaza taşı, örnek bölüm akışını gör ve nişin gerçekten kitap olacak kadar savunulabilir olup olmadığını test et.\","
+  },
+  {
+    "line": 1162,
+    "text": "    previewCtaLabel: \"Niş ile Preview Başlat\","
+  },
+  {
+    "line": 1167,
+    "text": "          niche: \"ADHD'li yetişkinler için analog planning systems\","
+  },
+  {
+    "line": 1168,
+    "text": "          audience: \"ABD'de üretkenlik araçlarını basit tutmak isteyen yetişkinler\","
+  },
+  {
+    "line": 1169,
+    "text": "          promise: \"dağınık görev listesini sürdürülebilir haftalık ritme çevirmek\","
+  },
+  {
+    "line": 1175,
+    "text": "        label: \"TR niş\","
+  },
+  {
+    "line": 1177,
+    "text": "          niche: \"Yeni başlayanlar için balkon serası kurma rehberi\","
+  },
+  {
+    "line": 1178,
+    "text": "          audience: \"Küçük şehir dairelerinde yetiştiriciliğe başlayan okurlar\","
+  },
+  {
+    "line": 1179,
+    "text": "          promise: \"ilk hasadı 60 günde almak\","
+  },
+  {
+    "line": 1185,
+    "text": "        label: \"Yoğun rekabet\","
+  },
+  {
+    "line": 1189,
+    "text": "          promise: \"dağınık takvim yerine sakin operasyon sistemi\","
+  },
+  {
+    "line": 1198,
+    "text": "        title: \"Mikro niş daraltma\","
+  },
+  {
+    "line": 1199,
+    "text": "        description: \"Genel kategoriyi bırakıp savunulabilir bir başlık alanı bulur.\","
+  },
+  {
+    "line": 1204,
+    "text": "        description: \"Başlığı daha da sıkılaştırman gerekip gerekmediğini görürsün.\","
+  },
+  {
+    "line": 1208,
+    "text": "        title: \"Subtitle yönleri\","
+  },
+  {
+    "line": 1209,
+    "text": "        description: \"KDP listing için ilk subtitle ve metadata setini çıkarır.\","
+  },
+  {
+    "line": 1213,
+    "text": "      { name: \"niche\", label: \"Düşündüğün niş\", type: \"textarea\", placeholder: \"Örn. renters için miniature greenhouse gardening\", minLength: 10, required: true },"
+  },
+  {
+    "line": 1214,
+    "text": "      { name: \"audience\", label: \"Bu nişi kim satın alacak?\", type: \"input\", placeholder: \"Örn. ilk kez küçük alanda yetiştiricilik yapan ABD'li okurlar\", minLength: 6, required: true },"
+  },
+  {
+    "line": 1215,
+    "text": "      { name: \"promise\", label: \"Kitap hangi sonucu vaat edecek?\", type: \"input\", placeholder: \"Örn. ilk hasadı 60 günde almak, daha az hata yapmak\", minLength: 8, required: true },"
+  },
+  {
+    "line": 1222,
+    "text": "          { value: \"low\", label: \"Düşük / niş\" },"
+  },
+  {
+    "line": 1224,
+    "text": "          { value: \"high\", label: \"Yüksek / kalabalık\" },"
+  },
+  {
+    "line": 1229,
+    "text": "        label: \"Yayın dili\","
+  },
+  {
+    "line": 1234,
+    "text": "          { value: \"turkish\", label: \"Türkçe\" },"
+  },
+  {
+    "line": 1235,
+    "text": "          { value: \"multilingual\", label: \"Çok dilli\" },"
+  },
+  {
+    "line": 1251,
+    "text": "    name: \"Müşteri Çeken Kitap Açısı Bulucu\","
+  },
+  {
+    "line": 1252,
+    "text": "    badge: \"Ücretsiz Araç\","
+  },
+  {
+    "line": 1254,
+    "text": "    description: \"Uzmanlığını müşteri çeken kısa kitap açısına dönüştürür.\","
+  },
+  {
+    "line": 1255,
+    "text": "    shortLabel: \"Açı Bulucu\","
+  },
+  {
+    "line": 1256,
+    "text": "    ctaLabel: \"Açıyı Bul\","
+  },
+  {
+    "line": 1259,
+    "text": "    metaTitle: \"Müşteri Çeken Kitap Açısı Bulucu | Kitap Oluşturucu\","
+  },
+  {
+    "line": 1260,
+    "text": "    metaDescription: \"Uzmanlığını lead üreten kısa kitap açısına çevir. Hedef müşteri, teklif ve sonuç bilgisiyle doğru angle ve mini rehber omurgasını bul.\","
+  },
+  {
+    "line": 1261,
+    "text": "    keywords: [\"lead magnet book\", \"authority book angle\", \"client attracting book\", \"müşteri çeken kitap\"],"
+  },
+  {
+    "line": 1262,
+    "text": "    heroTitle: \"Uzmanlığını müşteri çeken kısa kitaba çevir.\","
+  },
+  {
+    "line": 1264,
+    "text": "      \"Ne sattığını, kime sattığını ve hangi sonucu hızlandırdığını yaz. Araç; hangi kitap açısının daha fazla güven ve görüşme talebi üreteceğini çıkarsın.\","
+  },
+  {
+    "line": 1265,
+    "text": "    formIntro: \"Açı testi\","
+  },
+  {
+    "line": 1266,
+    "text": "    placeholderTitle: \"Lead magnet açısı burada görünecek\","
+  },
+  {
+    "line": 1267,
+    "text": "    placeholderText: \"Uzmanlık alanını ve ideal müşterini gir. Araç; kısa kitabın doğru vaat cümlesini, taslak yönünü ve CTA fırsatlarını gösterir.\","
+  },
+  {
+    "line": 1268,
+    "text": "    gateTitle: \"Tam açı setini aç\","
+  },
+  {
+    "line": 1269,
+    "text": "    gateDescription: \"Açı önerileri, kısa rehber taslağı ve CTA fırsatları e-posta ile açılsın.\","
+  },
+  {
+    "line": 1270,
+    "text": "    nextStepTitle: \"Açıyı bulduysan kısa rehberi üretmeye geç.\","
+  },
+  {
+    "line": 1271,
+    "text": "    nextStepDescription: \"Seçtiğin açıyı önizleme akışına taşı, ilk bölüm ve CTA tonunu gör, sonra kitabı tam müşteri çekici pakete çevir.\","
+  },
+  {
+    "line": 1272,
+    "text": "    previewCtaLabel: \"Angle ile Preview Başlat\","
+  },
+  {
+    "line": 1277,
+    "text": "          expertise: \"B2B SaaS onboarding audit ve retention framework'ü\","
+  },
+  {
+    "line": 1278,
+    "text": "          client: \"PLG sonrası activation sorunu yaşayan SaaS kurucuları\","
+  },
+  {
+    "line": 1279,
+    "text": "          outcome: \"ilk 30 günde aktivasyon düşüşünü fark edip düzeltmek\","
+  },
+  {
+    "line": 1287,
+    "text": "          expertise: \"ICF koçları için premium package positioning sistemi\","
+  },
+  {
+    "line": 1288,
+    "text": "          client: \"Teklifini ucuz sattığını düşünen koçlar\","
+  },
+  {
+    "line": 1289,
+    "text": "          outcome: \"daha yüksek fiyatlı seans paketi satmak\","
+  },
+  {
+    "line": 1298,
+    "text": "          client: \"Audience'ı var ama email listesi yavaş büyüyen creator'lar\","
+  },
+  {
+    "line": 1299,
+    "text": "          outcome: \"lead magnet ile ilk 1000 email subscriber'a ulaşmak\","
+  },
+  {
+    "line": 1308,
+    "text": "        title: \"Lead odaklı açı\","
+  },
+  {
+    "line": 1309,
+    "text": "        description: \"Kitabın satış değil güven ve talep üretmesini sağlar.\","
+  },
+  {
+    "line": 1313,
+    "text": "        title: \"Doğru müşteri\","
+  },
+  {
+    "line": 1314,
+    "text": "        description: \"Kime konuşacağını netleştirir, herkese yazma riskini azaltır.\","
+  },
+  {
+    "line": 1318,
+    "text": "        title: \"Kısa rehber omurgası\","
+  },
+  {
+    "line": 1319,
+    "text": "        description: \"Kitabı uzun authority metni değil, dönüşüm odaklı rehber yapar.\","
+  },
+  {
+    "line": 1323,
+    "text": "      { name: \"expertise\", label: \"Hangi uzmanlığı paketliyorsun?\", type: \"textarea\", placeholder: \"Örn. premium pricing, retention audit, webinar conversion system\", minLength: 10, required: true },"
+  },
+  {
+    "line": 1324,
+    "text": "      { name: \"client\", label: \"Bu kitabı hangi müşteri okuyacak?\", type: \"input\", placeholder: \"Örn. SaaS founder'lar, koçlar, danışmanlar, creator'lar\", minLength: 6, required: true },"
+  },
+  {
+    "line": 1325,
+    "text": "      { name: \"outcome\", label: \"Kitap hangi sonucu hızlandırmalı?\", type: \"input\", placeholder: \"Örn. daha çok demo, daha iyi pricing, daha hızlı email growth\", minLength: 8, required: true },"
+  },
+  {
+    "line": 1341,
+    "text": "        label: \"Üretim dili\","
+  },
+  {
+    "line": 1345,
+    "text": "          { value: \"turkish\", label: \"Türkçe\" },"
+  },
+  {
+    "line": 1347,
+    "text": "          { value: \"multilingual\", label: \"Çok dilli\" },"
+  },
+  {
+    "line": 1363,
+    "text": "    name: \"Başlık ve Alt Başlık Eleştirmeni\","
+  },
+  {
+    "line": 1364,
+    "text": "    badge: \"Ücretsiz Araç\","
+  },
+  {
+    "line": 1366,
+    "text": "    description: \"Başlık ve subtitle çiftini netlik, vaat ve konumlandırma açısından eleştirir.\","
+  },
+  {
+    "line": 1367,
+    "text": "    shortLabel: \"Başlık Eleştirisi\","
+  },
+  {
+    "line": 1368,
+    "text": "    ctaLabel: \"Başlığı Test Et\","
+  },
+  {
+    "line": 1371,
+    "text": "    metaTitle: \"Başlık ve Alt Başlık Eleştirmeni | Kitap Oluşturucu\","
+  },
+  {
+    "line": 1372,
+    "text": "    metaDescription: \"Kitap başlığını ve subtitle'ını netlik, vaat ve akılda kalıcılık açısından puanla. Alternatif başlıklar ve subtitle yönleri al.\","
+  },
+  {
+    "line": 1373,
+    "text": "    keywords: [\"book title critic\", \"subtitle generator\", \"kitap başlığı analizi\", \"nonfiction title ideas\"],"
+  },
+  {
+    "line": 1374,
+    "text": "    heroTitle: \"Başlık kulağa iyi geliyor diye yetinme.\","
+  },
+  {
+    "line": 1376,
+    "text": "      \"Başlığını, subtitle'ını ve hedef okurunu gir. Araç; çiftin ne kadar net olduğunu puanlasın, daha güçlü varyasyonlar ve subtitle yönleri önerisin.\","
+  },
+  {
+    "line": 1378,
+    "text": "    placeholderTitle: \"Başlık eleştirisi burada görünecek\","
+  },
+  {
+    "line": 1379,
+    "text": "    placeholderText: \"Başlık ve subtitle'ı gir. Araç; ilk bakış netliğini, vaat gücünü ve kitle sinyalini anında puanlar.\","
+  },
+  {
+    "line": 1380,
+    "text": "    gateTitle: \"Alternatif başlık setini aç\","
+  },
+  {
+    "line": 1381,
+    "text": "    gateDescription: \"Alternatif başlıklar, subtitle yönleri ve konumlandırma notları e-posta ile açılsın.\","
+  },
+  {
+    "line": 1382,
+    "text": "    nextStepTitle: \"Güçlü başlık seçildiyse kitabı onun etrafında kur.\","
+  },
+  {
+    "line": 1383,
+    "text": "    nextStepDescription: \"Kazanan başlık çiftini önizleme akışına taşı, ilk bölüm ve satış sayfası tonunu aynı positioning etrafında sabitle.\","
+  },
+  {
+    "line": 1384,
+    "text": "    previewCtaLabel: \"Başlıkla Preview Başlat\","
+  },
+  {
+    "line": 1391,
+    "text": "          audience: \"B2B danışmanlar ve solo ajans sahipleri\","
+  },
+  {
+    "line": 1392,
+    "text": "          goal: \"inbound lead üretmek\","
+  },
+  {
+    "line": 1401,
+    "text": "          audience: \"Niş creator'lar\","
+  },
+  {
+    "line": 1402,
+    "text": "          goal: \"email listesi büyütmek\","
+  },
+  {
+    "line": 1411,
+    "text": "          audience: \"Küçük alanda yetiştiricilik yapan yeni başlayanlar\","
+  },
+  {
+    "line": 1412,
+    "text": "          goal: \"mikro nişte KDP satışı\","
+  },
+  {
+    "line": 1420,
+    "text": "        title: \"Netlik puanı\","
+  },
+  {
+    "line": 1421,
+    "text": "        description: \"Başlık gerçekten ne söylediğini ilk bakışta belli ediyor mu görürsün.\","
+  },
+  {
+    "line": 1425,
+    "text": "        title: \"Vaat gücü\","
+  },
+  {
+    "line": 1426,
+    "text": "        description: \"Subtitle'ın sonuç cümlesi kurup kurmadığını ölçer.\","
+  },
+  {
+    "line": 1431,
+    "text": "        description: \"Doğru okuru çağırıp çağırmadığını hızlıca okursun.\","
+  },
+  {
+    "line": 1435,
+    "text": "      { name: \"title\", label: \"Başlık\", type: \"input\", placeholder: \"Örn. Silent Offers\", minLength: 3, required: true },"
+  },
+  {
+    "line": 1436,
+    "text": "      { name: \"subtitle\", label: \"Subtitle\", type: \"textarea\", placeholder: \"Örn. How boutique consultants turn trust into inbound pipeline without daily content chaos\", minLength: 8, required: true },"
+  },
+  {
+    "line": 1437,
+    "text": "      { name: \"audience\", label: \"Target reader\", type: \"input\", placeholder: \"Örn. danışmanlar, creator'lar, KDP okurları\", minLength: 6, required: true },"
+  },
+  {
+    "line": 1438,
+    "text": "      { name: \"goal\", label: \"Başlık hangi sonucu satmalı?\", type: \"input\", placeholder: \"Örn. lead, authority, satış veya net bir dönüşüm\", minLength: 8, required: true },"
+  }
+]

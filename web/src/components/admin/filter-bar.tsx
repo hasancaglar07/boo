@@ -67,7 +67,7 @@ export function FilterBar({
                 onChange={(event) => update(filter.key, event.target.value)}
                 className="h-11 min-w-[150px] rounded-2xl border border-[color:var(--admin-border)] bg-white/70 px-3 text-sm font-medium text-[color:var(--admin-text)] outline-none transition focus:border-[color:var(--admin-primary)] focus:ring-2 focus:ring-[color:var(--admin-primary-soft)] dark:bg-white/5"
               >
-                <option value="all">Tümü</option>
+                <option value="all">All</option>
                 {filter.options.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}

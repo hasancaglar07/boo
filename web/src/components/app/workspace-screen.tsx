@@ -2,11 +2,21 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { BarChart3, BookOpen, Check, FileText, FlaskConical, ImagePlus, Layers, Loader2, Sparkles, Upload, X } from "lucide-react";
+import { BarChart3, BookOpen, Check, FlaskConical, ImagePlus, Keyboard, Layers, Loader2, Sparkles, Upload, X } from "lucide-react";
 
 import { AppFrame } from "@/components/app/app-frame";
+import { AutoSaveIndicator } from "@/components/common/auto-save-indicator";
+import { EnhancedFileList } from "@/components/common/enhanced-file-list";
+import { useKeyboardShortcuts } from "@/components/common/keyboard-shortcuts";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
+import { KeyboardShortcutsHelp } from "@/components/common/keyboard-shortcuts-help";
 import { BookMockup } from "@/components/books/book-mockup";
+import { ChapterEditor } from "@/components/writing/chapter-editor";
+import { ChapterTemplates } from "@/components/writing/chapter-templates";
+import { GoalTracker } from "@/components/writing/goal-tracker";
+import { OutlinePreview } from "@/components/writing/outline-preview";
+import { TimeTracker } from "@/components/writing/time-tracker";
+import { WritingDashboard } from "@/components/writing/writing-dashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,20 +32,17 @@ import {
   isBackendUnavailableError,
   loadBook,
   loadBooks,
-  loadSettings,
   preflightBook,
   responseSummary,
   runWorkflow,
   saveBook,
-  saveSettings,
   uploadBookAsset,
   type Book,
-  type Settings,
 } from "@/lib/dashboard-api";
 import { useSessionGuard } from "@/lib/use-session-guard";
 import { cn } from "@/lib/utils";
 
-const tabOptions = ["home", "book", "writing", "research", "publish", "settings"] as const;
+const tabOptions = ["home", "book", "writing", "research", "publish"] as const;
 type WorkspaceTab = (typeof tabOptions)[number];
 
 const TAB_LABELS: Record<WorkspaceTab, string> = {
@@ -44,7 +51,6 @@ const TAB_LABELS: Record<WorkspaceTab, string> = {
   writing: "Content",
   research: "Research",
   publish: "Publish",
-  settings: "Settings",
 };
 
 function normalizeTab(tab?: string): WorkspaceTab {
@@ -111,15 +117,25 @@ export function WorkspaceScreen({
   const [books, setBooks] = useState<Book[]>([]);
   const [book, setBook] = useState<Book | null>(null);
   const [draft, setDraft] = useState<Book | null>(null);
-  const [settings, setSettings] = useState<Settings | null>(null);
   const [researchTopic, setResearchTopic] = useState("");
   const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeChapter, setActiveChapter] = useState(0);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [autoSaveCountdown, setAutoSaveCountdown] = useState(0);
+  const [lastSaved, setLastSaved] = useState<Date | undefined>();
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const tabScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isGeneratingOutline, setIsGeneratingOutline] = useState(false);
+  const [isGeneratingChapter, setIsGeneratingChapter] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [writingSubTab, setWritingSubTab] = useState<"overview" | "editor" | "analytics">("overview");
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
 
   function addToast(message: string, type: ToastType): number {
     const id = ++toastCounter;
@@ -140,16 +156,14 @@ export function WorkspaceScreen({
 
   async function hydrateWorkspace() {
     try {
-      const [bookList, loadedBook, loadedSettings] = await Promise.all([
+      const [bookList, loadedBook] = await Promise.all([
         loadBooks(),
         loadBook(slug),
-        loadSettings(),
       ]);
       setBooks(bookList);
       setBook(loadedBook);
       setDraft(loadedBook);
       setResearchTopic(loadedBook.title);
-      setSettings(loadedSettings);
       setBackendUnavailable(false);
       setIsDirty(false);
     } catch (error) {
@@ -172,9 +186,44 @@ export function WorkspaceScreen({
     window.history.replaceState({}, "", `${pathname}?${params.toString()}`);
   }, [activeTab, pathname]);
 
+  // Tab scroll indicators
+  useEffect(() => {
+    const scrollContainer = tabScrollRef.current;
+    if (!scrollContainer) return;
+
+    const checkScroll = () => {
+      setCanScrollLeft(scrollContainer.scrollLeft > 0);
+      setCanScrollRight(
+        scrollContainer.scrollLeft < scrollContainer.scrollWidth - scrollContainer.clientWidth
+      );
+    };
+
+    checkScroll();
+    scrollContainer.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
+
+    return () => {
+      scrollContainer.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, []);
+
   // Auto-save: trigger 30s after last change
   const scheduleAutoSave = useCallback(() => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    if (countdownInterval.current) clearInterval(countdownInterval.current);
+
+    setAutoSaveCountdown(30);
+    countdownInterval.current = setInterval(() => {
+      setAutoSaveCountdown((prev) => {
+        if (prev <= 1) {
+          if (countdownInterval.current) clearInterval(countdownInterval.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     autoSaveTimer.current = setTimeout(() => {
       void autoSave();
     }, 30_000);
@@ -195,6 +244,9 @@ export function WorkspaceScreen({
       setBook(saved);
       setDraft(saved);
       setIsDirty(false);
+      setLastSaved(new Date());
+      setAutoSaveCountdown(0);
+      if (countdownInterval.current) clearInterval(countdownInterval.current);
       updateToast(toastId, "Auto-saved.", "success");
     } catch {
       updateToast(toastId, "Auto-save failed.", "error");
@@ -204,15 +256,13 @@ export function WorkspaceScreen({
   }
 
   async function refresh() {
-    const [bookList, loadedBook, loadedSettings] = await Promise.all([
+    const [bookList, loadedBook] = await Promise.all([
       loadBooks(),
       loadBook(slug),
-      loadSettings(),
     ]);
     setBooks(bookList);
     setBook(loadedBook);
     setDraft(loadedBook);
-    setSettings(loadedSettings);
     setBackendUnavailable(false);
     setIsDirty(false);
   }
@@ -225,6 +275,9 @@ export function WorkspaceScreen({
       const saved = await saveBook(draft);
       setBook(saved);
       setDraft(saved);
+      setLastSaved(new Date());
+      setAutoSaveCountdown(0);
+      if (countdownInterval.current) clearInterval(countdownInterval.current);
       await refresh();
       setIsDirty(false);
       updateToast(toastId, "Book saved.", "success");
@@ -267,6 +320,39 @@ export function WorkspaceScreen({
     }
   }
 
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        key: 's',
+        ctrl: true,
+        description: 'Save book',
+        action: () => saveCurrentBook(),
+      },
+      {
+        key: 'n',
+        ctrl: true,
+        description: 'New chapter',
+        action: () => {
+          const newChapter = {
+            title: `Chapter ${(draft?.chapters.length || 0) + 1}`,
+            content: '',
+            state: 'draft' as const,
+            target_words: 2000,
+          };
+          updateDraft({ chapters: [...(draft?.chapters || []), newChapter] });
+          addToast('New chapter added.', 'success');
+        },
+      },
+      {
+        key: '?',
+        description: 'Show keyboard shortcuts',
+        action: () => setShowKeyboardHelp(true),
+      },
+    ],
+    enabled: true,
+  });
+
   if (!ready) return null;
   if (backendUnavailable) {
     return (
@@ -283,7 +369,7 @@ export function WorkspaceScreen({
     );
   }
 
-  if (!draft || !book || !settings) return null;
+  if (!draft || !book) return null;
   const currentDraft = draft;
 
   const actions = [
@@ -292,7 +378,6 @@ export function WorkspaceScreen({
     { label: "Content", description: "Outline and chapter writing", run: () => setActiveTab("writing") },
     { label: "Research", description: "KDP and keyword tools", run: () => setActiveTab("research") },
     { label: "Publish", description: "EPUB and PDF delivery", run: () => setActiveTab("publish") },
-    { label: "Settings", description: "API Keys", run: () => setActiveTab("settings") },
     { label: "Save", description: "Save book", run: () => saveCurrentBook() },
   ];
 
@@ -370,8 +455,6 @@ export function WorkspaceScreen({
     ? { label: "Get EPUB", tab: "publish" as WorkspaceTab, desc: "Your first goal should be getting the EPUB and checking the structure." }
     : { label: "Get New Version", tab: "publish" as WorkspaceTab, desc: "Improve cover, research and chapter quality." };
 
-  const activeChapterData = draft.chapters[activeChapter];
-
   return (
     <AppFrame
       current="workspace"
@@ -381,155 +464,210 @@ export function WorkspaceScreen({
       subtitle={isDirty ? "Unsaved changes pending." : "Overview, content production, research and publish delivery in one flow."}
       books={books}
       actions={actions}
-      primaryAction={{
-        label: isSaving ? "Saving..." : isDirty ? "Save *" : "Save",
-        onClick: () => saveCurrentBook(),
-      }}
     >
+      <div className="mb-4 flex items-center justify-end">
+        <AutoSaveIndicator
+          isDirty={isDirty}
+          isSaving={isSaving}
+          lastSaved={lastSaved}
+          countdown={autoSaveCountdown}
+          onSave={() => saveCurrentBook()}
+        />
+      </div>
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as WorkspaceTab)}>
         {/* Scrollable tab bar */}
-        <div className="overflow-x-auto">
-          <TabsList className="w-max min-w-full">
-            {tabOptions.map((tab) => (
-              <TabsTrigger key={tab} value={tab}>{TAB_LABELS[tab]}</TabsTrigger>
-            ))}
-          </TabsList>
+        <div className="relative">
+          {canScrollLeft && (
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background to-transparent pointer-events-none z-10" />
+          )}
+          <div className="overflow-x-auto" ref={tabScrollRef}>
+            <TabsList className="w-max min-w-full">
+              {tabOptions.map((tab) => (
+                <TabsTrigger key={tab} value={tab}>{TAB_LABELS[tab]}</TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+          {canScrollRight && (
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
+          )}
         </div>
 
         {/* ── HOME ── */}
         <TabsContent value="home" className="mt-6 space-y-6">
-          {/* Stats */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Next Step - Prominent at top */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Sparkles className="size-4" />
+                </div>
+                <div className="text-sm font-semibold text-primary">Next Recommended Step</div>
+              </div>
+              <div className="text-2xl font-bold text-foreground">{nextStep.label}</div>
+              <div className="text-sm leading-7 text-muted-foreground">{nextStep.desc}</div>
+              <Button className="w-full sm:w-auto" onClick={() => setActiveTab(nextStep.tab)}>
+                {nextStep.label} →
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Stats - Reduced to 3 */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { icon: Layers, value: stats.chapter_count, label: "Chapter" },
-              { icon: FlaskConical, value: stats.research_count, label: "Research" },
-              { icon: BarChart3, value: stats.export_count, label: "Output" },
-              { icon: BookOpen, value: book.outline_file ? "Ready" : "Missing", label: "Draft" },
-            ].map(({ icon: Icon, value, label }) => (
+              { icon: Layers, value: stats.chapter_count, label: "Chapters", desc: "Completed chapters" },
+              { icon: FlaskConical, value: stats.research_count, label: "Research", desc: "Research files" },
+              { icon: BarChart3, value: stats.export_count, label: "Exports", desc: "Generated outputs" },
+            ].map(({ icon: Icon, value, label, desc }) => (
               <Card key={label}>
                 <CardContent className="flex items-start gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted">
-                    <Icon className="size-4 text-muted-foreground" />
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                    <Icon className="size-5 text-primary" />
                   </div>
-                  <div>
-                    <div className="text-3xl font-semibold text-foreground">{value}</div>
-                    <div className="mt-1 text-sm text-muted-foreground">{label}</div>
+                  <div className="flex-1">
+                    <div className="text-3xl font-bold text-foreground">{value}</div>
+                    <div className="mt-0.5 text-sm font-medium text-foreground">{label}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">{desc}</div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          {/* Progress bar */}
+          {/* Progress bar - More prominent */}
           <Card>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">Book progress</span>
-                <span className="text-sm font-semibold text-primary">{progressScore}%</span>
+                <div>
+                  <div className="text-base font-semibold text-foreground">Book Progress</div>
+                  <div className="mt-1 text-sm text-muted-foreground">Overall completion status</div>
+                </div>
+                <div className="text-3xl font-bold text-primary">{progressScore}%</div>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full rounded-full bg-primary transition-all duration-500"
                   style={{ width: `${progressScore}%` }}
                 />
               </div>
-              <div className="flex gap-4 text-xs text-muted-foreground">
+              <div className="flex flex-wrap gap-3 text-xs">
                 {[
                   { label: "Outline", done: !!book.outline_file },
                   { label: "Chapters", done: stats.chapter_count > 0 },
                   { label: "Research", done: stats.research_count > 0 },
                   { label: "Output", done: stats.export_count > 0 },
                 ].map(({ label, done }) => (
-                  <div key={label} className={cn("flex items-center gap-1", done && "text-primary")}>
-                    {done ? <Check className="size-3" /> : <div className="size-3 rounded-full border border-current" />}
-                    {label}
+                  <div key={label} className={cn("flex items-center gap-1.5 px-2 py-1 rounded-full", done ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                    {done ? <Check className="size-3" /> : <div className="size-3 rounded-full border-2 border-current" />}
+                    <span className="font-medium">{label}</span>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Next step */}
-          <Card>
-            <CardContent>
-              <div className="text-sm font-medium text-foreground">Next recommended step</div>
-              <div className="mt-3 text-2xl font-medium text-foreground">{nextStep.label}</div>
-              <div className="mt-2 text-sm leading-7 text-muted-foreground">{nextStep.desc}</div>
-              <Button className="mt-4" onClick={() => setActiveTab(nextStep.tab)}>
-                {nextStep.label} →
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* ── BOOK ── */}
         <TabsContent value="book" className="mt-6 space-y-6">
-          <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
-            <Card>
-              <CardContent className="space-y-4">
-                <div className="text-sm font-medium text-foreground">Book information</div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div><Label>Title</Label><Input value={draft.title} onChange={(e) => updateDraft({ title: e.target.value })} /></div>
-                  <div><Label>Subtitle</Label><Input value={draft.subtitle || ""} onChange={(e) => updateDraft({ subtitle: e.target.value })} /></div>
-                  <div><Label>Author</Label><Input value={draft.author || ""} onChange={(e) => updateDraft({ author: e.target.value })} /></div>
-                  <div><Label>Publisher</Label><Input value={draft.publisher || ""} onChange={(e) => updateDraft({ publisher: e.target.value })} /></div>
-                  <div><Label>ISBN</Label><Input value={draft.isbn || ""} onChange={(e) => updateDraft({ isbn: e.target.value })} /></div>
-                  <div><Label>Year</Label><Input value={draft.year || ""} onChange={(e) => updateDraft({ year: e.target.value })} /></div>
-                  <div><Label>Branding / wordmark</Label><Input value={draft.branding_mark || ""} onChange={(e) => updateDraft({ branding_mark: e.target.value })} /></div>
-                  <div><Label>Logo URL</Label><Input value={draft.branding_logo_url || ""} onChange={(e) => updateDraft({ branding_logo_url: e.target.value })} /></div>
-                  <div className="md:col-span-2"><Label>Cover emphasis</Label><Input value={draft.cover_brief || ""} onChange={(e) => updateDraft({ cover_brief: e.target.value })} /></div>
-                </div>
-                <div className="rounded-2xl border border-border/80 bg-background/70 px-4 py-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-medium text-foreground">Upload logo</div>
-                      <div className="mt-1 text-sm leading-7 text-muted-foreground">
-                        You can upload PNG, JPG or WebP. It automatically links to the branding area when uploaded.
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="space-y-6">
+              {/* Book Information */}
+              <Card>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="size-5 text-primary" />
+                    <div className="text-base font-semibold text-foreground">Book Information</div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="md:col-span-2"><Label>Title</Label><Input value={draft.title} onChange={(e) => updateDraft({ title: e.target.value })} placeholder="Enter book title" /></div>
+                    <div className="md:col-span-2"><Label>Subtitle</Label><Input value={draft.subtitle || ""} onChange={(e) => updateDraft({ subtitle: e.target.value })} placeholder="Optional subtitle" /></div>
+                    <div><Label>ISBN</Label><Input value={draft.isbn || ""} onChange={(e) => updateDraft({ isbn: e.target.value })} placeholder="978-0-0000-0000-0" /></div>
+                    <div><Label>Year</Label><Input value={draft.year || ""} onChange={(e) => updateDraft({ year: e.target.value })} placeholder="2026" /></div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Author Information */}
+              <Card>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <span className="text-xs font-bold">A</span>
+                    </div>
+                    <div className="text-base font-semibold text-foreground">Author Information</div>
+                  </div>
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                    <div className="md:col-span-2"><Label>Author Name</Label><Input value={draft.author || ""} onChange={(e) => updateDraft({ author: e.target.value })} placeholder="Full author name" /></div>
+                    <div className="md:col-span-2"><Label>Publisher</Label><Input value={draft.publisher || ""} onChange={(e) => updateDraft({ publisher: e.target.value })} placeholder="Publisher name" /></div>
+                    <div className="md:col-span-2">
+                      <Label>Author Biography</Label>
+                      <Textarea value={draft.author_bio || ""} onChange={(e) => updateDraft({ author_bio: e.target.value })} placeholder="Brief author biography for the book cover" rows={3} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Branding */}
+              <Card>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="size-5 text-primary" />
+                    <div className="text-base font-semibold text-foreground">Branding & Cover</div>
+                  </div>
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                    <div><Label>Branding / Wordmark</Label><Input value={draft.branding_mark || ""} onChange={(e) => updateDraft({ branding_mark: e.target.value })} placeholder="Brand or series name" /></div>
+                    <div><Label>Logo URL</Label><Input value={draft.branding_logo_url || ""} onChange={(e) => updateDraft({ branding_logo_url: e.target.value })} placeholder="https://..." /></div>
+                    <div className="md:col-span-2"><Label>Cover Emphasis</Label><Input value={draft.cover_brief || ""} onChange={(e) => updateDraft({ cover_brief: e.target.value })} placeholder="Key visual elements for cover design" /></div>
+                  </div>
+                  <div className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="text-sm">
+                        <div className="font-medium text-foreground">Upload Brand Logo</div>
+                        <div className="mt-1 text-muted-foreground">PNG, JPG or WebP up to 4MB</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          ref={logoInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                          className="hidden"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) {
+                              void handleLogoUpload(file);
+                            }
+                            event.currentTarget.value = "";
+                          }}
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={() => logoInputRef.current?.click()}>
+                          <ImagePlus className="mr-2 size-4" />
+                          Upload
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() =>
+                            triggerWorkflow({
+                              action: "cover_script",
+                              title: draft.title,
+                              author: draft.author,
+                              genre: "non-fiction",
+                            }).catch((error) => addToast(error instanceof Error ? error.message : "Cover generation failed.", "error"))
+                          }
+                        >
+                          <Sparkles className="mr-2 size-4" />
+                          Generate Cover
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                      <input
-                        ref={logoInputRef}
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                        className="hidden"
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
-                          if (file) {
-                            void handleLogoUpload(file);
-                          }
-                          event.currentTarget.value = "";
-                        }}
-                      />
-                      <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
-                        <ImagePlus className="mr-2 size-4" />
-                        Upload Logo
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() =>
-                          triggerWorkflow({
-                            action: "cover_script",
-                            title: draft.title,
-                            author: draft.author,
-                            genre: "non-fiction",
-                          }).catch((error) => addToast(error instanceof Error ? error.message : "Cover generation failed.", "error"))
-                        }
-                      >
-                        <Sparkles className="mr-2 size-4" />
-                        Regenerate Cover
-                      </Button>
-                </div>
-                <div>
-                  <Label>Author biography</Label>
-                  <Textarea value={draft.author_bio || ""} onChange={(e) => updateDraft({ author_bio: e.target.value })} />
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
+            {/* Cover Preview */}
             <Card>
               <CardContent className="space-y-4">
-                <div className="text-sm font-medium text-foreground">Cover mockup</div>
+                <div className="text-sm font-medium text-foreground">Cover Preview</div>
                 <BookMockup
                   title={draft.title}
                   subtitle={draft.subtitle || ""}
@@ -538,73 +676,195 @@ export function WorkspaceScreen({
                   logoUrl={draft.branding_logo_url ? buildBookAssetUrl(slug, draft.branding_logo_url) : undefined}
                   imageUrl={draft.cover_image ? buildBookAssetUrl(slug, draft.cover_image) : undefined}
                   accentLabel={draft.cover_brief || "Pre-sale product preview"}
-                  size="lg"
+                  size="md"
                 />
-                {draft.branding_logo_url ? (
-                  <div className="rounded-2xl border border-border/80 bg-background/70 px-4 py-4">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Active logo</div>
+                {draft.branding_logo_url && (
+                  <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Active Logo</div>
                     <img
                       src={buildBookAssetUrl(slug, draft.branding_logo_url)}
                       alt={`${draft.branding_mark || draft.publisher || "Brand"} logo`}
-                      className="mt-3 h-14 w-auto max-w-[180px] rounded-md bg-muted/30 object-contain p-1"
+                      className="h-12 w-auto max-w-[160px] rounded-md bg-background object-contain p-1"
                     />
                   </div>
-                ) : null}
-                <div className="rounded-2xl border border-border/80 bg-background/70 px-4 py-4 text-sm leading-7 text-muted-foreground">
-                  This view strengthens the sales feel on the preview and upgrade screens. Branding and title are directly recognized here.
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Chapters */}
-          <div className="space-y-3">
-            <div className="text-sm font-medium text-foreground">Chapters ({draft.chapters.length})</div>
-            {draft.chapters.map((chapter, index) => (
-              <Card key={`${chapter.title}-${index}`}>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Badge >Ch. {index + 1}</Badge>
-                    {chapter.content && (
-                      <Badge >
-                        {chapter.content.split(/\s+/).filter(Boolean).length} words
-                      </Badge>
-                    )}
+          {/* Chapters Summary */}
+          <Card>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium text-foreground">Chapters</div>
+                  <div className="mt-1 text-sm text-muted-foreground">
+                    {draft.chapters.length} {draft.chapters.length === 1 ? 'chapter' : 'chapters'} in this book
                   </div>
-                  <div>
-                    <Label>Title</Label>
-                    <Input
-                      value={chapter.title}
-                      onChange={(event) => {
-                        const chapters = [...draft.chapters];
-                        chapters[index] = { ...chapter, title: event.target.value };
-                        updateDraft({ chapters });
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Label>Content</Label>
-                    <Textarea
-                      value={chapter.content}
-                      onChange={(event) => {
-                        const chapters = [...draft.chapters];
-                        chapters[index] = { ...chapter, content: event.target.value };
-                        updateDraft({ chapters });
-                      }}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </div>
+                <Button variant="outline" onClick={() => setActiveTab("writing")}>
+                  Go to Writing Tab →
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ── WRITING ── */}
         <TabsContent value="writing" className="mt-6 space-y-6">
-          <div className="flex flex-wrap gap-3">
-            <Button
-              onClick={() =>
-                triggerWorkflow({
+          {/* Writing Sub-Tabs */}
+          <Tabs value={writingSubTab} onValueChange={(value) => setWritingSubTab(value as typeof writingSubTab)}>
+            <div className="overflow-x-auto">
+              <TabsList className="w-max min-w-full">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="editor">Editor</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              </TabsList>
+            </div>
+
+            {/* Overview Sub-Tab */}
+            <TabsContent value="overview" className="mt-6 space-y-6">
+              <WritingDashboard chapters={draft.chapters} targetWords={2000} />
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                <TimeTracker
+                  slug={slug}
+                  chapterIndex={activeChapter}
+                  chapterTitle={draft.chapters[activeChapter]?.title || `Chapter ${activeChapter + 1}`}
+                  onSessionComplete={(session) => {
+                    addToast(`Session saved: ${Math.round(session.duration / 60)} minutes`, 'success');
+                  }}
+                />
+                <GoalTracker slug={slug} chapters={draft.chapters} />
+              </div>
+            </TabsContent>
+
+            {/* Editor Sub-Tab */}
+            <TabsContent value="editor" className="mt-6 space-y-6">
+              <ChapterTemplates
+                onApplyTemplate={(template) => {
+                  if (activeChapter < draft.chapters.length) {
+                    const chapters = [...draft.chapters];
+                    chapters[activeChapter] = {
+                      ...chapters[activeChapter],
+                      content: template.content,
+                    };
+                    updateDraft({ chapters });
+                    addToast(`Template "${template.name}" applied.`, 'success');
+                  }
+                }}
+              />
+
+              <ChapterEditor
+                chapters={draft.chapters}
+                targetWords={2000}
+                slug={slug}
+                author={draft.author || "Author"}
+                onUpdate={(chapters) => updateDraft({ chapters })}
+                onChapterAction={(action, index) => {
+                  if (action === "add") {
+                    addToast("Chapter added.", "success");
+                  } else if (action === "duplicate") {
+                    addToast("Chapter duplicated.", "success");
+                  } else if (action === "delete") {
+                    addToast("Chapter deleted.", "success");
+                  } else if (action === "move") {
+                    addToast("Chapter reordered.", "success");
+                  }
+                }}
+              />
+            </TabsContent>
+
+            {/* Analytics Sub-Tab */}
+            <TabsContent value="analytics" className="mt-6 space-y-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="mb-4">
+                    <h3 className="text-base font-semibold text-foreground">AI Workflows</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">Generate content and analyze your book with AI assistance</p>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      disabled={isGeneratingOutline}
+                      onClick={async () => {
+                        setIsGeneratingOutline(true);
+                        try {
+                          await triggerWorkflow({
+                            action: "outline_generate",
+                            topic: draft.title,
+                            title: draft.title,
+                            subtitle: draft.subtitle,
+                            language: draft.language,
+                            author: draft.author,
+                            publisher: draft.publisher,
+                            description: draft.description,
+                            genre: "non-fiction",
+                            audience: "general readers",
+                            style: "clear and practical",
+                            tone: "professional",
+                            year: draft.year,
+                          });
+                        } finally {
+                          setIsGeneratingOutline(false);
+                        }
+                      }}
+                      className={isGeneratingOutline ? "cursor-not-allowed opacity-70" : ""}
+                    >
+                      {isGeneratingOutline ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Sparkles className="mr-2 size-4" />}
+                      {isGeneratingOutline ? "Generating..." : "Generate Outline"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled={isGeneratingChapter}
+                      onClick={async () => {
+                        setIsGeneratingChapter(true);
+                        try {
+                          await triggerWorkflow({
+                            action: "chapter_generate",
+                            chapter_number: activeChapter + 1,
+                            chapter_title: draft.chapters[activeChapter]?.title || `Ch. ${activeChapter + 1}`,
+                            min_words: 1600,
+                            max_words: 2200,
+                            style: "clear",
+                            tone: "professional",
+                          });
+                        } finally {
+                          setIsGeneratingChapter(false);
+                        }
+                      }}
+                      className={isGeneratingChapter ? "cursor-not-allowed opacity-70" : ""}
+                    >
+                      {isGeneratingChapter ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                      {isGeneratingChapter ? "Generating..." : `Generate Ch. ${activeChapter + 1}`}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      disabled={isReviewing}
+                      onClick={async () => {
+                        setIsReviewing(true);
+                        try {
+                          await triggerWorkflow({
+                            action: "chapter_review",
+                            chapter_number: activeChapter + 1,
+                          });
+                        } finally {
+                          setIsReviewing(false);
+                        }
+                      }}
+                      className={isReviewing ? "cursor-not-allowed opacity-70" : ""}
+                    >
+                      {isReviewing ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                      {isReviewing ? "Reviewing..." : "Review"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <OutlinePreview
+                chapterPlan={draft.chapter_plan}
+                outlineFile={book.outline_file}
+                onEdit={() => setActiveTab("book")}
+                onRegenerate={() => triggerWorkflow({
                   action: "outline_generate",
                   topic: draft.title,
                   title: draft.title,
@@ -618,199 +878,201 @@ export function WorkspaceScreen({
                   style: "clear and practical",
                   tone: "professional",
                   year: draft.year,
-                }).catch((error) => addToast(error instanceof Error ? error.message : "Outline generation failed.", "error"))
-              }
-            >
-              Generate Outline
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                triggerWorkflow({
-                  action: "chapter_generate",
-                  chapter_number: activeChapter + 1,
-                  chapter_title: draft.chapters[activeChapter]?.title || `Ch. ${activeChapter + 1}`,
-                  min_words: 1600,
-                  max_words: 2200,
-                  style: "clear",
-                  tone: "professional",
-                }).catch((error) => addToast(error instanceof Error ? error.message : "Chapter generation failed.", "error"))
-              }
-            >
-              Generate Ch. {activeChapter + 1}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() =>
-                triggerWorkflow({
-                  action: "chapter_review",
-                  chapter_number: activeChapter + 1,
-                }).catch((error) => addToast(error instanceof Error ? error.message : "Review failed.", "error"))
-              }
-            >
-              Review
-            </Button>
-          </div>
-
-          {/* Chapter selector */}
-          {draft.chapters.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {draft.chapters.map((ch, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveChapter(i)}
-                  className={cn(
-                    "shrink-0 rounded-xl border px-3 py-1.5 text-sm transition",
-                    activeChapter === i
-                      ? "border-primary/40 bg-primary/10 text-primary"
-                      : "border-border bg-background text-muted-foreground hover:bg-accent",
-                  )}
-                >
-                  <span className="font-medium">B{i + 1}</span>
-                  {ch.content && (
-                    <span className="ml-1.5 text-xs opacity-70">
-                      {ch.content.split(/\s+/).filter(Boolean).length}k
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <Card>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium text-foreground">
-                  {activeChapterData?.title || `Ch. ${activeChapter + 1}`}
-                </div>
-                {activeChapterData?.content && (
-                  <Badge >
-                    <FileText className="mr-1 size-3" />
-                    {activeChapterData.content.split(/\s+/).filter(Boolean).length} words
-                  </Badge>
-                )}
-              </div>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
-                {activeChapterData?.content || "No content yet. Use the generate button above."}
-              </p>
-            </CardContent>
-          </Card>
+                }).catch((error) => addToast(error instanceof Error ? error.message : "Outline generation failed.", "error"))}
+                onExport={() => {
+                  addToast("Outline export coming soon!", "info");
+                }}
+              />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         {/* ── RESEARCH ── */}
         <TabsContent value="research" className="mt-6 space-y-6">
-          <div className="grid gap-4 md:grid-cols-[1fr_auto]">
-            <Input
-              value={researchTopic}
-              onChange={(event) => setResearchTopic(event.target.value)}
-              placeholder="Research topic"
-            />
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => triggerWorkflow({ action: "market_analyzer", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : KDP Analysis failed., "error"))}>KDP Analysis</Button>
-              <Button variant="outline" onClick={() => triggerWorkflow({ action: "keyword_research", keywords: [researchTopic] }).catch((error) => addToast(error instanceof Error ? error.message : Keywords failed., "error"))}>Keywords</Button>
-              <Button variant="outline" onClick={() => triggerWorkflow({ action: "topic_finder", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : Topic Finder failed., "error"))}>Topic Finder</Button>
-              <Button onClick={() => triggerWorkflow({ action: "research_insights", focus: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : AI Suggestion failed., "error"))}>AI Suggestion</Button>
-            </div>
-          </div>
-          <div className="grid gap-4">
-            {(book.resources?.research || []).slice(0, 12).map((file) => (
-              <Card key={file.relative_path}>
-                <CardContent className="flex items-center justify-between gap-4">
-                  <div>
-                    <div className="text-sm font-medium text-foreground">{file.name}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">{file.relative_path}</div>
+          <Card>
+            <CardContent className="space-y-4 pt-6">
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Market Research Tools</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Analyze your book's market potential and discover profitable opportunities</p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+                <Input
+                  value={researchTopic}
+                  onChange={(event) => setResearchTopic(event.target.value)}
+                  placeholder="Enter your book topic or keywords..."
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Button
+                  variant="outline"
+                  onClick={() => triggerWorkflow({ action: "market_analyzer", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : "KDP Analysis failed.", "error"))}
+                  className="justify-start"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                      <BarChart3 className="size-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-foreground">KDP Analysis</div>
+                      <div className="text-xs text-muted-foreground">Analyze market competition</div>
+                    </div>
                   </div>
-                  <a href={buildAssetUrl(file.url)} target="_blank" rel="noreferrer">
-                    <Button variant="ghost" size="sm">Open</Button>
-                  </a>
-                </CardContent>
-              </Card>
-            ))}
-            {!book.resources?.research?.length ? (
-              <Card><CardContent><div className="text-sm text-muted-foreground">No research files yet.</div></CardContent></Card>
-            ) : null}
-          </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => triggerWorkflow({ action: "keyword_research", keywords: [researchTopic] }).catch((error) => addToast(error instanceof Error ? error.message : "Keywords failed.", "error"))}
+                  className="justify-start"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                      <FlaskConical className="size-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-foreground">Keywords</div>
+                      <div className="text-xs text-muted-foreground">Find high-value keywords</div>
+                    </div>
+                  </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => triggerWorkflow({ action: "topic_finder", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : "Topic Finder failed.", "error"))}
+                  className="justify-start"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                      <Layers className="size-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-foreground">Topic Finder</div>
+                      <div className="text-xs text-muted-foreground">Discover trending topics</div>
+                    </div>
+                  </div>
+                </Button>
+                <Button
+                  onClick={() => triggerWorkflow({ action: "research_insights", focus: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : "AI Suggestion failed.", "error"))}
+                  className="justify-start"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                      <Sparkles className="size-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-foreground">AI Suggestion</div>
+                      <div className="text-xs text-muted-foreground">Get AI-powered insights</div>
+                    </div>
+                  </div>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <EnhancedFileList
+            files={book.resources?.research || []}
+            fileType="research"
+            onDownload={(file) => {
+              const url = buildAssetUrl(file.url);
+              window.open(url, '_blank');
+            }}
+            onPreview={(file) => {
+              const url = buildAssetUrl(file.url);
+              window.open(url, '_blank');
+            }}
+          />
         </TabsContent>
 
         {/* ── PUBLISH ── */}
         <TabsContent value="publish" className="mt-6 space-y-6">
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant="outline"
-              onClick={async () => {
-                const toastId = addToast("Running pre-check...", "loading");
-                try {
-                  const response = await preflightBook(slug, { action: "build", format: "epub" });
-                  updateToast(toastId, response.ok ? "Ready for EPUB." : String(response.reason || "Not ready."), response.ok ? "success" : "error");
-                } catch (error) {
-                  updateToast(toastId, error instanceof Error ? error.message : "Pre-check failed.", "error");
-                }
-              }}
-            >
-              Ön kontrol
-            </Button>
-            <Button onClick={() => triggerBuild("epub").catch((error) => addToast(error instanceof Error ? error.message : "EPUB generation failed.", "error"))}>
-              <Upload className="mr-2 size-4" />
-              Get EPUB
-            </Button>
-            <Button variant="ghost" onClick={() => triggerBuild("pdf").catch((error) => addToast(error instanceof Error ? error.message : "PDF generation failed.", "error"))}>Get PDF</Button>
-          </div>
-          <div className="grid gap-4">
-            {(book.resources?.exports || []).slice(-12).reverse().map((file) => (
-              <Card key={file.relative_path}>
-                <CardContent className="flex items-center justify-between gap-4">
-                  <div>
-                    <div className="text-sm font-medium text-foreground">{file.name}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">{file.relative_path}</div>
-                  </div>
-                  <a href={buildAssetUrl(file.url)} target="_blank" rel="noreferrer">
-                    <Button variant="ghost" size="sm">Open</Button>
-                  </a>
-                </CardContent>
-              </Card>
-            ))}
-            {!book.resources?.exports?.length ? (
-              <Card><CardContent><div className="text-sm text-muted-foreground">No output yet.</div></CardContent></Card>
-            ) : null}
-          </div>
-        </TabsContent>
-
-        {/* ── SETTINGS ── */}
-        <TabsContent value="settings" className="mt-6 space-y-6">
           <Card>
-            <CardContent className="space-y-4">
-              <div className="text-sm font-medium text-foreground">API Keys</div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div><Label>GEMINI_API_KEY</Label><Input type="password" value={settings.GEMINI_API_KEY || ""} onChange={(e) => setSettings({ ...settings, GEMINI_API_KEY: e.target.value })} /></div>
-                <div><Label>OPENAI_API_KEY</Label><Input type="password" value={settings.OPENAI_API_KEY || ""} onChange={(e) => setSettings({ ...settings, OPENAI_API_KEY: e.target.value })} /></div>
-                <div><Label>GROQ_API_KEY</Label><Input type="password" value={settings.GROQ_API_KEY || ""} onChange={(e) => setSettings({ ...settings, GROQ_API_KEY: e.target.value })} /></div>
-                <div><Label>Ollama model</Label><Input value={settings.ollama_model || ""} onChange={(e) => setSettings({ ...settings, ollama_model: e.target.value })} /></div>
+            <CardContent className="space-y-4 pt-6">
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Export Your Book</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Generate publication-ready files in multiple formats</p>
               </div>
-              <div className="text-sm font-medium text-foreground">Defaults</div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div><Label>Author</Label><Input value={settings.default_author || ""} onChange={(e) => setSettings({ ...settings, default_author: e.target.value })} /></div>
-                <div><Label>Publisher</Label><Input value={settings.default_publisher || ""} onChange={(e) => setSettings({ ...settings, default_publisher: e.target.value })} /></div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Button
+                  variant="outline"
+                  className="gap-2 border-warning/50 text-warning hover:bg-warning/10"
+                  onClick={async () => {
+                    const toastId = addToast("Running pre-check...", "loading");
+                    try {
+                      const response = await preflightBook(slug, { action: "build", format: "epub" });
+                      updateToast(toastId, response.ok ? "Ready for EPUB." : String(response.reason || "Not ready."), response.ok ? "success" : "error");
+                    } catch (error) {
+                      updateToast(toastId, error instanceof Error ? error.message : "Pre-check failed.", "error");
+                    }
+                  }}
+                >
+                  <Check className="size-4" />
+                  <div className="text-left">
+                    <div className="font-medium">Pre-check</div>
+                    <div className="text-xs opacity-70">Validate before export</div>
+                  </div>
+                </Button>
+
+                <Button
+                  className="gap-2"
+                  onClick={() => triggerBuild("epub").catch((error) => addToast(error instanceof Error ? error.message : "EPUB generation failed.", "error"))}
+                >
+                  <Upload className="size-4" />
+                  <div className="text-left">
+                    <div className="font-medium">Get EPUB</div>
+                    <div className="text-xs opacity-70">Standard e-book format</div>
+                  </div>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => triggerBuild("pdf").catch((error) => addToast(error instanceof Error ? error.message : "PDF generation failed.", "error"))}
+                >
+                  <Upload className="size-4" />
+                  <div className="text-left">
+                    <div className="font-medium">Get PDF</div>
+                    <div className="text-xs opacity-70">Print-ready format</div>
+                  </div>
+                </Button>
               </div>
-              <Button
-                onClick={async () => {
-                  const toastId = addToast("Saving settings...", "loading");
-                  try {
-                    const saved = await saveSettings(settings);
-                    setSettings(saved);
-                    updateToast(toastId, "Settings saved.", "success");
-                  } catch (error) {
-                    updateToast(toastId, error instanceof Error ? error.message : "Settings could not be saved.", "error");
-                  }
-                }}
-              >
-                Save Settings
-              </Button>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardContent className="space-y-3 pt-6">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Export History</h3>
+                <p className="mt-1 text-xs text-muted-foreground">Recently generated files (last 20)</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <EnhancedFileList
+            files={(book.resources?.exports || []).slice(-20).reverse()}
+            fileType="export"
+            onDownload={(file) => {
+              const url = buildAssetUrl(file.url);
+              window.open(url, '_blank');
+            }}
+          />
         </TabsContent>
+
       </Tabs>
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp
+        open={showKeyboardHelp}
+        onOpenChange={setShowKeyboardHelp}
+      />
+
+      {/* Keyboard Help Button */}
+      <button
+        onClick={() => setShowKeyboardHelp(true)}
+        className="fixed bottom-6 right-6 z-40 flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors"
+        aria-label="Show keyboard shortcuts"
+      >
+        <Keyboard className="size-5" />
+      </button>
     </AppFrame>
   );
 }

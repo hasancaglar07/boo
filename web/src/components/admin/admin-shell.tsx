@@ -130,7 +130,7 @@ export function AdminShell({
           type="button"
           className="fixed inset-0 z-40 bg-slate-950/50 lg:hidden"
           onClick={() => setDrawerOpen(false)}
-          aria-label="Admin menüsünü kapat"
+          aria-label="Close admin menu"
         />
       )}
 

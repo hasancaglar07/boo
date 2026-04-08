@@ -21,6 +21,7 @@ import {
   type FunnelDraft,
   type FunnelOutlineItem,
   type FunnelStep,
+  type FunnelBookType,
 } from "@/lib/funnel-draft";
 import { getAccount } from "@/lib/preview-auth";
 
@@ -89,8 +90,19 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
     const languageParam = searchParams.get("language");
     const hasLanguageQuery = Boolean(languageParam);
     const language = normalizeFunnelLanguage(languageParam || undefined);
-    const bookType = searchParams.get("bookType");
-    if (!topic && !audience && !bookType && !searchParams.get("language")) return;
+    const bookTypeParam = searchParams.get("bookType");
+    // Map Turkish URL values to English type values
+    const bookTypeMapping: Record<string, FunnelBookType> = {
+      rehber: "guide",
+      is: "business",
+      egitim: "education",
+      cocuk: "children",
+      diger: "other",
+    };
+    const bookType: FunnelBookType = bookTypeParam
+      ? (bookTypeMapping[bookTypeParam] || bookTypeParam as FunnelBookType)
+      : "other";
+    if (!topic && !audience && !bookTypeParam && !searchParams.get("language")) return;
     setDraft((current) => {
       const hasContent = Boolean(current.topic.trim() || current.audience.trim());
       return {
@@ -102,9 +114,7 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
         bookType:
           hasContent
             ? current.bookType
-            : bookType === "rehber" || bookType === "is" || bookType === "egitim" || bookType === "cocuk" || bookType === "diger"
-              ? bookType
-              : current.bookType,
+            : bookType,
         updatedAt: new Date().toISOString(),
       };
     });

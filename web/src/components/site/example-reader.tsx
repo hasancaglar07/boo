@@ -347,8 +347,8 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
                     Exact Outputs
                   </div>
                   <div className="mt-4 space-y-3">
-                    <ExportButton asset={item.exports.html} label="Full HTML Openç" slug={item.slug} format="html" />
-                    <ExportButton asset={item.exports.pdf} label="PDF'i görüntüle" slug={item.slug} format="pdf" />
+                    <ExportButton asset={item.exports.html} label="Open HTML" slug={item.slug} format="html" />
+                    <ExportButton asset={item.exports.pdf} label="View PDF" slug={item.slug} format="pdf" />
                     <ExportButton asset={item.exports.epub} label="Download EPUB" slug={item.slug} format="epub" />
                   </div>
                 </div>

@@ -92,7 +92,7 @@ export default function AdminSubscriptionsPage() {
           {row.nextBilling ? (
             <div className="text-xs admin-muted">Sonraki: {formatAdminDate(row.nextBilling)}</div>
           ) : (
-            <div className="text-xs text-amber-600 dark:text-amber-400">Manuel ödeme</div>
+            <div className="text-xs text-amber-600 dark:text-amber-400">Manual payment</div>
           )}
         </div>
       ),
@@ -151,7 +151,7 @@ export default function AdminSubscriptionsPage() {
             options: [
               { label: "Starter", value: "starter" },
               { label: "Creator", value: "creator" },
-              { label: "Stüdyo", value: "pro" },
+              { label: "Studio", value: "pro" },
             ],
           },
           {

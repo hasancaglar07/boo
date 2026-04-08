@@ -52,10 +52,14 @@ export type CoverVariant = {
   };
 };
 
+export type ChapterState = 'draft' | 'writing' | 'review' | 'done';
+
 export type Chapter = {
   number?: number;
   title: string;
   content: string;
+  state?: ChapterState;
+  target_words?: number;
   filename?: string;
   relative_path?: string;
   url?: string;
@@ -490,7 +494,7 @@ export async function startBookPreviewPipeline(slug: string) {
 
   for (let attempt = 0; attempt <= retryDelays.length; attempt += 1) {
     try {
-      const result = await api<{ ok: boolean; started: boolean; book: Book; generation: BookStatus }>(path, {
+      const result = await api<{ ok: boolean; started: boolean; slug?: string; generation: BookStatus }>(path, {
         method: "POST",
         json: {},
       });
@@ -507,6 +511,13 @@ export async function startBookPreviewPipeline(slug: string) {
   }
 
   throw lastError instanceof Error ? lastError : new BackendUnavailableError();
+}
+
+export async function startBookFullPipeline(slug: string) {
+  return api<{ ok: boolean; started: boolean; generation?: BookStatus; full_generation?: BookStatus["full_generation"] }>(
+    `/api/books/${encodeURIComponent(slug)}/full-bootstrap`,
+    { method: "GET" },
+  );
 }
 
 export async function selectBookCoverVariant(slug: string, variantId: string) {
@@ -616,7 +627,7 @@ export async function saveBookFile(slug: string, relativePath: string, content: 
 function fileToBase64(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error(File could not be read.));
+    reader.onerror = () => reject(new Error("File could not be read."));
     reader.onload = () => {
       const result = String(reader.result || "");
       const base64 = result.includes(",") ? result.split(",")[1] : result;

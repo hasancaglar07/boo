@@ -31,16 +31,22 @@ const BACKEND_ORIGIN =
   process.env.DASHBOARD_ORIGIN ||
   process.env.NEXT_PUBLIC_DASHBOARD_ORIGIN ||
   "http://127.0.0.1:8765";
-const BACKEND_FETCH_TIMEOUT_MS = 20_000;
-const BACKEND_BOOKS_FETCH_TIMEOUT_MS = 30_000;
-const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = 12_000;
-const BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS = 45_000;
-const BACKEND_WORKFLOW_FETCH_TIMEOUT_MS = 240_000;
-const BACKEND_UNREACHABLE_LOG_THROTTLE_MS = 5_000;
-const BACKEND_UNAVAILABLE_BACKOFF_MS = 5_000;
-const BACKEND_AUTO_START_COOLDOWN_MS = 15_000;
-const BACKEND_RECOVERY_RETRY_TIMEOUT_MS = 8_000;
-const PREVIEW_CACHE_TTL_MS = 10 * 60_000;
+
+// Timeout configuration from environment variables
+const BACKEND_TIMEOUT_MULTIPLIER = Number(process.env.BACKEND_TIMEOUT_MULTIPLIER || "1.0");
+const BACKEND_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_FETCH_TIMEOUT_MS || "20000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_BOOKS_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_BOOKS_FETCH_TIMEOUT_MS || "30000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_BOOK_DETAIL_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_DETAIL_FETCH_TIMEOUT_MS || "40000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS || "12000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS || "45000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_WORKFLOW_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_WORKFLOW_FETCH_TIMEOUT_MS || "240000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_UNREACHABLE_LOG_THROTTLE_MS = Number(process.env.BACKEND_UNREACHABLE_LOG_THROTTLE_MS || "5000");
+const PREVIEW_STATUS_LOG_THROTTLE_MS = Number(process.env.PREVIEW_STATUS_LOG_THROTTLE_MS || "15000");
+const FULL_BOOTSTRAP_TRIGGER_THROTTLE_MS = Number(process.env.FULL_BOOTSTRAP_TRIGGER_THROTTLE_MS || "45000");
+const BACKEND_UNAVAILABLE_BACKOFF_MS = Number(process.env.BACKEND_UNAVAILABLE_BACKOFF_MS || "5000");
+const BACKEND_AUTO_START_COOLDOWN_MS = Number(process.env.BACKEND_AUTO_START_COOLDOWN_MS || "15000");
+const BACKEND_RECOVERY_RETRY_TIMEOUT_MS = Number(process.env.BACKEND_RECOVERY_RETRY_TIMEOUT_MS || "8000");
+const PREVIEW_CACHE_TTL_MS = Number(process.env.PREVIEW_CACHE_TTL_MS || "600000");
 const BACKEND_AUTO_START_ENABLED = process.env.BOOK_AUTO_START_DASHBOARD !== "0";
 
 const IMAGE_FILE_PATTERN = /\.(png|jpe?g|webp|gif|svg|ico)$/i;
@@ -62,6 +68,8 @@ declare global {
   var __backendLastStartAttemptAt: number | undefined;
   var __backendStartInFlight: Promise<boolean> | undefined;
   var __backendPreviewCacheBySlug: Record<string, { payload: Record<string, unknown>; cachedAt: number }> | undefined;
+  var __backendPreviewLastStatusLogBySlug: Record<string, number> | undefined;
+  var __backendFullBootstrapLastAttemptBySlug: Record<string, number> | undefined;
 }
 
 function isBackendUnavailableLike(error: unknown) {
@@ -112,6 +120,50 @@ function writeCachedPreviewPayload(slug: string, payload: Record<string, unknown
     cachedAt: Date.now(),
   };
   globalThis.__backendPreviewCacheBySlug = cache;
+}
+
+function logPreviewStatus(slug: string, payload: Record<string, unknown>, source: "live" | "stale-cache") {
+  const cache = globalThis.__backendPreviewLastStatusLogBySlug || {};
+  const now = Date.now();
+  const last = cache[slug] || 0;
+  if (now - last < PREVIEW_STATUS_LOG_THROTTLE_MS) return;
+  cache[slug] = now;
+  globalThis.__backendPreviewLastStatusLogBySlug = cache;
+
+  const generationRaw = payload.generation;
+  const generation = generationRaw && typeof generationRaw === "object"
+    ? (generationRaw as Record<string, unknown>)
+    : {};
+  const fullRaw = generation.full_generation;
+  const full = fullRaw && typeof fullRaw === "object"
+    ? (fullRaw as Record<string, unknown>)
+    : {};
+
+  console.info("[api/backend] preview status", {
+    slug,
+    source,
+    stage: String(generation.stage || ""),
+    previewReady: Boolean(generation.preview_ready),
+    coverState: String(generation.cover_state || ""),
+    coverReady: Boolean(generation.cover_ready),
+    fullStage: String(full.stage || ""),
+    fullReadyCount: Number(full.ready_count || 0),
+    fullTargetCount: Number(full.target_count || 0),
+    fullEtaSeconds: Number(full.eta_seconds || 0),
+    fullError: String(full.error || ""),
+  });
+}
+
+function shouldTriggerFullBootstrap(slug: string) {
+  const cache = globalThis.__backendFullBootstrapLastAttemptBySlug || {};
+  const now = Date.now();
+  const last = cache[slug] || 0;
+  if (now - last < FULL_BOOTSTRAP_TRIGGER_THROTTLE_MS) {
+    return false;
+  }
+  cache[slug] = now;
+  globalThis.__backendFullBootstrapLastAttemptBySlug = cache;
+  return true;
 }
 
 function markBackendUnavailable(pathKey: string | null) {
@@ -292,11 +344,14 @@ async function forwardToBackend(
   url.search = request.nextUrl.search;
 
   const isPreviewPath = /^\/api\/books\/[^/]+\/preview$/.test(upstreamPath);
+  const isBookDetailPath = /^\/api\/books\/[^/]+$/.test(upstreamPath);
   const isPreviewBootstrapPath = /^\/api\/books\/[^/]+\/preview-bootstrap$/.test(upstreamPath);
   const isFullBootstrapPath = /^\/api\/books\/[^/]+\/full-bootstrap$/.test(upstreamPath);
   const timeoutMs =
     upstreamPath === "/api/books" && request.method === "GET"
       ? BACKEND_BOOKS_FETCH_TIMEOUT_MS
+      : isBookDetailPath && request.method === "GET"
+        ? BACKEND_BOOK_DETAIL_FETCH_TIMEOUT_MS
       : isPreviewBootstrapPath && request.method === "POST"
         ? BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS
       : isPreviewPath && request.method === "GET"
@@ -621,6 +676,7 @@ async function handleBookScopedRoute(
       if (action === "preview" && isBackendUnavailableLike(error)) {
         const cachedPayload = readCachedPreviewPayload(slug);
         if (cachedPayload) {
+          logPreviewStatus(slug, cachedPayload, "stale-cache");
           return NextResponse.json(cachedPayload, {
             status: 200,
             headers: { "x-backend-preview": "stale-cache" },
@@ -633,6 +689,7 @@ async function handleBookScopedRoute(
       if (action === "preview" && response.status === 503) {
         const cachedPayload = readCachedPreviewPayload(slug);
         if (cachedPayload) {
+          logPreviewStatus(slug, cachedPayload, "stale-cache");
           return NextResponse.json(cachedPayload, {
             status: 200,
             headers: { "x-backend-preview": "stale-cache" },
@@ -655,15 +712,21 @@ async function handleBookScopedRoute(
       const fullGeneration = (fullGenerationRaw && typeof fullGenerationRaw === "object")
         ? (fullGenerationRaw as Record<string, unknown>)
         : {};
+      const entitlementsRaw = enriched.entitlements;
+      const entitlements = (entitlementsRaw && typeof entitlementsRaw === "object")
+        ? (entitlementsRaw as Record<string, unknown>)
+        : {};
+      const canViewFullBook = Boolean(entitlements.can_view_full_book);
       const fullGenerationComplete = Boolean(fullGeneration.complete);
       const fullGenerationStage = String(fullGeneration.stage || "").trim().toLowerCase();
       const firstPreviewReady = Boolean(generation.first_chapter_ready || generation.preview_ready);
       const shouldBootstrapFullGeneration =
+        canViewFullBook &&
         firstPreviewReady &&
         !fullGenerationComplete &&
         fullGenerationStage !== "queued" &&
         fullGenerationStage !== "running";
-      if (shouldBootstrapFullGeneration) {
+      if (shouldBootstrapFullGeneration && shouldTriggerFullBootstrap(slug)) {
         void forwardToBackend(
           request,
           `/api/books/${encodeURIComponent(slug)}/full-bootstrap`,
@@ -673,6 +736,7 @@ async function handleBookScopedRoute(
         });
       }
       writeCachedPreviewPayload(slug, enriched);
+      logPreviewStatus(slug, enriched, "live");
       return NextResponse.json(enriched, { status: response.status });
     }
 

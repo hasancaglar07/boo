@@ -89,13 +89,13 @@ function defaultChapterReference(language: FunnelLanguage, number: number) {
 
 function workflowGenreLabel(bookType: FunnelDraft["bookType"]) {
   switch (bookType) {
-    case "rehber":
+    case "guide":
       return "guidebook";
-    case "is":
+    case "business":
       return "business";
-    case "egitim":
+    case "education":
       return "educational";
-    case "cocuk":
+    case "children":
       return "children";
     default:
       return "general";
@@ -104,9 +104,9 @@ function workflowGenreLabel(bookType: FunnelDraft["bookType"]) {
 
 function workflowStyleLabel(depth: FunnelDraft["depth"]) {
   switch (depth) {
-    case "hizli":
+    case "quick":
       return "concise";
-    case "detayli":
+    case "detailed":
       return "comprehensive";
     default:
       return "balanced";

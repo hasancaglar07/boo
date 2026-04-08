@@ -38,3 +38,15 @@ export function formatDate(value?: string) {
     year: "numeric",
   }).format(date);
 }
+
+export function formatEta(seconds?: number) {
+  const safe = Number(seconds || 0);
+  if (!Number.isFinite(safe) || safe <= 0) return "";
+  const mins = Math.floor(safe / 60);
+  const secs = safe % 60;
+  if (mins <= 0) return `${secs}s`;
+  if (mins < 60) return secs ? `${mins}m ${secs}s` : `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  const rest = mins % 60;
+  return rest ? `${hours}h ${rest}m` : `${hours}h`;
+}
