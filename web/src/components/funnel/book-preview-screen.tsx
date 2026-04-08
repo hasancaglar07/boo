@@ -749,79 +749,87 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
         {/* ── MAIN: Hero + Content ────────────────────────────────────────────── */}
         <div className="space-y-6 min-w-0">
-          {/* ── CLEAN HERO: Focus on book ──────────────────────────────────────── */}
-          <Card className="border-border/50 bg-card">
-            <CardContent className="p-5 md:p-6">
-              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_240px]">
-                {/* Left: Content */}
-                <div className="space-y-4">
-                  {/* Title & Description */}
-                  <div>
-                    <h1 className="text-2xl font-bold leading-tight text-foreground md:text-3xl">
-                      {preview.book.title}
-                    </h1>
-                    {preview.book.subtitle && (
-                      <p className="mt-1 text-base text-muted-foreground">
-                        {preview.book.subtitle}
-                      </p>
-                    )}
-                  </div>
+          {/* ── SIMPLIFIED HERO: Single focus point ─────────────────────────────────── */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-card">
+            <CardContent className="p-6 md:p-8 text-center">
+              {/* Status Badge */}
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+                {generation.active ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Writing your book...
+                  </>
+                ) : generation.preview_ready ? (
+                  <>
+                    <CheckCircle2 className="size-4" />
+                    Preview Ready
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="size-4" />
+                    Complete
+                  </>
+                )}
+              </div>
 
-                  {/* Single CTA */}
-                  <div className="flex items-center gap-3">
-                    {premium ? (
-                      <Button
-                        size="default"
-                        className="h-11 px-5 text-sm font-semibold"
-                        onClick={() => {
-                          trackEvent("full_book_viewed", { slug });
-                          router.push(`/app/book/${encodeURIComponent(slug)}/workspace?tab=writing`);
-                        }}
-                      >
-                        <BookOpen className="mr-2 size-4" />
-                        Read Full Book
-                      </Button>
-                    ) : (
-                      <>
-                        <Button
-                          size="default"
-                          className="h-11 px-5 text-sm font-semibold"
-                          onClick={() => openUpgrade("full_unlock")}
-                        >
-                          <Sparkles className="mr-2 size-4" />
-                          Unlock Full Book
-                          <span className="ml-1.5 text-muted-foreground">· $4</span>
-                        </Button>
-                        <Button
-                          size="default"
-                          variant="ghost"
-                          className="h-11 px-4 text-sm font-medium text-muted-foreground"
-                          onClick={() => {
-                            trackEvent("examples_reader_viewed", { slug });
-                            document.getElementById("preview-content")?.scrollIntoView({ behavior: "smooth" });
-                          }}
-                        >
-                          Read Preview
-                        </Button>
-                      </>
-                    )}
-                  </div>
+              {/* Book Cover - Centered and Large */}
+              <div className="mb-6 flex justify-center">
+                <BookMockup
+                  title={preview.book.title}
+                  subtitle={preview.book.subtitle}
+                  author={authorName}
+                  brand={logoText}
+                  logoUrl={logoUrl || undefined}
+                  imageUrl={coverUrl || undefined}
+                  accentLabel={coverBrief || (coverUrl ? "Ready" : "Generating...")}
+                  size="lg"
+                />
+              </div>
 
-                  {/* Minimal Meta */}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">{authorName}</span>
-                    <span>·</span>
-                    <span>{imprint}</span>
-                    <span>·</span>
-                    <span>{languageLabel(preview.book.language || "English")}</span>
-                    <span>·</span>
-                    <span>{ratio}% preview</span>
-                  </div>
-                </div>
+              {/* Title Only */}
+              <h1 className="text-2xl font-bold leading-tight text-foreground md:text-3xl mb-2">
+                {preview.book.title}
+              </h1>
 
-                {/* Right: Cover */}
-                <div className="hidden lg:block">
-                  <BookMockup
+              {/* Simple Status Message */}
+              <p className="text-sm text-muted-foreground mb-6">
+                {generation.active
+                  ? "Your book is being written... (usually takes 1-2 minutes)"
+                  : generation.preview_ready
+                  ? "First chapter ready! Full book coming soon."
+                  : "Your book is ready!"}
+              </p>
+
+              {/* Single Primary CTA */}
+              {premium ? (
+                <Button
+                  size="lg"
+                  className="h-12 px-8 text-base font-semibold"
+                  onClick={() => {
+                    trackEvent("full_book_viewed", { slug });
+                    router.push(`/app/book/${encodeURIComponent(slug)}/workspace?tab=writing`);
+                  }}
+                >
+                  <BookOpen className="mr-2 size-5" />
+                  Read Full Book
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  className="h-12 px-8 text-base font-semibold"
+                  onClick={() => openUpgrade("full_unlock")}
+                >
+                  <Sparkles className="mr-2 size-5" />
+                  Unlock Full Book · $4
+                </Button>
+              )}
+
+              {/* Minimal Author Info */}
+              <div className="mt-6 text-xs text-muted-foreground">
+                by {authorName} · {imprint}
+              </div>
+            </CardContent>
+          </Card>
                     title={preview.book.title}
                     subtitle={preview.book.subtitle}
                     author={authorName}
@@ -836,14 +844,13 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
             </CardContent>
           </Card>
 
-          {/* Content section header */}
-          <div id="preview-content" className="flex items-center justify-between px-1">
-            <h2 className="text-sm font-semibold text-foreground">Preview Content</h2>
-            <span className="text-xs text-muted-foreground">{ratio}% of book</span>
+          {/* Content section header - Simplified */}
+          <div id="preview-content" className="mb-4">
+            <h2 className="text-lg font-semibold text-foreground">First Chapter</h2>
           </div>
 
-          {/* Readable sections */}
-          {visibleSections.map((section, index) => (
+          {/* Readable sections - Show only first chapter */}
+          {visibleSections.slice(0, 1).map((section, index) => (
             <VisibleSection
               key={`visible-${section.number}-${section.title}`}
               section={section}
@@ -860,251 +867,232 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                 <Loader2 className="mx-auto mb-3 size-8 animate-spin text-primary" />
                 <div className="text-sm font-semibold text-foreground">Writing your book...</div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  First chapters will appear here automatically. Usually takes 1-2 minutes.
+                  First chapter will appear here automatically. Usually takes 1-2 minutes.
                 </p>
               </CardContent>
             </Card>
           )}
 
-          {premium && remainingChapterCount > 0 && (
-            <Card className="border-primary/10 bg-primary/5">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Loader2 className="size-3.5 animate-spin text-primary" />
-                    <span className="font-medium text-foreground">{chapterReadyCount}/{chapterTargetCount || "?"} chapters</span>
-                  </div>
-                  {generationEta && (
-                    <span className="text-xs text-muted-foreground">ETA {generationEta}</span>
-                  )}
+          {/* "Want to read more?" Card - Replace locked sections */}
+          {!premium && visibleSections.length > 0 && (
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+              <CardContent className="p-6 text-center">
+                <div className="mb-3">
+                  <BookOpen className="mx-auto size-8 text-primary" />
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Locked sections - Compact list */}
-          {showLockedSections && (
-            <Card className="border-dashed border-primary/30 bg-primary/[0.02]">
-              <CardContent className="p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                    <Lock className="size-3.5 text-primary" />
-                    <span>Locked chapters</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{preview.preview.locked_sections.length}</span>
-                </div>
-                <div className="space-y-1.5">
-                  {preview.preview.locked_sections.slice(0, 5).map((section) => (
-                    <button
-                      key={`locked-${section.number}-${section.title}`}
-                      type="button"
-                      className="w-full rounded-lg border border-transparent px-3 py-2 text-left text-sm text-muted-foreground hover:border-primary/20 hover:bg-primary/5 transition"
-                      onClick={() => {
-                        trackEvent("preview_locked_section_clicked", {
-                          slug,
-                          section: section.title,
-                        });
-                        openUpgrade("full_unlock");
-                      }}
-                    >
-                      <span className="font-medium text-muted-foreground/70">{section.number}.</span> {section.title}
-                    </button>
-                  ))}
-                  {preview.preview.locked_sections.length > 5 && (
-                    <div className="px-3 py-2 text-xs text-muted-foreground text-center">
-                      +{preview.preview.locked_sections.length - 5} more chapters
-                    </div>
-                  )}
-                </div>
+                <h3 className="text-base font-semibold text-foreground mb-2">
+                  Want to read more?
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Unlock full access to all {chapterTargetCount || "12"} chapters
+                </p>
                 <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-3 w-full"
+                  size="lg"
                   onClick={() => openUpgrade("full_unlock")}
                 >
                   <Sparkles className="mr-2 size-4" />
-                  Unlock All Chapters · $4
+                  Unlock Full Book · $4
                 </Button>
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* ── SIDEBAR: Compact & Organized ─────────────────────────────────────── */}
+        {/* ── SIDEBAR: Simplified Status ──────────────────────────────────────────────── */}
         <div className="space-y-4 lg:sticky lg:top-6 lg:h-fit">
-          {/* TOC - Compact */}
-          {preview.preview.toc.length > 0 && (
-            <Card>
-              <CardContent className="p-4">
-                <div className="mb-2.5 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-foreground">Contents</span>
-                  <span className="text-xs text-muted-foreground">{preview.preview.toc.length} chapters</span>
-                </div>
-                <div className="max-h-[400px] space-y-1 overflow-y-auto">
-                  {preview.preview.toc.map((item) => (
-                    <div
-                      key={`${item.number}-${item.title}`}
-                      className="rounded-lg border border-border/50 bg-background/50 px-3 py-2 text-sm text-foreground"
-                    >
-                      {item.number && <span className="mr-1.5 font-medium text-muted-foreground">{item.number}.</span>}
-                      <span className="truncate">{item.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Simple Status Card */}
+          <Card className="border-border/50 bg-card">
+            <CardContent className="p-5 space-y-4">
+              {/* Status Title */}
+              <div className="text-sm font-semibold text-foreground">Book Progress</div>
 
-          {/* Quick Actions - Only if not premium */}
-          {!premium && (
-            <Card className="border-primary/10 bg-primary/5">
-              <CardContent className="p-4">
-                <div className="mb-2.5 text-xs font-semibold text-foreground">Unlock Full Access</div>
-                <Button
-                  size="sm"
-                  className="w-full"
-                  onClick={() => openUpgrade("full_unlock")}
-                >
-                  <Sparkles className="mr-2 size-4" />
-                  Get All Chapters · $4
-                </Button>
-                <div className="mt-3 space-y-2 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="size-3.5 text-emerald-600" />
-                    <span>Full book access</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="size-3.5 text-emerald-600" />
-                    <span>PDF & EPUB downloads</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="size-3.5 text-emerald-600" />
-                    <span>Editing workspace</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Download Buttons - Premium Only */}
-          {premium && (
-            <>
-              <Card>
-                <CardContent className="p-4 space-y-3">
-                  <div className="text-xs font-semibold text-foreground">Download Book</div>
-                  <div className="grid gap-2">
-                    <Button
-                      variant="outline"
-                      className="justify-start h-auto py-3"
-                      disabled={isGeneratingPdf}
-                      onClick={handleGeneratePdf}
-                    >
-                      <Upload className="mr-2 size-4" />
-                      <div className="text-left flex-1">
-                        <div className="font-medium text-sm">
-                          {isGeneratingPdf ? "Generating PDF..." : "Get PDF"}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Print-ready format
-                        </div>
-                      </div>
-                      {isGeneratingPdf && <Loader2 className="size-4 animate-spin" />}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="justify-start h-auto py-3"
-                      disabled={isGeneratingEpub}
-                      onClick={handleGenerateEpub}
-                    >
-                      <Upload className="mr-2 size-4" />
-                      <div className="text-left flex-1">
-                        <div className="font-medium text-sm">
-                          {isGeneratingEpub ? "Generating EPUB..." : "Get EPUB"}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Standard e-book format
-                        </div>
-                      </div>
-                      {isGeneratingEpub && <Loader2 className="size-4 animate-spin" />}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Manual Cover Upload */}
-              <Card>
-                <CardContent className="p-4 space-y-3">
-                  <div className="text-xs font-semibold text-foreground">Customize Covers</div>
-                  <div className="grid gap-2">
-                    <input
-                      ref={frontCoverInputRef}
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      className="hidden"
-                      onChange={handleFrontCoverUpload}
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="justify-start"
-                      disabled={isUploadingCover || regenerationCount.cover_front >= 1}
-                      onClick={() => frontCoverInputRef.current?.click()}
-                    >
-                      <ImagePlus className="mr-2 size-4" />
-                      <div className="text-left flex-1">
-                        <div className="font-medium text-sm">Change Front Cover</div>
-                        <div className="text-xs text-muted-foreground">
-                          {regenerationCount.cover_front >= 1
-                            ? "Limit reached (1/1)"
-                            : "PNG, JPG or WebP up to 4MB"}
-                        </div>
-                      </div>
-                      {isUploadingCover && <Loader2 className="size-4 animate-spin" />}
-                    </Button>
-
-                    <input
-                      ref={backCoverInputRef}
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      className="hidden"
-                      onChange={handleBackCoverUpload}
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="justify-start"
-                      disabled={isUploadingCover || regenerationCount.cover_back >= 1}
-                      onClick={() => backCoverInputRef.current?.click()}
-                    >
-                      <ImagePlus className="mr-2 size-4" />
-                      <div className="text-left flex-1">
-                        <div className="font-medium text-sm">Change Back Cover</div>
-                        <div className="text-xs text-muted-foreground">
-                          {regenerationCount.cover_back >= 1
-                            ? "Limit reached (1/1)"
-                            : "PNG, JPG or WebP up to 4MB"}
-                        </div>
-                      </div>
-                      {isUploadingCover && <Loader2 className="size-4 animate-spin" />}
-                    </Button>
-                  </div>
-
-                  {(regenerationCount.cover_front >= 1 || regenerationCount.cover_back >= 1) && (
-                    <div className="pt-2 border-t">
-                      <div className="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-md p-2">
-                        <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
-                        <div>
-                          <div className="font-medium">Upload limits</div>
-                          <div className="mt-0.5 text-[10px] leading-tight">
-                            Front cover: {regenerationCount.cover_front}/1 · Back cover: {regenerationCount.cover_back}/1
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+              {/* Progress Checkmarks */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  {generation.cover_ready ? (
+                    <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <div className="size-5 rounded-full border-2 border-border shrink-0" />
                   )}
-                </CardContent>
-              </Card>
-            </>
+                  <span className={generation.cover_ready ? "text-foreground" : "text-muted-foreground"}>
+                    Cover designed
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 text-sm">
+                  {generation.preview_ready ? (
+                    <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <div className="size-5 rounded-full border-2 border-border shrink-0" />
+                  )}
+                  <span className={generation.preview_ready ? "text-foreground" : "text-muted-foreground"}>
+                    {chapterReadyCount} of {chapterTargetCount || "?"} chapters ready
+                  </span>
+                </div>
+
+                {remainingChapterCount > 0 && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <Loader2 className="size-5 text-primary animate-spin shrink-0" />
+                    <span className="text-muted-foreground">
+                      Writing {remainingChapterCount} more...
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* ETA */}
+              {generationEta && (
+                <div className="text-xs text-muted-foreground">
+                  ⏱️ About {generationEta} left
+                </div>
+              )}
+
+              {/* Upgrade CTA - Only if not premium */}
+              {!premium && (
+                <div className="pt-3 border-t">
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => openUpgrade("full_unlock")}
+                  >
+                    <Sparkles className="mr-2 size-4" />
+                    Unlock All Chapters · $4
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Downloads Card - Always Visible */}
+          <Card className="border-border/50 bg-card">
+            <CardContent className="p-5 space-y-4">
+              <div className="text-sm font-semibold text-foreground">Downloads</div>
+              <div className="grid gap-3">
+                {/* PDF Button */}
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3 relative"
+                  disabled={!premium || isGeneratingPdf}
+                  onClick={premium ? handleGeneratePdf : () => openUpgrade("pdf")}
+                >
+                  <Upload className="mr-3 size-5 shrink-0" />
+                  <div className="text-left flex-1">
+                    <div className="font-medium text-sm">
+                      {isGeneratingPdf ? "Generating PDF..." : "Get PDF"}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Print-ready format
+                    </div>
+                  </div>
+                  {!premium && <Lock className="absolute right-3 size-4 text-muted-foreground" />}
+                  {isGeneratingPdf && <Loader2 className="size-4 animate-spin" />}
+                </Button>
+
+                {/* EPUB Button */}
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3 relative"
+                  disabled={!premium || isGeneratingEpub}
+                  onClick={premium ? handleGenerateEpub : () => openUpgrade("epub")}
+                >
+                  <Upload className="mr-3 size-5 shrink-0" />
+                  <div className="text-left flex-1">
+                    <div className="font-medium text-sm">
+                      {isGeneratingEpub ? "Generating EPUB..." : "Get EPUB"}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      E-book format
+                    </div>
+                  </div>
+                  {!premium && <Lock className="absolute right-3 size-4 text-muted-foreground" />}
+                  {isGeneratingEpub && <Loader2 className="size-4 animate-spin" />}
+                </Button>
+              </div>
+
+              {!premium && (
+                <div className="pt-3 border-t">
+                  <div className="text-xs text-center text-muted-foreground">
+                    🔒 Premium feature - Unlock to download
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Manual Cover Upload - Premium Only */}
+          {premium && (
+            <Card className="border-border/50 bg-card">
+              <CardContent className="p-5 space-y-4">
+                <div className="text-sm font-semibold text-foreground">Customize Covers</div>
+                <div className="grid gap-3">
+                  <input
+                    ref={frontCoverInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={handleFrontCoverUpload}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-start h-auto py-2.5"
+                    disabled={isUploadingCover || regenerationCount.cover_front >= 1}
+                    onClick={() => frontCoverInputRef.current?.click()}
+                  >
+                    <ImagePlus className="mr-2 size-4" />
+                    <div className="text-left flex-1">
+                      <div className="font-medium text-sm">Front Cover</div>
+                      <div className="text-xs text-muted-foreground">
+                        {regenerationCount.cover_front >= 1
+                          ? "Limit reached (1/1)"
+                          : "PNG, JPG or WebP up to 4MB"}
+                      </div>
+                    </div>
+                    {isUploadingCover && <Loader2 className="size-4 animate-spin" />}
+                  </Button>
+
+                  <input
+                    ref={backCoverInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={handleBackCoverUpload}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-start h-auto py-2.5"
+                    disabled={isUploadingCover || regenerationCount.cover_back >= 1}
+                    onClick={() => backCoverInputRef.current?.click()}
+                  >
+                    <ImagePlus className="mr-2 size-4" />
+                    <div className="text-left flex-1">
+                      <div className="font-medium text-sm">Back Cover</div>
+                      <div className="text-xs text-muted-foreground">
+                        {regenerationCount.cover_back >= 1
+                          ? "Limit reached (1/1)"
+                          : "PNG, JPG or WebP up to 4MB"}
+                      </div>
+                    </div>
+                    {isUploadingCover && <Loader2 className="size-4 animate-spin" />}
+                  </Button>
+                </div>
+
+                {(regenerationCount.cover_front >= 1 || regenerationCount.cover_back >= 1) && (
+                  <div className="pt-3 border-t">
+                    <div className="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-md p-2">
+                      <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="font-medium">Upload limits</div>
+                        <div className="mt-0.5 text-[10px] leading-tight">
+                          Front: {regenerationCount.cover_front}/1 · Back: {regenerationCount.cover_back}/1
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
 
           {/* Book Details - Collapsible */}
