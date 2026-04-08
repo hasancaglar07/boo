@@ -5,9 +5,12 @@ import {
   BookOpen,
   CheckCircle2,
   FileText,
+  ImagePlus,
   Loader2,
   Lock,
   Sparkles,
+  Upload,
+  AlertCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -25,12 +28,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { trackEvent } from "@/lib/analytics";
 import {
+  buildAssetUrl,
   buildBookAssetUrl,
   isBackendUnavailableError,
   loadBookPreview,
   loadBooks,
   startBookFullPipeline,
   startBookPreviewPipeline,
+  uploadBookAsset,
+  buildBook,
   type Book,
   type BookPreview,
   type BookStatus,
@@ -38,6 +44,12 @@ import {
 import { formatEta } from "@/lib/utils";
 import { languageLabel } from "@/lib/funnel-draft";
 import { loadFunnelDraft } from "@/lib/funnel-draft";
+import {
+  canRegenerate,
+  getRegenerationCount,
+  incrementRegenerationCount,
+  type RegenerationCount,
+} from "@/lib/regeneration-limiter";
 
 const EMPTY_GENERATION: BookStatus = {
   chapter_count: 0,
@@ -173,6 +185,17 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const [transientBackendIssue, setTransientBackendIssue] = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [mobileActiveTab, setMobileActiveTab] = useState<"toc" | "details" | "actions">("toc");
+  const [regenerationCount, setRegenerationCount] = useState<RegenerationCount>({
+    rewrite: 0,
+    cover_front: 0,
+    cover_back: 0,
+  });
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isGeneratingEpub, setIsGeneratingEpub] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [exports, setExports] = useState<Array<{ id: string; format: string; url: string; date: string }>>([]);
+  const frontCoverInputRef = useRef<HTMLInputElement>(null);
+  const backCoverInputRef = useRef<HTMLInputElement>(null);
   const trackedRef = useRef(false);
   const bootstrapRequestedRef = useRef(false);
   const lastPreviewBootstrapAtRef = useRef(0);
@@ -253,6 +276,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     fullBootstrapRequestedRef.current = false;
     lastFullBootstrapAtRef.current = 0;
     previewSnapshotRef.current = null;
+    // Load regeneration count
+    setRegenerationCount(getRegenerationCount(slug));
   }, [slug]);
 
   useEffect(() => {
@@ -481,6 +506,179 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     trackEvent("paywall_viewed", { slug, trigger });
     router.push(`/app/book/${encodeURIComponent(slug)}/upgrade`);
   }
+
+  async function handleGeneratePdf() {
+    if (!premium) {
+      openUpgrade("pdf");
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    try {
+      const response = await buildBook(slug, {
+        format: "pdf",
+        author: preview.book.author,
+        publisher: preview.book.publisher,
+        author_bio: preview.book.author_bio,
+        branding_mark: preview.book.branding_mark,
+        branding_logo_url: preview.book.branding_logo_url,
+        cover_brief: preview.book.cover_brief,
+        generate_cover: false,
+        cover_image: preview.book.cover_image,
+        back_cover_image: preview.book.back_cover_image,
+        isbn: preview.book.isbn,
+        year: preview.book.year,
+      });
+
+      // Add to exports list
+      const newExport = {
+        id: Date.now().toString(),
+        format: "pdf",
+        url: buildAssetUrl((response as any).export_url || ""),
+        date: new Date().toISOString(),
+      };
+      setExports((prev) => [newExport, ...prev].slice(0, 10));
+
+      trackEvent("pdf_generated", { slug });
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  }
+
+  async function handleGenerateEpub() {
+    if (!premium) {
+      openUpgrade("epub");
+      return;
+    }
+
+    setIsGeneratingEpub(true);
+    try {
+      const response = await buildBook(slug, {
+        format: "epub",
+        author: preview.book.author,
+        publisher: preview.book.publisher,
+        author_bio: preview.book.author_bio,
+        branding_mark: preview.book.branding_mark,
+        branding_logo_url: preview.book.branding_logo_url,
+        cover_brief: preview.book.cover_brief,
+        generate_cover: false,
+        cover_image: preview.book.cover_image,
+        back_cover_image: preview.book.back_cover_image,
+        isbn: preview.book.isbn,
+        year: preview.book.year,
+      });
+
+      // Add to exports list
+      const newExport = {
+        id: Date.now().toString(),
+        format: "epub",
+        url: buildAssetUrl((response as any).export_url || ""),
+        date: new Date().toISOString(),
+      };
+      setExports((prev) => [newExport, ...prev].slice(0, 10));
+
+      trackEvent("epub_generated", { slug });
+    } catch (error) {
+      console.error("EPUB generation failed:", error);
+    } finally {
+      setIsGeneratingEpub(false);
+    }
+  }
+
+  async function handleFrontCoverUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Only image files are allowed (PNG, JPG, WebP)");
+      return;
+    }
+
+    // Validate file size (4MB)
+    if (file.size > 4 * 1024 * 1024) {
+      alert("File size must be under 4MB");
+      return;
+    }
+
+    // Check rate limit
+    if (!canRegenerate(slug, "cover_front")) {
+      alert("Front cover upload limit reached (1/1)");
+      return;
+    }
+
+    setIsUploadingCover(true);
+    try {
+      const result = await uploadBookAsset(slug, file, "cover_image");
+
+      // Update regeneration count
+      const updatedCount = incrementRegenerationCount(slug, "cover_front");
+      setRegenerationCount(updatedCount);
+
+      // Refresh preview
+      await hydrate();
+
+      trackEvent("cover_front_uploaded", { slug });
+    } catch (error) {
+      console.error("Front cover upload failed:", error);
+      alert("Upload failed. Please try again.");
+    } finally {
+      setIsUploadingCover(false);
+      // Reset input
+      if (frontCoverInputRef.current) {
+        frontCoverInputRef.current.value = "";
+      }
+    }
+  }
+
+  async function handleBackCoverUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Only image files are allowed (PNG, JPG, WebP)");
+      return;
+    }
+
+    // Validate file size (4MB)
+    if (file.size > 4 * 1024 * 1024) {
+      alert("File size must be under 4MB");
+      return;
+    }
+
+    // Check rate limit
+    if (!canRegenerate(slug, "cover_back")) {
+      alert("Back cover upload limit reached (1/1)");
+      return;
+    }
+
+    setIsUploadingCover(true);
+    try {
+      const result = await uploadBookAsset(slug, file, "back_cover_image");
+
+      // Update regeneration count
+      const updatedCount = incrementRegenerationCount(slug, "cover_back");
+      setRegenerationCount(updatedCount);
+
+      // Refresh preview
+      await hydrate();
+
+      trackEvent("cover_back_uploaded", { slug });
+    } catch (error) {
+      console.error("Back cover upload failed:", error);
+      alert("Upload failed. Please try again.");
+    } finally {
+      setIsUploadingCover(false);
+      // Reset input
+      if (backCoverInputRef.current) {
+        backCoverInputRef.current.value = "";
+      }
+    }
+  }
+
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -786,6 +984,127 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Download Buttons - Premium Only */}
+          {premium && (
+            <>
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <div className="text-xs font-semibold text-foreground">Download Book</div>
+                  <div className="grid gap-2">
+                    <Button
+                      variant="outline"
+                      className="justify-start h-auto py-3"
+                      disabled={isGeneratingPdf}
+                      onClick={handleGeneratePdf}
+                    >
+                      <Upload className="mr-2 size-4" />
+                      <div className="text-left flex-1">
+                        <div className="font-medium text-sm">
+                          {isGeneratingPdf ? "Generating PDF..." : "Get PDF"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Print-ready format
+                        </div>
+                      </div>
+                      {isGeneratingPdf && <Loader2 className="size-4 animate-spin" />}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="justify-start h-auto py-3"
+                      disabled={isGeneratingEpub}
+                      onClick={handleGenerateEpub}
+                    >
+                      <Upload className="mr-2 size-4" />
+                      <div className="text-left flex-1">
+                        <div className="font-medium text-sm">
+                          {isGeneratingEpub ? "Generating EPUB..." : "Get EPUB"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Standard e-book format
+                        </div>
+                      </div>
+                      {isGeneratingEpub && <Loader2 className="size-4 animate-spin" />}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Manual Cover Upload */}
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <div className="text-xs font-semibold text-foreground">Customize Covers</div>
+                  <div className="grid gap-2">
+                    <input
+                      ref={frontCoverInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleFrontCoverUpload}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="justify-start"
+                      disabled={isUploadingCover || regenerationCount.cover_front >= 1}
+                      onClick={() => frontCoverInputRef.current?.click()}
+                    >
+                      <ImagePlus className="mr-2 size-4" />
+                      <div className="text-left flex-1">
+                        <div className="font-medium text-sm">Change Front Cover</div>
+                        <div className="text-xs text-muted-foreground">
+                          {regenerationCount.cover_front >= 1
+                            ? "Limit reached (1/1)"
+                            : "PNG, JPG or WebP up to 4MB"}
+                        </div>
+                      </div>
+                      {isUploadingCover && <Loader2 className="size-4 animate-spin" />}
+                    </Button>
+
+                    <input
+                      ref={backCoverInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleBackCoverUpload}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="justify-start"
+                      disabled={isUploadingCover || regenerationCount.cover_back >= 1}
+                      onClick={() => backCoverInputRef.current?.click()}
+                    >
+                      <ImagePlus className="mr-2 size-4" />
+                      <div className="text-left flex-1">
+                        <div className="font-medium text-sm">Change Back Cover</div>
+                        <div className="text-xs text-muted-foreground">
+                          {regenerationCount.cover_back >= 1
+                            ? "Limit reached (1/1)"
+                            : "PNG, JPG or WebP up to 4MB"}
+                        </div>
+                      </div>
+                      {isUploadingCover && <Loader2 className="size-4 animate-spin" />}
+                    </Button>
+                  </div>
+
+                  {(regenerationCount.cover_front >= 1 || regenerationCount.cover_back >= 1) && (
+                    <div className="pt-2 border-t">
+                      <div className="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-md p-2">
+                        <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
+                        <div>
+                          <div className="font-medium">Upload limits</div>
+                          <div className="mt-0.5 text-[10px] leading-tight">
+                            Front cover: {regenerationCount.cover_front}/1 · Back cover: {regenerationCount.cover_back}/1
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
           )}
 
           {/* Book Details - Collapsible */}
