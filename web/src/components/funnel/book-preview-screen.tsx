@@ -830,19 +830,6 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
               </div>
             </CardContent>
           </Card>
-                    title={preview.book.title}
-                    subtitle={preview.book.subtitle}
-                    author={authorName}
-                    brand={logoText}
-                    logoUrl={logoUrl || undefined}
-                    imageUrl={coverUrl || undefined}
-                    accentLabel={coverBrief || (coverUrl ? "Ready" : "Generating...")}
-                    size="md"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Content section header - Simplified */}
           <div id="preview-content" className="mb-4">
