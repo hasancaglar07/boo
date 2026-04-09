@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Serif+Pro:wght@400;600&display=swap');
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -1507,4 +1508,68 @@ html.theme-transitioning *::after {
 }
 @media (prefers-reduced-motion:reduce) {
   .home-anim-in,.home-animate-in,.home-book-card { animation:none!important }
+}
+
+/* ── Loading Animations ───────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes pulse-ring {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* ── Toast Animations ──────────────────────────────────────────────────── */
+[data-sonner-toast] {
+  animation: toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+[data-sonner-toast][data-removed="true"] {
+  animation: toast-out 0.2s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+}
+
+[data-sonner-toaster] {
+  --toast-border: var(--border);
+  --toast-bg: var(--popover);
+  --toast-foreground: var(--popover-foreground);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .animate-shimmer,
+  [data-sonner-toast],
+  [data-sonner-toast][data-removed="true"] { animation:none!important }
 }

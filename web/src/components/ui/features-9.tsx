@@ -31,7 +31,7 @@ export interface Features9Props {
   supportTitle?: string;
   supportDescription?: string;
   uptimeLabel?: string;
-  activityTitle = 'Writing and editing rhythm'
+  activityTitle?: string;
   activityDescription?: string;
   chartData?: readonly ChartDatum[];
 }

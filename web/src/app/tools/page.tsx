@@ -3,11 +3,14 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, Layers3, Magnet, PenSquare, Search, Sparkles, type LucideIcon } from "lucide-react";
 
 import { MarketingCtaSection } from "@/components/site/marketing-cta-section";
+import { DirectAnswerBlock } from "@/components/site/direct-answer";
+import { LastUpdated } from "@/components/site/last-updated";
 import { MarketingPage } from "@/components/site/marketing-page";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildItemListSchema, buildBreadcrumbSchema } from "@/lib/schema";
+import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 import { marketingToolCatalog, type ToolIconKey } from "@/lib/marketing-tools";
 
 const iconMap: Record<ToolIconKey, LucideIcon> = {
@@ -43,6 +46,23 @@ const pillars = [
 ];
 
 export default function ToolsPage() {
+  const toolsListSchema = buildItemListSchema({
+    name: "Book Generator Free Tools",
+    description: "AI-powered book tools: idea scoring, outline extraction, KDP niche analysis, and more",
+    numberOfItems: marketingToolCatalog.length,
+    itemListElement: marketingToolCatalog.map((tool, index) => ({
+      position: index + 1,
+      name: tool.name,
+      description: tool.description,
+      url: absoluteUrl(tool.path),
+    })),
+  });
+
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", item: absoluteUrl("/") },
+    { name: "Tools", item: absoluteUrl("/tools") },
+  ]);
+
   return (
     <MarketingPage>
       <section className="border-b border-border/80 py-20 md:py-24">
@@ -55,6 +75,16 @@ export default function ToolsPage() {
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
               Score your idea, extract your outline, test your title. Each tool brings you one step closer to your book preview.
             </p>
+
+            {/* Direct Answer Block for AI Extraction */}
+            <div className="mt-8 text-left">
+              <DirectAnswerBlock
+                question="What free book tools are available?"
+                answer="Access 6+ free AI-powered tools: book idea validator for scoring concepts, outline generator for structure, content-to-book converter for repurposing, KDP niche analyzer for market research, lead magnet finder for client attraction, and title critic for optimization. Each tool provides instant scoring and detailed email reports to accelerate your book production decisions."
+              />
+              <LastUpdated date="2026-04-09" className="mt-4 text-sm" />
+            </div>
+
             <div className="mx-auto mt-8 grid max-w-3xl gap-3 md:grid-cols-3">
               {pillars.map((item) => (
                 <div key={item} className="rounded-[22px] border border-border/80 bg-card/70 px-4 py-4 text-sm text-muted-foreground">
@@ -113,6 +143,14 @@ export default function ToolsPage() {
           "Detailed report sent to your email",
           "Preview → full book → EPUB/PDF chain",
         ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(toolsListSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
     </MarketingPage>
   );

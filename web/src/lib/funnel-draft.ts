@@ -185,7 +185,7 @@ function suggestedChapterRole(index: number, total: number, bookType: FunnelBook
   if (index === 1) return "foundation";
   if (total >= 6 && index === total - 2) return "advanced";
   if (bookType === "education" && index === Math.floor(total / 2)) return "case";
-  if (bookType === "is" && index % 3 === 0) return "case";
+  if (bookType === "business" && index % 3 === 0) return "case";
   return "core";
 }
 

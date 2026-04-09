@@ -86,6 +86,7 @@ export type MarketingToolSummary = {
   ctaLabel: string;
   icon: ToolIconKey;
   experience: "custom" | "generic";
+  steps?: string[];
 };
 
 export type MarketingToolDimension = {
@@ -825,6 +826,11 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
     ctaLabel: "Test Idea",
     icon: "sparkles",
     experience: "custom",
+    steps: [
+      "Enter your book topic or idea",
+      "AI analyzes market potential and format fit",
+      "Get detailed score, format suggestion, and starting point via email"
+    ]
   },
   {
     slug: "book-outline-starter",
@@ -837,6 +843,11 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
     ctaLabel: "Generate Draft",
     icon: "layers",
     experience: "generic",
+    steps: [
+      "Enter your topic, target reader, and goal",
+      "AI generates 8-chapter backbone with editorial notes",
+      "Receive complete outline structure and move to preview"
+    ]
   },
   {
     slug: "content-to-book-mapper",
@@ -849,6 +860,11 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
     ctaLabel: "Convert",
     icon: "book",
     experience: "generic",
+    steps: [
+      "Paste your existing content (course, blog, or podcast transcript)",
+      "AI analyzes and organizes into book structure",
+      "Get mapped chapter outline with content recommendations"
+    ]
   },
   {
     slug: "kdp-niche-score",
@@ -861,6 +877,11 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
     ctaLabel: "Score Niche",
     icon: "search",
     experience: "generic",
+    steps: [
+      "Enter your book niche or topic area",
+      "AI analyzes Amazon KDP market competition and demand",
+      "Receive niche score, subtitle angles, and metadata recommendations"
+    ]
   },
   {
     slug: "lead-magnet-book-angle-finder",
@@ -873,6 +894,11 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
     ctaLabel: "Find the Angle",
     icon: "magnet",
     experience: "generic",
+    steps: [
+      "Describe your expertise and target customers",
+      "AI identifies compelling book angles and hooks",
+      "Get specific book concepts that attract your ideal clients"
+    ]
   },
   {
     slug: "title-subtitle-critic",
@@ -885,6 +911,11 @@ export const marketingToolCatalog: MarketingToolSummary[] = [
     ctaLabel: "Test Title",
     icon: "pen",
     experience: "generic",
+    steps: [
+      "Enter your book title and subtitle",
+      "AI critiques for clarity, promise, and market positioning",
+      "Receive detailed feedback and improvement suggestions"
+    ]
   },
 ];
 

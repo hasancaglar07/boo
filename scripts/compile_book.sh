@@ -565,7 +565,90 @@ generate_book_cover() {
     return 0
 }
 
-# Generate multiple book covers via OpenAI Images API and allow selection
+resolve_vertex_api_key() {
+    local value=""
+    for value in \
+        "${GOOGLE_API_KEY:-}" \
+        "${VERTEX_API_KEY:-}" \
+        "${GOOGLE_GENAI_API_KEY:-}"
+    do
+        if [ -n "$value" ]; then
+            printf '%s\n' "$value"
+            return 0
+        fi
+    done
+    return 1
+}
+
+generate_vertex_cover_image() {
+    local prompt="$1"
+    local output_file="$2"
+    local api_key=""
+    local payload=""
+    local model=""
+    local response=""
+    local b64=""
+    local error_msg=""
+
+    api_key="$(resolve_vertex_api_key 2>/dev/null || true)"
+    [ -n "$api_key" ] || return 1
+
+    payload="$(jq -nc --arg prompt "$prompt" '{
+        instances: [{prompt: $prompt}],
+        parameters: {
+            sampleCount: 1,
+            aspectRatio: "3:4",
+            personGeneration: "allow_adult"
+        }
+    }')"
+
+    for model in imagen-3.0-generate-002 imagen-3.0-generate-001; do
+        response="$(curl -sS --max-time 240 \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "$payload" \
+            "https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${api_key}" || true)"
+        b64="$(printf '%s' "$response" | jq -r '.predictions[0].bytesBase64Encoded // empty' 2>/dev/null)"
+        if [ -n "$b64" ] && [ "$b64" != "null" ]; then
+            printf '%s' "$b64" | base64 --decode > "$output_file"
+            if [ -s "$output_file" ]; then
+                return 0
+            fi
+        fi
+        error_msg="$(printf '%s' "$response" | jq -r '.error.message // .error // .message // empty' 2>/dev/null)"
+        if [ -n "$error_msg" ]; then
+            echo "⚠️ Vertex model ${model} cover generation failed: $error_msg"
+        fi
+    done
+
+    return 1
+}
+
+generate_vertex_cover_pair() {
+    local book_title="$1"
+    local author="$2"
+    local description="$3"
+    local output_dir="$4"
+    local front_file="${output_dir}/generated_cover_front.png"
+    local back_file="${output_dir}/generated_cover_back.png"
+    local front_prompt=""
+    local back_prompt=""
+
+    mkdir -p "$output_dir"
+
+    front_prompt="Create premium portrait editorial background artwork for a nonfiction book cover about ${description}. High-end bestseller look, cinematic lighting, depth, and clean negative space for title and author. No text."
+    back_prompt="Create coordinated portrait back-cover artwork for the same book. Keep center reading area clean for blurb, add subtle texture and continuity with the front, and keep lower-right area quiet for barcode. No text."
+
+    if generate_vertex_cover_image "$front_prompt" "$front_file"; then
+        COVER_IMAGE="$front_file"
+    fi
+    if generate_vertex_cover_image "$back_prompt" "$back_file"; then
+        BACK_COVER_IMAGE="$back_file"
+    fi
+
+    [ -n "$COVER_IMAGE" ] && [ -f "$COVER_IMAGE" ]
+}
+
+# Generate book covers. Codefast mode can return both front and back covers.
 generate_book_covers() {
     local BOOK_TITLE="$1"
     local AUTHOR="$2"
@@ -595,19 +678,34 @@ generate_book_covers() {
                 back_cover_blurb: $back_cover_blurb
             }' > "$config_file"
 
-        BOOK_COVER_CONFIG_FILE="$config_file" \
-        BOOK_COVERS_DIR="$runtime_dir" \
-        BOOK_COVER_SERVICE="auto" \
-        bash "$SCRIPT_DIR/generate_covers.sh" --front-only >/dev/null 2>&1 || return 1
+        if BOOK_COVER_CONFIG_FILE="$config_file" \
+            BOOK_COVERS_DIR="$runtime_dir" \
+            BOOK_COVER_SERVICE="auto" \
+            bash "$SCRIPT_DIR/generate_covers.sh" --generate >/dev/null 2>&1; then
+            local latest_front=""
+            local latest_back=""
+            latest_front="$(find "$runtime_dir/front" -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) 2>/dev/null | sort | tail -1 || true)"
+            latest_back="$(find "$runtime_dir/back" -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) 2>/dev/null | sort | tail -1 || true)"
 
-        local latest_front=""
-        latest_front="$(find "$runtime_dir/front" -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) 2>/dev/null | sort | tail -1 || true)"
-        if [ -n "$latest_front" ] && [ -f "$latest_front" ]; then
-            COVER_IMAGE="$latest_front"
-            return 0
+            if [ -n "$latest_front" ] && [ -f "$latest_front" ]; then
+                COVER_IMAGE="$latest_front"
+            fi
+            if [ -n "$latest_back" ] && [ -f "$latest_back" ]; then
+                BACK_COVER_IMAGE="$latest_back"
+            fi
+
+            if [ -n "$COVER_IMAGE" ] && [ -f "$COVER_IMAGE" ]; then
+                return 0
+            fi
+        else
+            echo "⚠️ Codefast cover generation failed; trying Vertex/OpenAI fallback."
         fi
+    fi
 
-        return 1
+    # Vertex fallback for local/offline-safe cover generation when Codefast path fails.
+    if generate_vertex_cover_pair "$BOOK_TITLE" "$AUTHOR" "$DESCRIPTION" "$OUTPUT_DIR"; then
+        echo "🖼️ Generated cover(s) with Vertex fallback."
+        return 0
     fi
 
     if [ -z "$OPENAI_API_KEY" ]; then
@@ -1084,12 +1182,15 @@ elif [ "$GENERATE_COVER" = true ]; then
     if command -v jq >/dev/null 2>&1; then
         # DESCRIPTION: use SUMMARY or a short excerpt as prompt description if available
         DESC="${SUMMARY:-$BOOK_TITLE}"
-        generate_book_covers "$BOOK_TITLE" "$AUTHOR" "$DESC" 3 "$EXPORTS_DIR"
-        # generate_book_covers sets COVER_IMAGE to the chosen file path on success
-        if [ -n "$COVER_IMAGE" ] && [ -f "$COVER_IMAGE" ]; then
+        if generate_book_covers "$BOOK_TITLE" "$AUTHOR" "$DESC" 3 "$EXPORTS_DIR"; then
             echo "🖼️ Using selected AI cover: $COVER_IMAGE"
             cp "$COVER_IMAGE" "$EXPORTS_DIR/$(basename "$COVER_IMAGE")"
             COVER_IMAGE="$EXPORTS_DIR/$(basename "$COVER_IMAGE")"
+            if [ -n "$BACK_COVER_IMAGE" ] && [ -f "$BACK_COVER_IMAGE" ]; then
+                cp "$BACK_COVER_IMAGE" "$EXPORTS_DIR/$(basename "$BACK_COVER_IMAGE")"
+                BACK_COVER_IMAGE="$EXPORTS_DIR/$(basename "$BACK_COVER_IMAGE")"
+                echo "🖼️ Using selected AI back cover: $BACK_COVER_IMAGE"
+            fi
         else
             echo "⚠️ AI cover selection failed or was skipped; falling back to ImageMagick cover generation"
             generate_book_cover "$BOOK_TITLE" "$EXPORTS_DIR"
@@ -1587,6 +1688,9 @@ cat << EOF >> "$METADATA_STATS_FILE"
 - **Compilation Date:** $(date)
 EOF
 
+# Reference manuscript layout order is intentionally frozen here to match the
+# Wesley-style export structure: references -> copyright -> about author ->
+# colophon/back matter -> back cover.
 # If a generated bibliography exists (from generate_references.sh), append it here
 BIB_FILE="$BOOK_DIR/final_bibliography.md"
 if [ -f "$BIB_FILE" ]; then
@@ -2004,15 +2108,29 @@ generate_ebook_format() {
             echo "Debug: H1 titles in the first 5 pages of EPUB input:"
             grep -E '^# ' "$epub_tmp_input" | head -n 30
 
-            # Prepare a temporary back-cover markdown file if a back cover image exists in the output dir
-            # back_md=""
-            # if [ -n "$BACK_COVER_IMAGE" ] && [ -f "$output_dir/$(basename "$BACK_COVER_IMAGE")" ]; then
-            #         back_basename="$(basename "$BACK_COVER_IMAGE")"
-            #         back_md="$output_dir/_backcover_insert.md"
-            #         if [ ! -f "$back_md" ]; then
-            #                 printf "\n\n![](%s)\n" "$back_basename" > "$back_md"
-            #         fi
-            # fi
+            # Append the selected back cover to EPUB so export parity matches the
+            # PDF manuscript order and the selected final asset bundle.
+            back_md=""
+            if [ -n "$BACK_COVER_IMAGE" ] && [ -f "$BACK_COVER_IMAGE" ]; then
+                back_basename="$(basename "$BACK_COVER_IMAGE")"
+                if [ ! -f "${output_dir}/${back_basename}" ]; then
+                    cp "$BACK_COVER_IMAGE" "${output_dir}/"
+                fi
+                back_md="$output_dir/_backcover_insert.md"
+                cat > "$back_md" << EOF
+
+<div class="back-cover">
+
+![]($back_basename)
+
+</div>
+EOF
+            fi
+
+            local pandoc_inputs=("$input_basename")
+            if [ -n "$back_md" ] && [ -f "$back_md" ]; then
+                pandoc_inputs+=("$(basename "$back_md")")
+            fi
 
 
             # Run pandoc from the output directory so image paths resolve correctly. Use --toc and set chapter level
@@ -2030,7 +2148,7 @@ generate_ebook_format() {
                             --metadata-file="$metadata_basename" \
                             --toc --toc-depth=2 --resource-path=. \
                             --epub-chapter-level=1 --epub-title-page=true \
-                            --split-level=1 -o "$(basename "$output_file")" "$input_basename"
+                            --split-level=1 -o "$(basename "$output_file")" "${pandoc_inputs[@]}"
                     else
                         pandoc -f markdown -t epub3 \
                             --epub-cover-image="$epub_cover_image" \
@@ -2038,7 +2156,7 @@ generate_ebook_format() {
                             --metadata-file="$metadata_basename" \
                             --toc --toc-depth=2 --resource-path=. \
                             --epub-chapter-level=1 --epub-title-page=true \
-                            --split-level=1 -o "$(basename "$output_file")" "$input_basename"
+                            --split-level=1 -o "$(basename "$output_file")" "${pandoc_inputs[@]}"
                     fi
                 else
                     if [ -n "$back_md" ]; then
@@ -2047,14 +2165,14 @@ generate_ebook_format() {
                             --metadata-file="$metadata_basename" \
                             --toc --toc-depth=2 --resource-path=. \
                             --epub-chapter-level=1 --epub-title-page=true \
-                            --split-level=1 -o "$(basename "$output_file")" "$input_basename"
+                            --split-level=1 -o "$(basename "$output_file")" "${pandoc_inputs[@]}"
                     else
                         pandoc -f markdown -t epub3 \
                             --css="$css_basename" \
                             --metadata-file="$metadata_basename" \
                             --toc --toc-depth=2 --resource-path=. \
                             --epub-chapter-level=1 --epub-title-page=true \
-                            --split-level=1 -o "$(basename "$output_file")" "$input_basename"
+                            --split-level=1 -o "$(basename "$output_file")" "${pandoc_inputs[@]}"
                     fi
                 fi
             })

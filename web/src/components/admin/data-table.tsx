@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { BulkActions } from "@/components/admin/bulk-actions";
+import { SkeletonCard } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 
 export type Column<T> = {
@@ -60,7 +61,10 @@ export function DataTable<T>({
           {Array.from({ length: 6 }).map((_, index) => (
             <div key={index} className="grid grid-cols-4 gap-4 px-4 py-4">
               {Array.from({ length: 4 }).map((__, innerIndex) => (
-                <div key={innerIndex} className="h-4 animate-pulse rounded bg-black/5 dark:bg-white/8" />
+                <SkeletonCard
+                  key={innerIndex}
+                  className="h-4 w-full rounded"
+                />
               ))}
             </div>
           ))}

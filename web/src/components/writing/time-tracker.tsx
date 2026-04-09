@@ -187,7 +187,7 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
               <div className="text-sm font-medium text-foreground">Session Timer</div>
               <div className="text-xs text-muted-foreground">Ch. {chapterIndex + 1}: {chapterTitle}</div>
             </div>
-            <Badge variant={isRunning ? "default" : "secondary"}>
+            <Badge className={isRunning ? "bg-default text-default-foreground" : "bg-secondary text-secondary-foreground"}>
               {isRunning ? "Active" : "Stopped"}
             </Badge>
           </div>
@@ -223,7 +223,7 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
               <Flame className={cn("size-4", pomodoro.isActive && "text-orange-500")} />
               <div className="text-sm font-medium text-foreground">Pomodoro</div>
             </div>
-            <Badge variant={pomodoro.isBreak ? "secondary" : "default"}>
+            <Badge className={pomodoro.isBreak ? "bg-secondary text-secondary-foreground" : "bg-default text-default-foreground"}>
               {pomodoro.isBreak ? "Break" : "Focus"}
             </Badge>
           </div>
@@ -235,7 +235,7 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
           <div className="flex gap-2">
             <Button
               onClick={togglePomodoro}
-              variant={pomodoro.isActive ? "outline" : "default"}
+              variant={pomodoro.isActive ? "outline" : "primary"}
               className="flex-1"
             >
               {pomodoro.isActive ? "Pause" : "Start"}

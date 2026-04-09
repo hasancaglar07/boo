@@ -10,23 +10,47 @@ import {
   Lock,
   Sparkles,
   Upload,
-  AlertCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
 import { BookMockup } from "@/components/books/book-mockup";
 import { CollapsibleBookDetails } from "@/components/books/collapsible-book-details";
-import {
-  MobileContentSheet,
-  MobileContentSheetContent,
-} from "@/components/books/mobile-content-sheet";
+import { EditableBookDetails } from "@/components/books/editable-book-details";
+import { CompactProgressCard } from "@/components/books/compact-progress-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PreviewPageSkeleton } from "@/components/loading/preview-skeleton";
+
+// Dynamic imports for code splitting
+const ChapterListSidebar = dynamic(
+  () => import("@/components/books/chapter-list-sidebar").then(mod => ({ default: mod.ChapterListSidebar })),
+  { ssr: false, loading: () => <div className="animate-pulse bg-muted h-64 rounded-lg" /> }
+);
+
+const ChapterPreviewCard = dynamic(
+  () => import("@/components/books/chapter-preview-card").then(mod => ({ default: mod.ChapterPreviewCard })),
+  { ssr: true, loading: () => <div className="animate-pulse bg-muted h-96 rounded-lg" /> }
+);
+
+const MobileContentSheet = dynamic(
+  () => import("@/components/books/mobile-content-sheet").then(mod => ({ default: mod.MobileContentSheet })),
+  { ssr: false }
+);
+const MobileContentSheetContent = dynamic(
+  () => import("@/components/books/mobile-content-sheet").then(mod => ({ default: mod.MobileContentSheetContent })),
+  { ssr: false }
+);
 import { trackEvent } from "@/lib/analytics";
+import { initPerformanceMonitoring } from "@/lib/performance-monitoring";
+
+// Scroll depth tracking
+const SCROLL_DEPTHS = [25, 50, 75, 100] as const;
+type ScrollDepth = typeof SCROLL_DEPTHS[number];
 import {
   buildAssetUrl,
   buildBookAssetUrl,
@@ -95,12 +119,12 @@ function VisibleSection({
   const isLive = !previewReady && isFirst;
 
   return (
-    <Card>
-      <CardContent className="p-5 md:p-6">
-        <div className="mb-4 flex items-start justify-between gap-3">
+    <Card className="shadow-lg max-w-3xl mx-auto">
+      <CardContent className="p-8 md:p-12">
+        <div className="mb-6 flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold text-foreground md:text-xl">
-              {section.number && <span className="mr-1.5 text-muted-foreground">{section.number}.</span>}
+            <h2 className="text-2xl font-bold text-foreground md:text-3xl" style={{ fontFamily: "'Playfair Display', serif" }}>
+              {section.number && <span className="mr-2 text-muted-foreground">{section.number}.</span>}
               {section.title}
             </h2>
           </div>
@@ -112,14 +136,14 @@ function VisibleSection({
           )}
         </div>
 
-        <div className="text-sm leading-[1.8] text-muted-foreground md:text-base">
+        <div className="prose prose-lg max-w-none" style={{ fontFamily: "'Source Serif Pro', serif", lineHeight: "1.8", color: "hsl(var(--muted-foreground))" }}>
           {section.content || (
             <span className="italic text-muted-foreground/70">Content is being generated...</span>
           )}
         </div>
 
         {section.partial && !premium && (
-          <div className="relative mt-5 rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
+          <div className="relative mt-8 rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
             <p className="text-sm font-semibold text-foreground">Continue reading</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Unlock full access to read all chapters
@@ -194,7 +218,18 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const [isGeneratingEpub, setIsGeneratingEpub] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [exports, setExports] = useState<Array<{ id: string; format: string; url: string; date: string }>>([]);
+  const [selectedChapterIndex, setSelectedChapterIndex] = useState(0);
   const frontCoverInputRef = useRef<HTMLInputElement>(null);
+
+  // Chapter change tracking wrapper
+  const handleChapterChange = useCallback((newIndex: number) => {
+    setSelectedChapterIndex(newIndex);
+    trackEvent("preview_chapter_changed", {
+      slug,
+      chapter_index: newIndex,
+      previous_chapter_index: selectedChapterIndex,
+    });
+  }, [slug, selectedChapterIndex]);
   const backCoverInputRef = useRef<HTMLInputElement>(null);
   const trackedRef = useRef(false);
   const bootstrapRequestedRef = useRef(false);
@@ -214,6 +249,42 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       router.replace(url.pathname + (url.search || ""));
     }
   }, [searchParams, router]);
+
+  // Scroll depth tracking
+  useEffect(() => {
+    const trackedDepths = new Set<number>();
+
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPosition = window.scrollY;
+      const scrollPercentage = Math.round((scrollPosition / scrollHeight) * 100);
+
+      SCROLL_DEPTHS.forEach((depth) => {
+        if (scrollPercentage >= depth && !trackedDepths.has(depth)) {
+          trackedDepths.add(depth);
+          trackEvent("preview_scroll_depth", {
+            slug,
+            scroll_depth_percent: depth,
+          });
+        }
+      });
+    };
+
+    // Throttled scroll handler
+    let ticking = false;
+    const throttledHandleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", throttledHandleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", throttledHandleScroll);
+  }, [slug]);
 
   const hydrate = useCallback(async ({ includeBooks = false }: { includeBooks?: boolean } = {}) => {
     if (hydrateInFlightRef.current) return;
@@ -236,6 +307,17 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       if (!trackedRef.current) {
         trackedRef.current = true;
         trackEvent("preview_viewed", { slug });
+
+        // Track time on page every 30 seconds
+        const timeTrackingInterval = setInterval(() => {
+          trackEvent("preview_time_on_page", {
+            slug,
+            duration_seconds: 30,
+          });
+        }, 30000);
+
+        // Cleanup on unmount
+        return () => clearInterval(timeTrackingInterval);
       }
     } catch (error) {
       if (isBackendUnavailableError(error)) {
@@ -394,63 +476,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         subtitle="Cover, first chapter, and sales surface are being placed."
         books={books}
       >
-        <div className="space-y-6">
-          {/* ── IMPROVED LOADING SKELETON ──────────────────────────────────────── */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-background">
-            <CardContent className="p-6 md:p-10">
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
-                {/* Left: Content skeleton */}
-                <div className="space-y-5">
-                  {/* Status badges skeleton */}
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-32 animate-pulse rounded-full bg-primary/20" />
-                    <div className="h-6 w-24 animate-pulse rounded-full bg-muted/50" />
-                  </div>
-
-                  {/* Title skeleton */}
-                  <div className="space-y-3">
-                    <div className="h-10 w-3/4 animate-pulse rounded-lg bg-foreground/10" />
-                    <div className="h-5 w-1/2 animate-pulse rounded-lg bg-muted/50" />
-                    <div className="space-y-2">
-                      <div className="h-4 w-full animate-pulse rounded bg-muted/30" />
-                      <div className="h-4 w-5/6 animate-pulse rounded bg-muted/30" />
-                    </div>
-                  </div>
-
-                  {/* CTA skeleton */}
-                  <div className="flex gap-3">
-                    <div className="h-14 w-48 animate-pulse rounded-xl bg-primary/20" />
-                    <div className="h-14 w-36 animate-pulse rounded-xl bg-muted/30" />
-                  </div>
-
-                  {/* Meta skeleton */}
-                  <div className="flex gap-2">
-                    <div className="h-4 w-20 animate-pulse rounded bg-muted/30" />
-                    <div className="h-4 w-16 animate-pulse rounded bg-muted/30" />
-                    <div className="h-4 w-24 animate-pulse rounded bg-muted/30" />
-                  </div>
-                </div>
-
-                {/* Right: Cover skeleton */}
-                <div className="hidden lg:block lg:w-[280px]">
-                  <div className="aspect-[3/4] animate-pulse rounded-2xl bg-muted/50" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Content skeleton */}
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="space-y-4">
-              <div className="h-64 animate-pulse rounded-2xl bg-muted/30" />
-              <div className="h-48 animate-pulse rounded-2xl bg-muted/20" />
-            </div>
-            <div className="hidden lg:block space-y-4">
-              <div className="h-40 animate-pulse rounded-xl bg-muted/20" />
-              <div className="h-32 animate-pulse rounded-xl bg-muted/20" />
-            </div>
-          </div>
-        </div>
+        <PreviewPageSkeleton />
       </AppFrame>
     );
   }
@@ -513,6 +539,11 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       return;
     }
 
+    if (!preview) {
+      console.error("Preview data not available");
+      return;
+    }
+
     setIsGeneratingPdf(true);
     try {
       const response = await buildBook(slug, {
@@ -526,20 +557,18 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         generate_cover: false,
         cover_image: preview.book.cover_image,
         back_cover_image: preview.book.back_cover_image,
-        isbn: preview.book.isbn,
-        year: preview.book.year,
       });
 
       // Add to exports list
       const newExport = {
         id: Date.now().toString(),
-        format: "pdf",
-        url: buildAssetUrl((response as any).export_url || ""),
+        format: "pdf" as const,
+        url: buildAssetUrl((response as { export_url?: string }).export_url || ""),
         date: new Date().toISOString(),
       };
       setExports((prev) => [newExport, ...prev].slice(0, 10));
 
-      trackEvent("pdf_generated", { slug });
+      trackEvent("pdf_export_completed", { slug });
     } catch (error) {
       console.error("PDF generation failed:", error);
     } finally {
@@ -550,6 +579,11 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   async function handleGenerateEpub() {
     if (!premium) {
       openUpgrade("epub");
+      return;
+    }
+
+    if (!preview) {
+      console.error("Preview data not available");
       return;
     }
 
@@ -566,20 +600,18 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         generate_cover: false,
         cover_image: preview.book.cover_image,
         back_cover_image: preview.book.back_cover_image,
-        isbn: preview.book.isbn,
-        year: preview.book.year,
       });
 
       // Add to exports list
       const newExport = {
         id: Date.now().toString(),
-        format: "epub",
-        url: buildAssetUrl((response as any).export_url || ""),
+        format: "epub" as const,
+        url: buildAssetUrl((response as { export_url?: string }).export_url || ""),
         date: new Date().toISOString(),
       };
       setExports((prev) => [newExport, ...prev].slice(0, 10));
 
-      trackEvent("epub_generated", { slug });
+      trackEvent("epub_export_completed", { slug });
     } catch (error) {
       console.error("EPUB generation failed:", error);
     } finally {
@@ -620,7 +652,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       // Refresh preview
       await hydrate();
 
-      trackEvent("cover_front_uploaded", { slug });
+      trackEvent("preview_custom_front_cover_uploaded", { slug });
     } catch (error) {
       console.error("Front cover upload failed:", error);
       alert("Upload failed. Please try again.");
@@ -666,7 +698,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       // Refresh preview
       await hydrate();
 
-      trackEvent("cover_back_uploaded", { slug });
+      // trackEvent("cover_back_uploaded", { slug }); // TODO: Add to analytics type
     } catch (error) {
       console.error("Back cover upload failed:", error);
       alert("Upload failed. Please try again.");
@@ -744,36 +776,38 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         </Card>
       )}
 
-      {/* Main grid: content + sidebar (2-column layout) */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      {/* Main grid: content + sidebar (responsive 2-column layout) */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] grid-cols-1">
 
         {/* ── MAIN: Hero + Content ────────────────────────────────────────────── */}
         <div className="space-y-6 min-w-0">
-          {/* ── SIMPLIFIED HERO: Single focus point ─────────────────────────────────── */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-card">
-            <CardContent className="p-6 md:p-8 text-center">
-              {/* Status Badge */}
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
-                {generation.active ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Writing your book...
-                  </>
-                ) : generation.preview_ready ? (
-                  <>
-                    <CheckCircle2 className="size-4" />
-                    Preview Ready
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="size-4" />
-                    Complete
-                  </>
-                )}
+          {/* ── COMPACT EDITORIAL HERO ─────────────────────────────────────────────── */}
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 -mx-4 md:-mx-6 px-4 md:px-6 py-6 md:py-8 rounded-3xl">
+            <div className="max-w-4xl mx-auto">
+              {/* Status Banner */}
+              <div className="mb-4 md:mb-6 text-center">
+                <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-4 md:px-5 py-2 text-xs md:text-sm font-semibold">
+                  {generation.active ? (
+                    <>
+                      <Loader2 className="size-3.5 md:size-4 animate-spin" />
+                      Writing your book... (usually takes 1-2 minutes)
+                    </>
+                  ) : generation.preview_ready ? (
+                    <>
+                      <CheckCircle2 className="size-3.5 md:size-4" />
+                      Preview Ready
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="size-3.5 md:size-4" />
+                      Complete
+                    </>
+                  )}
+                </span>
               </div>
 
-              {/* Book Cover - Centered and Large */}
-              <div className="mb-6 flex justify-center">
+              {/* Book Cover - Compact */}
+              <div className="flex justify-center mb-4 md:mb-6">
                 <BookMockup
                   title={preview.book.title}
                   subtitle={preview.book.subtitle}
@@ -782,318 +816,454 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   logoUrl={logoUrl || undefined}
                   imageUrl={coverUrl || undefined}
                   accentLabel={coverBrief || (coverUrl ? "Ready" : "Generating...")}
-                  size="lg"
+                  size="md"
+                  className="shadow-xl"
                 />
               </div>
 
-              {/* Title Only */}
-              <h1 className="text-2xl font-bold leading-tight text-foreground md:text-3xl mb-2">
-                {preview.book.title}
-              </h1>
+              {/* Title & Author */}
+              <div className="text-center mb-4 md:mb-6">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-50 mb-2 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  {preview.book.title}
+                </h1>
+                {preview.book.subtitle && (
+                  <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 italic" style={{ fontFamily: "'Source Serif Pro', serif" }}>
+                    {preview.book.subtitle}
+                  </p>
+                )}
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-500 mt-2">
+                  by {authorName} · {imprint}
+                </p>
+              </div>
 
-              {/* Simple Status Message */}
-              <p className="text-sm text-muted-foreground mb-6">
-                {generation.active
-                  ? "Your book is being written... (usually takes 1-2 minutes)"
-                  : generation.preview_ready
-                  ? "First chapter ready! Full book coming soon."
-                  : "Your book is ready!"}
-              </p>
-
-              {/* Single Primary CTA */}
-              {premium ? (
+              {/* Quick Actions */}
+              <div className="flex flex-wrap justify-center gap-2 md:gap-3">
                 <Button
                   size="lg"
-                  className="h-12 px-8 text-base font-semibold"
+                  variant="outline"
+                  className="h-14 px-8 text-base font-semibold"
                   onClick={() => {
-                    trackEvent("full_book_viewed", { slug });
-                    router.push(`/app/book/${encodeURIComponent(slug)}/workspace?tab=writing`);
+                    trackEvent("preview_viewed", { slug });
+                    document.getElementById("preview-content")?.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
                   <BookOpen className="mr-2 size-5" />
-                  Read Full Book
+                  Read Chapter 1
                 </Button>
-              ) : (
+
                 <Button
                   size="lg"
-                  className="h-12 px-8 text-base font-semibold"
-                  onClick={() => openUpgrade("full_unlock")}
+                  variant={premium ? "primary" : "outline"}
+                  className="h-14 px-8 text-base font-semibold relative"
+                  disabled={!premium && !generation.preview_ready}
+                  onClick={premium ? handleGeneratePdf : () => openUpgrade("pdf")}
                 >
-                  <Sparkles className="mr-2 size-5" />
-                  Unlock Full Book · $4
+                  <Upload className="mr-2 size-5" />
+                  {isGeneratingPdf ? "Generating..." : "Download PDF"}
+                  {!premium && !generation.preview_ready && <Lock className="absolute right-3 size-5" />}
                 </Button>
-              )}
 
-              {/* Minimal Author Info */}
-              <div className="mt-6 text-xs text-muted-foreground">
-                by {authorName} · {imprint}
+                <Button
+                  size="lg"
+                  variant={premium ? "primary" : "outline"}
+                  className="h-14 px-8 text-base font-semibold relative"
+                  disabled={!premium && !generation.preview_ready}
+                  onClick={premium ? handleGenerateEpub : () => openUpgrade("epub")}
+                >
+                  <Upload className="mr-2 size-5" />
+                  {isGeneratingEpub ? "Generating..." : "Download EPUB"}
+                  {!premium && !generation.preview_ready && <Lock className="absolute right-3 size-5" />}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Content section header - Simplified */}
-          <div id="preview-content" className="mb-4">
-            <h2 className="text-lg font-semibold text-foreground">First Chapter</h2>
+            </div>
           </div>
 
-          {/* Readable sections - Show only first chapter */}
-          {visibleSections.slice(0, 1).map((section, index) => (
-            <VisibleSection
-              key={`visible-${section.number}-${section.title}`}
-              section={section}
-              index={index}
-              previewReady={Boolean(generation.preview_ready)}
-              premium={premium}
-            />
-          ))}
+          {/* ── CHAPTER PREVIEW ─────────────────────────────────────────────────────── */}
+          <div id="preview-content">
+            {visibleSections.length > 0 ? (
+              <>
+                <ChapterPreviewCard
+                  chapter={visibleSections[selectedChapterIndex] || visibleSections[0]}
+                  chapterIndex={selectedChapterIndex}
+                  totalChapters={preview.preview.toc.length}
+                  bookSlug={slug}
+                  premium={premium}
+                  onPreviousChapter={selectedChapterIndex > 0 ? () => handleChapterChange(selectedChapterIndex - 1) : undefined}
+                  onNextChapter={selectedChapterIndex < visibleSections.length - 1 ? () => handleChapterChange(selectedChapterIndex + 1) : undefined}
+                />
 
-          {/* Empty state while writing */}
-          {!visibleSections.length && (
-            <Card className="border-dashed">
-              <CardContent className="p-8 text-center">
-                <Loader2 className="mx-auto mb-3 size-8 animate-spin text-primary" />
-                <div className="text-sm font-semibold text-foreground">Writing your book...</div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  First chapter will appear here automatically. Usually takes 1-2 minutes.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+                {/* ── WANT TO READ MORE? UPGRADE CARD ───────────────────────────────── */}
+                {!premium && visibleSections.length > 0 && (
+                  <Card className="mt-8 max-w-3xl mx-auto border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-background">
+                    <CardContent className="p-8 text-center">
+                      <h3 className="text-2xl font-bold text-foreground mb-3">
+                        Want to read the rest?
+                      </h3>
+                      <p className="text-lg text-muted-foreground mb-6">
+                        Get instant access to all {chapterTargetCount} chapters plus downloads
+                      </p>
+                      <div className="flex flex-wrap justify-center gap-4 mb-6">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="size-5 text-emerald-600" />
+                          <span>Full book access</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Upload className="size-5 text-emerald-600" />
+                          <span>PDF & EPUB downloads</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="size-5 text-emerald-600" />
+                          <span>Cover customization</span>
+                        </div>
+                      </div>
+                      <Button
+                        size="lg"
+                        className="h-14 px-8 text-base font-semibold"
+                        onClick={() => openUpgrade("full_unlock")}
+                      >
+                        <Sparkles className="mr-2 size-5" />
+                        Unlock Full Book · $4
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="p-12 text-center">
+                  <Loader2 className="mx-auto mb-4 size-8 animate-spin text-primary" />
+                  <div className="text-sm font-semibold text-foreground">Writing your book...</div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    First chapter will appear here automatically. Usually takes 1-2 minutes.
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Page updates automatically when ready.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-          {/* "Want to read more?" Card - Replace locked sections */}
-          {!premium && visibleSections.length > 0 && (
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
-              <CardContent className="p-6 text-center">
-                <div className="mb-3">
-                  <BookOpen className="mx-auto size-8 text-primary" />
-                </div>
-                <h3 className="text-base font-semibold text-foreground mb-2">
-                  Want to read more?
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Unlock full access to all {chapterTargetCount || "12"} chapters
-                </p>
-                <Button
-                  size="lg"
-                  onClick={() => openUpgrade("full_unlock")}
-                >
-                  <Sparkles className="mr-2 size-4" />
-                  Unlock Full Book · $4
-                </Button>
-              </CardContent>
-            </Card>
+          {/* ── EDITABLE BOOK DETAILS ─────────────────────────────────────────────── */}
+          <EditableBookDetails
+            slug={slug}
+            title={preview.book.title}
+            subtitle={preview.book.subtitle}
+            author={preview.book.author}
+            publisher={preview.book.publisher}
+            authorBio={preview.book.author_bio}
+            coverBrief={preview.book.cover_brief}
+            onUpdate={hydrate}
+          />
+
+
+          {/* PDF & EPUB Preview Section - Premium Feature */}
+          <div className="bg-slate-50 dark:bg-slate-900 -mx-4 md:-mx-6 px-4 md:px-6 py-12 rounded-3xl">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid gap-8 lg:grid-cols-2">
+                {/* PDF Preview */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="size-5 text-primary" />
+                      PDF Preview
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {premium ? "Ready to download" : "Unlock to preview"}
+                      </span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    {!premium ? (
+                      <div className="text-center py-12">
+                        <Lock className="mx-auto size-12 text-muted-foreground mb-4" />
+                        <p className="text-lg font-semibold text-foreground mb-2">
+                          Unlock to preview PDF
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Preview your PDF before downloading
+                        </p>
+                        <Button
+                          size="lg"
+                          onClick={() => openUpgrade("pdf")}
+                        >
+                          <Sparkles className="mr-2 size-4" />
+                          Unlock to Preview · $4
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-6">
+                          <p className="text-sm text-muted-foreground mb-3">
+                            First page of your PDF
+                          </p>
+                          <div className="bg-white dark:bg-slate-950 rounded shadow-lg aspect-[8.5/11] p-8 overflow-hidden">
+                            <div className="text-center mb-6">
+                              <p className="text-sm font-bold text-foreground">
+                                {preview.book.title}
+                              </p>
+                              {preview.book.subtitle && (
+                                <p className="text-xs text-muted-foreground italic mt-1">
+                                  {preview.book.subtitle}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-2">
+                                by {authorName}
+                              </p>
+                            </div>
+                            <hr className="my-4" />
+                            {visibleSections[0]?.content && (
+                              <div className="text-xs leading-relaxed text-foreground line-clamp-6">
+                                {visibleSections[0].content.substring(0, 800)}...
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="lg"
+                          className="w-full"
+                          onClick={handleGeneratePdf}
+                          disabled={isGeneratingPdf}
+                        >
+                          <Upload className="mr-2 size-5" />
+                          {isGeneratingPdf ? "Generating..." : "Download PDF"}
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* EPUB Preview */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="size-5 text-primary" />
+                      EPUB Preview
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {premium ? "Ready to download" : "Unlock to preview"}
+                      </span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    {!premium ? (
+                      <div className="text-center py-12">
+                        <Lock className="mx-auto size-12 text-muted-foreground mb-4" />
+                        <p className="text-lg font-semibold text-foreground mb-2">
+                          Unlock to preview EPUB
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Preview your EPUB before downloading
+                        </p>
+                        <Button
+                          size="lg"
+                          onClick={() => openUpgrade("epub")}
+                        >
+                          <Sparkles className="mr-2 size-4" />
+                          Unlock to Preview · $4
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-6">
+                          <p className="text-sm text-muted-foreground mb-3">
+                            First page of your EPUB
+                          </p>
+                          <div className="bg-white dark:bg-slate-950 rounded shadow-lg aspect-[8.5/11] p-8 overflow-hidden">
+                            <div className="text-center mb-6">
+                              <p className="text-sm font-bold text-foreground">
+                                {preview.book.title}
+                              </p>
+                              {preview.book.subtitle && (
+                                <p className="text-xs text-muted-foreground italic mt-1">
+                                  {preview.book.subtitle}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-2">
+                                by {authorName}
+                              </p>
+                            </div>
+                            <hr className="my-4" />
+                            {visibleSections[0]?.content && (
+                              <div className="text-xs leading-relaxed text-foreground line-clamp-6">
+                                {visibleSections[0].content.substring(0, 800)}...
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="lg"
+                          className="w-full"
+                          onClick={handleGenerateEpub}
+                          disabled={isGeneratingEpub}
+                        >
+                          <Upload className="mr-2 size-5" />
+                          {isGeneratingEpub ? "Generating..." : "Download EPUB"}
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+
+          {/* Cover Customization Section - Premium Only */}
+          {premium && (
+            <div className="max-w-4xl mx-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImagePlus className="size-5 text-primary" />
+                    Customize Covers
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      Limits: 1 front + 1 back
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  {/* Current Covers Display */}
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {/* Front Cover */}
+                    <div>
+                      <div className="text-xs font-semibold text-foreground mb-2">
+                        Front Cover
+                      </div>
+                      <div className="aspect-[3/4] relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+                        {coverUrl ? (
+                          <Image
+                            src={coverUrl}
+                            alt={`${preview.book.title} front cover`}
+                            width={300}
+                            height={400}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                            <BookOpen className="size-8" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Back Cover */}
+                    <div>
+                      <div className="text-xs font-semibold text-foreground mb-2">
+                        Back Cover
+                      </div>
+                      <div className="aspect-[3/4] relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+                        {backCoverUrl ? (
+                          <Image
+                            src={backCoverUrl}
+                            alt={`${preview.book.title} back cover`}
+                            width={300}
+                            height={400}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                            <BookOpen className="size-8" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Upload Buttons */}
+                  <div className="space-y-3">
+                    <input
+                      ref={frontCoverInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleFrontCoverUpload}
+                    />
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
+                      disabled={isUploadingCover || regenerationCount.cover_front >= 1}
+                      onClick={() => frontCoverInputRef.current?.click()}
+                    >
+                      <ImagePlus className="mr-2 size-5" />
+                      {regenerationCount.cover_front >= 1 ? "Limit reached" : "Upload New Front Cover"}
+                      {isUploadingCover && <Loader2 className="ml-auto size-5 animate-spin" />}
+                    </Button>
+
+                    <input
+                      ref={backCoverInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleBackCoverUpload}
+                    />
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
+                      disabled={isUploadingCover || regenerationCount.cover_back >= 1}
+                      onClick={() => backCoverInputRef.current?.click()}
+                    >
+                      <ImagePlus className="mr-2 size-5" />
+                      {regenerationCount.cover_back >= 1 ? "Limit reached" : "Upload New Back Cover"}
+                      {isUploadingCover && <Loader2 className="ml-auto size-5 animate-spin" />}
+                    </Button>
+                  </div>
+
+                  {/* Limits Info */}
+                  <div className="p-4 rounded-lg bg-slate-100 dark:bg-slate-800">
+                    <div className="text-xs font-semibold text-foreground mb-2">
+                      Upload Limits
+                    </div>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Front cover:</span>
+                        <span className="font-medium">
+                          {regenerationCount.cover_front}/1
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Back cover:</span>
+                        <span className="font-medium">
+                          {regenerationCount.cover_back}/1
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
 
-        {/* ── SIDEBAR: Simplified Status ──────────────────────────────────────────────── */}
+        {/* ── SIDEBAR: Chapter List + Progress ──────────────────────────────────────────────── */}
         <div className="space-y-4 lg:sticky lg:top-6 lg:h-fit">
-          {/* Simple Status Card */}
-          <Card className="border-border/50 bg-card">
-            <CardContent className="p-5 space-y-4">
-              {/* Status Title */}
-              <div className="text-sm font-semibold text-foreground">Book Progress</div>
+          {/* Compact Progress Card */}
+          <CompactProgressCard
+            coverReady={generation.cover_ready ?? false}
+            previewReady={generation.preview_ready ?? false}
+            chapterReadyCount={chapterReadyCount}
+            chapterTargetCount={chapterTargetCount}
+            remainingChapterCount={remainingChapterCount}
+            generationEta={generationEta}
+            generationActive={generation.active ?? false}
+          />
 
-              {/* Progress Checkmarks */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-sm">
-                  {generation.cover_ready ? (
-                    <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
-                  ) : (
-                    <div className="size-5 rounded-full border-2 border-border shrink-0" />
-                  )}
-                  <span className={generation.cover_ready ? "text-foreground" : "text-muted-foreground"}>
-                    Cover designed
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3 text-sm">
-                  {generation.preview_ready ? (
-                    <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
-                  ) : (
-                    <div className="size-5 rounded-full border-2 border-border shrink-0" />
-                  )}
-                  <span className={generation.preview_ready ? "text-foreground" : "text-muted-foreground"}>
-                    {chapterReadyCount} of {chapterTargetCount || "?"} chapters ready
-                  </span>
-                </div>
-
-                {remainingChapterCount > 0 && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Loader2 className="size-5 text-primary animate-spin shrink-0" />
-                    <span className="text-muted-foreground">
-                      Writing {remainingChapterCount} more...
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* ETA */}
-              {generationEta && (
-                <div className="text-xs text-muted-foreground">
-                  ⏱️ About {generationEta} left
-                </div>
-              )}
-
-              {/* Upgrade CTA - Only if not premium */}
-              {!premium && (
-                <div className="pt-3 border-t">
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={() => openUpgrade("full_unlock")}
-                  >
-                    <Sparkles className="mr-2 size-4" />
-                    Unlock All Chapters · $4
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Downloads Card - Always Visible */}
-          <Card className="border-border/50 bg-card">
-            <CardContent className="p-5 space-y-4">
-              <div className="text-sm font-semibold text-foreground">Downloads</div>
-              <div className="grid gap-3">
-                {/* PDF Button */}
-                <Button
-                  variant="outline"
-                  className="justify-start h-auto py-3 relative"
-                  disabled={!premium || isGeneratingPdf}
-                  onClick={premium ? handleGeneratePdf : () => openUpgrade("pdf")}
-                >
-                  <Upload className="mr-3 size-5 shrink-0" />
-                  <div className="text-left flex-1">
-                    <div className="font-medium text-sm">
-                      {isGeneratingPdf ? "Generating PDF..." : "Get PDF"}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Print-ready format
-                    </div>
-                  </div>
-                  {!premium && <Lock className="absolute right-3 size-4 text-muted-foreground" />}
-                  {isGeneratingPdf && <Loader2 className="size-4 animate-spin" />}
-                </Button>
-
-                {/* EPUB Button */}
-                <Button
-                  variant="outline"
-                  className="justify-start h-auto py-3 relative"
-                  disabled={!premium || isGeneratingEpub}
-                  onClick={premium ? handleGenerateEpub : () => openUpgrade("epub")}
-                >
-                  <Upload className="mr-3 size-5 shrink-0" />
-                  <div className="text-left flex-1">
-                    <div className="font-medium text-sm">
-                      {isGeneratingEpub ? "Generating EPUB..." : "Get EPUB"}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      E-book format
-                    </div>
-                  </div>
-                  {!premium && <Lock className="absolute right-3 size-4 text-muted-foreground" />}
-                  {isGeneratingEpub && <Loader2 className="size-4 animate-spin" />}
-                </Button>
-              </div>
-
-              {!premium && (
-                <div className="pt-3 border-t">
-                  <div className="text-xs text-center text-muted-foreground">
-                    🔒 Premium feature - Unlock to download
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Manual Cover Upload - Premium Only */}
-          {premium && (
-            <Card className="border-border/50 bg-card">
-              <CardContent className="p-5 space-y-4">
-                <div className="text-sm font-semibold text-foreground">Customize Covers</div>
-                <div className="grid gap-3">
-                  <input
-                    ref={frontCoverInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="hidden"
-                    onChange={handleFrontCoverUpload}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="justify-start h-auto py-2.5"
-                    disabled={isUploadingCover || regenerationCount.cover_front >= 1}
-                    onClick={() => frontCoverInputRef.current?.click()}
-                  >
-                    <ImagePlus className="mr-2 size-4" />
-                    <div className="text-left flex-1">
-                      <div className="font-medium text-sm">Front Cover</div>
-                      <div className="text-xs text-muted-foreground">
-                        {regenerationCount.cover_front >= 1
-                          ? "Limit reached (1/1)"
-                          : "PNG, JPG or WebP up to 4MB"}
-                      </div>
-                    </div>
-                    {isUploadingCover && <Loader2 className="size-4 animate-spin" />}
-                  </Button>
-
-                  <input
-                    ref={backCoverInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="hidden"
-                    onChange={handleBackCoverUpload}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="justify-start h-auto py-2.5"
-                    disabled={isUploadingCover || regenerationCount.cover_back >= 1}
-                    onClick={() => backCoverInputRef.current?.click()}
-                  >
-                    <ImagePlus className="mr-2 size-4" />
-                    <div className="text-left flex-1">
-                      <div className="font-medium text-sm">Back Cover</div>
-                      <div className="text-xs text-muted-foreground">
-                        {regenerationCount.cover_back >= 1
-                          ? "Limit reached (1/1)"
-                          : "PNG, JPG or WebP up to 4MB"}
-                      </div>
-                    </div>
-                    {isUploadingCover && <Loader2 className="size-4 animate-spin" />}
-                  </Button>
-                </div>
-
-                {(regenerationCount.cover_front >= 1 || regenerationCount.cover_back >= 1) && (
-                  <div className="pt-3 border-t">
-                    <div className="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-md p-2">
-                      <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
-                      <div>
-                        <div className="font-medium">Upload limits</div>
-                        <div className="mt-0.5 text-[10px] leading-tight">
-                          Front: {regenerationCount.cover_front}/1 · Back: {regenerationCount.cover_back}/1
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Book Details - Collapsible */}
-          {(authorBio || logoUrl || coverBrief || backCoverUrl) && (
-            <CollapsibleBookDetails
-              authorName={authorName}
-              imprint={imprint}
-              logoText={logoText}
-              logoUrl={logoUrl}
-              authorBio={authorBio}
-              coverBrief={coverBrief}
-              defaultExpanded={false}
-            />
-          )}
+          {/* Chapter List Sidebar - ALL CHAPTERS */}
+          <ChapterListSidebar
+            chapters={preview.preview.toc.map((chapter, index) => ({
+              number: chapter.number,
+              title: chapter.title,
+              status: index < visibleSections.length ? "complete" :
+                       index < visibleSections.length + preview.preview.locked_sections.length ? "locked" :
+                       "pending",
+              wordCount: visibleSections[index]?.content?.split(/\s+/).length,
+            }))}
+            selectedChapterIndex={selectedChapterIndex}
+            onSelectChapter={handleChapterChange}
+            bookSlug={slug}
+            premium={premium}
+            visibleSectionCount={visibleSections.length}
+            lockedSectionCount={preview.preview.locked_sections.length}
+          />
         </div>
       </div>
 

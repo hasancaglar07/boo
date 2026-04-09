@@ -5,9 +5,12 @@ import { Calendar, ChevronRight, Clock } from "lucide-react";
 
 import { BlogReadingProgress } from "@/components/site/blog-reading-progress";
 import { BlogToc } from "@/components/site/blog-toc";
+import { LastUpdated } from "@/components/site/last-updated";
 import { MarketingPage } from "@/components/site/marketing-page";
 import { Badge } from "@/components/ui/badge";
 import { blogPosts } from "@/lib/marketing-data";
+import { buildArticleSchema, buildBreadcrumbSchema } from "@/lib/schema";
+import { getAuthorById, DEFAULT_AUTHOR } from "@/lib/authors";
 import { absoluteUrl, buildPageMetadata, buildOgImageUrl, siteConfig } from "@/lib/seo";
 
 type BlogPostPageProps = {
@@ -104,56 +107,25 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const quickAnswer = firstSentence(post.intro);
   const takeawayItems = post.sections.slice(0, 3).map(([title]) => title);
 
-  const articleSchema = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: post.title,
+  const articleSchema = buildArticleSchema({
+    title: post.title,
     description: post.summary,
-    inLanguage: "en-US",
-    mainEntityOfPage: postUrl,
-    url: postUrl,
     datePublished: post.datePublished,
     dateModified: post.dateModified,
-    author: {
-      "@type": "Person",
-      name: "Book Generator Team",
-      url: absoluteUrl("/about"),
-    },
-    publisher: {
-      "@type": "Organization",
-      name: siteConfig.name,
-      logo: {
-        "@type": "ImageObject",
-        url: absoluteUrl("/logo.png"),
-      },
-    },
-    articleSection: post.category,
-  };
+    author: getAuthorById(post.authorId || DEFAULT_AUTHOR).name,
+    authorUrl: absoluteUrl("/about"),
+    authorExpertise: getAuthorById(post.authorId || DEFAULT_AUTHOR).expertise,
+    url: postUrl,
+    imageUrl: buildOgImageUrl(post.title, post.summary),
+    section: post.category,
+    keywords: [post.category, "AI book writing", "Book Generator", "Publishing"],
+  });
 
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: absoluteUrl("/"),
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Blog",
-        item: absoluteUrl("/blog"),
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: post.title,
-        item: postUrl,
-      },
-    ],
-  };
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", item: absoluteUrl("/") },
+    { name: "Blog", item: absoluteUrl("/blog") },
+    { name: post.title, item: postUrl },
+  ]);
 
   return (
     <MarketingPage>
@@ -191,7 +163,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   <time dateTime={post.datePublished}>{formatDate(post.datePublished)}</time>
                 </span>
                 <span className="size-1 rounded-full bg-border" />
-                <span>Last updated: {formatDate(post.dateModified)}</span>
+                <LastUpdated date={post.dateModified} className="text-sm" />
                 <span className="size-1 rounded-full bg-border" />
                 <span className="flex items-center gap-1.5">
                   <Clock className="size-3.5 shrink-0" />

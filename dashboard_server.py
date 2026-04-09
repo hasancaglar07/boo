@@ -52,6 +52,37 @@ FULL_CHAPTER_PIPELINE_CONCURRENCY = max(
     1,
     min(4, int(os.environ.get("BOOK_FULL_CHAPTER_PIPELINE_CONCURRENCY", "2") or "2")),
 )
+PIPELINE_RECOVERY_ENABLED = os.environ.get("BOOK_PIPELINE_RECOVERY_ENABLED", "1").strip() != "0"
+PIPELINE_WATCHDOG_INTERVAL_SECONDS = max(
+    15,
+    int(os.environ.get("BOOK_PIPELINE_WATCHDOG_INTERVAL_SECONDS", "30") or "30"),
+)
+PIPELINE_STALE_SECONDS = max(
+    60,
+    int(os.environ.get("BOOK_PIPELINE_STALE_SECONDS", "180") or "180"),
+)
+IMAGE_PROVIDER_POLICY = os.environ.get("BOOK_IMAGE_PROVIDER_POLICY", "vertex_only").strip().lower().replace("-", "_")
+PREVIEW_COVER_SERVICE = os.environ.get("BOOK_PREVIEW_COVER_SERVICE", "vertex-imagen-standard").strip() or "vertex-imagen-standard"
+VERTEX_IMAGE_SERVICES = {
+    "vertex-imagen-fast",
+    "vertex-imagen-standard",
+    "vertex-imagen-ultra",
+    "vertex-gemini-flash-image",
+}
+VERTEX_API_KEY_ENV_NAMES = (
+    "GOOGLE_API_KEY",
+    "VERTEX_API_KEY",
+    "GOOGLE_GENAI_API_KEY",
+)
+VERTEX_PROJECT_ENV_NAMES = (
+    "GOOGLE_CLOUD_PROJECT",
+    "GOOGLE_PROJECT_ID",
+    "VERTEX_PROJECT_ID",
+)
+VERTEX_LOCATION_ENV_NAMES = (
+    "GOOGLE_CLOUD_LOCATION",
+    "VERTEX_LOCATION",
+)
 
 # Retry configuration for subprocess operations
 SUBPROCESS_MAX_RETRIES = int(os.environ.get("SUBPROCESS_MAX_RETRIES", "3"))
@@ -73,6 +104,9 @@ _pipeline_thread_pool: ThreadPoolExecutor | None = None
 _pipeline_thread_pool_lock = threading.Lock()
 _active_threads: weakref.WeakSet[threading.Thread] = weakref.WeakSet()
 _active_threads_lock = threading.Lock()
+_pipeline_watchdog_thread: threading.Thread | None = None
+_pipeline_watchdog_lock = threading.Lock()
+_pipeline_watchdog_stop_event = threading.Event()
 
 
 def get_pipeline_thread_pool() -> ThreadPoolExecutor:
@@ -955,6 +989,84 @@ def now_utc_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def normalized_image_provider_policy(value: Any = None) -> str:
+    policy = str(IMAGE_PROVIDER_POLICY if value is None else value).strip().lower().replace("-", "_")
+    if not policy:
+        return "auto"
+    return policy
+
+
+def image_provider_policy_vertex_only() -> bool:
+    return normalized_image_provider_policy() in {"vertex_only", "vertex"}
+
+
+def first_nonempty_env_value(env: dict[str, str], keys: tuple[str, ...]) -> str:
+    for key in keys:
+        value = str(env.get(key, "") or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def resolve_vertex_image_config(env: dict[str, str] | None = None) -> dict[str, str]:
+    resolved_env = env if env is not None else command_env()
+    return {
+        "api_key": first_nonempty_env_value(resolved_env, VERTEX_API_KEY_ENV_NAMES),
+        "project": first_nonempty_env_value(resolved_env, VERTEX_PROJECT_ENV_NAMES),
+        "location": first_nonempty_env_value(resolved_env, VERTEX_LOCATION_ENV_NAMES) or "us-central1",
+    }
+
+
+def has_vertex_image_provider_config(env: dict[str, str] | None = None) -> bool:
+    config = resolve_vertex_image_config(env)
+    return bool(config["api_key"] and config["project"])
+
+
+def normalize_cover_service_for_policy(service: Any = None) -> str:
+    requested = str(service or "").strip().lower()
+    if image_provider_policy_vertex_only():
+        if requested in VERTEX_IMAGE_SERVICES:
+            return requested
+        configured = str(PREVIEW_COVER_SERVICE or "").strip().lower()
+        if configured in VERTEX_IMAGE_SERVICES:
+            return configured
+        return "vertex-imagen-standard"
+    return requested or "auto"
+
+
+def parse_iso_datetime(value: Any) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = f"{text[:-1]}+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def is_timestamp_stale(value: Any, threshold_seconds: int) -> bool:
+    parsed = parse_iso_datetime(value)
+    if parsed is None:
+        return True
+    age = datetime.now(timezone.utc) - parsed
+    return age.total_seconds() >= threshold_seconds
+
+
+def is_preview_pipeline_active(slug: str) -> bool:
+    with ACTIVE_PREVIEW_PIPELINES_LOCK:
+        return slug in ACTIVE_PREVIEW_PIPELINES
+
+
+def is_full_pipeline_active(slug: str) -> bool:
+    with ACTIVE_FULL_CHAPTER_PIPELINES_LOCK:
+        return slug in ACTIVE_FULL_CHAPTER_PIPELINES
+
+
 def resolve_book_asset_path(book_dir: Path, relative_path: str) -> Path | None:
     if not relative_path:
         return None
@@ -1473,13 +1585,21 @@ def chapter_generation_blueprint(book_dir: Path, metadata: dict[str, Any] | None
     return deduped
 
 
-def chapter_ready_threshold(target_min_words: int) -> int:
+def chapter_ready_threshold(target_min_words: int, *, strict: bool = True) -> int:
+    if strict:
+        return max(1, int(target_min_words or PREVIEW_PIPELINE_MIN_WORDS))
     baseline = int(target_min_words * 0.65) if target_min_words > 0 else PREVIEW_PIPELINE_MIN_WORDS
     return max(220, min(PREVIEW_PIPELINE_MIN_WORDS, baseline))
 
 
-def chapter_meets_generation_target(book_dir: Path, chapter_number_value: int, target_min_words: int) -> bool:
-    threshold = chapter_ready_threshold(target_min_words)
+def chapter_meets_generation_target(
+    book_dir: Path,
+    chapter_number_value: int,
+    target_min_words: int,
+    *,
+    strict: bool = True,
+) -> bool:
+    threshold = chapter_ready_threshold(target_min_words, strict=strict)
     return chapter_body_word_count(book_dir, chapter_number_value, stop_at=threshold) >= threshold
 
 
@@ -1686,7 +1806,12 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
             )
             min_words = int(item.get("min_words") or 1600)
             max_words = int(item.get("max_words") or max(min_words + 400, 2200))
-            if chapter_number_value == 1 and preview_first_ready and (book_dir / "chapter_1_final.md").exists():
+            if (
+                chapter_number_value == 1
+                and preview_first_ready
+                and (book_dir / "chapter_1_final.md").exists()
+                and chapter_meets_generation_target(book_dir, chapter_number_value, min_words)
+            ):
                 continue
             if not force and chapter_meets_generation_target(book_dir, chapter_number_value, min_words):
                 continue
@@ -2068,6 +2193,135 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
     }
 
 
+def resume_interrupted_pipelines() -> dict[str, int]:
+    summary = {"preview_requeued": 0, "full_requeued": 0}
+    if not PIPELINE_RECOVERY_ENABLED:
+        return summary
+
+    if not BOOK_OUTPUTS_DIR.exists():
+        return summary
+
+    preview_resume_stages = {"queued", "running", "chapter", "cover"}
+    full_resume_stages = {"queued", "running", "error", "needs_attention"}
+
+    for book_dir in sorted(BOOK_OUTPUTS_DIR.iterdir()):
+        if not book_dir.is_dir():
+            continue
+        slug = book_dir.name
+        try:
+            metadata = read_metadata(book_dir)
+
+            preview_stage = str(metadata.get("preview_stage") or "").strip().lower()
+            preview_status = build_generation_status(book_dir, metadata, lightweight=True)
+            if (
+                not bool(preview_status.get("product_ready"))
+                and not is_preview_pipeline_active(slug)
+                and preview_stage in preview_resume_stages
+            ):
+                started = start_preview_pipeline(slug)
+                if bool(started.get("started")):
+                    summary["preview_requeued"] += 1
+                    append_log(f"Recovery requeued preview pipeline for '{slug}' (stage={preview_stage}).")
+
+            full_stage = str(metadata.get("full_generation_stage") or "").strip().lower()
+            full_status = build_full_generation_status(book_dir, metadata, lightweight=True)
+            if (
+                not bool(full_status.get("complete"))
+                and not is_full_pipeline_active(slug)
+                and full_stage in full_resume_stages
+            ):
+                started = start_full_chapter_pipeline(slug, force=False)
+                if bool(started.get("started")):
+                    summary["full_requeued"] += 1
+                    append_log(f"Recovery requeued full pipeline for '{slug}' (stage={full_stage}).")
+        except Exception as exc:  # noqa: BLE001
+            append_log(f"Recovery scan failed for '{slug}': {exc}")
+    return summary
+
+
+def pipeline_watchdog_loop() -> None:
+    preview_stale_stages = {"queued", "running", "chapter", "cover"}
+    full_stale_stages = {"queued", "running", "error", "needs_attention"}
+    while not _pipeline_watchdog_stop_event.wait(PIPELINE_WATCHDOG_INTERVAL_SECONDS):
+        if not PIPELINE_RECOVERY_ENABLED or not BOOK_OUTPUTS_DIR.exists():
+            continue
+        for book_dir in sorted(BOOK_OUTPUTS_DIR.iterdir()):
+            if not book_dir.is_dir():
+                continue
+            slug = book_dir.name
+            try:
+                metadata = read_metadata(book_dir)
+
+                preview_stage = str(metadata.get("preview_stage") or "").strip().lower()
+                preview_active = is_preview_pipeline_active(slug)
+                preview_status = build_generation_status(book_dir, metadata, lightweight=True)
+                preview_updated_at = metadata.get("preview_updated_at") or metadata.get("preview_started_at")
+                should_requeue_preview = (
+                    not bool(preview_status.get("product_ready"))
+                    and not preview_active
+                    and preview_stage in preview_stale_stages
+                    and is_timestamp_stale(preview_updated_at, PIPELINE_STALE_SECONDS)
+                )
+                if should_requeue_preview:
+                    append_log(
+                        f"Watchdog requeue preview for '{slug}' (stage={preview_stage}, stale>{PIPELINE_STALE_SECONDS}s)."
+                    )
+                    start_preview_pipeline(slug)
+
+                full_stage = str(metadata.get("full_generation_stage") or "").strip().lower()
+                full_active = is_full_pipeline_active(slug)
+                full_status = build_full_generation_status(book_dir, metadata, lightweight=True)
+                full_updated_at = (
+                    metadata.get("full_generation_updated_at")
+                    or metadata.get("full_generation_started_at")
+                    or metadata.get("full_generation_eta_updated_at")
+                )
+                should_requeue_full = (
+                    not bool(full_status.get("complete"))
+                    and not full_active
+                    and full_stage in full_stale_stages
+                    and is_timestamp_stale(full_updated_at, PIPELINE_STALE_SECONDS)
+                )
+                if should_requeue_full:
+                    append_log(
+                        f"Watchdog requeue full pipeline for '{slug}' (stage={full_stage}, stale>{PIPELINE_STALE_SECONDS}s)."
+                    )
+                    start_full_chapter_pipeline(slug, force=False)
+            except Exception as exc:  # noqa: BLE001
+                append_log(f"Watchdog scan failed for '{slug}': {exc}")
+
+
+def ensure_pipeline_watchdog_running() -> None:
+    global _pipeline_watchdog_thread
+    if not PIPELINE_RECOVERY_ENABLED:
+        return
+    with _pipeline_watchdog_lock:
+        if _pipeline_watchdog_thread and _pipeline_watchdog_thread.is_alive():
+            return
+        _pipeline_watchdog_stop_event.clear()
+        _pipeline_watchdog_thread = threading.Thread(
+            target=pipeline_watchdog_loop,
+            name="pipeline_watchdog",
+            daemon=True,
+        )
+        _pipeline_watchdog_thread.start()
+    append_log(
+        "Pipeline watchdog started "
+        f"(interval={PIPELINE_WATCHDOG_INTERVAL_SECONDS}s, stale={PIPELINE_STALE_SECONDS}s)."
+    )
+
+
+def stop_pipeline_watchdog(timeout: float = 5.0) -> None:
+    global _pipeline_watchdog_thread
+    with _pipeline_watchdog_lock:
+        thread = _pipeline_watchdog_thread
+        _pipeline_watchdog_thread = None
+    if thread and thread.is_alive():
+        _pipeline_watchdog_stop_event.set()
+        thread.join(timeout=timeout)
+    _pipeline_watchdog_stop_event.clear()
+
+
 def run_preview_pipeline(slug: str) -> None:
     book_dir = BOOK_OUTPUTS_DIR / slug
     if not book_dir.exists():
@@ -2171,16 +2425,15 @@ def run_preview_pipeline(slug: str) -> None:
             book_metadata = read_metadata(book_dir)
             book = read_book_core_fields(book_dir, book_metadata)
             default_author = read_settings()["default_author"]
-            cover_result = run_workflow(
-                {
-                    "action": "cover_script",
-                    "slug": slug,
-                    "title": book.get("title") or slug,
-                    "author": book.get("author") or default_author,
-                    "genre": infer_cover_genre(book),
-                }
-            )
-            if not cover_result.get("ok") or not cover_asset_ready(book_dir):
+            cover_result: dict[str, Any] = {
+                "ok": False,
+                "action": "cover_variants_generate",
+                "returncode": 1,
+                "output": "Kapak üretimi başlatılamadı.",
+                "warnings": [],
+                "produced_files": [],
+            }
+            if image_provider_policy_vertex_only():
                 variants_preflight = preflight_for_workflow("cover_variants_generate", slug)
                 if variants_preflight.get("ok"):
                     cover_result = run_workflow(
@@ -2188,23 +2441,55 @@ def run_preview_pipeline(slug: str) -> None:
                             "action": "cover_variants_generate",
                             "slug": slug,
                             "variant_count": 1,
-                            "safe_mode": True,
+                            "service": normalize_cover_service_for_policy(PREVIEW_COVER_SERVICE),
+                            "safe_mode": False,
                         }
                     )
+                else:
+                    cover_result = {
+                        "ok": False,
+                        "action": "cover_variants_generate",
+                        "returncode": 1,
+                        "output": "\n".join(variants_preflight.get("missing") or [])
+                        or "Vertex kapak üretimi için gerekli yapılandırma eksik.",
+                        "warnings": list(variants_preflight.get("warnings") or []),
+                        "produced_files": [],
+                    }
+            else:
+                cover_result = run_workflow(
+                    {
+                        "action": "cover_script",
+                        "slug": slug,
+                        "title": book.get("title") or slug,
+                        "author": book.get("author") or default_author,
+                        "genre": infer_cover_genre(book),
+                    }
+                )
+                if not cover_result.get("ok") or not cover_asset_ready(book_dir):
+                    variants_preflight = preflight_for_workflow("cover_variants_generate", slug)
+                    if variants_preflight.get("ok"):
+                        cover_result = run_workflow(
+                            {
+                                "action": "cover_variants_generate",
+                                "slug": slug,
+                                "variant_count": 1,
+                                "safe_mode": True,
+                            }
+                        )
 
-            if not cover_asset_ready(book_dir):
-                fallback_preflight = preflight_for_workflow("cover_local", slug)
-                if fallback_preflight.get("ok"):
-                    cover_result = run_workflow(
-                        {
-                            "action": "cover_local",
-                            "slug": slug,
-                            "title": book.get("title") or slug,
-                            "subtitle": book.get("subtitle") or "",
-                            "author": book.get("author") or default_author,
-                            "blurb": book.get("description") or "",
-                        }
-                    )
+                if not cover_asset_ready(book_dir):
+                    fallback_preflight = preflight_for_workflow("cover_local", slug)
+                    if fallback_preflight.get("ok"):
+                        cover_result = run_workflow(
+                            {
+                                "action": "cover_local",
+                                "slug": slug,
+                                "title": book.get("title") or slug,
+                                "subtitle": book.get("subtitle") or "",
+                                "author": book.get("author") or default_author,
+                                "blurb": book.get("description") or "",
+                            }
+                        )
             if cover_asset_ready(book_dir):
                 save_metadata(
                     book_dir,
@@ -2663,6 +2948,63 @@ def latest_export_dir(book_dir: Path) -> Path | None:
         key=lambda item: item.name,
     )
     return exports[-1] if exports else None
+
+
+def latest_export_file_for_format(book_dir: Path, format_name: str) -> Path | None:
+    target_suffix = f".{format_name.lower()}"
+    candidates = [
+        path
+        for path in collect_exports(book_dir)
+        if path.is_file() and path.suffix.lower() == target_suffix
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda item: (item.stat().st_mtime, item.name))
+
+
+def selected_cover_variant_record(metadata: dict[str, Any]) -> dict[str, Any] | None:
+    variants = normalize_cover_variants(metadata.get("cover_variants"))
+    if not variants:
+        return None
+    selected_id = str(metadata.get("selected_cover_variant") or "").strip()
+    recommended_id = str(metadata.get("recommended_cover_variant") or "").strip()
+    target_id = selected_id or recommended_id
+    for variant in variants:
+        if str(variant.get("id") or "") == target_id:
+            return variant
+    return variants[0]
+
+
+def build_export_parity_report(book_dir: Path, metadata: dict[str, Any], format_name: str) -> dict[str, Any]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    latest_dir = latest_export_dir(book_dir)
+    front_cover, back_cover = resolve_cover_image_references(book_dir, metadata)
+    export_file = latest_export_file_for_format(book_dir, format_name) if format_name in {"epub", "pdf"} else None
+
+    if not latest_dir:
+        errors.append("No export directory was created.")
+    else:
+        for label, reference in (("front", front_cover), ("back", back_cover)):
+            if not reference:
+                errors.append(f"Selected {label} cover asset is missing from metadata.")
+                continue
+            expected_name = Path(reference).name
+            if not (latest_dir / expected_name).is_file():
+                errors.append(f"Expected {label} cover '{expected_name}' was not copied into the latest export directory.")
+        if format_name in {"epub", "pdf"} and not export_file:
+            errors.append(f"No {format_name.upper()} export file was found in the latest export directory.")
+        elif export_file and latest_dir not in export_file.parents:
+            warnings.append("Resolved export file was not located in the latest export directory.")
+
+    return {
+        "ok": not errors,
+        "errors": errors,
+        "warnings": warnings,
+        "latest_export_dir": relative_to_root(latest_dir) if latest_dir else "",
+        "export_relative_path": relative_to_root(export_file) if export_file else "",
+        "export_url": workspace_url(export_file) if export_file else "",
+    }
 
 
 def list_files(paths: list[Path]) -> list[dict[str, Any]]:
@@ -3904,6 +4246,7 @@ def write_lightweight_epub(
     description: str,
     chapters: list[dict[str, Any]],
     cover_path: Path | None = None,
+    back_cover_path: Path | None = None,
 ) -> None:
     direction = "rtl" if fallback_epub_language_code(language) in {"ar", "fa", "he", "ur"} else "ltr"
     with zipfile.ZipFile(output_path, "w") as archive:
@@ -3926,6 +4269,8 @@ h1, h2 { line-height: 1.25; }
 .meta { color: #6f6156; font-family: Arial, sans-serif; font-size: 0.85rem; }
 .chapter-ref { text-transform: uppercase; letter-spacing: 0.12em; font-family: Arial, sans-serif; color: #725441; font-size: 0.72rem; }
 .cover img { width: 100%; max-width: 520px; display: block; margin: 0 auto 1.25rem; }
+.back-cover { page-break-before: always; }
+.back-cover img { width: 100%; max-width: 520px; display: block; margin: 0 auto; }
 """.strip(),
         )
 
@@ -3938,12 +4283,20 @@ h1, h2 { line-height: 1.25; }
         spine_items = ["<itemref idref='title-page'/>"]
 
         cover_file_name = ""
+        back_cover_file_name = ""
         if cover_path and cover_path.exists() and cover_path.is_file():
             cover_file_name = f"cover{cover_path.suffix.lower() or '.png'}"
             cover_media_type = mimetypes.guess_type(cover_file_name)[0] or "image/png"
             archive.writestr(f"OEBPS/{cover_file_name}", cover_path.read_bytes())
             manifest_items.append(
                 f"<item id='cover-image' href='{cover_file_name}' media-type='{cover_media_type}' properties='cover-image'/>"
+            )
+        if back_cover_path and back_cover_path.exists() and back_cover_path.is_file():
+            back_cover_file_name = f"back-cover{back_cover_path.suffix.lower() or '.png'}"
+            back_cover_media_type = mimetypes.guess_type(back_cover_file_name)[0] or "image/png"
+            archive.writestr(f"OEBPS/{back_cover_file_name}", back_cover_path.read_bytes())
+            manifest_items.append(
+                f"<item id='back-cover-image' href='{back_cover_file_name}' media-type='{back_cover_media_type}'/>"
             )
 
         for index, chapter in enumerate(chapters, start=1):
@@ -4006,6 +4359,23 @@ h1, h2 { line-height: 1.25; }
                 direction,
             ),
         )
+        if back_cover_file_name:
+            archive.writestr(
+                "OEBPS/back-cover.xhtml",
+                fallback_xhtml_page(
+                    f"{title} Back Cover",
+                    f"""
+                    <section class="back-cover">
+                      <img src='{html.escape(back_cover_file_name)}' alt='{html.escape(title)} back cover' />
+                    </section>
+                    """,
+                    direction,
+                ),
+            )
+            manifest_items.append(
+                "<item id='back-cover-page' href='back-cover.xhtml' media-type='application/xhtml+xml'/>"
+            )
+            spine_items.append("<itemref idref='back-cover-page'/>")
         archive.writestr(
             "OEBPS/content.opf",
             f"""<?xml version="1.0" encoding="utf-8"?>
@@ -4137,8 +4507,9 @@ def build_book_with_lightweight_fallback(
     )
     manuscript_path.write_text(manuscript, encoding="utf-8")
 
-    cover_reference, _ = resolve_cover_image_references(book_dir, metadata)
+    cover_reference, back_cover_reference = resolve_cover_image_references(book_dir, metadata)
     cover_path = resolve_book_asset_path(book_dir, cover_reference) if cover_reference else None
+    back_cover_path = resolve_book_asset_path(book_dir, back_cover_reference) if back_cover_reference else None
     exported_formats: list[str] = []
     if format_name in {"all", "epub"}:
         write_lightweight_epub(
@@ -4152,6 +4523,7 @@ def build_book_with_lightweight_fallback(
             description=description,
             chapters=chapters,
             cover_path=cover_path,
+            back_cover_path=back_cover_path,
         )
         exported_formats.append("epub")
     if format_name in {"all", "pdf"}:
@@ -4166,6 +4538,8 @@ def build_book_with_lightweight_fallback(
             description,
             "",
         ]
+        if cover_path and cover_path.exists():
+            pdf_lines.extend(["Front cover: " + cover_path.name, ""])
         for index, chapter in enumerate(chapters, start=1):
             chapter_number = int(chapter.get("number") or index)
             chapter_title = str(chapter.get("title") or "").strip() or f"Chapter {chapter_number}"
@@ -4186,6 +4560,8 @@ def build_book_with_lightweight_fallback(
                     pdf_lines.append("")
                     continue
                 pdf_lines.extend(textwrap.wrap(text, width=95) or [""])
+        if back_cover_path and back_cover_path.exists():
+            pdf_lines.extend(["", "Back cover: " + back_cover_path.name])
         write_lightweight_pdf(export_dir / f"{base_name}.pdf", pdf_lines)
         exported_formats.append("pdf")
 
@@ -4207,6 +4583,7 @@ def build_book_with_lightweight_fallback(
         seen_warnings.add(text)
         deduped_warnings.append(text)
     warnings = deduped_warnings
+    parity = build_export_parity_report(book_dir, metadata, "pdf" if format_name == "all" else format_name)
 
     return {
         "ok": True,
@@ -4216,15 +4593,19 @@ def build_book_with_lightweight_fallback(
         "warnings": warnings,
         "produced_files": produced_files(book_dir, before_snapshot),
         "preflight": preflight,
+        "export_relative_path": parity.get("export_relative_path", ""),
+        "export_url": parity.get("export_url", ""),
+        "parity": parity,
         "book": read_book(book_dir),
     }
 
 
-def preflight_for_build(format_name: str) -> dict[str, Any]:
+def preflight_for_build(format_name: str, slug: str | None = None) -> dict[str, Any]:
     capabilities = build_capabilities()
     if format_name not in capabilities:
         raise ValueError("Unsupported format.")
     warnings: list[str] = []
+    missing: list[str] = []
     capability = capabilities[format_name]
     primary_ok = bool(capability["available"])
     fallback_ok = format_name in LIGHTWEIGHT_BUILD_FORMATS
@@ -4235,13 +4616,40 @@ def preflight_for_build(format_name: str) -> dict[str, Any]:
         fallback_note = "Primary exporter missing; lightweight fallback export will be used."
         warnings.append(fallback_note)
         reason = fallback_note
+    if slug:
+        book_dir = BOOK_OUTPUTS_DIR / slug
+        metadata = read_metadata(book_dir) if book_dir.exists() else {}
+        env = command_env()
+        if image_provider_policy_vertex_only() and not has_vertex_image_provider_config(env):
+            missing.append(
+                "Vertex image config is incomplete. Set GOOGLE_API_KEY (or VERTEX_API_KEY / GOOGLE_GENAI_API_KEY) "
+                "and GOOGLE_CLOUD_PROJECT (or GOOGLE_PROJECT_ID / VERTEX_PROJECT_ID)."
+            )
+            missing.append("Vertex OCR validation cannot run until the Vertex image config is complete.")
+        if book_dir.exists():
+            front_cover, back_cover = resolve_cover_image_references(book_dir, metadata)
+            if not front_cover:
+                missing.append("Selected final front cover asset is missing.")
+            if not back_cover:
+                missing.append("Selected final back cover asset is missing.")
+            selected_variant = selected_cover_variant_record(metadata)
+            if selected_variant:
+                validation = selected_variant.get("text_validation") if isinstance(selected_variant.get("text_validation"), dict) else {}
+                render_mode = str(selected_variant.get("render_mode") or "").strip()
+                if render_mode in {"ai-signature", "ai-minimal"} and not bool(validation.get("valid")):
+                    missing.append("Selected cover variant did not pass Vertex text validation.")
+            elif normalize_cover_variants(metadata.get("cover_variants")):
+                missing.append("Selected cover variant could not be resolved from metadata.")
+        else:
+            missing.append("Book directory not found.")
     return {
-        "ok": primary_ok or fallback_ok,
+        "ok": (primary_ok or fallback_ok) and not missing,
         "primary_ok": primary_ok,
         "fallback_ok": fallback_ok,
         "warnings": warnings,
+        "missing": missing,
         "capabilities": capabilities,
-        "reason": reason,
+        "reason": "; ".join(missing) if missing else reason,
     }
 
 
@@ -4253,8 +4661,20 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
         raise FileNotFoundError("Book directory not found.")
 
     format_name = str(payload.get("format") or "epub").strip().lower()
-    preflight = preflight_for_build(format_name)
-    primary_export_ok = bool(preflight.get("primary_ok", preflight.get("ok", False)))
+    preflight = preflight_for_build(format_name, slug)
+    if not bool(preflight.get("ok", False)):
+        return {
+            "ok": False,
+            "action": "build",
+            "returncode": 1,
+            "output": preflight["reason"],
+            "warnings": preflight["warnings"] + ([preflight["reason"]] if preflight["reason"] else []),
+            "produced_files": [],
+            "preflight": preflight,
+            "book": read_book(book_dir),
+        }
+
+    primary_export_ok = bool(preflight.get("primary_ok", False))
     if not primary_export_ok:
         fallback_before = file_snapshot(book_dir)
         fallback_result = build_book_with_lightweight_fallback(
@@ -4375,6 +4795,7 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
         saved_meta = save_metadata(book_dir, metadata_updates)
     cover_image = normalized_cover_image
     back_cover_image = normalized_back_cover_image
+    selected_variant = selected_cover_variant_record(saved_meta)
 
     front_cover_path = (book_dir / cover_image).resolve() if cover_image else None
     back_cover_path = (book_dir / back_cover_image).resolve() if back_cover_image else None
@@ -4382,6 +4803,31 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
         front_cover_path = None
     if back_cover_path and not back_cover_path.exists():
         back_cover_path = None
+    if not front_cover_path or not back_cover_path:
+        return {
+            "ok": False,
+            "action": "build",
+            "returncode": 1,
+            "output": "Selected final cover assets are missing.",
+            "warnings": ["Selected final cover assets are missing."],
+            "produced_files": [],
+            "preflight": preflight,
+            "book": read_book(book_dir),
+        }
+    if selected_variant:
+        validation = selected_variant.get("text_validation") if isinstance(selected_variant.get("text_validation"), dict) else {}
+        render_mode = str(selected_variant.get("render_mode") or "").strip()
+        if render_mode in {"ai-signature", "ai-minimal"} and not bool(validation.get("valid")):
+            return {
+                "ok": False,
+                "action": "build",
+                "returncode": 1,
+                "output": "Selected cover variant failed Vertex text validation.",
+                "warnings": ["Selected cover variant failed Vertex text validation."],
+                "produced_files": [],
+                "preflight": preflight,
+                "book": read_book(book_dir),
+            }
 
     command = bash_command(
         ROOT_DIR / "compile_book.sh",
@@ -4454,14 +4900,19 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
                 f"Build command failed for '{slug}' (rc={result.returncode}); returned lightweight fallback export."
             )
             return fallback_result
+    parity = build_export_parity_report(book_dir, saved_meta, format_name)
+    warnings = [*list(preflight.get("warnings") or []), *list(parity.get("warnings") or [])]
     return {
-        "ok": result.returncode == 0,
+        "ok": result.returncode == 0 and bool(parity.get("ok")),
         "action": "build",
-        "returncode": result.returncode,
+        "returncode": result.returncode if parity.get("ok") else 1,
         "output": (result.stdout or "") + (result.stderr or ""),
-        "warnings": preflight["warnings"],
+        "warnings": warnings + list(parity.get("errors") or []),
         "produced_files": produced_files(book_dir, before),
         "preflight": preflight,
+        "export_relative_path": parity.get("export_relative_path", ""),
+        "export_url": parity.get("export_url", ""),
+        "parity": parity,
         "book": read_book(book_dir),
     }
 
@@ -4712,19 +5163,27 @@ def preflight_for_workflow(action: str, slug: str | None = None) -> dict[str, An
                 ok = False
                 missing.append("No research result found yet. Run KDP analysis, keyword research, or topic finder first.")
 
-    if action == "cover_local" and not any(tool_exists(tool, env) for tool in ("magick", "convert")):
-        ok = False
-        missing.append("ImageMagick is missing.")
+    if action == "cover_local":
+        if image_provider_policy_vertex_only():
+            ok = False
+            missing.append("Image provider policy is vertex_only; local cover rendering is disabled.")
+        elif not any(tool_exists(tool, env) for tool in ("magick", "convert")):
+            ok = False
+            missing.append("ImageMagick is missing.")
 
     if action == "cover_script":
-        if not tool_exists("jq", env):
+        if image_provider_policy_vertex_only():
             ok = False
-            missing.append("jq is missing.")
-        if not python_launcher:
-            ok = False
-            missing.append("Python runtime is missing.")
-        if not tool_exists("playwright", env):
-            warnings.append("playwright command not found. The script may install it on first run.")
+            missing.append("Image provider policy is vertex_only; browser cover script is disabled.")
+        else:
+            if not tool_exists("jq", env):
+                ok = False
+                missing.append("jq is missing.")
+            if not python_launcher:
+                ok = False
+                missing.append("Python runtime is missing.")
+            if not tool_exists("playwright", env):
+                warnings.append("playwright command not found. The script may install it on first run.")
 
     if action == "cover_variants_generate":
         wsl_binary_path = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "wsl.exe"
@@ -4744,6 +5203,12 @@ def preflight_for_workflow(action: str, slug: str | None = None) -> dict[str, An
         if os.name == "nt" and not (wsl_cover_bridge or wsl_binary_present or python_launcher):
             ok = False
             missing.append("WSL bridge or Python runtime is required for cover variants generation.")
+        if image_provider_policy_vertex_only() and not has_vertex_image_provider_config(env):
+            ok = False
+            missing.append(
+                "Vertex image config is incomplete. Set GOOGLE_API_KEY (or VERTEX_API_KEY / GOOGLE_GENAI_API_KEY) "
+                "and GOOGLE_CLOUD_PROJECT (or GOOGLE_PROJECT_ID / VERTEX_PROJECT_ID)."
+            )
 
     if action == "topic_finder" and not tool_exists("xmllint", env):
         ok = False
@@ -5038,17 +5503,29 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         )
     elif action == "cover_variants_generate":
         settings = read_settings()
+        policy_vertex_only = image_provider_policy_vertex_only()
         variant_count = clamp_cover_variant_target_count(payload.get("variant_count", 1), default=1)
         save_metadata(book_dir, {"cover_variant_target_count": variant_count})
-        service_value = str(payload.get("service") or settings["cover_service"] or "auto")
+        service_value = normalize_cover_service_for_policy(payload.get("service") or settings["cover_service"] or "auto")
+        if not service_value:
+            service_value = "auto"
         force_generate = bool(payload.get("force", False))
         selected_override = str(payload.get("selected_cover_variant") or "").strip()
-        safe_mode = bool(payload.get("safe_mode", False))
-        env_overrides: dict[str, str] | None = None
+        safe_mode_requested = bool(payload.get("safe_mode", False))
+        safe_mode = safe_mode_requested and not policy_vertex_only
+        if safe_mode_requested and policy_vertex_only:
+            append_log(
+                "Ignoring safe_mode for cover_variants_generate because BOOK_IMAGE_PROVIDER_POLICY=vertex_only."
+            )
+        env_overrides: dict[str, str] = {
+            "SHOWCASE_IMAGE_PROVIDER_POLICY": normalized_image_provider_policy(),
+            "BOOK_IMAGE_PROVIDER_POLICY": normalized_image_provider_policy(),
+        }
         timeout_seconds = 210
         if safe_mode:
             # Safe mode avoids long remote provider waits and forces fast local fallback paths.
-            env_overrides = {
+            env_overrides.update(
+                {
                 "CODEFAST_API_KEY": "",
                 "OPENAI_API_KEY": "",
                 "GEMINI_API_KEY": "",
@@ -5057,7 +5534,8 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
                 "VERTEX_API_KEY": "",
                 "GOOGLE_GENAI_API_KEY": "",
                 "SHOWCASE_MAX_ART_ATTEMPTS": "1",
-            }
+                }
+            )
             timeout_seconds = 90
         script_args = [
             str(book_dir),
@@ -5073,10 +5551,10 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         result = run_python_script_with_fallback(
             ROOT_DIR / "scripts" / "generate_book_cover_variants.py",
             script_args,
-            env=command_env(overrides=env_overrides),
+            env=command_env(overrides=env_overrides or None),
             timeout_seconds=timeout_seconds,
         )
-        if result.returncode != 0 and not safe_mode:
+        if result.returncode != 0 and not safe_mode and not policy_vertex_only:
             safe_env = {
                 "CODEFAST_API_KEY": "",
                 "OPENAI_API_KEY": "",
@@ -5086,6 +5564,8 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
                 "VERTEX_API_KEY": "",
                 "GOOGLE_GENAI_API_KEY": "",
                 "SHOWCASE_MAX_ART_ATTEMPTS": "1",
+                "SHOWCASE_IMAGE_PROVIDER_POLICY": "auto",
+                "BOOK_IMAGE_PROVIDER_POLICY": "auto",
             }
             safe_args = [
                 str(book_dir),
@@ -5271,7 +5751,32 @@ class DashboardHandler(BaseHTTPRequestHandler):
         try:
             if path == "/api/health":
                 # Health check is always public
-                self.respond_json({"ok": True, "host": HOST, "port": PORT, "time": now_iso()})
+                env = command_env()
+                vertex_config = resolve_vertex_image_config(env)
+                with ACTIVE_PREVIEW_PIPELINES_LOCK:
+                    preview_active_count = len(ACTIVE_PREVIEW_PIPELINES)
+                with ACTIVE_FULL_CHAPTER_PIPELINES_LOCK:
+                    full_active_count = len(ACTIVE_FULL_CHAPTER_PIPELINES)
+                watchdog_running = bool(_pipeline_watchdog_thread and _pipeline_watchdog_thread.is_alive())
+                self.respond_json(
+                    {
+                        "ok": True,
+                        "host": HOST,
+                        "port": PORT,
+                        "time": now_iso(),
+                        "pipeline_recovery_enabled": PIPELINE_RECOVERY_ENABLED,
+                        "watchdog_running": watchdog_running,
+                        "watchdog_interval_seconds": PIPELINE_WATCHDOG_INTERVAL_SECONDS,
+                        "pipeline_stale_seconds": PIPELINE_STALE_SECONDS,
+                        "active_preview_pipelines": preview_active_count,
+                        "active_full_generation_pipelines": full_active_count,
+                        "image_provider_policy": normalized_image_provider_policy(),
+                        "preview_cover_service": normalize_cover_service_for_policy(PREVIEW_COVER_SERVICE),
+                        "vertex_image_configured": bool(vertex_config["api_key"] and vertex_config["project"]),
+                        "vertex_project_configured": bool(vertex_config["project"]),
+                        "vertex_location": vertex_config["location"],
+                    }
+                )
                 return
             if path == "/api/books":
                 # Public endpoint - data is filtered by Next.js layer
@@ -5411,7 +5916,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             workflow_action = str(payload.get("action") or "").strip()
             if workflow_action == "build":
                 format_name = str(payload.get("format") or "epub").strip().lower()
-                self.respond_json(preflight_for_build(format_name))
+                self.respond_json(preflight_for_build(format_name, slug))
             else:
                 self.respond_json(preflight_for_workflow(workflow_action, slug))
             return
@@ -5502,12 +6007,21 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
 def main() -> None:
     BOOK_OUTPUTS_DIR.mkdir(exist_ok=True)
+    recovery_summary = resume_interrupted_pipelines()
+    if recovery_summary["preview_requeued"] or recovery_summary["full_requeued"]:
+        append_log(
+            "Startup recovery summary: "
+            f"preview_requeued={recovery_summary['preview_requeued']} "
+            f"full_requeued={recovery_summary['full_requeued']}"
+        )
+    ensure_pipeline_watchdog_running()
     server = ThreadingHTTPServer((HOST, PORT), DashboardHandler)
     print(f"Book dashboard running at http://{HOST}:{PORT}")
 
     # Setup graceful shutdown handlers
     def shutdown_handler(signum: int, frame: Any) -> None:
         print(f"\nReceived signal {signum}, shutting down gracefully...")
+        stop_pipeline_watchdog(timeout=5.0)
         server.shutdown()
         shutdown_pipeline_thread_pool(wait=True, timeout=30.0)
         print("Shutdown complete")

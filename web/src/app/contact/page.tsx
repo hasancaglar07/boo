@@ -5,8 +5,9 @@ import { ContactForm } from "@/components/site/contact-form";
 import { MarketingPage } from "@/components/site/marketing-page";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { buildBreadcrumbSchema } from "@/lib/schema";
 import { supportChannels } from "@/lib/marketing-data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Book Generator Contact | Support and Billing",
@@ -17,6 +18,11 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function ContactPage() {
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", item: absoluteUrl("/") },
+    { name: "Contact", item: absoluteUrl("/contact") },
+  ]);
+
   return (
     <MarketingPage>
       <ContactPageHero />
@@ -63,6 +69,10 @@ export default function ContactPage() {
         </div>
         <ContactForm />
       </section>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
     </MarketingPage>
   );
 }

@@ -3,6 +3,8 @@ import { ShieldCheck, Check, ArrowRight, Zap, BookOpen, Layers, Sparkles, X } fr
 import Link from "next/link";
 
 import { PricingPageHero } from "@/components/site/page-heroes";
+import { DirectAnswerBlock } from "@/components/site/direct-answer";
+import { LastUpdated } from "@/components/site/last-updated";
 import { MarketingPage } from "@/components/site/marketing-page";
 import { PricingCreativeSection } from "@/components/site/pricing-creative-section";
 import { PricingComparisonTable } from "@/components/site/pricing-comparison-table";
@@ -145,6 +147,17 @@ export default function PricingPage() {
   return (
     <MarketingPage>
       <PricingPageHero />
+
+      {/* Direct Answer Block for AI Extraction */}
+      <section className="border-b border-border/80 py-12">
+        <div className="shell">
+          <DirectAnswerBlock
+            question="How much does Book Generator cost?"
+            answer="Book Generator offers flexible pricing starting at $4 for a single book with no subscription required. Monthly plans range from $19-$79, including 10-80 books per month with {NO_API_COST_CLAIM}. All plans include EPUB/PDF output, cover generation, and KDP-compliant formatting. {REFUND_GUARANTEE_CLAIM} within 30 days."
+          />
+          <LastUpdated date="2026-04-09" className="mt-4 text-sm" />
+        </div>
+      </section>
 
       {/* One-line summary + Plans — right below hero */}
       <section className="shell pt-6 pb-0">

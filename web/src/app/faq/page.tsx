@@ -8,6 +8,7 @@ import { MarketingPage } from "@/components/site/marketing-page";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Faq5 } from "@/components/ui/faq-5";
 import { Card, CardContent } from "@/components/ui/card";
+import { buildFAQSchema } from "@/lib/schema";
 import { faqSections } from "@/lib/marketing-data";
 import { buildPageMetadata } from "@/lib/seo";
 
@@ -41,20 +42,11 @@ export default function FaqPage() {
     }, [])
     .slice(0, 4);
 
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqSections.flatMap((section) =>
-      section.items.map(([question, answer]) => ({
-        "@type": "Question",
-        name: question,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: answer,
-        },
-      })),
-    ),
-  };
+  // Build FAQ schema from all FAQ items
+  const allFaqs = faqSections.flatMap((section) =>
+    section.items.map(([question, answer]) => ({ question, answer }))
+  );
+  const faqSchema = buildFAQSchema(allFaqs);
 
   return (
     <MarketingPage>

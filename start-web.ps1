@@ -13,6 +13,10 @@ $DashboardPort = if ($env:BOOK_DASHBOARD_PORT) { [int]$env:BOOK_DASHBOARD_PORT }
 $DashboardHealthUrl = "http://$DashboardHost`:$DashboardPort/api/health"
 $DashboardScript = Join-Path $PSScriptRoot 'dashboard_server.py'
 $DashboardPidFile = Join-Path $PSScriptRoot '.dashboard-server.pid'
+$DashboardForceRestart = $false
+if ($env:BOOK_DASHBOARD_FORCE_RESTART) {
+  $DashboardForceRestart = @('1', 'true', 'yes', 'on') -contains $env:BOOK_DASHBOARD_FORCE_RESTART.ToLowerInvariant()
+}
 
 function WriteHeader {
   Write-Host ''
@@ -157,7 +161,11 @@ function StartDev {
   Write-Host '[info] Durdurmak icin Ctrl+C'
   Write-Host "[info] Tarayici adresi: $Url"
   Write-Host ''
-  EnsureDashboard -ForceRestart
+  if ($DashboardForceRestart) {
+    EnsureDashboard -ForceRestart
+  } else {
+    EnsureDashboard
+  }
   StopPortProcess
   Write-Host '[info] Tarayici aciliyor...'
   Start-Process $Url | Out-Null
@@ -168,7 +176,11 @@ function StartDev {
 function StartProd {
   WriteHeader
   Write-Host '[mode] prod'
-  EnsureDashboard -ForceRestart
+  if ($DashboardForceRestart) {
+    EnsureDashboard -ForceRestart
+  } else {
+    EnsureDashboard
+  }
   StopPortProcess
   Set-Location $WebDir
   pnpm build

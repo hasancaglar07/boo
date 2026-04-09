@@ -3,6 +3,8 @@ import Link from "next/link";
 import { BookOpen, CheckCircle2, Globe, Layers3, Sparkles } from "lucide-react";
 
 import { ExamplesPageHero } from "@/components/site/page-heroes";
+import { DirectAnswerBlock } from "@/components/site/direct-answer";
+import { LastUpdated } from "@/components/site/last-updated";
 import { MarketingPage } from "@/components/site/marketing-page";
 import { SectionHeading } from "@/components/site/section-heading";
 import { ExamplesShowcase } from "@/components/site/examples-showcase";
@@ -85,6 +87,17 @@ export default async function ExamplesPage() {
   return (
     <MarketingPage>
       <ExamplesPageHero items={items} />
+
+      {/* Direct Answer Block for AI Extraction */}
+      <section className="border-b border-border/80 py-12">
+        <div className="shell">
+          <DirectAnswerBlock
+            question="What book examples can I see?"
+            answer="Explore 50+ real AI-generated books with visible chapter plans, first chapter previews, professional cover designs, and downloadable EPUB/PDF outputs. Examples span multiple categories including business, self-help, fiction, and educational content in both English and Turkish."
+          />
+          <LastUpdated date="2026-04-09" className="mt-4 text-sm" />
+        </div>
+      </section>
 
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell">

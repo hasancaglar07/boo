@@ -1,0 +1,129 @@
+
+> web@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.2:3000
+- Environments: .env.local, .env
+✓ Ready in 470ms
+
+[Prisma] Connection pool config: {
+  max: 10,
+  min: 2,
+  idleTimeoutMillis: 30000,
+  acquireTimeoutMillis: 60000
+}
+○ Compiling /faq ...
+ GET /faq 200 in 4.2s (next.js: 3.1s, application-code: 1086ms)
+ GET /faq 200 in 935ms (next.js: 784ms, application-code: 151ms)
+ GET /app/library 200 in 4.3s (next.js: 1572ms, application-code: 2.7s)
+ GET /tools 200 in 4.3s (next.js: 3.4s, application-code: 909ms)
+[Prisma] Connection pool config: {
+  max: 10,
+  min: 2,
+  idleTimeoutMillis: 30000,
+  acquireTimeoutMillis: 60000
+}
+ GET /api/auth/state 200 in 408ms (next.js: 363ms, application-code: 44ms)
+ GET /api/auth/state 200 in 29ms (next.js: 4ms, application-code: 26ms)
+ GET /login?next=%2Fapp%2Flibrary 200 in 2.2s (next.js: 1185ms, application-code: 1022ms)
+ GET /api/auth/state 200 in 84ms (next.js: 29ms, application-code: 55ms)
+ GET / 200 in 3.0s (next.js: 86ms, application-code: 2.9s)
+[browser] Please ensure that the container has a non-static position, like 'relative', 'fixed', or 'absolute' to ensure scroll offset is calculated correctly. (<anonymous>)
+ GET /api/auth/state 200 in 34ms (next.js: 8ms, application-code: 26ms)
+ GET /start/topic 200 in 177ms (next.js: 121ms, application-code: 56ms)
+ GET /api/auth/state 200 in 22ms (next.js: 6ms, application-code: 17ms)
+prisma:query INSERT INTO `main`.`AnalyticsEvent` (`id`, `userId`, `guestIdentityId`, `eventName`, `pathname`, `properties`, `createdAt`) VALUES (?,?,?,?,?,?,?) RETURNING `id` AS `id`, `userId` AS `userId`, `guestIdentityId` AS `guestIdentityId`, `sessionId` AS `sessionId`, `eventName` AS `eventName`, `pathname` AS `pathname`, `properties` AS `properties`, `createdAt` AS `createdAt`
+[analytics] {
+  event: 'wizard_started',
+  pathname: '/start/topic',
+  timestamp: '2026-04-08T23:56:43.486Z',
+  properties: {
+    anonymous_id: null,
+    auth_state: 'guest',
+    book_slug: null,
+    flow_id: null,
+    source: 'start_topic'
+  }
+}
+ POST /api/events 200 in 124ms (next.js: 70ms, application-code: 54ms)
+ GET /api/auth/state 200 in 102ms (next.js: 21ms, application-code: 81ms)
+ GET / 200 in 2.5s (next.js: 8ms, application-code: 2.5s)
+ GET /pricing 200 in 151ms (next.js: 61ms, application-code: 91ms)
+ GET /api/auth/state 200 in 33ms (next.js: 5ms, application-code: 28ms)
+ GET /examples 200 in 2.7s (next.js: 70ms, application-code: 2.6s)
+ GET /api/auth/state 200 in 42ms (next.js: 7ms, application-code: 35ms)
+ GET /use-cases 200 in 1181ms (next.js: 1082ms, application-code: 99ms)
+ GET /api/auth/state 200 in 31ms (next.js: 4ms, application-code: 27ms)
+ GET / 200 in 2.6s (next.js: 9ms, application-code: 2.6s)
+ GET /api/auth/state 200 in 42ms (next.js: 10ms, application-code: 32ms)
+ GET /login?next=%2Fapp%2Flibrary 200 in 787ms (next.js: 10ms, application-code: 776ms)
+ GET / 200 in 3.3s (next.js: 236ms, application-code: 3.1s)
+✓ Compiled in 512ms
+ GET /login?next=%2Fapp%2Flibrary 200 in 2.2s (next.js: 367ms, application-code: 1815ms)
+ GET /login?next=%2Fapp%2Flibrary 200 in 1410ms (next.js: 345ms, application-code: 1066ms)
+ GET /login?next=%2Fapp%2Flibrary 200 in 1217ms (next.js: 88ms, application-code: 1128ms)
+ GET /login?next=%2Fapp%2Flibrary 200 in 1218ms (next.js: 129ms, application-code: 1088ms)
+✓ Compiled in 513ms
+ GET /login?next=%2Fapp%2Flibrary 200 in 3.3s (next.js: 370ms, application-code: 3.0s)
+⨯ ReferenceError: getFeaturedStatistics is not defined
+    at HomePage (src\app\page.tsx:101:5)
+   99 |
+  100 |   return (
+> 101 |     <MarketingPage>
+      |     ^
+  102 |       <PremiumBookHero />
+  103 |
+  104 |       {/* MiddleBlock: Answer "What is this?" early */} {
+  digest: '4234683007'
+}
+ GET / 200 in 13.4s (next.js: 197ms, application-code: 13.2s)
+⨯ ReferenceError: getFeaturedStatistics is not defined
+    at HomePage (src\app\page.tsx:101:5)
+   99 |
+  100 |   return (
+> 101 |     <MarketingPage>
+      |     ^
+  102 |       <PremiumBookHero />
+  103 |
+  104 |       {/* MiddleBlock: Answer "What is this?" early */} {
+  digest: '4234683007'
+}
+ GET / 200 in 13.1s (next.js: 9ms, application-code: 13.1s)
+⨯ ReferenceError: getFeaturedStatistics is not defined
+    at HomePage (src\app\page.tsx:101:5)
+   99 |
+  100 |   return (
+> 101 |     <MarketingPage>
+      |     ^
+  102 |       <PremiumBookHero />
+  103 |
+  104 |       {/* MiddleBlock: Answer "What is this?" early */} {
+  digest: '4234683007'
+}
+ GET / 200 in 12.3s (next.js: 80ms, application-code: 12.2s)
+⨯ ReferenceError: getFeaturedStatistics is not defined
+    at HomePage (src\app\page.tsx:101:5)
+   99 |
+  100 |   return (
+> 101 |     <MarketingPage>
+      |     ^
+  102 |       <PremiumBookHero />
+  103 |
+  104 |       {/* MiddleBlock: Answer "What is this?" early */} {
+  digest: '4234683007'
+}
+ GET / 200 in 12.2s (next.js: 80ms, application-code: 12.1s)
+ GET / 200 in 9.6s (next.js: 259ms, application-code: 9.3s)
+[Prisma] Connection pool config: {
+  max: 10,
+  min: 2,
+  idleTimeoutMillis: 30000,
+  acquireTimeoutMillis: 60000
+}
+ GET /api/auth/state 200 in 332ms (next.js: 271ms, application-code: 61ms)
+ GET / 200 in 4.9s (next.js: 6ms, application-code: 4.9s)
+ GET /api/auth/state 200 in 44ms (next.js: 8ms, application-code: 36ms)
+[browser] Please ensure that the container has a non-static position, like 'relative', 'fixed', or 'absolute' to ensure scroll offset is calculated correctly. (<anonymous>)
+[?25h

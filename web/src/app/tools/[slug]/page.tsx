@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 
 import { InteractiveMarketingTool } from "@/components/site/interactive-marketing-tool";
 import { MarketingPage } from "@/components/site/marketing-page";
+import { buildBreadcrumbSchema, buildHowToSchema } from "@/lib/schema";
 import { getGenericMarketingToolBySlug, getGenericMarketingToolSlugs } from "@/lib/marketing-tools";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 
 type ToolPageProps = {
   params: Promise<{ slug: string }>;
@@ -43,9 +44,39 @@ export default async function ToolPage({ params }: ToolPageProps) {
     notFound();
   }
 
+  const toolUrl = absoluteUrl(tool.path);
+
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", item: absoluteUrl("/") },
+    { name: "Tools", item: absoluteUrl("/tools") },
+    { name: tool.name, item: toolUrl },
+  ]);
+
+  const howToSchema = buildHowToSchema({
+    name: tool.name,
+    description: tool.description,
+    steps: (tool.steps || [
+      "Enter your information",
+      "AI analyzes and processes",
+      "Get detailed results via email"
+    ]).map((step) => ({
+      name: step,
+      text: step,
+    })),
+    estimatedTime: "PT5M",
+  });
+
   return (
     <MarketingPage>
       <InteractiveMarketingTool slug={tool.slug} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
+      />
     </MarketingPage>
   );
 }

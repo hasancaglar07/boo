@@ -5,6 +5,8 @@ import Link from "next/link";
 import { MarketingCtaSection } from "@/components/site/marketing-cta-section";
 import { MarketingPage } from "@/components/site/marketing-page";
 import { SectionHeading } from "@/components/site/section-heading";
+import { DirectAnswerBlock } from "@/components/site/direct-answer";
+import { LastUpdated } from "@/components/site/last-updated";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
@@ -158,11 +160,14 @@ export default function UseCasesPage() {
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
               From individual authors to enterprise teams, consultants to KDP publishers. Book Generator works differently for different purposes — but it's strongest where there's a publish-ready knowledge book workflow.
             </p>
-            <div className="mx-auto mt-8 max-w-3xl rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 text-left shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Short answer</p>
-              <p className="mt-2 text-sm leading-7 text-foreground">
-                Book Generator is a multilingual AI-powered book production system designed for experts, coaches, instructors, course creators, and KDP publishers. Rather than technical documentation or academic thesis production, it excels at producing expertise books, guide books, lead-generating short books, and publish-ready knowledge books.
-              </p>
+
+            {/* Direct Answer Block for AI Extraction */}
+            <div className="mt-8 text-left">
+              <DirectAnswerBlock
+                question="Who should use Book Generator?"
+                answer="Book Generator is ideal for anyone with expertise to share: first-time authors overcoming writer's block, consultants and coaches building authority, instructors transforming course content into books, KDP publishers scaling production, and content creators repurposing existing material. It's especially powerful for experts who know their topic but struggle with structure, consistency, or finding time to write."
+              />
+              <LastUpdated date="2026-04-09" className="mt-4 text-sm" />
             </div>
           </div>
         </div>

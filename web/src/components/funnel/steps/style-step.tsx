@@ -24,7 +24,7 @@ import { getAccount, getPlan } from "@/lib/preview-auth";
 import { cn } from "@/lib/utils";
 
 const TONES: FunnelTone[] = ["clear", "professional", "warm", "inspiring"];
-const DEPTHS: FunnelDepth[] = ["hizli", "dengeli", "detayli"];
+const DEPTHS: FunnelDepth[] = ["quick", "balanced", "detailed"];
 const COVER_DIRECTIONS: FunnelCoverDirection[] = ["editorial", "tech", "minimal", "energetic"];
 
 type StyleTab = "identity" | "cover" | "advanced";

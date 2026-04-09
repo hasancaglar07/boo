@@ -19,8 +19,10 @@ from generate_showcase_ai_covers import (  # noqa: E402
     infer_cover_branch,
     infer_cover_genre,
     infer_cover_subtopic,
+    is_vertex_only_policy,
     normalized_cover_entry,
     resolve_api_key,
+    resolve_vertex_config,
 )
 
 
@@ -279,7 +281,14 @@ def main() -> None:
         raise SystemExit(f"Book directory not found: {book_dir}")
 
     api_key = ""
-    if args.force or not existing_art_ready(book_dir):
+    if is_vertex_only_policy():
+        api_key = resolve_api_key()
+        if not resolve_vertex_config():
+            raise SystemExit(
+                "Vertex-only image policy requires GOOGLE_API_KEY (or VERTEX_API_KEY / GOOGLE_GENAI_API_KEY) "
+                "and GOOGLE_CLOUD_PROJECT (or GOOGLE_PROJECT_ID / VERTEX_PROJECT_ID)."
+            )
+    elif args.force or not existing_art_ready(book_dir):
         try:
             api_key = resolve_api_key()
         except SystemExit as exc:

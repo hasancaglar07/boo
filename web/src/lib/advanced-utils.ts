@@ -1,5 +1,5 @@
 import type { Chapter, ChapterState } from "./dashboard-api";
-import type { WritingGoal, TimeSession, ChapterComment, ChapterVersion } from "@/types/advanced-features";
+import type { WritingGoal, TimeSession, ChapterComment, ChapterCommentReply, ChapterVersion } from "@/types/advanced-features";
 
 // ===== Goal Utilities =====
 

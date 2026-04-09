@@ -98,15 +98,20 @@ SERVICE_CHOICES = (
     "nano-banana-pro",
     "nano-banana-2",
 )
-AI_TEXT_ALLOWED_LANGUAGES = {"English", "Spanish", "Portuguese", "Italian", "Dutch"}
+IMAGE_PROVIDER_POLICY = (
+    os.environ.get("SHOWCASE_IMAGE_PROVIDER_POLICY", "")
+    or os.environ.get("BOOK_IMAGE_PROVIDER_POLICY", "")
+    or "auto"
+).strip().lower().replace("-", "_")
+AI_TEXT_ALLOWED_LANGUAGES = {"English", "Turkish", "Spanish", "Portuguese", "Italian", "Dutch", "German", "French"}
 AI_TEXT_HYBRID_TITLE_MAX = 42
 AI_TEXT_HYBRID_SUBTITLE_MAX = 40
 AI_TEXT_MINIMAL_TITLE_MAX = 48
 AI_TEXT_AUTHOR_MAX = 24
-AI_TEXT_TITLE_MIN_SCORE = 0.8
-AI_TEXT_SUBTITLE_MIN_SCORE = 0.72
-AI_TEXT_AUTHOR_MIN_SCORE = 0.68
-AI_TEXT_MAX_ATTEMPTS = 3
+AI_TEXT_TITLE_MIN_SCORE = 0.84
+AI_TEXT_SUBTITLE_MIN_SCORE = 0.76
+AI_TEXT_AUTHOR_MIN_SCORE = 0.78
+AI_TEXT_MAX_ATTEMPTS = 5
 VARIANT_COUNT = 3
 POLL_ATTEMPTS = 24
 POLL_INTERVAL_SECONDS = 4
@@ -115,8 +120,8 @@ try:
     MAX_ART_ATTEMPTS_PER_VARIANT = max(1, int(os.environ.get("SHOWCASE_MAX_ART_ATTEMPTS", "8")))
 except ValueError:
     MAX_ART_ATTEMPTS_PER_VARIANT = 8
-TEXT_RISK_REJECT_THRESHOLD = 0.0  # OCR disabled â€“ no rejection
-TEXT_RISK_REUSE_THRESHOLD = 0.0   # OCR disabled â€“ no rejection
+TEXT_RISK_REJECT_THRESHOLD = 0.18
+TEXT_RISK_REUSE_THRESHOLD = 0.08
 GENRE_MATRIX: dict[str, dict[str, Any]] = {
     "business-marketing": {
         "branch": "nonfiction",
@@ -124,33 +129,33 @@ GENRE_MATRIX: dict[str, dict[str, Any]] = {
         "families": (
             {
                 "id": "commercial-bold",
-                "label": "Commercial Bold",
+                "label": "Reference Classic",
                 "art_variant": 1,
                 "template": "business-playbook",
                 "titleTone": "sharp",
                 "frameStyle": "brass-rail",
-                "baseMotif": "folio",
-                "artDirection": "commercial bookstore clarity, bold negative space, and decisive nonfiction confidence",
+                "baseMotif": "seal",
+                "artDirection": "classic commercial nonfiction cover, bright high-contrast field, giant title-first hierarchy, one central symbolic icon, and airport-bookstore clarity",
             },
             {
                 "id": "executive-premium",
-                "label": "Executive Premium",
+                "label": "Signal Ledger",
                 "art_variant": 2,
-                "template": "executive-minimal",
-                "titleTone": "classic",
+                "template": "business-playbook",
+                "titleTone": "sharp",
                 "frameStyle": "double-line",
-                "baseMotif": "pillars",
-                "artDirection": "premium executive polish, controlled elegance, and quieter authority",
+                "baseMotif": "folio",
+                "artDirection": "reference-inspired sales cover with strong color blocking, central badge-or-icon emphasis, and clean lower author lockup",
             },
             {
                 "id": "clean-signal",
-                "label": "Clean Signal",
+                "label": "Reference Minimal",
                 "art_variant": 3,
                 "template": "business-playbook",
                 "titleTone": "sharp",
                 "frameStyle": "double-line",
-                "baseMotif": "grid",
-                "artDirection": "modern signal-led structure, cleaner systems energy, and sharp visual discipline",
+                "baseMotif": "beams",
+                "artDirection": "clean trade-book simplicity, vivid background, one hero symbol, and highly readable bookstore thumbnail presence",
             },
         ),
         "paletteKeys": ("amber-ledger", "ink-copper", "slate-gold", "ivory-graphite"),
@@ -162,33 +167,33 @@ GENRE_MATRIX: dict[str, dict[str, Any]] = {
         "families": (
             {
                 "id": "authority-serif",
-                "label": "Authority Serif",
+                "label": "Reference Authority",
                 "art_variant": 1,
-                "template": "expertise-authority",
-                "titleTone": "classic",
+                "template": "business-playbook",
+                "titleTone": "sharp",
                 "frameStyle": "double-line",
-                "baseMotif": "folio",
-                "artDirection": "editorial credibility, literary premium pacing, and authority-book confidence",
+                "baseMotif": "seal",
+                "artDirection": "classic expert-book cover, bold headline dominance, central authority symbol, bright commercial color, and clean author finish",
             },
             {
                 "id": "method-ledger",
-                "label": "Method Ledger",
+                "label": "Reference Method",
                 "art_variant": 2,
                 "template": "business-playbook",
                 "titleTone": "sharp",
                 "frameStyle": "brass-rail",
                 "baseMotif": "seal",
-                "artDirection": "structured frameworks, ledger-like order, and method-driven commercial clarity",
+                "artDirection": "method-driven trade paperback styling, strong visual badge, simplified background, and direct bestseller-like hierarchy",
             },
             {
                 "id": "modern-mentor",
-                "label": "Modern Mentor",
+                "label": "Reference Mentor",
                 "art_variant": 3,
-                "template": "executive-minimal",
-                "titleTone": "classic",
+                "template": "business-playbook",
+                "titleTone": "sharp",
                 "frameStyle": "corner-bracket",
-                "baseMotif": "beams",
-                "artDirection": "premium guidance, warm authority, and contemporary expert positioning",
+                "baseMotif": "folio",
+                "artDirection": "mentor-led commercial cover energy, simplified symbolic centerpiece, confident color field, and strong bottom author line",
             },
         ),
         "paletteKeys": ("plum-seal", "brass-ledger", "ink-parchment", "emerald-ink"),
@@ -381,9 +386,21 @@ def resolve_env_value(*candidate_names: str) -> str:
     return ""
 
 
+def is_vertex_only_policy() -> bool:
+    return IMAGE_PROVIDER_POLICY in {"vertex_only", "vertex"}
+
+
 def resolve_api_key() -> str:
     for env_path in DEFAULT_ENV_FILES:
         load_env_file(env_path)
+    if is_vertex_only_policy():
+        vertex_config = resolve_vertex_config()
+        if vertex_config:
+            return vertex_config["api_key"]
+        raise SystemExit(
+            "Vertex-only image policy requires GOOGLE_API_KEY (or VERTEX_API_KEY / GOOGLE_GENAI_API_KEY) "
+            "and GOOGLE_CLOUD_PROJECT (or GOOGLE_PROJECT_ID / VERTEX_PROJECT_ID)."
+        )
     for names in (VERTEX_API_KEY_NAMES, LEGACY_KEY_NAMES):
         for name in names:
             value = os.environ.get(name, "").strip()
@@ -740,8 +757,11 @@ def cover_hierarchy_for_variant(entry: dict[str, Any], family: dict[str, Any]) -
 
 
 def normalize_service(service: str, entry: dict[str, Any] | None = None) -> list[str]:
-    if service != "auto":
-        return [service]
+    requested = str(service or "auto").strip().lower() or "auto"
+    if requested != "auto":
+        if is_vertex_only_policy() and requested not in VERTEX_IMAGEN_MODELS and requested != "vertex-gemini-flash-image":
+            return ["vertex-imagen-standard"]
+        return [requested]
     providers = ["vertex-imagen-standard", "vertex-imagen-ultra"]
     if entry:
         normalized = normalized_cover_entry(entry)
@@ -749,7 +769,8 @@ def normalize_service(service: str, entry: dict[str, Any] | None = None) -> list
         genre = infer_cover_genre(normalized, branch)
         if branch == "children" or genre == "education":
             providers.append("vertex-gemini-flash-image")
-    providers.extend(["nano-banana-pro", "nano-banana-2"])
+    if not is_vertex_only_policy():
+        providers.extend(["nano-banana-pro", "nano-banana-2"])
     return providers
 
 
@@ -768,14 +789,22 @@ def compare_text_score(expected: str, observed: str) -> float:
         return 0.0
     if expected_norm == observed_norm:
         return 1.0
-    expected_tokens = set(expected_norm.split())
-    observed_tokens = set(observed_norm.split())
-    token_overlap = len(expected_tokens & observed_tokens) / max(1, len(expected_tokens))
+    expected_words = expected_norm.split()
+    observed_words = observed_norm.split()
+    expected_tokens = set(expected_words)
+    observed_tokens = set(observed_words)
+    overlap = len(expected_tokens & observed_tokens)
+    recall = overlap / max(1, len(expected_tokens))
+    precision = overlap / max(1, len(observed_tokens))
     sequence = difflib.SequenceMatcher(None, expected_norm, observed_norm).ratio()
-    score = (sequence * 0.65) + (token_overlap * 0.35)
-    if expected_norm in observed_norm:
-        score = max(score, 0.94)
-    return round(min(score, 0.999), 4)
+    ordered = difflib.SequenceMatcher(None, expected_words, observed_words).ratio()
+    extra_penalty = max(0, len(observed_words) - len(expected_words)) * 0.045
+    missing_penalty = max(0, len(expected_words) - overlap) * 0.07
+    score = (sequence * 0.32) + (ordered * 0.28) + (recall * 0.22) + (precision * 0.18)
+    score -= extra_penalty + missing_penalty
+    if expected_norm in observed_norm and precision >= 0.72:
+        score = max(score, 0.9 - extra_penalty)
+    return round(max(0.0, min(score, 0.999)), 4)
 
 
 def ai_text_strategy_for_entry(entry: dict[str, Any]) -> str:
@@ -783,9 +812,12 @@ def ai_text_strategy_for_entry(entry: dict[str, Any]) -> str:
     branch = infer_cover_branch(entry)
     if branch == "children":
         return "studio-safe"
+    if not str(entry.get("title") or "").strip():
+        return "studio-safe"
+    if is_vertex_only_policy():
+        return "hybrid-ai-text"
     language = str(entry.get("languageCode") or "").strip() or "English"
     title = str(entry.get("title") or "").strip()
-    subtitle = str(entry.get("subtitle") or "").strip()
     author = str(entry.get("author") or "").strip()
     if language not in AI_TEXT_ALLOWED_LANGUAGES:
         return "studio-safe"
@@ -885,24 +917,24 @@ def variant_specs_for_entry(entry: dict[str, Any]) -> list[dict[str, Any]]:
 
     return [
         {
-            "id": f"{families[0]['id']}-signature",
-            "label": "Signature",
+            "id": f"{families[0]['id']}-reference",
+            "label": str(families[0]["label"]),
             "family": families[0],
             "render_mode": "ai-signature",
             "text_strategy": strategy,
         },
         {
             "id": f"{families[1]['id']}-minimal",
-            "label": "Minimal",
+            "label": str(families[1]["label"]),
             "family": families[1],
             "render_mode": "ai-minimal",
             "text_strategy": strategy,
         },
         {
-            "id": f"{families[2]['id']}-exact",
-            "label": "Exact",
+            "id": f"{families[2]['id']}-classic",
+            "label": str(families[2]["label"]),
             "family": families[2],
-            "render_mode": "studio-exact",
+            "render_mode": "ai-signature",
             "text_strategy": strategy,
         },
     ]
@@ -913,8 +945,17 @@ def ai_text_providers_for_entry(service: str, entry: dict[str, Any]) -> list[str
     allowed = [
         provider
         for provider in ordered
-        if provider in {"vertex-imagen-standard", "vertex-imagen-ultra", "nano-banana-pro", "nano-banana-2"}
+        if provider
+        in {
+            "vertex-imagen-standard",
+            "vertex-imagen-ultra",
+            "vertex-gemini-flash-image",
+            "nano-banana-pro",
+            "nano-banana-2",
+        }
     ]
+    if is_vertex_only_policy():
+        allowed = [provider for provider in allowed if provider.startswith("vertex-")]
     return allowed or ordered
 
 
@@ -1058,21 +1099,23 @@ def ai_text_prompt(entry: dict[str, Any], family: dict[str, Any], mode: str, att
     subtitle_instruction = f'Render the exact subtitle text: "{subtitle}".' if subtitle and mode == "ai-signature" else ""
     author_instruction = f'Render the exact author name: "{author}".' if author else ""
     minimal_instruction = (
-        "Use a very clean hierarchy: dominant title, optional small author, and no extra copy. The title may wrap to two lines if needed, but the exact words must stay intact and in the same order."
+        "Use a very clean hierarchy: dominant title, optional small author, no sticker copy, no subtitle unless explicitly requested, and no extra copy. The title may wrap to two or three lines, but the exact words must stay intact and in the same order."
         if mode == "ai-minimal"
-        else "Use a premium bookstore hierarchy: dominant title, controlled subtitle, and author line."
+        else "Use a classic bookstore hierarchy: oversized title, compact subtitle, clear author line, and a single central emblem or scene."
     )
     retry_instruction = ""
     if attempt_index > 1:
         retry_instruction = (
-            " Retry rule: the previous attempt likely misspelled or distorted text. "
-            "Keep the wording exact, remove any extra characters, and do not invent punctuation."
+            " Retry rule: the previous attempt likely misspelled, reordered, or crowded the text. "
+            "Keep the wording exact, preserve word order, simplify the composition, enlarge the title, and remove any extra characters or invented punctuation."
         )
     return (
         f"Create a finished premium portrait {category} book cover, not just background art. "
         f"Art direction: {topic}. Visual language: {style}. "
         f"{title_instruction} {subtitle_instruction} {author_instruction} "
         f"{minimal_instruction} "
+        "Match the feel of a classic commercial nonfiction paperback: bright or decisive color field, bold title dominance, one clear central symbolic icon or badge, minimal clutter, and strong thumbnail readability. "
+        "Use only one main symbol or focal object. Keep the background simple enough that the text remains perfectly readable. "
         "Only render the requested title, subtitle, and author. Do not add any other words, badges, blurbs, fake endorsements, logos, watermarks, glyphs, icons, publisher names, or extra typography. "
         "Do not add prefixed characters such as #, bullets, quote marks, labels like Author:, or decorative prefixes before any line of text. "
         "The text must be crisp, professional, centered or cleanly aligned, and look like a real bookstore-ready cover. "
@@ -1094,8 +1137,104 @@ def extract_text_candidate(payload: dict[str, Any]) -> str:
     return ""
 
 
+def extract_json_object(text: str) -> dict[str, Any]:
+    stripped = str(text or "").strip()
+    if not stripped:
+        return {}
+    candidates = [stripped]
+    match = re.search(r"\{.*\}", stripped, flags=re.DOTALL)
+    if match:
+        candidates.insert(0, match.group(0))
+    for candidate in candidates:
+        try:
+            payload = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            return payload
+    return {}
+
+
+def image_mime_type(image_path: Path) -> str:
+    suffix = image_path.suffix.lower()
+    if suffix in {".jpg", ".jpeg"}:
+        return "image/jpeg"
+    if suffix == ".webp":
+        return "image/webp"
+    return "image/png"
+
+
+def clean_ocr_value(value: Any) -> str:
+    text = str(value or "").strip().strip('"').strip("'")
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def gemini_ocr_models() -> tuple[str, ...]:
+    return ("gemini-2.5-flash", "gemini-2.5-flash-lite")
+
+
 def ocr_cover_fields(image_path: Path) -> dict[str, str]:
-    # OCR disabled â€“ user handles quality via regenerate / manual upload
+    config = resolve_vertex_config()
+    if not config or not image_path.exists():
+        return {"title": "", "subtitle": "", "author": "", "all_text": ""}
+
+    encoded_image = base64.b64encode(image_path.read_bytes()).decode("utf-8")
+    payload = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [
+                    {
+                        "text": (
+                            "Read the visible text on this book cover and return JSON only. "
+                            'Use exactly these keys: "title", "subtitle", "author", "all_text". '
+                            "Preserve the visible wording and word order exactly as shown. "
+                            "Do not infer missing letters. If a field is absent, use an empty string. "
+                            "Put every readable word into all_text in natural reading order."
+                        )
+                    },
+                    {
+                        "inlineData": {
+                            "mimeType": image_mime_type(image_path),
+                            "data": encoded_image,
+                        }
+                    },
+                ],
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0,
+            "topP": 0.1,
+            "responseMimeType": "application/json",
+        },
+    }
+
+    for model in gemini_ocr_models():
+        response = requests.post(
+            VERTEX_GEMINI_TEXT_URL_TEMPLATE.format(model=model, api_key=config["api_key"]),
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            json=payload,
+            timeout=120,
+        )
+        if not response.ok:
+            continue
+        parsed = extract_json_object(extract_text_candidate(safe_json_response(response)))
+        if not parsed:
+            continue
+        title = clean_ocr_value(parsed.get("title"))
+        subtitle = clean_ocr_value(parsed.get("subtitle"))
+        author = clean_ocr_value(parsed.get("author"))
+        all_text = clean_ocr_value(parsed.get("all_text")) or " ".join(
+            part for part in (title, subtitle, author) if part
+        ).strip()
+        return {
+            "title": title,
+            "subtitle": subtitle,
+            "author": author,
+            "all_text": all_text,
+        }
+
     return {"title": "", "subtitle": "", "author": "", "all_text": ""}
 
 
@@ -1529,6 +1668,8 @@ def generate_variant(prompt: str, output_path: Path, api_key: str, provider: str
             return generate_with_vertex_imagen(prompt, output_path, provider)
         if provider == "vertex-gemini-flash-image":
             return generate_with_vertex_gemini(prompt, output_path)
+        if is_vertex_only_policy():
+            return False
         legacy_key = resolve_legacy_api_key() or api_key
         if not legacy_key:
             return False
@@ -1560,6 +1701,7 @@ def ensure_variant_art(
     generated: list[dict[str, Any]] = []
     legacy_ai_cover = assets_dir / "ai_front_cover.png"
     providers = normalize_service(service, entry)
+    allow_procedural_fallback = not is_vertex_only_policy()
     target_families = families or families_for_entry(entry)
     for family in target_families:
         variant_index = int(family["art_variant"])
@@ -1598,7 +1740,7 @@ def ensure_variant_art(
                 if accepted:
                     break
 
-            if not provider_used:
+            if not provider_used and allow_procedural_fallback:
                 try:
                     render_procedural_art(entry, target, str(family["id"]))
                     provider_used = "procedural-studio"
@@ -1830,22 +1972,23 @@ def build_cover_variants(
                 api_key,
                 render_mode,
             )
-            if ai_result and ai_result.get("validation", {}).get("valid"):
-                front_image = f"assets/front_cover_{variant_id}.png"
-                front_svg = ""
-                provider = str(ai_result.get("provider") or provider)
-                validation_payload = dict(ai_result.get("validation") or {})
-            else:
-                effective_render_mode = "studio-exact-fallback"
-                validation_payload = dict((ai_result or {}).get("validation") or {})
+            validation_payload = dict((ai_result or {}).get("validation") or {})
+            if not ai_result or not validation_payload.get("valid"):
+                raise RuntimeError(
+                    f"Vertex text validation failed for {variant_id} "
+                    f"(title={validation_payload.get('titleScore', 0)}, "
+                    f"subtitle={validation_payload.get('subtitleScore', 0)}, "
+                    f"author={validation_payload.get('authorScore', 0)})."
+                )
+            front_image = f"assets/front_cover_{variant_id}.png"
+            front_svg = ""
+            provider = str(ai_result.get("provider") or provider)
 
         score_bonus = 10.0
         if effective_render_mode == "ai-signature":
             score_bonus = 18.0
         elif effective_render_mode == "ai-minimal":
             score_bonus = 15.0
-        elif effective_render_mode == "studio-exact-fallback":
-            score_bonus = 9.0
 
         cover_variants.append(
             {

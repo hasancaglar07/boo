@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { ChapterComment } from "@/types/advanced-features";
+import type { ChapterComment, ChapterCommentReply } from "@/types/advanced-features";
 import {
   addComment,
   addReply,
@@ -140,8 +140,7 @@ export function ChapterComments({
         Comments
         {unresolvedCount > 0 && (
           <Badge
-            variant="destructive"
-            className="absolute -top-1 -right-1 h-5 min-w-5 px-1 flex items-center justify-center p-0 text-xs"
+            className="absolute -top-1 -right-1 h-5 min-w-5 px-1 flex items-center justify-center p-0 text-xs bg-red-500 text-white border-red-500"
           >
             {unresolvedCount}
           </Badge>
@@ -152,7 +151,7 @@ export function ChapterComments({
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Comments - {chapterTitle}</span>
-            <Badge variant="secondary">{chapterComments.length} total</Badge>
+            <Badge className="bg-secondary text-secondary-foreground">{chapterComments.length} total</Badge>
           </DialogTitle>
         </DialogHeader>
 
@@ -212,11 +211,11 @@ export function ChapterComments({
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium text-foreground">{comment.author}</span>
-                          <Badge variant={comment.resolved ? "secondary" : "default"} className="text-xs">
+                          <Badge className={comment.resolved ? "bg-secondary text-secondary-foreground text-xs" : "bg-default text-default-foreground text-xs"}>
                             {comment.resolved ? "Resolved" : "Open"}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
+                            {formatDistanceToNow(new Date(comment.timestamp))}
                           </span>
                         </div>
                         <p className="text-sm text-foreground whitespace-pre-wrap">{comment.text}</p>
@@ -229,7 +228,7 @@ export function ChapterComments({
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs font-medium text-foreground">{reply.author}</span>
                                   <span className="text-xs text-muted-foreground">
-                                    {formatDistanceToNow(new Date(reply.timestamp), { addSuffix: true })}
+                                    {formatDistanceToNow(new Date(reply.timestamp))}
                                   </span>
                                 </div>
                                 <p className="text-xs text-muted-foreground">{reply.text}</p>

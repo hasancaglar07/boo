@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { BarChart3, BookOpen, Check, FlaskConical, ImagePlus, Keyboard, Layers, Loader2, Sparkles, Upload, X } from "lucide-react";
+import { BarChart3, BookOpen, Check, Download, ExternalLink, FileText, FlaskConical, ImagePlus, Keyboard, Layers, Loader2, Sparkles, Upload, X } from "lucide-react";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { AutoSaveIndicator } from "@/components/common/auto-save-indicator";
 import { EnhancedFileList } from "@/components/common/enhanced-file-list";
+import { EpubReaderPreview } from "@/components/app/epub-reader-preview";
 import { useKeyboardShortcuts } from "@/components/common/keyboard-shortcuts";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
 import { KeyboardShortcutsHelp } from "@/components/common/keyboard-shortcuts-help";
@@ -37,6 +38,7 @@ import {
   runWorkflow,
   saveBook,
   uploadBookAsset,
+  type Artifact,
   type Book,
 } from "@/lib/dashboard-api";
 import { useSessionGuard } from "@/lib/use-session-guard";
@@ -55,6 +57,47 @@ const TAB_LABELS: Record<WorkspaceTab, string> = {
 
 function normalizeTab(tab?: string): WorkspaceTab {
   return tab && tabOptions.includes(tab as WorkspaceTab) ? (tab as WorkspaceTab) : "home";
+}
+
+type ExportFormat = "pdf" | "epub";
+
+function exportFormatForFile(file?: Artifact | null): ExportFormat | null {
+  const lowered = String(file?.name || "").toLowerCase();
+  if (lowered.endsWith(".pdf")) return "pdf";
+  if (lowered.endsWith(".epub")) return "epub";
+  return null;
+}
+
+function sortExportsNewestFirst(files: Artifact[]) {
+  return [...files].sort((left, right) => {
+    const leftTime = left.modified ? Date.parse(left.modified) : 0;
+    const rightTime = right.modified ? Date.parse(right.modified) : 0;
+    if (leftTime !== rightTime) {
+      return rightTime - leftTime;
+    }
+    return right.relative_path.localeCompare(left.relative_path);
+  });
+}
+
+function latestExportByFormat(files: Artifact[], format: ExportFormat) {
+  return sortExportsNewestFirst(files).find((file) => exportFormatForFile(file) === format) || null;
+}
+
+function preferredPreviewExport(files: Artifact[]) {
+  return latestExportByFormat(files, "pdf") || latestExportByFormat(files, "epub") || sortExportsNewestFirst(files)[0] || null;
+}
+
+function resolveSelectedCoverVariant(book: Book | null) {
+  const variants = book?.cover_variants || [];
+  if (!variants.length) return null;
+  const selectedId = String(book?.selected_cover_variant || "").trim();
+  const recommendedId = String(book?.recommended_cover_variant || "").trim();
+  return (
+    variants.find((variant) => variant.id === selectedId) ||
+    variants.find((variant) => variant.id === recommendedId) ||
+    variants[0] ||
+    null
+  );
 }
 
 // --- Toast helpers ---
@@ -136,6 +179,7 @@ export function WorkspaceScreen({
   const [isReviewing, setIsReviewing] = useState(false);
   const [writingSubTab, setWritingSubTab] = useState<"overview" | "editor" | "analytics">("overview");
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [selectedExportRelativePath, setSelectedExportRelativePath] = useState("");
 
   function addToast(message: string, type: ToastType): number {
     const id = ++toastCounter;
@@ -185,6 +229,22 @@ export function WorkspaceScreen({
     params.set("tab", activeTab);
     window.history.replaceState({}, "", `${pathname}?${params.toString()}`);
   }, [activeTab, pathname]);
+
+  useEffect(() => {
+    const exportFiles = book?.resources?.exports || [];
+    if (!exportFiles.length) {
+      if (selectedExportRelativePath) {
+        setSelectedExportRelativePath("");
+      }
+      return;
+    }
+    const selectedStillExists = exportFiles.some((file) => file.relative_path === selectedExportRelativePath);
+    if (selectedStillExists) return;
+    const next = preferredPreviewExport(exportFiles);
+    if (next) {
+      setSelectedExportRelativePath(next.relative_path);
+    }
+  }, [book, selectedExportRelativePath]);
 
   // Tab scroll indicators
   useEffect(() => {
@@ -265,6 +325,7 @@ export function WorkspaceScreen({
     setDraft(loadedBook);
     setBackendUnavailable(false);
     setIsDirty(false);
+    return loadedBook;
   }
 
   async function saveCurrentBook() {
@@ -371,6 +432,17 @@ export function WorkspaceScreen({
 
   if (!draft || !book) return null;
   const currentDraft = draft;
+  const exportFiles = sortExportsNewestFirst((book.resources?.exports || []).filter((file) => {
+    const format = exportFormatForFile(file);
+    return format === "pdf" || format === "epub";
+  }));
+  const selectedExportFile =
+    exportFiles.find((file) => file.relative_path === selectedExportRelativePath) ||
+    preferredPreviewExport(exportFiles) ||
+    null;
+  const selectedExportFormat = exportFormatForFile(selectedExportFile);
+  const selectedCoverVariant = resolveSelectedCoverVariant(currentDraft);
+  const selectedCoverValidation = selectedCoverVariant?.text_validation;
 
   const actions = [
     { label: "Overview", description: "Main progress summary", run: () => setActiveTab("home") },
@@ -418,7 +490,16 @@ export function WorkspaceScreen({
         year: currentDraft.year,
         fast: currentDraft.fast,
       });
-      await refresh();
+      const loadedBook = await refresh();
+      const exportFiles = loadedBook.resources?.exports || [];
+      const latestRequestedExport =
+        latestExportByFormat(exportFiles, format) ||
+        (typeof response.export_relative_path === "string"
+          ? exportFiles.find((file) => file.relative_path === response.export_relative_path) || null
+          : null);
+      if (latestRequestedExport) {
+        setSelectedExportRelativePath(latestRequestedExport.relative_path);
+      }
       updateToast(toastId, responseSummary(response).short, "success");
       if (!hadExportBefore) trackEvent("first_export_success", { slug, format });
       if (currentDraft.generate_cover) trackEvent("cover_generated", { slug, format });
@@ -982,77 +1063,249 @@ export function WorkspaceScreen({
 
         {/* ── PUBLISH ── */}
         <TabsContent value="publish" className="mt-6 space-y-6">
-          <Card>
-            <CardContent className="space-y-4 pt-6">
-              <div>
-                <h3 className="text-base font-semibold text-foreground">Export Your Book</h3>
-                <p className="mt-1 text-sm text-muted-foreground">Generate publication-ready files in multiple formats</p>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <Button
-                  variant="outline"
-                  className="gap-2 border-warning/50 text-warning hover:bg-warning/10"
-                  onClick={async () => {
-                    const toastId = addToast("Running pre-check...", "loading");
-                    try {
-                      const response = await preflightBook(slug, { action: "build", format: "epub" });
-                      updateToast(toastId, response.ok ? "Ready for EPUB." : String(response.reason || "Not ready."), response.ok ? "success" : "error");
-                    } catch (error) {
-                      updateToast(toastId, error instanceof Error ? error.message : "Pre-check failed.", "error");
-                    }
-                  }}
-                >
-                  <Check className="size-4" />
-                  <div className="text-left">
-                    <div className="font-medium">Pre-check</div>
-                    <div className="text-xs opacity-70">Validate before export</div>
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)]">
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="space-y-4 pt-6">
+                  <div>
+                    <h3 className="text-base font-semibold text-foreground">Export Your Book</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Generate publication-ready EPUB and PDF files, then review them inline without leaving the workspace.
+                    </p>
                   </div>
-                </Button>
 
-                <Button
-                  className="gap-2"
-                  onClick={() => triggerBuild("epub").catch((error) => addToast(error instanceof Error ? error.message : "EPUB generation failed.", "error"))}
-                >
-                  <Upload className="size-4" />
-                  <div className="text-left">
-                    <div className="font-medium">Get EPUB</div>
-                    <div className="text-xs opacity-70">Standard e-book format</div>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Button
+                      variant="outline"
+                      className="gap-2 border-warning/50 text-warning hover:bg-warning/10"
+                      onClick={async () => {
+                        const toastId = addToast("Running pre-check...", "loading");
+                        try {
+                          const response = await preflightBook(slug, { action: "build", format: "epub" });
+                          const message = response.ok
+                            ? "Build path is ready."
+                            : String(response.reason || response.missing || "Build is not ready.");
+                          updateToast(toastId, message, response.ok ? "success" : "error");
+                        } catch (error) {
+                          updateToast(toastId, error instanceof Error ? error.message : "Pre-check failed.", "error");
+                        }
+                      }}
+                    >
+                      <Check className="size-4" />
+                      <div className="text-left">
+                        <div className="font-medium">Pre-check</div>
+                        <div className="text-xs opacity-70">Validate covers, Vertex, and exporter</div>
+                      </div>
+                    </Button>
+
+                    <Button
+                      className="gap-2"
+                      onClick={() => triggerBuild("epub").catch((error) => addToast(error instanceof Error ? error.message : "EPUB generation failed.", "error"))}
+                    >
+                      <BookOpen className="size-4" />
+                      <div className="text-left">
+                        <div className="font-medium">Get EPUB</div>
+                        <div className="text-xs opacity-70">Embedded e-book preview</div>
+                      </div>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => triggerBuild("pdf").catch((error) => addToast(error instanceof Error ? error.message : "PDF generation failed.", "error"))}
+                    >
+                      <FileText className="size-4" />
+                      <div className="text-left">
+                        <div className="font-medium">Get PDF</div>
+                        <div className="text-xs opacity-70">Print-ready preview</div>
+                      </div>
+                    </Button>
                   </div>
-                </Button>
+                </CardContent>
+              </Card>
 
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => triggerBuild("pdf").catch((error) => addToast(error instanceof Error ? error.message : "PDF generation failed.", "error"))}
-                >
-                  <Upload className="size-4" />
-                  <div className="text-left">
-                    <div className="font-medium">Get PDF</div>
-                    <div className="text-xs opacity-70">Print-ready format</div>
+              <Card>
+                <CardContent className="space-y-4 pt-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">Live Output Preview</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        The latest generated PDF or EPUB opens here automatically after each successful build.
+                      </p>
+                    </div>
+                    {selectedExportFile ? (
+                      <div className="flex items-center gap-2">
+                        <Badge className="border-border/70 bg-background text-foreground">
+                          {selectedExportFormat === "pdf" ? "PDF" : selectedExportFormat === "epub" ? "EPUB" : "Export"}
+                        </Badge>
+                        <a href={buildAssetUrl(selectedExportFile.url)} target="_blank" rel="noreferrer">
+                          <Button variant="outline" size="sm">
+                            <ExternalLink className="mr-1.5 size-3.5" />
+                            Open
+                          </Button>
+                        </a>
+                        <a href={buildAssetUrl(selectedExportFile.url)} download>
+                          <Button size="sm">
+                            <Download className="mr-1.5 size-3.5" />
+                            Download
+                          </Button>
+                        </a>
+                      </div>
+                    ) : null}
                   </div>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardContent className="space-y-3 pt-6">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Export History</h3>
-                <p className="mt-1 text-xs text-muted-foreground">Recently generated files (last 20)</p>
-              </div>
-            </CardContent>
-          </Card>
+                  {selectedExportFile ? (
+                    selectedExportFormat === "pdf" ? (
+                      <div className="overflow-hidden rounded-2xl border border-border/70 bg-white">
+                        <iframe
+                          title={selectedExportFile.name}
+                          src={`${buildAssetUrl(selectedExportFile.url)}#toolbar=0&view=FitH`}
+                          className="h-[780px] w-full"
+                        />
+                      </div>
+                    ) : selectedExportFormat === "epub" ? (
+                      <EpubReaderPreview url={buildAssetUrl(selectedExportFile.url)} />
+                    ) : null
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-10 text-center">
+                      <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted">
+                        <Upload className="size-5 text-muted-foreground" />
+                      </div>
+                      <div className="mt-4 text-sm font-medium text-foreground">No preview selected yet</div>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Generate EPUB or PDF to open the newest output directly inside the workspace.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
-          <EnhancedFileList
-            files={(book.resources?.exports || []).slice(-20).reverse()}
-            fileType="export"
-            onDownload={(file) => {
-              const url = buildAssetUrl(file.url);
-              window.open(url, '_blank');
-            }}
-          />
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="space-y-4 pt-6">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Selected Cover For Export</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      The active variant below is the exact cover bundle that the build pipeline exports.
+                    </p>
+                  </div>
+
+                  {selectedCoverVariant ? (
+                    <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className="border-border/70 bg-background text-foreground">{selectedCoverVariant.label}</Badge>
+                        <Badge className="border-border/70 bg-background text-foreground">{selectedCoverVariant.provider || "vertex"}</Badge>
+                        <Badge className="border-border/70 bg-background text-foreground">{selectedCoverVariant.render_mode || "ai-signature"}</Badge>
+                        <Badge className={cn(
+                          "border-transparent",
+                          selectedCoverValidation?.valid
+                            ? "bg-green-500/15 text-green-700 dark:text-green-400"
+                            : "bg-destructive/15 text-destructive"
+                        )}>
+                          {selectedCoverValidation?.valid ? "Text Validation Passed" : "Text Validation Required"}
+                        </Badge>
+                      </div>
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        <div>Family: <span className="font-medium text-foreground">{selectedCoverVariant.family}</span></div>
+                        <div>Template: <span className="font-medium text-foreground">{selectedCoverVariant.template || "reference-classic"}</span></div>
+                        <div>Layout: <span className="font-medium text-foreground">{selectedCoverVariant.layout || "auto"}</span></div>
+                      </div>
+                      {selectedCoverValidation ? (
+                        <div className="grid gap-2 sm:grid-cols-3">
+                          <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                            Title score
+                            <div className="mt-1 text-sm font-semibold text-foreground">
+                              {selectedCoverValidation.titleScore ?? 0}
+                            </div>
+                          </div>
+                          <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                            Subtitle score
+                            <div className="mt-1 text-sm font-semibold text-foreground">
+                              {selectedCoverValidation.subtitleScore ?? 0}
+                            </div>
+                          </div>
+                          <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                            Author score
+                            <div className="mt-1 text-sm font-semibold text-foreground">
+                              {selectedCoverValidation.authorScore ?? 0}
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
+                      No cover variant has been selected yet.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="space-y-4 pt-6">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Export History</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">Select an EPUB or PDF to preview it inline.</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {exportFiles.length ? (
+                      exportFiles.map((file) => {
+                        const format = exportFormatForFile(file);
+                        const selected = file.relative_path === selectedExportFile?.relative_path;
+                        const url = buildAssetUrl(file.url);
+                        return (
+                          <div
+                            key={file.relative_path}
+                            className={cn(
+                              "rounded-2xl border p-4 transition-colors",
+                              selected ? "border-primary/40 bg-primary/5" : "border-border/70 bg-background",
+                            )}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedExportRelativePath(file.relative_path)}
+                                className="min-w-0 flex-1 text-left"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Badge className="border-border/70 bg-background text-foreground">{format?.toUpperCase()}</Badge>
+                                  <span className="truncate text-sm font-medium text-foreground">{file.name}</span>
+                                </div>
+                                <div className="mt-2 text-xs text-muted-foreground">{file.modified || file.relative_path}</div>
+                              </button>
+                              <div className="flex shrink-0 items-center gap-2">
+                                <a href={url} target="_blank" rel="noreferrer">
+                                  <Button variant="outline" size="sm">
+                                    <ExternalLink className="mr-1.5 size-3.5" />
+                                    Open
+                                  </Button>
+                                </a>
+                                <a href={url} download>
+                                  <Button size="sm">
+                                    <Download className="mr-1.5 size-3.5" />
+                                    Save
+                                  </Button>
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-8 text-center">
+                        <div className="text-sm font-medium text-foreground">No exports yet</div>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Build EPUB or PDF to populate the embedded preview list.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
       </Tabs>
@@ -1075,4 +1328,4 @@ export function WorkspaceScreen({
       </button>
     </AppFrame>
   );
-}
+}

@@ -16,8 +16,11 @@ import {
   WandSparkles,
 } from "lucide-react";
 
+import { DirectAnswerBlock } from "@/components/site/direct-answer";
+import { LastUpdated } from "@/components/site/last-updated";
 import { MarketingPage } from "@/components/site/marketing-page";
 import { SectionHeading } from "@/components/site/section-heading";
+import { buildHowToSchema } from "@/lib/schema";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { absoluteUrl, buildPageMetadata } from "@/lib/seo";
 
@@ -163,22 +166,15 @@ const faqs = [
 ] as const;
 
 export default function HowItWorksPage() {
-  const howToSchema = {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    name: "How to produce a book with Book Creator?",
-    description:
-      "Enter your topic summary, approve the outline, preview it, and get EPUB/PDF outputs.",
-    inLanguage: "en-US",
-    totalTime: "PT30M",
-    url: absoluteUrl("/how-it-works"),
-    step: steps.map((item) => ({
-      "@type": "HowToStep",
-      position: Number(item.step),
+  const howToSchema = buildHowToSchema({
+    name: "How to Generate a Book with AI",
+    description: "Complete guide to creating a publication-ready book using Book Generator's AI-powered platform in 3 simple steps",
+    estimatedTime: "PT30M",
+    steps: steps.map((item) => ({
       name: item.title,
       text: item.text,
     })),
-  };
+  });
 
   const faqSchema = {
     "@context": "https://schema.org",
@@ -224,6 +220,15 @@ export default function HowItWorksPage() {
               <span className="text-sm text-muted-foreground">
                 Start with short answers. See the outline, then proceed.
               </span>
+            </div>
+
+            {/* Direct Answer Block for AI Extraction */}
+            <div className="mt-8 text-left">
+              <DirectAnswerBlock
+                question="How does AI book generation work?"
+                answer="Book Generator transforms your expertise into publication-ready books in 3 steps. First, answer 5 guided questions about your topic and audience. The AI generates a complete chapter outline for your approval. Once approved, it writes each chapter with consistent style and tone, then produces professional EPUB and PDF files ready for Amazon KDP publishing."
+              />
+              <LastUpdated date="2026-04-09" className="mt-4 text-sm" />
             </div>
 
             <div className="mt-12 grid gap-3 md:grid-cols-3">

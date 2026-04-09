@@ -8,6 +8,7 @@ type PageMetadataInput = {
   noIndex?: boolean;
   type?: "website" | "article";
   ogImage?: string;
+  hreflang?: Record<string, string>; // NEW: International language support
 };
 
 const productionSiteUrl = "https://bookgenerator.net";
@@ -110,6 +111,7 @@ export function buildPageMetadata({
     alternates: {
       canonical,
       languages: {
+        "en": canonical,
         "en-US": canonical,
       },
     },

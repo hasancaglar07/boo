@@ -110,7 +110,26 @@ export type AnalyticsEventName =
   | "fast_preview_loading_completed"
   | "start_page_viewed"
   | "start_option_clicked"
-  | "preview_custom_front_cover_uploaded";
+  | "preview_custom_front_cover_uploaded"
+  // Performance monitoring events
+  | "performance_lcp"
+  | "performance_fid"
+  | "performance_cls"
+  | "performance_fcp"
+  | "performance_page_load"
+  | "performance_resource_load"
+  | "performance_custom_mark"
+  // Preview engagement events
+  | "preview_time_on_page"
+  | "preview_scroll_depth"
+  | "preview_chapter_changed"
+  | "preview_error_caught"
+  | "preview_error_retry"
+  | "preview_manual_error"
+  | "global_error_caught"
+  | "global_error_reset"
+  | "global_error_go_home"
+  | "manual_error_reported";
 
 type AnalyticsPayload = {
   event: AnalyticsEventName;

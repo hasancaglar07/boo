@@ -1,7 +1,7 @@
 "use client"
 
 import { useTheme } from "next-themes"
-import { Toaster as Sonner, type ToasterProps } from "sonner"
+import { Toaster as Sonner, type ToasterProps, toast } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
@@ -38,12 +38,23 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast: "cn-toast group/toast",
+          title: "text-sm font-semibold",
+          description: "text-xs",
+          actionButton: "bg-primary text-primary-foreground hover:bg-primary/90",
+          cancelButton: "bg-muted text-muted-foreground hover:bg-muted/80",
+          closeButton: "bg-transparent border-border hover:bg-accent",
         },
+        duration: 4000,
       }}
+      position="top-right"
+      expand={false}
+      richColors
+      closeButton
       {...props}
     />
   )
 }
 
 export { Toaster }
+export { toast }

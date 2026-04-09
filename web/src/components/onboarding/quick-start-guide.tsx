@@ -7,25 +7,37 @@ import { trackEvent } from "@/lib/analytics";
 const QUICK_START_STEPS = [
   {
     icon: "✍️",
-    title: "Write Your TopicWrite Your TopicGenerate your book topic in 10 secondsGenerate your book topic in 10 sec10 sec",
+    title: "Write Your Topic",
+    description: "Generate your book topic in 10 seconds",
+    time: "10 sec",
   },
   {
     icon: "🤖",
-    title: "AI ile Outline",
+    title: "AI Outline",
     description: "Generate automatic chapter plan",
     time: "30 sec",
   },
   {
     icon: "🎨",
-    title: "Choose CoverChoose CoverChoose one of the AI cover drafts",
+    title: "Choose Cover",
+    description: "Choose one of the AI cover drafts",
     time: "15 sec",
   },
   {
     icon: "📖",
-    title: "PreviewPreviewRead the first chapter right away",
-    time: "Nowowquick_start_clicked", { location: "homepage_guide" });
+    title: "Preview & Read",
+    description: "Read the first chapter right away",
+    time: "5 sec",
+  },
+];
+
+export function QuickStartGuide() {
+  const router = useRouter();
+
+  const handleGetStarted = () => {
+    trackEvent("quick_start_clicked", { location: "homepage_guide" });
     router.push("/start/topic");
-  }
+  };
 
   return (
     <div className="quick-start-card rounded-[28px] border border-border/80 bg-card/80 p-6 md:p-8">
@@ -36,7 +48,7 @@ const QUICK_START_STEPS = [
         </p>
       </div>
 
-      <div className=Transform your idea into a publish-ready book in just 4 steps>
+      <div className="space-y-3">
         {QUICK_START_STEPS.map((step, index) => (
           <div
             key={index}
@@ -65,8 +77,8 @@ const QUICK_START_STEPS = [
       </div>
 
       <div className="mt-6">
-        <Button size="lg" className="w-full" onClick={handleStart}>
-          Start Now
+        <Button size="lg" className="w-full" onClick={handleGetStarted}>
+          Get Started Now
         </Button>
         <p className="mt-3 text-center text-xs text-muted-foreground">
           No sign-up required · Free trial · Cancel anytime

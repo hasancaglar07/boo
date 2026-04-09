@@ -4,7 +4,6 @@ import Link from "next/link";
 import { PremiumBookHero } from "@/components/site/premium-book-hero";
 import { InteractiveBookShowcase } from "@/components/site/interactive-book-showcase";
 
-import { HomeHowItWorksSection } from "@/components/site/home-how-it-works-section";
 import { HomeTestimonialsSection } from "@/components/site/home-testimonials-section";
 import { HomeBlogPreviewSection } from "@/components/site/home-blog-preview-section";
 import { MarketingCtaSection } from "@/components/site/marketing-cta-section";
@@ -12,8 +11,10 @@ import { MarketingPage } from "@/components/site/marketing-page";
 import { PricingCreativeSection } from "@/components/site/pricing-creative-section";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Card, CardContent } from "@/components/ui/card";
+import { buildReviewSchema, buildWebSiteSchema } from "@/lib/schema";
 import { loadExamplesShowcaseData } from "@/lib/examples-data";
-import { buildPageMetadata, buildOgImageUrl } from "@/lib/seo";
+import { buildPageMetadata, buildOgImageUrl, absoluteUrl, siteConfig } from "@/lib/seo";
+import { customerReviews, aggregateRating } from "@/lib/reviews-data";
 import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -78,6 +79,23 @@ export default async function HomePage() {
     ],
   ];
 
+  const reviewSchema = buildReviewSchema({
+    itemName: siteConfig.name,
+    itemUrl: absoluteUrl("/"),
+    reviews: customerReviews,
+    aggregateRating,
+  });
+
+  const webSiteSchema = buildWebSiteSchema({
+    name: siteConfig.name,
+    description: siteConfig.description,
+    url: siteConfig.siteUrl,
+    searchAction: {
+      target: absoluteUrl("/search?q={search_term_string}"),
+      queryInput: "required name=search_term_string",
+    },
+  });
+
   return (
     <MarketingPage>
       <PremiumBookHero />
@@ -123,10 +141,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <HomeHowItWorksSection />
+      <HomeTestimonialsSection />
       <InteractiveBookShowcase books={fallbackShowcaseBooks} />
 
-      {/* Pricing: Answer "is it expensive?" before testimonials */}
+      {/* Pricing: Answer "is it expensive?" before blog */}
       <section className="border-b border-border/80 py-18">
         <PricingCreativeSection
           tag="Book Pricing"
@@ -135,7 +153,6 @@ export default async function HomePage() {
         />
       </section>
 
-      <HomeTestimonialsSection />
       <HomeBlogPreviewSection />
 
       <section className="border-b border-border/80 py-18">
@@ -171,6 +188,14 @@ export default async function HomePage() {
           "Free preview — unlock full access when you like it",
           "KDP-compatible EPUB + PDF output",
         ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
       />
     </MarketingPage>
   );

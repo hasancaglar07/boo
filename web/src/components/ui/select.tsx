@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const Select = React.forwardRef<
   HTMLSelectElement,
-  React.ComponentProps<typeof HTMLSelectElement>
+  React.SelectHTMLAttributes<HTMLSelectElement>
 >(({ className, children, ...props }, ref) => {
   return (
     <div className="relative">

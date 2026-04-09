@@ -11,13 +11,16 @@ import {
 } from "lucide-react";
 
 import { AboutPageHero } from "@/components/site/page-heroes";
+import { DirectAnswerBlock } from "@/components/site/direct-answer";
 import { MarketingCtaSection } from "@/components/site/marketing-cta-section";
 import { MarketingPage } from "@/components/site/marketing-page";
 import { SectionHeading } from "@/components/site/section-heading";
 import { CyberneticBentoGrid } from "@/components/ui/cybernetic-bento-grid";
 import { Features4 } from "@/components/ui/features-4";
 import { Card, CardContent } from "@/components/ui/card";
+import { buildReviewSchema } from "@/lib/schema";
 import { buildPageMetadata, absoluteUrl, siteConfig } from "@/lib/seo";
+import { customerReviews, aggregateRating } from "@/lib/reviews-data";
 import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -134,6 +137,13 @@ export default function AboutPage() {
     description: siteConfig.description,
   };
 
+  const reviewSchema = buildReviewSchema({
+    itemName: siteConfig.name,
+    itemUrl: absoluteUrl("/about"),
+    reviews: customerReviews,
+    aggregateRating,
+  });
+
   return (
     <MarketingPage>
       <AboutPageHero />
@@ -151,6 +161,16 @@ export default function AboutPage() {
               <div className="text-xs leading-5 text-muted-foreground">{m.label}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Direct Answer Block for AI Extraction */}
+      <section className="border-b border-border/80 py-12">
+        <div className="shell">
+          <DirectAnswerBlock
+            question="What is Book Generator?"
+            answer="Book Generator is an AI-powered publishing platform that transforms your expertise into publication-ready books in 5 questions. It generates complete manuscripts, professional covers, and KDP-compliant EPUB/PDF output, handling research, outlining, writing, and formatting automatically. {NO_API_COST_CLAIM} and {KDP_LIVE_BOOKS_CLAIM} with {KDP_GUARANTEE_CLAIM} focus."
+          />
         </div>
       </section>
 
@@ -226,6 +246,10 @@ export default function AboutPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewSchema) }}
       />
     </MarketingPage>
   );

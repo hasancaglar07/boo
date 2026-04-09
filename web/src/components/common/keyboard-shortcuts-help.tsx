@@ -49,7 +49,7 @@ export function KeyboardShortcutsHelp({
               <span className="text-sm text-muted-foreground">
                 {shortcut.description}
               </span>
-              <Badge variant="outline" className="font-mono text-xs">
+              <Badge className="font-mono text-xs">
                 {shortcut.key}
               </Badge>
             </div>

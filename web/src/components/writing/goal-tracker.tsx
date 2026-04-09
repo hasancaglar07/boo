@@ -84,7 +84,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
               <div className="text-sm font-medium text-foreground">Daily Target</div>
             </div>
             {isGoalComplete && (
-              <Badge variant="default" className="gap-1">
+              <Badge className="bg-default text-default-foreground gap-1">
                 <CheckCircle2 className="size-3" />
                 Complete!
               </Badge>
@@ -173,7 +173,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
                       Ch. {deadline.chapterIndex + 1}
                     </span>
                   </div>
-                  <Badge variant={deadline.daysUntil <= 3 ? "destructive" : "secondary"}>
+                  <Badge className={deadline.daysUntil <= 3 ? "bg-red-500 text-white" : "bg-secondary text-secondary-foreground"}>
                     {deadline.daysUntil === 0
                       ? "Today"
                       : deadline.daysUntil === 1

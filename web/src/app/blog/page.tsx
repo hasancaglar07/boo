@@ -8,8 +8,9 @@ import { SectionHeading } from "@/components/site/section-heading";
 import { Features4 } from "@/components/ui/features-4";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { buildItemListSchema, buildBreadcrumbSchema } from "@/lib/schema";
 import { blogPosts } from "@/lib/marketing-data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Book Generator Blog | AI Book Writing Guides",
@@ -62,6 +63,23 @@ function formatDate(dateStr: string) {
 
 export default function BlogPage() {
   const [featured, ...restPosts] = blogPosts;
+
+  const blogListSchema = buildItemListSchema({
+    name: "Book Generator Blog Articles",
+    description: "Collection of AI book writing guides, KDP preparation, and publishing tutorials",
+    numberOfItems: blogPosts.length,
+    itemListElement: blogPosts.map((post, index) => ({
+      position: index + 1,
+      name: post.title,
+      description: post.summary,
+      url: absoluteUrl(`/blog/${post.slug}`),
+    })),
+  });
+
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", item: absoluteUrl("/") },
+    { name: "Blog", item: absoluteUrl("/blog") },
+  ]);
 
   return (
     <MarketingPage>
@@ -195,6 +213,14 @@ export default function BlogPage() {
           "Chapter generation and editing",
           "Preview first, then full book",
         ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogListSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
     </MarketingPage>
   );

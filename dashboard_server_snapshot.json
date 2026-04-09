@@ -1,0 +1,19 @@
+{
+  "synced_from": "http://127.0.0.1:8765",
+  "synced_at": "2026-04-09T00:31:22+03:00",
+  "server_ok": true,
+  "pipeline_recovery_enabled": true,
+  "watchdog_running": true,
+  "watchdog_interval_seconds": 30,
+  "pipeline_stale_seconds": 180,
+  "image_provider_policy": "vertex_only",
+  "preview_cover_service": "vertex-imagen-standard",
+  "vertex_image_configured": false,
+  "vertex_project_configured": false,
+  "vertex_location": "us-central1",
+  "default_author": "Book Creator",
+  "default_publisher": "Book Generator",
+  "cover_service": "auto",
+  "has_codefast_api_key": true,
+  "has_google_api_key": false
+}

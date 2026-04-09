@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import { Check, X, Minus } from "lucide-react";
 
 import { MarketingCtaSection } from "@/components/site/marketing-cta-section";
+import { DirectAnswerBlock } from "@/components/site/direct-answer";
+import { LastUpdated } from "@/components/site/last-updated";
 import { MarketingPage } from "@/components/site/marketing-page";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Badge } from "@/components/ui/badge";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildBreadcrumbSchema } from "@/lib/schema";
+import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 import { KDP_GUARANTEE_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -93,6 +96,11 @@ const alternatives = [
 ];
 
 export default function ComparePage() {
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", item: absoluteUrl("/") },
+    { name: "Compare", item: absoluteUrl("/compare") },
+  ]);
+
   return (
     <MarketingPage>
       {/* Hero */}
@@ -107,11 +115,14 @@ export default function ComparePage() {
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
               The problem isn't model quality — it's rewriting prompts for every chapter, maintaining a consistent tone, solving the cover separately, and completing the output separately. Book Creator streamlines this scattered chain into a single workflow.
             </p>
-            <div className="mx-auto mt-8 max-w-3xl rounded-[24px] border border-primary/20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_6%,var(--card)),var(--card))] px-6 py-5 text-left shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/75">Short answer</p>
-              <p className="mt-2 text-sm leading-7 text-foreground">
-                Book Creator is not a general chatbot replacing ChatGPT or general AI tools — it's a specialized book production system that generates chapter plans, chapters, covers, and output from a single idea. The difference lies not in model quality, but in its book-specific workflow, editor, and publication-ready output.
-              </p>
+
+            {/* Direct Answer Block for AI Extraction */}
+            <div className="mt-8 text-left">
+              <DirectAnswerBlock
+                question="How does Book Generator compare to ChatGPT or manual writing?"
+                answer="Book Generator isn't a replacement for ChatGPT—it's a specialized book production system. While ChatGPT requires prompt engineering for each chapter and lacks book structure, Book Generator provides topic-to-book workflow, consistent chapter generation, KDP-compliant EPUB/PDF output, and cover design in a single pipeline."
+              />
+              <LastUpdated date="2026-04-09" className="mt-4 text-sm" />
             </div>
           </div>
         </div>
@@ -229,6 +240,10 @@ export default function ComparePage() {
           "Turkish book support",
           "Preview first, then full book",
         ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
     </MarketingPage>
   );

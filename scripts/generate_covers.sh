@@ -284,6 +284,102 @@ api_key_or_fail() {
     printf '%s\n' "$key"
 }
 
+resolve_vertex_api_key() {
+    local value=""
+    for value in \
+        "${GOOGLE_API_KEY:-}" \
+        "${VERTEX_API_KEY:-}" \
+        "${GOOGLE_GENAI_API_KEY:-}"
+    do
+        if [[ -n "$value" ]]; then
+            printf '%s\n' "$value"
+            return 0
+        fi
+    done
+    return 1
+}
+
+image_policy_vertex_only() {
+    case "${BOOK_IMAGE_PROVIDER_POLICY:-}" in
+        vertex|VERTEX|vertex_only|VERTEX_ONLY)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+vertex_model_candidates_for_provider() {
+    case "$1" in
+        vertex-imagen-fast)
+            printf '%s\n' "imagen-3.0-generate-002 imagen-3.0-generate-001"
+            ;;
+        vertex-imagen-standard|vertex-imagen-ultra|vertex-gemini-flash-image|*)
+            printf '%s\n' "imagen-3.0-generate-002 imagen-3.0-generate-001"
+            ;;
+    esac
+}
+
+generate_with_vertex_imagen() {
+    local prompt="$1"
+    local output_file="$2"
+    local provider="${3:-vertex-imagen-standard}"
+    local api_key=""
+    local model=""
+    local response=""
+    local response_file=""
+    local http_code=""
+    local b64=""
+    local error_msg=""
+    local payload=""
+
+    api_key="$(resolve_vertex_api_key 2>/dev/null || true)"
+    if [[ -z "$api_key" ]]; then
+        print_warning "Vertex API key not configured; skipping ${provider}."
+        return 1
+    fi
+
+    payload="$(jq -nc --arg prompt "$prompt" '{
+        instances: [{prompt: $prompt}],
+        parameters: {
+            sampleCount: 1,
+            aspectRatio: "3:4",
+            personGeneration: "allow_adult"
+        }
+    }')"
+
+    for model in $(vertex_model_candidates_for_provider "$provider"); do
+        response_file="$(mktemp)"
+        http_code="$(curl -sS --max-time 240 -o "$response_file" -w "%{http_code}" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "$payload" \
+            "https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${api_key}")" || {
+                rm -f "$response_file"
+                continue
+            }
+        response="$(cat "$response_file")"
+        rm -f "$response_file"
+
+        if [[ "$http_code" =~ ^2 ]]; then
+            b64="$(printf '%s' "$response" | jq -r '.predictions[0].bytesBase64Encoded // empty' 2>/dev/null)"
+            if [[ -n "$b64" && "$b64" != "null" ]]; then
+                printf '%s' "$b64" | base64 --decode > "$output_file"
+                if [[ -s "$output_file" ]]; then
+                    return 0
+                fi
+            fi
+        fi
+
+        error_msg="$(printf '%s' "$response" | jq -r '.error.message // .error // .message // empty' 2>/dev/null)"
+        if [[ -n "$error_msg" ]]; then
+            print_warning "Vertex model ${model} failed: ${error_msg}"
+        fi
+    done
+
+    return 1
+}
+
 save_image_from_json() {
     local response="$1"
     local output_file="$2"
@@ -486,7 +582,18 @@ generate_with_nano_model() {
 service_to_provider_sequence() {
     case "$1" in
         auto|"")
-            codefast_cover_provider_order
+            if resolve_vertex_api_key >/dev/null 2>&1; then
+                if image_policy_vertex_only; then
+                    echo "vertex-imagen-standard"
+                else
+                    echo "vertex-imagen-standard $(codefast_cover_provider_order)"
+                fi
+            else
+                codefast_cover_provider_order
+            fi
+            ;;
+        vertex-imagen-fast|vertex-imagen-standard|vertex-imagen-ultra|vertex-gemini-flash-image)
+            echo "$1"
             ;;
         grok|grok-imagine|codefast-grok)
             echo "grok-imagine"
@@ -514,6 +621,12 @@ generate_cover_with_fallback() {
     for provider in $sequence; do
         print_status "Trying cover provider: ${provider}"
         case "$provider" in
+            vertex-imagen-fast|vertex-imagen-standard|vertex-imagen-ultra)
+                if generate_with_vertex_imagen "$prompt" "$output_file" "$provider"; then
+                    print_success "Cover generated with ${provider}"
+                    return 0
+                fi
+                ;;
             grok-imagine)
                 if generate_with_grok_imagine "$prompt" "$output_file"; then
                     print_success "Cover generated with Grok Imagine"
@@ -689,12 +802,13 @@ Options:
   -g, --generate      Generate both front and back covers
   -f, --front-only    Generate only the front cover
   -b, --back-only     Generate only the back cover
-  -s, --service       Set service (auto|grok-imagine|nano-banana-pro|nano-banana-2)
+  -s, --service       Set service (auto|vertex-imagen-standard|vertex-imagen-fast|vertex-imagen-ultra|grok-imagine|nano-banana-pro|nano-banana-2)
   -h, --help          Show this help
 
 Notes:
-  - Uses CODEFAST_API_KEY / codefast / existing API key env vars as the shared key
-  - Auto mode fallback: Grok Imagine -> Nano Banana Pro -> Nano Banana 2
+  - Supports Vertex via GOOGLE_API_KEY / VERTEX_API_KEY / GOOGLE_GENAI_API_KEY
+  - Supports Codefast via CODEFAST_API_KEY / codefast
+  - Auto mode fallback: Vertex Imagen Standard -> Grok Imagine -> Nano Banana Pro -> Nano Banana 2
   - Final covers always receive deterministic local typography and text-safe back-cover layout
   - Quality gate: generates multiple variants, scores them, and keeps the best one automatically
 EOF
