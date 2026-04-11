@@ -384,7 +384,7 @@
     "behindScenes": {
       "badge": "Why is it clearer?",
       "title": "Breaks the path from brief to publish into visible pieces",
-      "description": "The process is not just a single \"generate\" button. Direction is established first, then the plan solidifies, then output-driven production begins.",
+      "description": "The process is not just a single “generate” button. Direction is established first, then the plan solidifies, then output-driven production begins.",
       "items": {
         "0": {
           "eyebrow": "Direction",

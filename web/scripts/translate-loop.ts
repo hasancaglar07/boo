@@ -10,7 +10,7 @@ const DELAY_MS = 20_000;
 
 function runTranslate(): Promise<number> {
   return new Promise((resolve) => {
-    const child = spawn('npx', ['tsx', './scripts/translate.ts'], {
+    const child = spawn('npx', ['tsx', './scripts/translate.ts', '--batch-size=40'], {
       cwd: CWD,
       stdio: 'inherit',
       shell: true
