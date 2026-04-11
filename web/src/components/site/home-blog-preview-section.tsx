@@ -1,20 +1,24 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { ArrowRight, Clock } from "lucide-react";
 
 import { blogPosts } from "@/lib/marketing-data";
 import { SectionHeading } from "@/components/site/section-heading";
 
 export function HomeBlogPreviewSection() {
+  const t = useTranslations("HomeBlogPreview");
   const featured = blogPosts.slice(0, 3);
 
   return (
     <section className="border-b border-border/80 py-16 md:py-20">
       <div className="shell">
         <SectionHeading
-          badge="Book Writing Guide"
-          title="AI Book Writing Guide: Read This Before Publishing Your First Book"
-          description="Quick and clear answers to the most frequently asked questions about preparing your first book with an AI book creator."
+          badge={t("badge")}
+          title={t("title")}
+          description={t("description")}
           actionHref="/blog"
-          actionLabel="View all posts"
+          actionLabel={t("actionLabel")}
         />
 
         <div className="mt-10 grid gap-4 md:gap-5 md:grid-cols-3">
@@ -40,7 +44,7 @@ export function HomeBlogPreviewSection() {
               <p className="mt-2 flex-1 text-sm leading-7 text-muted-foreground">{post.summary}</p>
 
               <div className="mt-4 flex items-center gap-1 text-xs font-medium text-primary">
-                Read
+                {t("readLabel")}
                 <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
               </div>
             </a>

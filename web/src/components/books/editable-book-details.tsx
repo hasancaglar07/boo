@@ -21,6 +21,8 @@ interface EditableBookDetailsProps {
   publisher?: string;
   authorBio?: string;
   coverBrief?: string;
+  brandingMark?: string;
+  brandingLogoUrl?: string;
   onUpdate?: () => void;
   isLoading?: boolean;
 }
@@ -33,6 +35,8 @@ export function EditableBookDetails({
   publisher,
   authorBio,
   coverBrief,
+  brandingMark,
+  brandingLogoUrl,
   onUpdate,
   isLoading = false,
 }: EditableBookDetailsProps) {
@@ -51,6 +55,8 @@ export function EditableBookDetails({
     publisher: publisher || "",
     authorBio: authorBio || "",
     coverBrief: coverBrief || "",
+    brandingMark: brandingMark || "",
+    brandingLogoUrl: brandingLogoUrl || "",
   });
 
   // Auto-save countdown
@@ -102,6 +108,8 @@ export function EditableBookDetails({
         publisher: draft.publisher,
         author_bio: draft.authorBio,
         cover_brief: draft.coverBrief,
+        branding_mark: draft.brandingMark,
+        branding_logo_url: draft.brandingLogoUrl,
       });
 
       setIsDirty(false);
@@ -128,6 +136,8 @@ export function EditableBookDetails({
       publisher: publisher || "",
       authorBio: authorBio || "",
       coverBrief: coverBrief || "",
+      brandingMark: brandingMark || "",
+      brandingLogoUrl: brandingLogoUrl || "",
     });
     setIsDirty(false);
     setIsEditing(false);
@@ -255,6 +265,24 @@ export function EditableBookDetails({
                 </div>
               </div>
             )}
+
+            {brandingMark && (
+              <div className="rounded-[14px] border border-border/60 bg-background/60 px-2.5 md:px-3 py-2 md:py-3">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Brand Mark
+                </div>
+                <div className="mt-1 text-sm text-foreground">{brandingMark}</div>
+              </div>
+            )}
+
+            {brandingLogoUrl && (
+              <div className="rounded-[14px] border border-border/60 bg-background/60 px-2.5 md:px-3 py-2 md:py-3">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Brand Logo Path
+                </div>
+                <div className="mt-1 break-all text-xs text-muted-foreground">{brandingLogoUrl}</div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -374,6 +402,30 @@ export function EditableBookDetails({
               onChange={(e) => handleFieldChange("coverBrief", e.target.value)}
               placeholder="Describe the cover design emphasis"
               className="mt-1.5 min-h-[60px] md:min-h-[80px]"
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Brand Mark
+            </label>
+            <Input
+              value={draft.brandingMark}
+              onChange={(e) => handleFieldChange("brandingMark", e.target.value)}
+              placeholder="Publisher mark text"
+              className="mt-1.5 h-11"
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Brand Logo URL / Path
+            </label>
+            <Input
+              value={draft.brandingLogoUrl}
+              onChange={(e) => handleFieldChange("brandingLogoUrl", e.target.value)}
+              placeholder="assets/publisher-logo.png or https://..."
+              className="mt-1.5 h-11"
             />
           </div>
         </div>

@@ -242,6 +242,9 @@ CURRENT CHAPTER ENDING CONTEXT:
 ${recent_excerpt}"
 
     local extension_system_prompt="You are an expert book author extending a chapter with seamless continuation paragraphs. Produce only appendable prose."
+    local extension_max_retries="${BOOK_CHAPTER_EXTENSION_MAX_RETRIES:-1}"
+    local extension_timeout_seconds="${BOOK_CHAPTER_EXTENSION_PROVIDER_TIMEOUT_SECONDS:-$CODEFAST_CURL_MAX_TIME}"
+    local extension_fast_failover="${BOOK_CHAPTER_EXTENSION_FAST_FAILOVER:-1}"
 
     if [ "$attempt_type" = "final" ]; then
         # Increase token count by 20% for final attempt
@@ -254,7 +257,18 @@ ${recent_excerpt}"
     # Call API to extend the chapter
     echo "🤖 Generating append-only continuation..."
     local extended_content
-    extended_content=$(smart_api_call "$extension_prompt" "$extension_system_prompt" "chapter_extension" 0.7 "$extension_tokens" 2)
+    extended_content=$(
+        smart_api_call \
+            "$extension_prompt" \
+            "$extension_system_prompt" \
+            "chapter_extension" \
+            0.7 \
+            "$extension_tokens" \
+            "$extension_max_retries" \
+            "" \
+            "$extension_timeout_seconds" \
+            "$extension_fast_failover"
+    )
     
     # Check if API call was successful
     if [ $? -eq 0 ] && [ -n "$extended_content" ]; then

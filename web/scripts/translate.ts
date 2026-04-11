@@ -25,7 +25,7 @@ class TranslationApiError extends Error {
   }
 }
 
-const API_BASE_URL = 'https://claudecode.codefast.app';
+const API_BASE_URL = 'https://claudecode2.codefast.app';
 const API_KEY = process.env.CODEFAST_TRANSLATE_API_KEY || 'sk-aa9118949569889b72e4bb5123618ef9a36449952e379a98';
 const SOURCE_FILE = path.resolve(process.cwd(), 'messages/en.json');
 const MESSAGES_DIR = path.resolve(process.cwd(), 'messages');
@@ -40,7 +40,7 @@ function parseArgs(argv: string[]): CliOptions {
     retries: 4,
     delayMs: 900,
     testMode: false,
-    model: 'claude-sonnet-4-6',
+    model: 'glm-4.5-air',
     force: false
   };
 
@@ -134,22 +134,59 @@ function sleep(ms: number): Promise<void> {
 
 function extractJsonBlock(raw: string): string {
   const trimmed = raw.trim();
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-    return trimmed;
+
+  // Try to extract and repair JSON
+  let candidate = trimmed;
+  if (!candidate.startsWith('{')) {
+    const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (fencedMatch?.[1]) {
+      candidate = fencedMatch[1].trim();
+    } else {
+      const firstBrace = trimmed.indexOf('{');
+      const lastBrace = trimmed.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        candidate = trimmed.slice(firstBrace, lastBrace + 1);
+      }
+    }
   }
 
-  const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  if (fencedMatch?.[1]) {
-    return fencedMatch[1].trim();
+  // Try to parse as-is first
+  try {
+    JSON.parse(candidate);
+    return candidate;
+  } catch {
+    // Repair: fix unescaped double quotes inside JSON string values
+    const repaired = repairJsonQuotes(candidate);
+    JSON.parse(repaired); // throws if still invalid
+    return repaired;
   }
+}
 
-  const firstBrace = trimmed.indexOf('{');
-  const lastBrace = trimmed.lastIndexOf('}');
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    return trimmed.slice(firstBrace, lastBrace + 1);
+function repairJsonQuotes(text: string): string {
+  const out: string[] = [];
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] !== '"') { out.push(text[i++]); continue; }
+    // Opening quote of a JSON string
+    out.push('"'); i++;
+    while (i < text.length) {
+      const c = text[i];
+      if (c === '\\') { out.push(c); i++; if (i < text.length) { out.push(text[i]); i++; } continue; }
+      if (c === '"') {
+        // Determine if this closes the string: next non-space must be : , } ] or end
+        let j = i + 1;
+        while (j < text.length && ' \t\r\n'.includes(text[j])) j++;
+        const next = text[j];
+        if (!next || ':,}]'.includes(next)) { out.push(c); i++; break; }
+        // Unescaped inner quote — escape it
+        out.push('\\'); out.push(c); i++;
+      } else if (c === '\n' || c === '\r') {
+        // Unescaped newline inside string — escape it
+        out.push(c === '\n' ? '\\n' : '\\r'); i++;
+      } else { out.push(c); i++; }
+    }
   }
-
-  throw new Error('Could not extract JSON object from translation response.');
+  return out.join('');
 }
 
 async function postTranslationRequest(payload: JSONObject, model: string): Promise<string> {

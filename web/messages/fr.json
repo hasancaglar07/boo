@@ -1,179 +1,2289 @@
 {
   "Common": {
-    "skipToMain": "Passer au contenu principal",
-    "loading": "Chargement..."
+    "skipToMain": "Skip to main content",
+    "loading": "Loading..."
   },
   "Metadata": {
-    "defaultTitle": "Générateur de livres - Écrivez des livres avec l'IA",
-    "defaultDescription": "Plateforme de génération de livres alimentée par l'IA. Transformez votre idée en un livre prêt à publier, avec couverture et sortie EPUB/PDF en 5 questions."
+    "defaultTitle": "Book Generator - Write Books with AI",
+    "defaultDescription": "AI-powered book generation platform. Turn your idea into a publication-ready book, cover, and EPUB/PDF output in 5 questions."
   },
   "LocaleSwitcher": {
-    "label": "Langue",
-    "title": "Changer de langue"
+    "label": "Language",
+    "title": "Change language"
   },
   "localeNames": {
-    "en": "Anglais",
-    "tr": "Turc",
-    "de": "Allemand",
-    "fr": "Français",
-    "es": "Espagnol",
-    "ar": "Arabe",
-    "ru": "Russe",
-    "zh": "Chinois",
-    "ja": "Japonais",
-    "ko": "Coréen",
-    "it": "Italien",
-    "pt": "Portugais"
+    "en": "English",
+    "tr": "Turkish",
+    "de": "German",
+    "fr": "French",
+    "es": "Spanish",
+    "ar": "Arabic",
+    "ru": "Russian",
+    "zh": "Chinese",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "it": "Italian",
+    "pt": "Portuguese"
   },
   "nav": {
-    "howItWorks": "Comment ça marche",
-    "examples": "Exemples",
-    "pricing": "Tarifs",
-    "tools": "Outils",
+    "howItWorks": "How It Works",
+    "examples": "Examples",
+    "pricing": "Pricing",
+    "tools": "Tools",
     "faq": "FAQ",
-    "login": "Se connecter",
-    "myBooks": "Mes livres",
-    "newBook": "Nouveau livre",
-    "freePreview": "Aperçu gratuit",
-    "goHome": "Aller à l'accueil",
-    "mainMenu": "Menu principal",
-    "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu",
-    "mobileMenu": "Menu mobile",
-    "mobileSecondaryMenu": "Menu secondaire mobile",
-    "more": "Plus",
-    "brandName": "Générateur de livres",
-    "howItWorksDesc": "5 questions pour un livre complet",
-    "examplesDesc": "De vrais livres créés avec l'IA",
-    "useCasesDesc": "Pour les éducateurs, consultants et créateurs",
-    "pricingDesc": "Forfaits à partir de 4 $ par livre",
-    "compareDesc": "Voyez comment nous nous comparons",
-    "toolsDesc": "Outils gratuits d'écriture et de publication",
-    "resourcesDesc": "Guides, modèles et conseils",
-    "blogDesc": "Conseils d'écriture et mises à jour produit"
+    "login": "Log In",
+    "myBooks": "My Books",
+    "newBook": "New Book",
+    "freePreview": "Free Preview",
+    "goHome": "Go to homepage",
+    "mainMenu": "Main menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "mobileMenu": "Mobile menu",
+    "mobileSecondaryMenu": "Mobile secondary menu",
+    "more": "More",
+    "brandName": "Book Generator",
+    "howItWorksDesc": "5 questions to a complete book",
+    "examplesDesc": "Real books created with AI",
+    "useCasesDesc": "For educators, consultants & creators",
+    "pricingDesc": "Plans starting at $4 per book",
+    "compareDesc": "See how we stack up",
+    "toolsDesc": "Free writing & publishing tools",
+    "resourcesDesc": "Guides, templates & tips",
+    "blogDesc": "Writing advice & product updates"
   },
   "footer": {
-    "freePreview": "Aperçu gratuit",
-    "compare": "Comparer",
-    "freeTools": "Outils gratuits",
+    "freePreview": "Free Preview",
+    "compare": "Compare",
+    "freeTools": "Free Tools",
     "blog": "Blog",
-    "resources": "Ressources",
-    "useCases": "Cas d'utilisation",
-    "about": "À propos",
+    "resources": "Resources",
+    "useCases": "Use Cases",
+    "about": "About",
     "contact": "Contact",
-    "affiliate": "Programme d'affiliation",
-    "privacy": "Politique de confidentialité",
-    "terms": "Conditions d'utilisation",
-    "refund": "Politique de remboursement",
-    "product": "Produit",
-    "company": "Entreprise",
-    "legal": "Mentions légales",
-    "writingTips": "Conseils d'écriture et campagnes",
-    "newsletterDesc": "Rejoignez notre newsletter hebdomadaire et écrivez votre premier livre plus vite.",
-    "emailPlaceholder": "Votre adresse e-mail",
-    "emailLabel": "Adresse e-mail",
-    "subscribe": "S'abonner",
-    "subscribed": "Abonné !",
-    "ctaTitle": "Commencez à écrire votre livre <em>aujourd'hui</em>",
-    "ctaSub": "Créez votre premier livre en quelques minutes avec un aperçu gratuit.",
-    "ctaBtn": "Démarrer l'aperçu gratuit",
-    "brandDesc": "Interface d'écriture de livres alimentée par l'IA, simple et premium. Créez votre premier livre selon des standards professionnels.",
-    "copyright": "Générateur de livres. Tous droits réservés.",
-    "tagline": "Écriture de livres propulsée par l'IA.",
-    "theme": "Thème",
-    "goHome": "Aller à l'accueil",
+    "affiliate": "Affiliate Program",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "refund": "Refund Policy",
+    "product": "Product",
+    "company": "Company",
+    "legal": "Legal",
+    "writingTips": "Writing tips & campaigns",
+    "newsletterDesc": "Join our weekly newsletter, write your first book faster.",
+    "emailPlaceholder": "Your email address",
+    "emailLabel": "Email address",
+    "subscribe": "Subscribe",
+    "subscribed": "Subscribed!",
+    "ctaTitle": "Start writing your book <em>today</em>",
+    "ctaSub": "Create your first book in minutes with a free preview.",
+    "ctaBtn": "Start Free Preview",
+    "brandDesc": "AI-powered, simple and premium book writing interface. Create your first book to professional standards.",
+    "copyright": "Book Generator. All rights reserved.",
+    "tagline": "AI-powered book writing.",
+    "theme": "Theme",
+    "goHome": "Go to homepage",
     "trust": {
-      "kdp": "Approche de livraison qui simplifie la conformité KDP",
-      "refund": "Demande de remboursement sous 30 jours",
-      "noApiCost": "Le coût du modèle est inclus dans le prix du forfait"
+      "kdp": "Delivery approach that simplifies KDP compliance",
+      "refund": "Refund request within 30 days",
+      "noApiCost": "Model cost is included in the plan price"
     }
   },
   "HomePage": {
     "metadata": {
-      "title": "Écrire un livre avec l'IA | Créez un EPUB prêt pour KDP en 15 minutes",
-      "description": "Transformez votre expertise en un livre prêt à publier avec l'IA. Générez des brouillons, des couvertures et une sortie EPUB/PDF en 5 questions. Aperçu gratuit — sans carte bancaire.",
-      "ogTitle": "Écrire un livre avec l'IA",
-      "ogDescription": "Transformez votre expertise en un livre prêt à publier en 15 minutes. Aperçu gratuit."
+      "title": "Write a Book with AI | Create KDP-Ready EPUB in 15 Minutes",
+      "description": "Turn your expertise into a publish-ready book with AI. Generate drafts, covers, and EPUB/PDF output in 5 questions. Preview for free — no credit card required.",
+      "ogTitle": "Write a Book with AI",
+      "ogDescription": "Turn your expertise into a publish-ready book in 15 minutes. Preview for free."
     },
     "middleBlock": {
-      "title": "Écrire un livre avec l'IA : transformez votre idée en EPUB et PDF",
-      "description": "Transformez votre expertise en livre prêt à publier avec Book Creator. Génération de brouillon par IA, conception de couverture et sortie EPUB/PDF compatible KDP en un seul flux de travail.",
-      "subDescription": "Prévisualisez votre livre gratuitement, débloquez l'accès complet quand il vous plaît. Commencez immédiatement — aucune carte de crédit requise.",
+      "title": "Write a Book with AI: Turn Your Idea into EPUB and PDF",
+      "description": "Turn your expertise into a publish-ready book with Book Creator. AI-powered draft generation, cover design, and KDP-compatible EPUB/PDF output in a single workflow.",
+      "subDescription": "Preview your book for free, unlock full access when you like it. Start immediately — no credit card required.",
       "cards": {
         "a": {
-          "title": "Pour les éducateurs, consultants et créateurs de contenu",
-          "description": "Une plateforme d'écriture de livres propulsée par l'IA pour quiconque souhaite transformer son expertise en livre KDP. La création d'e-books est désormais un flux de travail unique.",
-          "cta": "Voir tous les cas d'usage →"
+          "title": "For Educators, Consultants, and Content Creators",
+          "description": "An AI-powered book writing platform for anyone who wants to turn their expertise into a KDP book. E-book creation is now a single workflow.",
+          "cta": "See all use cases →"
         },
         "b": {
-          "title": "Fini la page blanche ou les outils éparpillés",
-          "description": "Rédigez votre livre avec l'IA — brouillon, contenu et sortie sur une seule plateforme. Finalisez votre livre sans avoir besoin d'outils différents.",
-          "cta": "Voir comment nous nous comparons →"
+          "title": "No More Blank Page or Scattered Tools",
+          "description": "Write your book with AI — draft, content, and output all on one platform. Complete your book without needing different tools.",
+          "cta": "See how we compare →"
         },
         "c": {
-          "title": "Fichiers EPUB et PDF compatibles KDP",
-          "description": "Chapitres modifiables, couverture professionnelle et sorties EPUB + PDF prêtes à publier. Compatible avec Kindle et KDP."
+          "title": "KDP-Compatible EPUB and PDF Files",
+          "description": "Editable chapters, professional cover, and publish-ready EPUB + PDF outputs. Compatible with Kindle and KDP."
         }
       }
     },
     "pricing": {
-      "tag": "Tarification du livre",
-      "title": "Préparez votre premier livre pour 4 $ — EPUB et PDF prêts pour KDP inclus",
-      "description": "Accédez à un livre complet pour 4 $ : brouillon généré par IA, couverture professionnelle, sorties EPUB et PDF. Prévisualisez gratuitement, puis débloquez l'accès complet."
+      "tag": "Book Pricing",
+      "title": "Prepare Your First Book for $4 — KDP-Ready EPUB and PDF Included",
+      "description": "Access a complete book for $4: AI-powered draft, professional cover, EPUB and PDF outputs. Preview for free, then unlock full access."
     },
     "faq": {
       "heading": {
-        "badge": "Questions les plus posées",
-        "title": "Questions fréquemment posées sur l'écriture d'un livre avec l'IA",
-        "description": "Comment fonctionne le créateur de livres IA, quelle est la qualité des résultats et est-il compatible KDP ? Les questions les plus importantes sur le processus d'écriture de livre.",
-        "actionLabel": "Toutes les questions"
+        "badge": "Most Asked Questions",
+        "title": "Frequently Asked Questions About Writing a Book with AI",
+        "description": "How does the AI book creator work, what's the output quality, and is it KDP-compatible? The most critical questions about the book writing process.",
+        "actionLabel": "All questions"
       },
       "quality": {
-        "question": "Un livre écrit par une IA peut-il vraiment être de haute qualité ?",
-        "answer": "L'IA crée le brouillon — vous contrôlez la qualité. Modifiez chaque chapitre, régénérez ce qui ne vous convient pas. {kdpLiveBooksClaim} de nos livres sont en ligne avec une garantie {kdpGuaranteeClaim}."
+        "question": "Can an AI-written book really be high quality?",
+        "answer": "AI creates the draft — you control the quality. Edit every chapter, regenerate what you don't like. {kdpLiveBooksClaim} of our books are live with a {kdpGuaranteeClaim} guarantee."
       },
       "duration": {
-        "question": "Combien de temps faut-il pour écrire un livre avec l'IA ?",
-        "answer": "Saisissez votre sujet et obtenez un EPUB et un PDF prêts à publier en 30 à 90 minutes. La plupart des livres sont finalisés en une seule session. Selon des enquêtes utilisateurs, 92 % des auteurs publient dans les 7 jours, contre 3 à 6 mois avec les méthodes d'écriture traditionnelles."
+        "question": "How long does it take to write a book with AI?",
+        "answer": "Enter your topic and get a publish-ready EPUB and PDF in 30–90 minutes. Most books are completed in a single session. According to user surveys, 92% of authors publish within 7 days compared to 3-6 months with traditional writing methods."
       },
       "kdp": {
-        "question": "Puis-je télécharger directement les sorties EPUB et PDF sur KDP ?",
-        "answer": "Oui. Vous obtenez des sorties EPUB et PDF compatibles KDP. Nous recommandons une révision finale avec votre propre liste de contrôle avant le téléchargement."
+        "question": "Can I upload the EPUB and PDF outputs directly to KDP?",
+        "answer": "Yes. You get KDP-compatible EPUB and PDF outputs. We recommend a final review with your own checklist before uploading."
       },
       "creditCard": {
-        "question": "Ai-je besoin d'une carte de crédit pour commencer ?",
-        "answer": "Non. Commencez avec une prévisualisation gratuite — explorez le brouillon, la couverture et le plan de votre livre sans saisir aucune information de paiement. Passez à la version supérieure uniquement lorsque vous êtes satisfait du résultat."
+        "question": "Do I need a credit card to start?",
+        "answer": "No. Start with a free preview — explore your book's draft, cover, and outline without entering any payment information. Upgrade only when you're satisfied with the result."
       },
       "formats": {
-        "question": "Quels formats de sortie sont disponibles ?",
-        "answer": "Vous recevez un EPUB (pour Kindle et toutes les liseuses), un PDF (pour l'impression à la demande) et un aperçu HTML partageable. Toutes les sorties sont modifiables et prêtes pour KDP."
+        "question": "What output formats are available?",
+        "answer": "You receive EPUB (for Kindle and all e-readers), PDF (for print-on-demand), and a shareable HTML preview. All outputs are editable and KDP-ready."
       },
       "claims": {
-        "kdpAccept": "accepté par KDP",
-        "guarantee": "garantie"
+        "kdpAccept": "KDP accepted",
+        "guarantee": "guarantee"
       },
-      "ctaLabel": "Démarrer la prévisualisation gratuite"
-    },
-    "cta": {
-      "title": "Commencez à écrire votre livre avec l'IA dès aujourd'hui",
-      "description": "Saisissez votre sujet et créez votre prévisualisation gratuite en 15 minutes. {noApiCostClaim}, aucune carte de crédit requise.",
-      "items": {
-        "0": "Brouillon, couverture et contenu générés par IA prêts",
-        "1": "Prévisualisation gratuite — débloquez l'accès complet quand il vous plaît",
-        "2": "Sortie EPUB + PDF compatible KDP"
-      }
+      "ctaLabel": "Start Free Preview"
     },
     "testimonials": {
-      "badge": "Avis clients",
-      "title": "Ce que disent les auteurs",
-      "description": "Des résultats réels d'auteurs réels.",
-      "aggregateLabel": "{count}+ avis vérifiés d'auteurs réels"
+      "badge": "Customer Reviews",
+      "title": "What Authors Say",
+      "description": "Real results from real authors.",
+      "aggregateLabel": "{count}+ verified reviews from real authors"
     },
     "showcase": {
-      "badge": "Vrais livres, vraies couvertures",
-      "title": "Exemples de vrais livres générés par IA",
-      "description": "Chacun est passé du résumé du sujet au brouillon, puis du brouillon au flux de travail EPUB et PDF. Vous pouvez démarrer votre propre livre cette semaine avec le même processus.",
-      "ctaLabel": "Démarrer la prévisualisation gratuite du livre"
+      "badge": "Real Books, Real Covers",
+      "title": "AI-Generated Real Book Examples",
+      "description": "Each went from topic summary to draft, from draft to EPUB and PDF workflow. You can start your own book this week with the same process.",
+      "ctaLabel": "Start Free Book Preview"
+    },
+    "cta": {
+      "title": "Start Writing Your Book with AI Today",
+      "description": "Enter your topic and create your free preview in 15 minutes. {noApiCostClaim}, no credit card required.",
+      "items": {
+        "0": "AI-powered draft, cover, and content ready",
+        "1": "Free preview — unlock full access when you like it",
+        "2": "KDP-compatible EPUB + PDF output"
+      }
     }
-  }
+  },
+  "PricingPage": {
+    "metadata": {
+      "title": "Book Generator Pricing | AI Book Writing Plans",
+      "description": "Compare Book Generator pricing plans. Try with a $4 one-time payment, grow with monthly plans. From your first book to full production workflows, there's a plan for every level."
+    },
+    "summary": "Your first book is $4, subsequent books start at $19/month — preview is free.",
+    "plans": {
+      "tag": "Plans",
+      "title": "Pay once or produce with a monthly plan.",
+      "description": "Open your first book for $4, build a rhythm with 10 books a month, or transform into a publishing system with 30 or 80 books."
+    },
+    "comparison": {
+      "title": "Same book, very different price.",
+      "description": "The cost of producing a book with other methods.",
+      "link": "See detailed feature comparison →",
+      "items": {
+        "0": {
+          "label": "Ghostwriter / Agency",
+          "price": "$500–$5,000",
+          "perBook": "per book"
+        },
+        "1": {
+          "label": "Scrivener + ChatGPT + Canva + Calibre",
+          "price": "Free but…",
+          "perBook": "10–30 hours / book"
+        },
+        "2": {
+          "label": "Book Generator — Single Book",
+          "price": "$4",
+          "perBook": "one-time, no subscription"
+        },
+        "3": {
+          "label": "Book Generator — Starter",
+          "price": "$1.90",
+          "perBook": "per book ($19/mo, 10 books)"
+        }
+      }
+    },
+    "whoFor": {
+      "title": "Which plan is right for you?",
+      "description": "Find the right starting point based on your goals.",
+      "items": {
+        "0": {
+          "plan": "Single Book — $4",
+          "title": "First-time user",
+          "description": "Pay once, the book is yours. Experience the entire process for $4 — get a full refund within 30 days if you're not satisfied.",
+          "bullets": {
+            "0": "No writing experience needed",
+            "1": "Draft ready in 5 minutes",
+            "2": "Zero risk"
+          }
+        },
+        "1": {
+          "plan": "Starter — $19/mo",
+          "title": "Regular content creator",
+          "description": "Build your series with 10 books per month, expand your niche on KDP. Just $1.90 per book.",
+          "bullets": {
+            "0": "10 books/month, 20 covers",
+            "1": "EPUB + PDF for every book",
+            "2": "$1.90 per book"
+          }
+        },
+        "2": {
+          "plan": "Creator — $39/mo",
+          "title": "Growing on KDP",
+          "description": "Know which book will sell with the research hub, and produce fast with 30 books per month.",
+          "bullets": {
+            "0": "KDP keyword + market analysis",
+            "1": "30 books/mo, 60 covers",
+            "2": "Additional export options"
+          }
+        },
+        "3": {
+          "plan": "Studio — $79/mo",
+          "title": "High-volume production / agency",
+          "description": "80 books/month, with API and automation workflows unlocked. No extra costs.",
+          "bullets": {
+            "0": "80 books/mo, 200 covers",
+            "1": "API and automation access",
+            "2": "Model cost is included in the plan price"
+          }
+        }
+      }
+    },
+    "featureTable": {
+      "title": "Feature comparison",
+      "description": "See what's included in each plan, side by side."
+    },
+    "faq": {
+      "title": "Questions on your mind",
+      "description": "Everything you need to know before choosing a plan.",
+      "items": {
+        "0": {
+          "q": "Which plan should I choose?",
+          "a": "If you're testing your first book, start with the Single Book plan ($4) — zero risk, no subscription. If you plan to produce a few books per month, Starter ($19/mo, 10 books) is far more economical. If you want to publish regularly, Creator ($39/mo, 30 books) is the sweet spot — including the research hub and KDP analytics."
+        },
+        "1": {
+          "q": "Is the preview really free?",
+          "a": "Yes. You can access the wizard without signing up. Viewing the outline, cover preview, and first chapters requires no payment. You only pay for the full book + export."
+        },
+        "2": {
+          "q": "Can I upload directly to KDP?",
+          "a": "Yes. EPUB and PDF outputs are produced to meet Amazon KDP upload requirements. The production workflow is designed around KDP-focused logic, and the delivery package is prepared with a KDP-compliance focus."
+        },
+        "3": {
+          "q": "Can I write in one language and produce a book in another?",
+          "a": "Yes. The interface stays in your preferred language, while the book content is produced in English or any other language you choose. English is KDP's largest market — you can turn that to your advantage."
+        },
+        "4": {
+          "q": "Can I change my plan?",
+          "a": "Yes. Upgrade, downgrade, or cancel anytime. Manage everything with one click from the billing area — no approval needed."
+        },
+        "5": {
+          "q": "Do unused book credits carry over?",
+          "a": "No, monthly credits do not roll over to the next month. That's why you should choose the plan you need — there's no reason to get a bigger plan than necessary."
+        }
+      },
+      "stillQuestions": "Still have questions?",
+      "fullFaq": "Full FAQ",
+      "contactUs": "contact us"
+    },
+    "cta": {
+      "title": "See your book first —",
+      "titleHighlight": "then pay $4.",
+      "description": "Outline and cover preview are free. Full book + EPUB/PDF for $4 — pay once, it's yours.",
+      "btn1": "Start Free Preview",
+      "btn2": "Start with a Monthly Plan",
+      "items": {
+        "0": "Free preview",
+        "1": "$4 one-time",
+        "2": "KDP-compliance guarantee",
+        "3": "Refund within 30 days"
+      }
+    }
+  },
+  "HowItWorksPage": {
+    "metadata": {
+      "title": "How Book Creator Works | 3-Step Book Production",
+      "description": "See step-by-step how the book production process works — from a brief topic summary to chapter plans, previews, and EPUB/PDF output."
+    },
+    "hero": {
+      "badge": "How it works",
+      "title": "Enter your topic, approve your plan,",
+      "titleHighlight": "turn your book into output.",
+      "description": "Book Creator is a guided book production workflow that turns a brief topic summary into a visible chapter plan, preview, and EPUB/PDF output.",
+      "cta": "Start building your book",
+      "ctaSubtext": "Start with short answers. See the outline, then proceed."
+    },
+    "directAnswer": {
+      "question": "How does AI book generation work?",
+      "answer": "Book Generator transforms your expertise into publication-ready books in 3 steps. First, answer 5 guided questions about your topic and audience. The AI generates a complete chapter outline for your approval. Once approved, it writes each chapter with consistent style and tone, then produces professional EPUB and PDF files ready for Amazon KDP publishing."
+    },
+    "steps": {
+      "0": {
+        "step": "1",
+        "title": "Enter your topic and target reader",
+        "text": "Share a brief summary, your target reader, and the outcome you want to convey. No long forms — you start with guided questions.",
+        "output": "Clear book direction, title angle, and starting framework",
+        "cta": "Enter your topic summary"
+      },
+      "1": {
+        "step": "2",
+        "title": "Review and approve the outline",
+        "text": "The system suggests a title, chapter flow, and book structure. You can edit, refine, and approve before moving to production.",
+        "output": "Visible chapter plan and a more controlled production workflow",
+        "cta": "Build your chapter plan"
+      },
+      "2": {
+        "step": "3",
+        "title": "Preview your book and get your outputs",
+        "text": "See the first result, and when you like it, convert your book to full output. EPUB and PDF files are prepared in a single workflow.",
+        "output": "Preview, editable content, and EPUB/PDF outputs",
+        "cta": "Start production"
+      }
+    },
+    "stepsSection": {
+      "badge": "3-step process",
+      "title": "How exactly does the process work?",
+      "description": "As a new visitor, you should see not only what happens but also what you get at the end of each step. This page exists for that reason.",
+      "resultLabel": "Result of this step",
+      "stepPrefix": "Step"
+    },
+    "reassurance": {
+      "badge": "Trust and clarity",
+      "title": "Guides you with a visible workflow, not blank page anxiety",
+      "description": "This page isn't just about showcasing features — it clarifies how much effort you'll invest, how much control you'll have, and what you'll receive at the end.",
+      "items": {
+        "0": {
+          "title": "Quick start",
+          "text": "Start with a few short answers — no lengthy preparation needed."
+        },
+        "1": {
+          "title": "You're in control",
+          "text": "You never go into blind production without seeing and approving the outline first."
+        },
+        "2": {
+          "title": "Output-focused workflow",
+          "text": "The process doesn't just generate text — it aims to deliver EPUB/PDF at the end."
+        },
+        "3": {
+          "title": "Built for experts",
+          "text": "Designed for instructors, consultants, and creators who want to turn their knowledge into a book."
+        }
+      }
+    },
+    "behindScenes": {
+      "badge": "Why is it clearer?",
+      "title": "Breaks the path from brief to publish into visible pieces",
+      "description": "The process is not just a single “generate” button. Direction is established first, then the plan solidifies, then output-driven production begins.",
+      "items": {
+        "0": {
+          "eyebrow": "Direction",
+          "title": "Clarify why you're writing, not just what",
+          "description": "Who you're writing for, what outcome you promise the reader, and what language to use are determined upfront. So your book stays focused from the very first step."
+        },
+        "1": {
+          "eyebrow": "Plan",
+          "title": "The chapter structure becomes visible",
+          "description": "Title, subtitles, and chapter order take shape together. Instead of assembling text after the fact, you build a structured outline from the start."
+        },
+        "2": {
+          "eyebrow": "Production",
+          "title": "Move forward with a preview",
+          "description": "The system doesn't just dump text. It produces a visible result first — so you see what you're turning into a finished product much earlier."
+        },
+        "3": {
+          "eyebrow": "Delivery",
+          "title": "Outputs are built into the process, not tacked on at the end",
+          "description": "EPUB, PDF, and basic publishing files stop being a separate chore added at the end — they become a natural part of production."
+        }
+      }
+    },
+    "whoFor": {
+      "badge": "Who is it for?",
+      "title": "Especially for those who want to turn their expertise into a book",
+      "description": "This workflow is not just for those who want to write — it is better suited for those who want to productize, systematize, and turn their knowledge into concrete output.",
+      "audience": {
+        "0": "Consultants and instructors who want to turn their expertise into a book",
+        "1": "First-time authors who prefer a guided workflow over starting from a blank page",
+        "2": "Content creators who want fast drafts, visible chapter plans, and output-driven progress"
+      }
+    },
+    "deliverables": {
+      "badge": "At the end of the process",
+      "title": "What do you end up with?",
+      "description": "Not just ideas — you get visible intermediate outputs that enable progress and files ready for delivery.",
+      "items": {
+        "0": {
+          "label": "Book direction",
+          "text": "Title angle, positioning, and the book's core promise"
+        },
+        "1": {
+          "label": "Plan",
+          "text": "Chapter-by-chapter visible outline and book structure"
+        },
+        "2": {
+          "label": "Content",
+          "text": "Editable chapter content and preview output"
+        },
+        "3": {
+          "label": "Delivery",
+          "text": "EPUB, PDF, and essential files that simplify publishing preparation"
+        }
+      }
+    },
+    "faq": {
+      "badge": "Frequently asked questions",
+      "title": "Most asked questions before deciding",
+      "description": "A how-it-works page should not leave uncertainty while trying to persuade. These short answers fill that gap.",
+      "items": {
+        "0": {
+          "question": "What do I need to get started?",
+          "answer": "Usually a brief topic summary, target reader information, and a few clear answers about what you want the book to achieve are enough."
+        },
+        "1": {
+          "question": "Do I go into production without seeing the outline?",
+          "answer": "No. The process is designed so you can see and approve your direction and chapter plan first."
+        },
+        "2": {
+          "question": "Do I only get text, or are there output files too?",
+          "answer": "The goal isn't just generating text — it's progressing all the way to preview and book outputs including EPUB/PDF delivery."
+        },
+        "3": {
+          "question": "Who is this product best suited for?",
+          "answer": "It's especially suited for experts, instructors, consultants, and creators who want to turn their knowledge, experience, or methodology into a book."
+        }
+      }
+    },
+    "cta": {
+      "badge": "Ready to start",
+      "title": "Don't stare at a blank screen —",
+      "titleHighlight": "start with a guided system.",
+      "description": "Clarify your topic, see your chapter plan, review the preview, and convert your book to output. Instead of building the process piece by piece, move forward with visible steps.",
+      "button": "Start your free preview",
+      "buttonSubtext": "Start with a brief intro · See the plan · Then decide"
+    }
+  },
+  "AboutPage": {
+    "metadata": {
+      "title": "About Book Generator | Our AI Book Production Approach",
+      "description": "Learn why Book Generator works with a simple interface, what principles guide our AI book production, and how we help first-time authors move faster."
+    },
+    "directAnswer1": {
+      "question": "What is Book Generator?",
+      "answer": "Book Generator is an AI-powered publishing studio that transforms your expertise into KDP-ready books in 30-90 minutes. Unlike general AI tools, it provides specialized book structure, consistent chapter generation, professional cover design, and EPUB/PDF outputs in a single workflow. Users include consultants, educators, and content creators worldwide with 92% publishing within 7 days."
+    },
+    "metrics": {
+      "0": {
+        "value": "KDP-focused",
+        "label": "KDP-focused production workflow"
+      },
+      "1": {
+        "value": "30 examples",
+        "label": "multilingual showcase books"
+      },
+      "2": {
+        "value": "Free preview",
+        "label": "visible before payment"
+      },
+      "3": {
+        "value": "Guided delivery",
+        "label": "an approach that simplifies the publishing process"
+      }
+    },
+    "directAnswer2": {
+      "question": "What is Book Generator?",
+      "answer": "Book Generator is an AI-powered publishing platform that transforms your expertise into publication-ready books in 5 questions. It generates complete manuscripts, professional covers, and KDP-compliant EPUB/PDF output, handling research, outlining, writing, and formatting automatically. Model cost is included in the plan price and KDP-focused production workflow with KDP-compliance focus."
+    },
+    "about": {
+      "badge": "About",
+      "title": "This product was designed for people who want to publish their book but don't want to drown in complex tools.",
+      "description": "Our goal isn't to show more panels — it's to help more people actually finish their books. That's why we built a simple surface with a powerful production system behind it.",
+      "additionalText": "For us, the real competitor isn't another AI tool — it's procrastination, blank page fear, and scattered workflows. We made product decisions specifically to reduce these psychological barriers."
+    },
+    "principles": {
+      "badge": "Principles",
+      "title": "What principles did we build the product on?",
+      "description": "Both the marketing page and the in-app experience are based on the same decision: even a first-time user should be able to move forward without wondering where to click.",
+      "items": {
+        "0": {
+          "title": "Fewer words",
+          "description": "Short, clear steps that lead the user to the result — instead of long instructions and technical jargon."
+        },
+        "1": {
+          "title": "Single path",
+          "description": "For first-time users, the visible flow follows a simple create, write, publish logic."
+        },
+        "2": {
+          "title": "Editable content",
+          "description": "Every generated chapter can be revisited, expanded, and improved."
+        },
+        "3": {
+          "title": "Publishing-focused",
+          "description": "The goal isn't just writing — it's producing real output with EPUB, PDF, and delivery folders."
+        },
+        "4": {
+          "title": "Confidence-building quality",
+          "description": "Research, review, and correction layers work behind the scenes without overwhelming the first-time user."
+        },
+        "5": {
+          "title": "AI but simple",
+          "description": "Artificial intelligence doesn't create visible chaos; it simply provides speed and clarity where needed."
+        }
+      }
+    },
+    "approach": {
+      "badge": "Approach",
+      "title": "It looks simple because the power is collected behind the scenes.",
+      "description": "Research, chapter planning, cover, chapter generation, and output are all organized around the same book. This gives both a professional and understandable product feel.",
+      "items": {
+        "0": {
+          "eyebrow": "Why like this?",
+          "title": "Simple on the surface because complexity is handled behind the scenes",
+          "description": "For someone producing a book for the first time, the biggest problem is too many options. So instead of making advanced tasks visible one by one, we built a backbone that manages the flow.",
+          "metric": "First-time user friendly",
+          "bullets": {
+            "0": "Wizard first",
+            "1": "Panel later",
+            "2": "Enhanced background",
+            "3": "Clean delivery logic"
+          }
+        },
+        "1": {
+          "eyebrow": "Product decision",
+          "title": "We reduce decision fatigue instead of adding buttons",
+          "description": "We don't want users to think about what to do first — we want them to just do it.",
+          "bullets": {
+            "0": "Single starting point",
+            "1": "Single main CTA",
+            "2": "Clear ordering",
+            "3": "Short texts"
+          }
+        },
+        "2": {
+          "eyebrow": "Publishing",
+          "title": "The first goal is always real output",
+          "description": "That's why we placed output and book information flows at the center of the product.",
+          "bullets": {
+            "0": "EPUB",
+            "1": "PDF"
+          }
+        },
+        "3": {
+          "eyebrow": "Enhanced",
+          "title": "Research and review tools can stay hidden",
+          "description": "They open when needed; on the first screen, they don't overwhelm the user.",
+          "bullets": {
+            "0": "Keywords",
+            "1": "KDP",
+            "2": "Review"
+          }
+        },
+        "4": {
+          "eyebrow": "Result",
+          "title": "The goal isn't to show more features — it's to help more books get finished",
+          "description": "That's why we treated the product not as a showcase panel, but as a result-oriented publishing system.",
+          "bullets": {
+            "0": "High completion feeling",
+            "1": "Clean progress",
+            "2": "You're in control",
+            "3": "System works behind the scenes"
+          }
+        }
+      }
+    },
+    "missionApproach": {
+      "mission": {
+        "title": "Mission",
+        "description": "To enable anyone with knowledge, expertise, or experience to turn it into a book without getting stuck on technical barriers."
+      },
+      "approach": {
+        "title": "Approach",
+        "description": "First, a confidence-building message, then clear onboarding, then a book production flow that actually works. Model cost is included in the plan price and if the publishing target is KDP, the delivery package is prepared with KDP-compliance focus."
+      },
+      "contact": "Have questions or suggestions? Get in touch with us →"
+    },
+    "cta": {
+      "title": "This product exists for publishing books, not for showing off.",
+      "description": "So all design decisions serve one purpose: making it easier for the user to finish their first book. See the preview first, then move on to the full book.",
+      "items": {
+        "0": "Fewer words, clear guidance",
+        "1": "Simple panel on the surface",
+        "2": "Powerful production system behind the scenes",
+        "3": "Preview first, then full book"
+      }
+    }
+  },
+  "FaqPage": {
+    "metadata": {
+      "title": "Book Generator FAQ | AI Book Writing Questions",
+      "description": "Browse short answers to the most frequently asked questions about Book Generator's workflow, plans, output formats, rights, covers, payments, and support processes."
+    },
+    "mainSection": {
+      "badge": "FAQ",
+      "title": "The key questions that delay decisions.",
+      "description": "What gets produced, how it works, what outputs you get, and how understandable it is for a first-time user — all clarified here.",
+      "helpText": "For technical questions, visit the {contactLink} page, for plan details check {pricingLink} and for process steps see the {howItWorksLink} page.",
+      "contactLabel": "contact",
+      "pricingLabel": "pricing",
+      "howItWorksLabel": "how it works"
+    },
+    "quickAnswers": {
+      "badge": "Quick answers",
+      "heading": "4 answers you'll want to know at first glance",
+      "description": "These are typically the first questions that shape a user's decision to try or purchase."
+    },
+    "allQuestions": {
+      "badge": "All questions",
+      "title": "More detailed answers organized by topic.",
+      "description": "Grouped under general usage, book production, cover, delivery, rights, payment, and support headings."
+    },
+    "sectionCtas": {
+      "General": "See how it works",
+      "Book Production": "Explore examples",
+      "Cover and Design": "See examples",
+      "Delivery and Outputs": "Compare plans",
+      "Rights and Publishing": "Start free preview",
+      "Subscription and Payment": "See pricing",
+      "Support": "Get in touch"
+    },
+    "fitSection": {
+      "title": "Who is it not right for?",
+      "link": "See who it's for",
+      "whereExcel": {
+        "title": "Where we excel",
+        "description": "Guide books, expertise books, short lead-magnet books, and publication-ready informational books. Especially suited for experts, instructors, content creators, and KDP-focused users."
+      },
+      "notRight": {
+        "title": "Not the right fit",
+        "description": "It was not designed for novels, academic theses, heavily footnoted works, or technical documentation. Stating this limitation openly builds trust; we won't misrepresent the product."
+      }
+    },
+    "cta": {
+      "title": "Done with questions? Start your own book now.",
+      "description": "Write your topic idea, see the outline, and try the first EPUB workflow. Make your decision inside the product, not on a landing page. 30-day refund guarantee, no credit card required.",
+      "items": {
+        "0": "Clear guidance from the first workflow",
+        "1": "AI-assisted chapter planning and output system",
+        "2": "Chapter planning and output system",
+        "3": "Preview first, then full book"
+      }
+    }
+  },
+  "ContactPage": {
+    "metadata": {
+      "title": "Book Generator Contact | Support and Billing",
+      "description": "Find Book Generator support, technical help, account access, and billing request channels on a single page and get a quick response."
+    },
+    "directAnswer": {
+      "question": "How can I contact Book Generator support?",
+      "answer": "Book Generator provides three support channels: general support via email with same-day response time, billing support for payment and subscription questions, and technical help for book production issues. For fastest resolution, include your book slug, preview link, or screenshot. Average response time is 2 hours during business hours."
+    },
+    "infoBanner": {
+      "0": {
+        "title": "General response time",
+        "text": "We aim to respond to most messages within the same business day."
+      },
+      "1": {
+        "title": "For fastest resolution",
+        "text": "Share your book slug, preview link, or screenshot."
+      },
+      "2": {
+        "title": "Subject selection matters",
+        "text": "Choosing the right subject for billing, access, and technical support speeds up the process."
+      }
+    },
+    "formSection": {
+      "badge": "Contact",
+      "title": "Tell us where you're stuck. We'll sort it out quickly.",
+      "description": "Be specific with your subject so the right team can respond faster."
+    },
+    "supportChannels": {
+      "0": {
+        "title": "General support",
+        "text": "Main support channel for usage questions, account access, and delivery flow."
+      },
+      "1": {
+        "title": "Billing",
+        "text": "Billing-focused support for plan, cancellation, and payment issues."
+      },
+      "2": {
+        "title": "Response target",
+        "text": "Within the first business day for standard requests, faster for critical payment issues."
+      }
+    }
+  },
+  "ToolsPage": {
+    "metadata": {
+      "title": "Free Book Tools | Book Generator",
+      "description": "Score your idea, extract an outline, test your KDP niche. Prepare your book for publishing with AI-powered free tools."
+    },
+    "hero": {
+      "badge": "Free Tools",
+      "title": "Free tools that accelerate your book",
+      "titleHighlight": "Free tools",
+      "description": "Score your idea, extract your outline, test your title. Each tool brings you one step closer to your book preview."
+    },
+    "directAnswer": {
+      "question": "What free book tools are available?",
+      "answer": "Access 6+ free AI-powered tools: book idea validator for scoring concepts, outline generator for structure, content-to-book converter for repurposing, KDP niche analyzer for market research, lead magnet finder for client attraction, and title critic for optimization."
+    },
+    "pillars": {
+      "0": "Score your idea, extract your outline",
+      "1": "Instant score, detailed report sent to your email",
+      "2": "Jump directly from any tool to book preview"
+    },
+    "toolsSection": {
+      "badge": "Tool Library",
+      "title": "Powerful individually, comprehensive together.",
+      "description": "Each tool works the same way: quick score, clear recommendations, detailed report, and a seamless path to preview."
+    },
+    "cta": {
+      "title": "Stop tinkering with tools, start your book.",
+      "description": "Clarify direction with tools, then move to the preview workflow. The decision is here, production is in the wizard.",
+      "items": {
+        "0": "Go from idea to outline in one click",
+        "1": "Test KDP and customer angles early",
+        "2": "Detailed report sent to your email",
+        "3": "Preview → full book → EPUB/PDF chain"
+      }
+    }
+  },
+  "ResourcesPage": {
+    "metadata": {
+      "title": "Free Resources | Book Generator",
+      "description": "Practical guides, checklists, and templates for writing books with AI. Explore free resources to accelerate your book writing process."
+    },
+    "hero": {
+      "badge": "Free Resources",
+      "title": "Free resources to accelerate your book decision",
+      "description": "Guides, templates, checklists, and tutorials. The goal isn't just reading — it's moving you faster into previewing, chapter planning, and the real book flow."
+    },
+    "directAnswer": {
+      "question": "What free resources are available for book writing?",
+      "answer": "Book Generator provides 7 free resources: AI Book Writing Starter Pack, 6 interactive tools, comprehensive 30-item pre-publish checklist, niche research worksheet, 15-minute quick start guide, 100 profitable book ideas list, and KDP Starter Toolkit."
+    },
+    "resources": {
+      "0": {
+        "badge": "Email Starter Pack",
+        "title": "AI Book Writing Starter Pack",
+        "description": "A short guide, quality filter, and pre-publish check notes to start your first book without staring at a blank page.",
+        "highlights": {
+          "0": "Topic summary creation techniques",
+          "1": "How to set up a chapter plan",
+          "2": "What to watch during chapter generation",
+          "3": "EPUB/PDF delivery pipeline"
+        },
+        "cta": "Apply step by step in the wizard"
+      },
+      "1": {
+        "badge": "Tool Library",
+        "title": "Free Book Tools",
+        "description": "Score your book idea, generate an outline, test your KDP niche, find a customer-attracting angle, and refine your title.",
+        "highlights": {
+          "0": "6 different interactive tools",
+          "1": "Partial free score + full report via email",
+          "2": "CTA chain leading to start funnel",
+          "3": "Validator, outline, KDP, and title tools"
+        },
+        "cta": "Open Tool Hub"
+      },
+      "2": {
+        "badge": "Checklist",
+        "title": "Pre-Publish Book Checklist",
+        "description": "A comprehensive 30-item checklist to review before publishing on Amazon KDP or any other platform.",
+        "highlights": {
+          "0": "Metadata and description checks",
+          "1": "Cover design standards",
+          "2": "EPUB validation steps",
+          "3": "KDP upload requirements"
+        },
+        "cta": "Create and check your book"
+      },
+      "3": {
+        "badge": "Template",
+        "title": "Niche Research Worksheet",
+        "description": "A fillable worksheet designed to help you find the right niche and target audience for your book.",
+        "highlights": {
+          "0": "Target reader profile template",
+          "1": "Competition analysis table",
+          "2": "Keyword research framework",
+          "3": "Pricing and market notes"
+        },
+        "cta": "Define your niche in the wizard"
+      },
+      "4": {
+        "badge": "Guide",
+        "title": "Book Generator Quick Start (15 min)",
+        "description": "A step-by-step guide covering the entire process from your first login to generating your first book.",
+        "highlights": {
+          "0": "Filling in the wizard",
+          "1": "Chapter plan approval and editing",
+          "2": "Chapter generation and saving",
+          "3": "Output and download steps"
+        },
+        "cta": "Apply the guide — start now"
+      },
+      "5": {
+        "badge": "Idea List",
+        "title": "100 Profitable Book Ideas List",
+        "description": "100 book ideas researched across best-selling niche categories on Amazon KDP. Each idea includes target audience notes.",
+        "highlights": {
+          "0": "100 ideas across 10 categories",
+          "1": "Target audience notes for each idea",
+          "2": "Competition level assessment",
+          "3": "Price range suggestions"
+        },
+        "cta": "Pick an idea and get started"
+      },
+      "6": {
+        "badge": "KDP Toolkit",
+        "title": "KDP Starter Toolkit",
+        "description": "A starter path that combines the templates and guides you need to publish your first book on Amazon KDP.",
+        "highlights": {
+          "0": "Book description template",
+          "1": "Category selection guide",
+          "2": "Pricing strategy notes",
+          "3": "Publishing starter checklist"
+        },
+        "cta": "Create your KDP book now"
+      }
+    },
+    "allResourcesSection": {
+      "badge": "All Resources",
+      "title": "Tools that simplify the process.",
+      "description": "Resources prepared for every stage, from guides to templates, checklists to video tutorials."
+    },
+    "crossLinks": {
+      "lookingFor": "Looking for more content:"
+    },
+    "cta": {
+      "title": "Start your own book instead of just reading.",
+      "description": "You've explored the guides and seen the templates. Now test the same logic with your own topic summary: preview first, then decide whether to continue. 30-day money-back guarantee.",
+      "items": {
+        "0": "Quick start with the wizard",
+        "1": "Chapter plan + chapter generation",
+        "2": "Preview first, then full book",
+        "3": "EPUB and PDF output"
+      }
+    }
+  },
+  "BlogPage": {
+    "metadata": {
+      "title": "Book Generator Blog | AI Book Writing Guides",
+      "description": "Read practical guides on AI book writing, KDP preparation, EPUB/PDF publishing steps, and content planning on the Book Generator blog."
+    },
+    "hero": {
+      "badge": "Blog",
+      "title": "Articles that overcome objections and speed up decisions.",
+      "description": "This page is not a news feed; it's a collection of short articles that quickly clear up the critical questions of a first-time book author."
+    },
+    "introText": "To get started, you can first check how it works, then clarify your decision with the FAQ and pricing pages.",
+    "introText2": "But real clarity usually comes not from reading, but from entering your own topic idea and seeing the preview.",
+    "topics": {
+      "badge": "Topics",
+      "title": "What questions does the blog answer?",
+      "description": "Categories that speed up different decision points — from rights to initial planning, format selection to cover decisions.",
+      "items": {
+        "0": {
+          "title": "Rights",
+          "description": "How control, ownership, and user role are positioned in AI-generated content?"
+        },
+        "1": {
+          "title": "Getting Started",
+          "description": "How to choose topic, chapter count, and scope for your first book?"
+        },
+        "2": {
+          "title": "Publishing",
+          "description": "Short answers to delivery questions like EPUB, PDF, and platform compatibility."
+        },
+        "3": {
+          "title": "Research",
+          "description": "Simple decision articles for topic selection, keyword logic, and demand validation."
+        },
+        "4": {
+          "title": "Prompt Writing",
+          "description": "Practical tips for English topic summary, tone, target reader, and chapter plan clarity."
+        },
+        "5": {
+          "title": "Cover",
+          "description": "What to keep in mind so your cover isn't just pretty but serves sales."
+        }
+      }
+    },
+    "articles": {
+      "badge": "Articles",
+      "title": "All articles",
+      "description": "Straightforward content that addresses the main objections first, then covers more detailed decision points.",
+      "featuredLabel": "Featured",
+      "readLabel": "read"
+    },
+    "cta": {
+      "title": "After reading, the next best step is to see your own preview.",
+      "description": "The blog speeds up your decision, but real clarity comes when you enter your own book idea into the system. See the preview first, then decide to unlock the full book.",
+      "items": {
+        "0": "Topic and target reader input",
+        "1": "Outline and chapter plan creation",
+        "2": "Chapter generation and editing",
+        "3": "Preview first, then full book"
+      }
+    }
+  },
+  "LoginPage": {
+    "metadata": {
+      "title": "Log In | Book Creator",
+      "description": "Open the Book Creator session, go to the wizard flow, and continue book production from where you left off."
+    },
+    "emailVerified": "Email verified. You can log in.",
+    "welcomeBack": "Welcome Back",
+    "continueBook": "Continue your book where you left off",
+    "dontHaveAccount": "Don't have an account?",
+    "signupLink": "Sign up",
+    "trustNote": "Your data is safe with us"
+  },
+  "SignupPage": {
+    "metadata": {
+      "title": "Sign Up | Book Generator",
+      "description": "Create a Book Generator account, save your preview, and continue your book workflow."
+    },
+    "createAccount": "Create Account",
+    "startForFree": "Start for free • 2 minutes",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginLink": "Log in",
+    "trustNote": "No credit card required • Secure sign-up"
+  },
+  "HomeHero": {
+    "badge": "AI-Powered Book Writing",
+    "title": "Turn your expertise into a book. Get your first EPUB this week.",
+    "subtitle": "For consultants, instructors, and content creators: Enter your topic, approve the chapter outline, generate chapters, add a cover, and your publication file is ready.",
+    "ctaText": "Start your first book",
+    "secondaryCtaText": "View Sample Outputs",
+    "trustNote": "No credit card required · Preview first · Model cost is included in the plan price · Delivery approach that simplifies KDP compliance"
+  },
+  "HomeGallery": {
+    "badge": "Real Book Showcase",
+    "heading": "Not mockup ideas — these are real, produced covers spinning in the gallery.",
+    "description": "Every book here comes from actual example outputs. The same cover pipeline, same export chain, and same book production workflow is reused throughout the site."
+  },
+  "MarketingCta": {
+    "title": "The single clear starting point for publishing your first book.",
+    "description": "A book system that takes you from topic idea to first publishable file without unnecessary dashboard fatigue.",
+    "buttonText": "Start Your Free Preview"
+  },
+  "AuthForm": {
+    "errors": {
+      "incorrectCredentials": {
+        "title": "Incorrect credentials",
+        "description": "Email or password does not match."
+      },
+      "verificationRequired": {
+        "title": "Verification required",
+        "description": "You need to verify your email address."
+      },
+      "loginFailed": {
+        "title": "Login failed"
+      },
+      "emailRequired": {
+        "title": "Email required",
+        "description": "Please enter your email address."
+      },
+      "passwordRequired": {
+        "title": "Password is required",
+        "description": "Please enter your password."
+      },
+      "nameRequired": {
+        "title": "Name required",
+        "description": "Please enter your name."
+      },
+      "couldNotSend": {
+        "title": "Could not be sent",
+        "description": "Please try again."
+      },
+      "registrationFailed": {
+        "title": "Registration failed",
+        "description": "Please try again."
+      },
+      "generic": {
+        "title": "An error occurred",
+        "description": "Please try again."
+      }
+    },
+    "feedback": {
+      "linkSent": {
+        "title": "Link sent",
+        "description": "Check your email."
+      },
+      "verified": {
+        "title": "Verified",
+        "description": "Your account is ready."
+      },
+      "invalidLink": {
+        "title": "Invalid link",
+        "description": "It may have expired."
+      },
+      "magicLinkSent": {
+        "title": "Link sent",
+        "description": "Click the link in your email."
+      }
+    },
+    "google": {
+      "signIn": "Sign in with Google",
+      "signUp": "Sign up with Google"
+    },
+    "divider": "or",
+    "fields": {
+      "fullName": {
+        "label": "Full Name",
+        "placeholder": "Your name"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "example@mail.com"
+      },
+      "password": {
+        "label": "Password",
+        "placeholderLogin": "Your password",
+        "placeholderRegister": "At least 8 characters"
+      }
+    },
+    "links": {
+      "forgotPassword": "Forgot?"
+    },
+    "buttons": {
+      "login": "Sign In",
+      "register": "Sign Up",
+      "processing": "Processing...",
+      "magicLink": "Don't want to enter password • Send email link",
+      "magicLinkSending": "Sending..."
+    },
+    "aria": {
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
+    }
+  },
+  "FaqData": {
+    "General": {
+      "title": "General",
+      "items": {
+        "0": {
+          "q": "What does this product do?",
+          "a": "It takes your idea, generates an outline, produces chapters, and converts your book into publishable output files."
+        },
+        "1": {
+          "q": "Can I generate content in English?",
+          "a": "Yes. The interface stays in Turkish, but book content can be produced in English or any other language you choose."
+        },
+        "2": {
+          "q": "Can a first-time user understand this?",
+          "a": "Yes. The main workflow consists of a 5-question wizard and 3 basic steps: idea, outline, publish."
+        },
+        "3": {
+          "q": "Is the preview really free? Do I need card details?",
+          "a": "Yes, completely free. You can complete the wizard, see your cover and chapter plan without registration or card details. The first 20% content preview is also included. Payment is only required when you want the full book and output files."
+        },
+        "4": {
+          "q": "Is AI-generated content really usable quality?",
+          "a": "The output is a structured outline — not like a professional editor, but a ready-to-edit skeleton instead of starting from a blank page. You can modify, regenerate, or replace any chapter with your own text. KDP-focused production workflow and our books are prepared with KDP-compliance focus."
+        },
+        "5": {
+          "q": "Who is this product NOT suitable for?",
+          "a": "It is not designed for novel or fiction writers, those seeking academic formatting (footnotes, bibliography), or technical documentation needs. It's the right tool for guides, expertise books, info products, or KDP non-fiction."
+        }
+      }
+    },
+    "BookProduction": {
+      "title": "Book Production",
+      "items": {
+        "0": {
+          "q": "How do I create a book?",
+          "a": "Enter brief information such as topic, target reader, tone, and language. The system builds an outline and chapter flow based on that."
+        },
+        "1": {
+          "q": "Do I have to generate chapters before approving the outline?",
+          "a": "No. It is recommended to decide on the outline first, then proceed to chapter generation."
+        },
+        "2": {
+          "q": "Can I edit the book later?",
+          "a": "Yes. Chapter contents and book metadata can be updated in the workspace."
+        },
+        "3": {
+          "q": "Can I generate just a single piece like an introduction or summary?",
+          "a": "The main workflow is focused on full book production. In advanced workflows, you can also work on specific chapters."
+        },
+        "4": {
+          "q": "Can I write in Turkish and produce an English book?",
+          "a": "Yes. You can fill out the wizard entirely in Turkish; the system produces content in your chosen language — including English. No translation tool needed."
+        },
+        "5": {
+          "q": "How many chapters are generated? Can I control the length?",
+          "a": "You approve the number of chapters and their titles during the outline stage; the system typically suggests a 7–12 chapter outline. You can add, remove, or reorder chapters."
+        }
+      }
+    },
+    "CoverAndDesign": {
+      "title": "Cover and Design",
+      "items": {
+        "0": {
+          "q": "Can I add a cover?",
+          "a": "Yes. Local cover generation, manual upload, and AI-assisted cover options are available in supported workflows."
+        },
+        "1": {
+          "q": "Are back cover and additional images supported?",
+          "a": "Yes. Front and back cover files can be managed in the publishing and asset workflows within the workspace."
+        },
+        "2": {
+          "q": "Are covers generated automatically?",
+          "a": "If you want, an automatic workflow is used; or you can proceed entirely with your own uploaded images."
+        }
+      }
+    },
+    "DeliveryAndOutputs": {
+      "title": "Delivery and Outputs",
+      "items": {
+        "0": {
+          "q": "What files do I receive?",
+          "a": "Depending on your plan and selection, you receive EPUB, PDF, HTML, Markdown, and additional e-book formats where applicable."
+        },
+        "1": {
+          "q": "Which output is recommended first?",
+          "a": "It is recommended to get EPUB first. After checking the structure, you can move on to PDF and other formats."
+        },
+        "2": {
+          "q": "Where are the outputs stored?",
+          "a": "Each book is stored in its own folder with timestamped output folders."
+        },
+        "3": {
+          "q": "Can I upload the EPUB file directly to Amazon KDP?",
+          "a": "Yes. The generated EPUB is compatible with Amazon KDP's standard upload workflow. KDP-focused production workflow and our books are prepared with KDP-compliance focus."
+        }
+      }
+    },
+    "RightsAndPublishing": {
+      "title": "Rights and Publishing",
+      "items": {
+        "0": {
+          "q": "Do I own the content?",
+          "a": "Since you provide the topic, direction, edits, and final approval, control of the resulting book belongs to the user."
+        },
+        "1": {
+          "q": "Can I publish on KDP or other platforms?",
+          "a": "Yes. The product produces digital outputs; the publishing decision and compliance with platform rules are the user's responsibility."
+        },
+        "2": {
+          "q": "Do you provide ISBNs?",
+          "a": "No. Metadata management is available, but ISBN procurement must be handled by the user or publisher."
+        }
+      }
+    },
+    "SubscriptionAndPayment": {
+      "title": "Subscription and Payment",
+      "items": {
+        "0": {
+          "q": "Can I change my plan?",
+          "a": "Yes. Package upgrade, downgrade, or cancellation can be managed from the billing area."
+        },
+        "1": {
+          "q": "Do unused credits roll over?",
+          "a": "No. Monthly credits do not carry over to the next period."
+        },
+        "2": {
+          "q": "What if I chose the wrong plan?",
+          "a": "Submit a change or refund request through support; we evaluate and respond as quickly as possible."
+        },
+        "3": {
+          "q": "What does the $4 one-time payment include?",
+          "a": "The $4 Single Book plan provides full access for one book without a monthly subscription: all chapters, cover, EPUB, and PDF output. No time limit."
+        }
+      }
+    },
+    "Support": {
+      "title": "Support",
+      "items": {
+        "0": {
+          "q": "How do I get support?",
+          "a": "You can get technical, delivery, or billing support through the support channels on the contact page."
+        },
+        "1": {
+          "q": "How long does it take to get a response?",
+          "a": "The standard target is to respond within the first business day. Critical payment issues are handled faster."
+        },
+        "2": {
+          "q": "What should I do if the result is not what I expected?",
+          "a": "First, review the topic summary and outline. If needed, correct the workflow with rewriting, expanding, or support redirection."
+        }
+      }
+    }
+  },
+  "UseCasesPage": {
+    "metadata": {
+      "title": "Who Is It For? | Book Generator",
+      "description": "Discover who uses Book Generator and why. An AI-powered book production system for authors, consultants, instructors, course creators, and content creators."
+    },
+    "hero": {
+      "badge": "Who Uses It?",
+      "title": "Not for everyone.",
+      "titleHighlight": "Incredibly powerful for the right user.",
+      "description": "From individual authors to enterprise teams, consultants to KDP publishers. Book Generator works differently for different purposes — but it's strongest where there's a publish-ready knowledge book workflow."
+    },
+    "directAnswer1": {
+      "question": "Who is Book Generator for?",
+      "answer": "Book Generator serves six primary user segments: individual authors, consultants and coaches, instructors, KDP publishers, content creators, and organizations. 92% publish within 7 days."
+    },
+    "directAnswer2": {
+      "question": "Who should use Book Generator?",
+      "answer": "Book Generator is ideal for anyone with expertise to share: first-time authors overcoming writer's block, consultants and coaches building authority, instructors transforming course content into books, KDP publishers scaling production."
+    },
+    "segmentsSection": {
+      "badge": "Use Cases",
+      "title": "Which scenario fits you?",
+      "description": "Find the closest match among six different user profiles.",
+      "outcomeLabel": "Typical outcome"
+    },
+    "segments": {
+      "0": {
+        "badge": "Individual Authors",
+        "title": "Authors looking to publish their first book",
+        "description": "You have an idea you want to write about, but getting started feels hard. The chapter outline isn't coming together in your head, and months keep passing by.",
+        "benefits": {
+          "0": "Draft chapter outline from your idea in 5 minutes",
+          "1": "Chapter-by-chapter production — stay on track without getting lost",
+          "2": "Consistent voice every time",
+          "3": "Download directly as EPUB and PDF"
+        },
+        "outcome": "A long-postponed first guide book can turn into a draft within weeks once the chapter structure is clarified.",
+        "cta": "Getting started guide for authors"
+      },
+      "1": {
+        "badge": "Consultants & Coaches",
+        "title": "Professionals who want to turn their expertise into a book",
+        "description": "Turning years of accumulated knowledge into a book both boosts your credibility and opens doors to new clients. But there's no time. Book Generator transforms your expertise into structured content.",
+        "benefits": {
+          "0": "Short lead-generating promotional books",
+          "1": "Brand-aligned tone of voice",
+          "2": "Chapter structure that conveys your methodology",
+          "3": "Multiple niche books in a short time"
+        },
+        "outcome": "Converting consulting knowledge into a short authority book can serve as an entry product and trust builder for your services.",
+        "cta": "Guide for consultants"
+      },
+      "2": {
+        "badge": "Instructors & Course Creators",
+        "title": "Educators who turn teaching content into guide books",
+        "description": "You already have course materials, workshop notes, and course modules prepared. Book Generator brings these together into a cohesive guide book structure.",
+        "benefits": {
+          "0": "Book draft from course modules",
+          "1": "Instructional tone and chapter structure",
+          "2": "End-of-chapter summaries and action items",
+          "3": "Use as a lead-generating short book or paid guide"
+        },
+        "outcome": "Course or workshop content can more quickly be transformed into a guide book that students can read and apply.",
+        "cta": "Get started for educators"
+      },
+      "3": {
+        "badge": "KDP Publishers",
+        "title": "Publishers releasing multiple titles on Amazon KDP",
+        "description": "You're targeting multiple titles per month. Writing by hand slows you down. Book Generator automates the entire publishing pipeline.",
+        "benefits": {
+          "0": "Monthly multi-title production capacity",
+          "1": "Niche research and chapter outline suggestions",
+          "2": "KDP-compliant EPUB/PDF output",
+          "3": "Cost-output optimization"
+        },
+        "outcome": "For KDP-focused users, getting research, draft, and output in a single workflow increases repetitive production capacity.",
+        "cta": "View KDP publisher plan"
+      },
+      "4": {
+        "badge": "Content Creators",
+        "title": "Creators who grow their blog, podcast, and courses into a book",
+        "description": "You have written content, a podcast, course materials. Bringing them together and presenting them as a book opens up a new revenue stream.",
+        "benefits": {
+          "0": "Book draft from existing content",
+          "1": "Language that speaks to your reader audience",
+          "2": "Additional income and lead collection opportunity",
+          "3": "Quick updates and new editions"
+        },
+        "outcome": "Scattered blog, podcast, or course fragments can be gathered into a single book narrative and transformed into a new revenue surface.",
+        "cta": "Get started as a content creator"
+      },
+      "5": {
+        "badge": "Organizations & Teams",
+        "title": "Teams that turn institutional knowledge into publications",
+        "description": "Company knowledge is scattered across employees. Orientation guides, process manuals, internal training materials — transform them all into a consistent book format.",
+        "benefits": {
+          "0": "Internal company knowledge transfer",
+          "1": "Standardized orientation materials",
+          "2": "Corporate culture and process manuals",
+          "3": "Multi-author support (team production)"
+        },
+        "outcome": "When internal company knowledge, processes, or orientation workflows are converted into a single book, they become a reusable asset.",
+        "cta": "Contact us for enterprise plans"
+      }
+    },
+    "cta": {
+      "title": "No matter which segment you belong to, the first step is the same — and it's free.",
+      "description": "Preview without a credit card. Create your topic summary, see the chapter outline — clarify whether this book is truly worth publishing. 30-day money-back guarantee.",
+      "items": {
+        "0": "First topic summary in 5 minutes",
+        "1": "Instant chapter outline generation",
+        "2": "Preview first, then the full book",
+        "3": "EPUB/PDF output"
+      }
+    }
+  },
+  "ComparePage": {
+    "metadata": {
+      "title": "Comparison | Book Creator and Alternatives",
+      "description": "Compare Book Creator against manual writing, general AI assistants, and competing tools. Find out why a specialized book production tool is essential."
+    },
+    "hero": {
+      "badge": "Comparison",
+      "title": "You can start with ChatGPT.",
+      "titleHighlight": "But it may not be enough to finish.",
+      "description": "The problem isn't model quality — it's rewriting prompts for every chapter, maintaining a consistent tone, solving the cover separately, and completing the output separately."
+    },
+    "directAnswer": {
+      "question": "How does Book Generator compare to ChatGPT or manual writing?",
+      "answer": "Book Generator isn't a replacement for ChatGPT—it's a specialized book production system. While ChatGPT requires prompt engineering for each chapter, Book Generator provides topic-to-book workflow, consistent chapter generation, KDP-compliant EPUB/PDF output, and cover design in a single pipeline."
+    },
+    "hiddenCost": {
+      "label": "The hidden cost of the manual approach",
+      "text": "A 10–30 hour workflow can't be managed in a single tool: research in one place, outline in another, cover separately, output separately. This fragmentation is the most common reason books remain unfinished."
+    },
+    "featureTable": {
+      "badge": "Feature Table",
+      "title": "What can it do, and what can't it?",
+      "description": "Features purpose-built for book production — things general AI tools lack.",
+      "headers": {
+        "feature": "Feature",
+        "bookCreator": "Book Creator",
+        "manualAI": "Manual AI",
+        "generalTools": "General Tools"
+      },
+      "legend": {
+        "yes": "Full support",
+        "partial": "Partial / manual",
+        "no": "None"
+      },
+      "rows": {
+        "0": {
+          "feature": "Book-focused topic input system",
+          "note": "Other tools accept generic prompts; they don't understand book structure."
+        },
+        "1": {
+          "feature": "Automatic outline generation"
+        },
+        "2": {
+          "feature": "Consistent chapter-by-chapter generation",
+          "note": "Long-form content suffers from context drift."
+        },
+        "3": {
+          "feature": "EPUB output"
+        },
+        "4": {
+          "feature": "KDP-compliant PDF"
+        },
+        "5": {
+          "feature": "Cover image generation"
+        },
+        "6": {
+          "feature": "Bibliography / reference support"
+        },
+        "7": {
+          "feature": "No separate API costs for users",
+          "note": "In Book Creator, model costs are included in the plan; some general tools charge separately."
+        },
+        "8": {
+          "feature": "Publishing history and revisions"
+        },
+        "9": {
+          "feature": "Book production in Turkish",
+          "note": "General AI tools can produce Turkish content, but structure may break."
+        },
+        "10": {
+          "feature": "KDP niche research"
+        },
+        "11": {
+          "feature": "No setup required (web-based)"
+        },
+        "12": {
+          "feature": "Pricing model — per-book value",
+          "note": "Token-based tools mean longer books = higher costs."
+        }
+      }
+    },
+    "alternatives": {
+      "badge": "Understanding Alternatives",
+      "title": "Why other tools fall short?",
+      "prosLabel": "Pros",
+      "consLabel": "Cons",
+      "items": {
+        "0": {
+          "name": "ChatGPT / Claude (manual)",
+          "pros": {
+            "0": "Powerful language model",
+            "1": "Flexibility"
+          },
+          "cons": {
+            "0": "No book structure",
+            "1": "You need to write new prompts for every chapter",
+            "2": "Inconsistency due to context drift",
+            "3": "No EPUB/PDF output",
+            "4": "High token costs for long books"
+          }
+        },
+        "1": {
+          "name": "Jasper / Copy.ai",
+          "pros": {
+            "0": "Good short-form content generation",
+            "1": "Template support"
+          },
+          "cons": {
+            "0": "Not designed for book-length content",
+            "1": "No KDP output",
+            "2": "Turkish quality is inconsistent",
+            "3": "Expensive subscription"
+          }
+        },
+        "2": {
+          "name": "Scrivener + AI plugins",
+          "pros": {
+            "0": "Powerful authoring tool",
+            "1": "Structured writing"
+          },
+          "cons": {
+            "0": "Steep learning curve",
+            "1": "Complex AI integration",
+            "2": "Paid + plugin costs",
+            "3": "KDP output requires manual adjustment"
+          }
+        },
+        "3": {
+          "name": "Manual writing",
+          "pros": {
+            "0": "Full control",
+            "1": "No AI dependency"
+          },
+          "cons": {
+            "0": "Can take months or years",
+            "1": "Hard to get started",
+            "2": "High editing costs",
+            "3": "Creating an outline is a project in itself"
+          }
+        }
+      }
+    },
+    "cta": {
+      "title": "Stop wasting time with general tools — see the difference with your own topic.",
+      "items": {
+        "0": "Topic summary → chapter plan → book pipeline",
+        "1": "KDP-compliant EPUB / PDF",
+        "2": "Turkish book support",
+        "3": "Preview first, then full book"
+      }
+    }
+  },
+  "ExamplesPage": {
+    "metadata": {
+      "title": "Example Books and Real Outputs | Book Creator",
+      "description": "Explore example books with real covers, chapter plans, first chapter previews, and EPUB/PDF/HTML outputs. Then start your own book with the same workflow."
+    },
+    "directAnswer": {
+      "question": "What book examples can I see?",
+      "answer": "Explore 50+ real AI-generated books with visible chapter plans, first chapter previews, professional cover designs, and downloadable EPUB/PDF outputs."
+    },
+    "intro": {
+      "badge": "What do the examples prove?",
+      "title": "This page is not just a showcase — it's a decision-making tool",
+      "description": "A first-time visitor doesn't just look at covers here. Every example exists to help you quickly understand the real level of structure, content, and delivery format.",
+      "fourThingsHeading": "These examples show you 4 things",
+      "items": {
+        "0": {
+          "title": "Structural quality",
+          "text": "Is the chapter plan actually readable? Does the topic fit a logical backbone?"
+        },
+        "1": {
+          "title": "Content level",
+          "text": "Thanks to first chapter previews, you see not just covers but also a real sense of the content."
+        },
+        "2": {
+          "title": "Cover and positioning",
+          "text": "Does the cover, title, and category alignment give you a sense of publishability? That's what you test."
+        },
+        "3": {
+          "title": "Delivery format",
+          "text": "Where available, you can see whether HTML, PDF, and EPUB outputs are truly ready."
+        }
+      },
+      "usageBadge": "How to use this page?",
+      "instructions": {
+        "0": "First, use category, language, and search filters to find examples close to your topic.",
+        "1": "Use quick look to explore the table of contents, first chapter, and output tabs.",
+        "2": "Open the full page of any example that catches your eye for a deeper look.",
+        "3": "Then start your own book with the same workflow using your topic."
+      }
+    },
+    "faqs": {
+      "0": {
+        "question": "Are these examples real, or just demo designs?",
+        "answer": "The examples on this page come from the real production workflow — topic summary, outline, chapter generation, cover, and output."
+      },
+      "1": {
+        "question": "What can I examine in each example?",
+        "answer": "You can explore the cover, category, language, chapter count, summary, quick-look preview, text sample from the first chapter, and — where available — HTML/PDF/EPUB outputs."
+      },
+      "2": {
+        "question": "Will my results be exactly the same as these examples?",
+        "answer": "No, they won't be identical. But this page shows you the quality level, structural logic, and delivery format you can expect."
+      },
+      "3": {
+        "question": "Can I start a book similar to an example I like?",
+        "answer": "Yes. From any example, you can jump into the same starting workflow and begin a similar production process with your own topic."
+      }
+    },
+    "nextStep": {
+      "badge": "Next step",
+      "heading": "If the examples look good enough, try your own topic now.",
+      "description": "You start with the same workflow: topic summary, chapter plan, preview, cover, and output. You've seen the examples; now you can run the same process for your own book.",
+      "btn1": "Start your own book",
+      "btn2": "See how it works first",
+      "btn3": "View pricing"
+    }
+  },
+  "PageHeroes": {
+    "about": {
+      "badge": "About",
+      "title": "Not more panels,",
+      "titleHighlight": "more completed books.",
+      "description": "Our single goal: remove unnecessary complexity and enable anyone with expertise to actually finish their book.",
+      "principles": {
+        "0": "Fewer Words",
+        "1": "Single Path",
+        "2": "Editable",
+        "3": "Publishing-Focused",
+        "4": "Reliable",
+        "5": "AI + Simple"
+      }
+    },
+    "pricing": {
+      "badge": "Pricing",
+      "title": "Your book will be ready this weekend.",
+      "titleHighlight": "Start for $4, download your EPUB.",
+      "description": "See your draft for free, full book $4. No subscription, 30-day refund guarantee.",
+      "agencyPrice": "$500–$5,000",
+      "agencyLabel": "Agency / ghostwriter",
+      "ourPrice": "$4",
+      "ourLabel": "Book Creator",
+      "badges": {
+        "0": "30-Day Refund",
+        "1": "Preview First",
+        "2": "$4 One-Time",
+        "3": "No CC Required"
+      }
+    },
+    "examples": {
+      "badge": "Examples",
+      "title": "Not promises,",
+      "titleHighlight": "real outputs.",
+      "description": "Book titles, draft structures, and EPUB output examples generated from real topics."
+    },
+    "howItWorks": {
+      "badge": "How It Works",
+      "title": "Not from a blank page,",
+      "titleHighlight": "start with a guided preview.",
+      "description": "First topic, then outline, then preview. You progress knowing what happens at each step.",
+      "steps": {
+        "0": {
+          "number": "01",
+          "title": "Topic",
+          "description": "Topic and target reader"
+        },
+        "1": {
+          "number": "02",
+          "title": "Draft",
+          "description": "Chapter architecture"
+        },
+        "2": {
+          "number": "03",
+          "title": "Production",
+          "description": "Chapter writing"
+        },
+        "3": {
+          "number": "04",
+          "title": "Cover",
+          "description": "Visual workflow"
+        },
+        "4": {
+          "number": "05",
+          "title": "Output",
+          "description": "EPUB + PDF"
+        }
+      }
+    },
+    "faq": {
+      "badge": "FAQ",
+      "title": "Before deciding,",
+      "titleHighlight": "commonly asked questions.",
+      "description": "What the product does, who it's for, how it works, and what you get — short and clear answers.",
+      "stats": {
+        "0": {
+          "value": "7",
+          "label": "Categories"
+        },
+        "1": {
+          "value": "30+",
+          "label": "Q&A"
+        },
+        "2": {
+          "value": "1 min",
+          "label": "Average read"
+        }
+      }
+    },
+    "contact": {
+      "badge": "Contact",
+      "title": "For support",
+      "titleHighlight": "shortcut.",
+      "description": "Technical issues, account, payment, or delivery — whatever the topic, write briefly and clearly.",
+      "methods": {
+        "0": {
+          "label": "Support",
+          "description": "Usage and technical questions"
+        },
+        "1": {
+          "label": "1 Business Day",
+          "description": "Average response time"
+        },
+        "2": {
+          "label": "Secure",
+          "description": "Your data is safe with us"
+        }
+      }
+    }
+  },
+  "PremiumHero": {
+    "badge": "Free Preview",
+    "title": "Prepare Your Book in 15 Minutes",
+    "subtitle": "Write your idea, AI generates the chapters, receive as EPUB and PDF",
+    "ctaText": "Start Your First Book Free →",
+    "secondaryCtaText": "See Examples",
+    "features": {
+      "0": "5 short questions",
+      "1": "Preview first",
+      "2": "No credit card required"
+    }
+  },
+  "HomeBlogPreview": {
+    "badge": "Book Writing Guide",
+    "title": "AI Book Writing Guide: Read This Before Publishing Your First Book",
+    "description": "Quick and clear answers to the most frequently asked questions about preparing your first book with an AI book creator.",
+    "actionLabel": "View all posts",
+    "readLabel": "Read"
+  },
+  "PricingCreative": {
+    "plans": {
+      "single": {
+        "ctaLabel": "Unlock This Book for $4"
+      },
+      "starter": {
+        "ctaLabel": "Start with Starter Plan"
+      },
+      "creator": {
+        "ctaLabel": "Best Value Plan: Author"
+      },
+      "studio": {
+        "ctaLabel": "Go to Studio"
+      }
+    },
+    "perBook": "per book",
+    "mostPopular": "Most Popular",
+    "annual": "annual"
+  },
+  "sign_in": "Sign In",
+  "sign_up": "Sign Up",
+  "sending_": "Sending...",
+  "don_t_want_to_enter_password_send_email_link": "Don't want to enter password • Send email link",
+  "update_password": "Update Password",
+  "send_reset_link": "Send Reset Link",
+  "back_to_login": "Back to login",
+  "re_enter_your_new_password": "Re-enter your new password",
+  "example_mail_com": "example@mail.com",
+  "if_an_account_exists_with_this_email_a_reset_link_will_be_sent_for_security_reasons_we_may_show_the_same_message_in_some_cases_": "If an account exists with this email, a reset link will be sent. For security reasons, we may show the same message in some cases.",
+  "continue_with_google": "Continue with Google",
+  "continue_with_email": "Continue with Email",
+  "create_account": "Create Account",
+  "already_have_an_account_sign_in": "Already have an account? Sign In",
+  "first_name": "First Name",
+  "last_name": "Last Name",
+  "i_want_to_prepare_my_first_book_quickly_and_in_an_organized_way_": "I want to prepare my first book quickly and in an organized way.",
+  "loading_": "Loading...",
+  "success": "Success",
+  "warning": "Warning",
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "share": "Share",
+  "download": "Download",
+  "upload": "Upload",
+  "previous": "Previous",
+  "submit": "Submit",
+  "reset": "Reset",
+  "try_again": "Try Again",
+  "retry": "Retry",
+  "book_title": "Book Title",
+  "chapter": "Chapter",
+  "table_of_contents": "Table of Contents",
+  "preview": "Preview",
+  "export": "Export",
+  "publish": "Publish",
+  "draft": "Draft",
+  "final": "Final",
+  "outline": "Outline",
+  "style": "Style",
+  "generate": "Generate",
+  "dashboard": "Dashboard",
+  "analytics": "Analytics",
+  "settings": "Settings",
+  "profile": "Profile",
+  "billing": "Billing",
+  "books": "Books",
+  "users": "Users",
+  "reports": "Reports",
+  "audit": "Audit",
+  "jobs": "Jobs",
+  "no_results_found": "No results found",
+  "something_went_wrong": "Something went wrong",
+  "please_try_again": "Please try again",
+  "required": "Required",
+  "invalid_email": "Invalid email",
+  "password_too_short": "Password too short",
+  "passwords_don_t_match": "Passwords don't match",
+  "successfully_saved": "Successfully saved",
+  "successfully_deleted": "Successfully deleted",
+  "successfully_updated": "Successfully updated",
+  "new_users_vs_premium_conversions": "New users vs premium conversions",
+  "weekly_signup_and_paid_flow": "Weekly signup and paid flow",
+  "user_growth": "User growth",
+  "new_user_trend": "New user trend",
+  "revenue": "Revenue",
+  "signups": "Signups",
+  "paid": "Paid",
+  "vs_previous_period": "vs previous period",
+  "chart_data_not_available": "Chart data not available",
+  "loading_chart_data_": "Loading chart data...",
+  "no_data_to_display": "No data to display",
+  "user_created_account": "User created account",
+  "user_upgraded_to_premium": "User upgraded to premium",
+  "book_generated": "Book generated",
+  "book_exported": "Book exported",
+  "settings_updated": "Settings updated",
+  "password_reset": "Password reset",
+  "login_successful": "Login successful",
+  "logout_successful": "Logout successful",
+  "total_revenue": "Total revenue",
+  "new_users": "New users",
+  "active_users": "Active users",
+  "generated_books": "Generated books",
+  "exported_books": "Exported books",
+  "conversion_rate": "Conversion rate",
+  "churn_rate": "Churn rate",
+  "referral_rate": "Referral rate",
+  "book_generated_successfully": "Book generated successfully",
+  "book_exported_successfully": "Book exported successfully",
+  "chapter_created": "Chapter created",
+  "chapter_updated": "Chapter updated",
+  "outline_generated": "Outline generated",
+  "style_applied": "Style applied",
+  "book_preview_ready": "Book preview ready",
+  "book_published": "Book published",
+  "book_draft_saved": "Book draft saved",
+  "book_finalized": "Book finalized",
+  "book_generation_failed": "Book generation failed",
+  "export_failed": "Export failed",
+  "save_failed": "Save failed",
+  "network_error": "Network error",
+  "server_error": "Server error",
+  "invalid_input": "Invalid input",
+  "file_too_large": "File too large",
+  "format_not_supported": "Format not supported",
+  "generating_outline_": "Generating outline...",
+  "writing_chapters_": "Writing chapters...",
+  "applying_style_": "Applying style...",
+  "creating_preview_": "Creating preview...",
+  "exporting_book_": "Exporting book...",
+  "finalizing_": "Finalizing...",
+  "complete_": "Complete!",
+  "auto_save": "Auto-save",
+  "save_draft": "Save draft",
+  "save_chapter": "Save chapter",
+  "delete_chapter": "Delete chapter",
+  "move_up": "Move up",
+  "move_down": "Move down",
+  "insert_chapter": "Insert chapter",
+  "chapter_comments": "Chapter comments",
+  "add_comment": "Add comment",
+  "reply": "Reply",
+  "resolve_comment": "Resolve comment",
+  "unresolved_comment": "Unresolved comment",
+  "word_count": "Word count",
+  "character_count": "Character count",
+  "reading_time": "Reading time",
+  "estimated_completion": "Estimated completion",
+  "bold": "Bold",
+  "italic": "Italic",
+  "underline": "Underline",
+  "strikethrough": "Strikethrough",
+  "heading_1": "Heading 1",
+  "heading_2": "Heading 2",
+  "heading_3": "Heading 3",
+  "paragraph": "Paragraph",
+  "quote": "Quote",
+  "list": "List",
+  "numbered_list": "Numbered list",
+  "image": "Image",
+  "code": "Code",
+  "menu": "Menu",
+  "forward": "Forward",
+  "refresh": "Refresh",
+  "search": "Search",
+  "filter": "Filter",
+  "sort": "Sort",
+  "import": "Import",
+  "clear": "Clear",
+  "select_all": "Select all",
+  "deselect_all": "Deselect all",
+  "paste": "Paste",
+  "cut": "Cut",
+  "undo": "Undo",
+  "redo": "Redo",
+  "zoom_in": "Zoom in",
+  "zoom_out": "Zoom out",
+  "reset_zoom": "Reset zoom",
+  "fullscreen": "Fullscreen",
+  "exit_fullscreen": "Exit fullscreen",
+  "subscribe_to_our_newsletter": "Subscribe to our newsletter",
+  "enter_your_email": "Enter your email",
+  "unsubscribe": "Unsubscribe",
+  "email_address": "Email address",
+  "invalid_email_address": "Invalid email address",
+  "already_subscribed": "Already subscribed",
+  "subscribed_successfully": "Subscribed successfully",
+  "unsubscribed_successfully": "Unsubscribed successfully",
+  "contact_form": "Contact form",
+  "your_name": "Your name",
+  "your_message": "Your message",
+  "send_message": "Send message",
+  "message_sent_successfully": "Message sent successfully",
+  "failed_to_send_message": "Failed to send message",
+  "invalid_credentials": "Invalid credentials",
+  "email_already_in_use": "Email already in use",
+  "email_not_found": "Email not found",
+  "account_not_activated": "Account not activated",
+  "token_expired": "Token expired",
+  "invalid_token": "Invalid token",
+  "password_reset_successful": "Password reset successful",
+  "account_created_successfully": "Account created successfully",
+  "session_expired": "Session expired",
+  "invalid_session": "Invalid session",
+  "book_not_found": "Book not found",
+  "book_created_successfully": "Book created successfully",
+  "book_updated_successfully": "Book updated successfully",
+  "book_deleted_successfully": "Book deleted successfully",
+  "invalid_book_data": "Invalid book data",
+  "chapter_limit_exceeded": "Chapter limit exceeded",
+  "invalid_file_format": "Invalid file format",
+  "export_format_not_supported": "Export format not supported",
+  "user_not_found": "User not found",
+  "user_updated_successfully": "User updated successfully",
+  "user_deleted_successfully": "User deleted successfully",
+  "invalid_user_data": "Invalid user data",
+  "permission_denied": "Permission denied",
+  "account_suspended": "Account suspended",
+  "account_deleted": "Account deleted",
+  "password_changed_successfully": "Password changed successfully",
+  "email_updated_successfully": "Email updated successfully",
+  "profile_updated_successfully": "Profile updated successfully",
+  "admin_access_required": "Admin access required",
+  "invalid_admin_permissions": "Invalid admin permissions",
+  "system_maintenance": "System maintenance",
+  "rate_limit_exceeded": "Rate limit exceeded",
+  "api_key_invalid": "API key invalid",
+  "api_key_expired": "API key expired",
+  "quota_exceeded": "Quota exceeded",
+  "service_unavailable": "Service unavailable",
+  "database_error": "Database error",
+  "field_is_required": "Field is required",
+  "field_must_be_a_valid_email": "Field must be a valid email",
+  "field_must_be_at_least_8_characters": "Field must be at least 8 characters",
+  "field_must_be_less_than_255_characters": "Field must be less than 255 characters",
+  "field_must_be_a_number": "Field must be a number",
+  "field_must_be_positive": "Field must be positive",
+  "field_must_be_a_date": "Field must be a date",
+  "invalid_date_format": "Invalid date format",
+  "field_must_be_unique": "Field must be unique",
+  "field_pattern_mismatch": "Field pattern mismatch",
+  "file_uploaded_successfully": "File uploaded successfully",
+  "file_deleted_successfully": "File deleted successfully",
+  "file_not_found": "File not found",
+  "file_permission_denied": "File permission denied",
+  "file_corrupted": "File corrupted",
+  "file_processing_failed": "File processing failed",
+  "file_validation_failed": "File validation failed",
+  "file_size_exceeded": "File size exceeded",
+  "file_type_not_allowed": "File type not allowed",
+  "file_storage_full": "File storage full",
+  "payment_successful": "Payment successful",
+  "payment_failed": "Payment failed",
+  "payment_cancelled": "Payment cancelled",
+  "payment_pending": "Payment pending",
+  "payment_expired": "Payment expired",
+  "invalid_payment_method": "Invalid payment method",
+  "payment_method_not_supported": "Payment method not supported",
+  "refund_processed_successfully": "Refund processed successfully",
+  "refund_failed": "Refund failed",
+  "subscription_cancelled": "Subscription cancelled",
+  "subscription_renewed": "Subscription renewed",
+  "email_sent_successfully": "Email sent successfully",
+  "email_delivery_failed": "Email delivery failed",
+  "email_template_not_found": "Email template not found",
+  "email_queue_full": "Email queue full",
+  "email_server_error": "Email server error",
+  "email_rate_limit_exceeded": "Email rate limit exceeded",
+  "email_authentication_failed": "Email authentication failed",
+  "email_connection_failed": "Email connection failed",
+  "email_configuration_error": "Email configuration error",
+  "analytics_data_not_available": "Analytics data not available",
+  "analytics_date_range_invalid": "Analytics date range invalid",
+  "analytics_query_failed": "Analytics query failed",
+  "analytics_cache_error": "Analytics cache error",
+  "analytics_database_error": "Analytics database error",
+  "analytics_processing_timeout": "Analytics processing timeout",
+  "analytics_data_corrupted": "Analytics data corrupted",
+  "analytics_export_failed": "Analytics export failed",
+  "analytics_report_generated": "Analytics report generated",
+  "analytics_statistics_calculated": "Analytics statistics calculated",
+  "an_unexpected_error_occurred": "An unexpected error occurred",
+  "service_temporarily_unavailable": "Service temporarily unavailable",
+  "maintenance_in_progress": "Maintenance in progress",
+  "try_again_later": "Try again later",
+  "contact_support": "Contact support",
+  "error_processing_request": "Error processing request",
+  "invalid_request_parameters": "Invalid request parameters",
+  "resource_not_found": "Resource not found",
+  "access_denied": "Access denied",
+  "authentication_required": "Authentication required",
+  "cache_error": "Cache error",
+  "file_system_error": "File system error",
+  "configuration_error": "Configuration error",
+  "operation_completed_successfully": "Operation completed successfully",
+  "data_saved_successfully": "Data saved successfully",
+  "changes_applied_successfully": "Changes applied successfully",
+  "settings_updated_successfully": "Settings updated successfully",
+  "export_completed_successfully": "Export completed successfully",
+  "generation_completed_successfully": "Generation completed successfully",
+  "download_started": "Download started",
+  "process_completed": "Process completed",
+  "task_completed_successfully": "Task completed successfully",
+  "action_completed_successfully": "Action completed successfully",
+  "request_processed_successfully": "Request processed successfully",
+  "action_cannot_be_undone": "Action cannot be undone",
+  "data_will_be_permanently_deleted": "Data will be permanently deleted",
+  "this_action_may_take_some_time": "This action may take some time",
+  "large_file_detected": "Large file detected",
+  "processing_may_take_longer": "Processing may take longer",
+  "slow_network_detected": "Slow network detected",
+  "browser_not_optimized": "Browser not optimized",
+  "feature_may_not_work_properly": "Feature may not work properly",
+  "compatibility_issues_detected": "Compatibility issues detected",
+  "deprecated_feature_detected": "Deprecated feature detected",
+  "welcome_to_the_platform": "Welcome to the platform",
+  "getting_started_guide": "Getting started guide",
+  "documentation_available": "Documentation available",
+  "help_center": "Help center",
+  "report_a_bug": "Report a bug",
+  "request_a_feature": "Request a feature",
+  "system_status": "System status",
+  "last_updated": "Last updated",
+  "beta_feature": "Beta feature",
+  "new_feature_available": "New feature available",
+  "hotfix_deployed": "Hotfix deployed",
+  "maintenance_scheduled": "Maintenance scheduled",
+  "log_in": "Log In",
+  "register": "Register",
+  "close": "Close",
+  "remember_me": "Remember me",
+  "forgot_password_": "Forgot password?",
+  "don_t_have_an_account_": "Don't have an account?",
+  "already_have_an_account_": "Already have an account?",
+  "info": "Info",
+  "edit": "Edit",
+  "copy": "Copy",
+  "next": "Next",
+  "topic": "Topic",
+  "ready_to_publish_your_book_": "Ready to publish your book?",
+  "start_creating_today": "Start Creating Today",
+  "bookopencheck": "BookOpenCheck",
+  "filepenline": "FilePenLine",
+  "shieldcheck": "ShieldCheck",
+  "translations_": "Translations ",
+  "directanswerblock_": "DirectAnswerBlock ",
+  "lastupdated_": "LastUpdated ",
+  "marketingctasection_": "MarketingCtaSection ",
+  "marketingpage_": "MarketingPage ",
+  "sectionheading_": "SectionHeading ",
+  "cyberneticbentogrid_": "CyberneticBentoGrid ",
+  "pagemetadata": "PageMetadata",
+  "translations": "Translations",
+  "picon_classname": "PIcon className",
+  "bookmarked_key": "BookMarked key",
+  "sparkles_key": "Sparkles key",
+  "shieldcheck_key": "ShieldCheck key",
+  "bentoitems_": "BentoItems ",
+  "marketingpage": "MarketingPage",
+  "directanswerblock_question": "DirectAnswerBlock question",
+  "lastupdated_date": "LastUpdated date",
+  "sectionheading_badge": "SectionHeading badge",
+  "cyberneticbentogrid_badge": "CyberneticBentoGrid\n          badge",
+  "marketingctasection_title": "MarketingCtaSection\n        title",
+  "setinnerhtml": "SetInnerHTML",
+  "_metrics_i_value_": "`metrics.${i}.value`",
+  "_metrics_i_label_": "`metrics.${i}.label`",
+  "size_5_text_primary": "size-5 text-primary",
+  "mt_4_text_sm": "mt-4 text-sm",
+  "pagemetadata_": "PageMetadata ",
+  "legacy_account_url": "Legacy account URL",
+  "accountpage": "AccountPage",
+  "cartesiangrid": "CartesianGrid",
+  "chartcontainer": "ChartContainer",
+  "charttooltip": "ChartTooltip",
+  "metriccard_": "MetricCard ",
+  "notconfiguredcard_": "NotConfiguredCard ",
+  "adminresource_": "AdminResource ",
+  "admincurrency": "AdminCurrency",
+  "adminnumber_": "AdminNumber ",
+  "funnelpayload_": "FunnelPayload ",
+  "churnpayload_": "ChurnPayload ",
+  "authpayload_": "AuthPayload ",
+  "bridgeskipped": "BridgeSkipped",
+  "adminresource": "AdminResource",
+  "funnelpayload": "FunnelPayload",
+  "churnpayload": "ChurnPayload",
+  "authpayload": "AuthPayload",
+  "metriccard_title": "MetricCard\r\n          title",
+  "adminnumber": "AdminNumber",
+  "magic_links": "Magic Links",
+  "verification_resends": "Verification Resends",
+  "blocked_checkout": "Blocked Checkout",
+  "bridge_skips": "Bridge Skips",
+  "conversion_funnel": "Conversion funnel",
+  "chartcontainer_classname": "ChartContainer className",
+  "barchart_data": "BarChart data",
+  "cartesiangrid_vertical": "CartesianGrid vertical",
+  "xaxis_datakey": "XAxis dataKey",
+  "yaxis_tickline": "YAxis\r\n                tickLine",
+  "bar_datakey": "Bar dataKey",
+  "areachart_data": "AreaChart data",
+  "auth_mini_funnel": "Auth mini funnel",
+  "auth_methods": "Auth methods",
+  "auth_failure_reasons": "Auth failure reasons",
+  "auth_sources": "Auth sources",
+  "recent_auth_events": "Recent auth events",
+  "localestring": "LocaleString",
+  "churn_by_month": "Churn by month",
+  "notconfiguredcard_title": "NotConfiguredCard\n          title",
+  "grid_gap_4_md_grid_cols_5": "grid gap-4 md:grid-cols-5",
+  "grid_gap_6_xl_grid_cols_4": "grid gap-6 xl:grid-cols-4",
+  "text_sm_admin_muted": "text-sm admin-muted",
+  "text_xs_admin_muted": "text-xs admin-muted",
+  "pagination_": "Pagination ",
+  "admindatetime_": "AdminDateTime ",
+  "admindatetime": "AdminDateTime",
+  "datatable_data": "DataTable\r\n        data",
+  "pagination_page": "Pagination\r\n          page",
+  "text_sm_text_rose_600": "text-sm text-rose-600",
+  "statusbadge_": "StatusBadge ",
+  "invoicerow_": "InvoiceRow ",
+  "uricomponent": "URIComponent",
+  "book_unlock": "Book Unlock",
+  "statusbadge_status": "StatusBadge\r\n                                      status",
+  "internal_ledger": "Internal ledger",
+  "link_href": "Link\n          href",
+  "linechart_data": "LineChart data",
+  "no_invoices_found": "No invoices found",
+  "sparkles_classname": "Sparkles className",
+  "premium_unlocked_": "Premium Unlocked\n            ",
+  "propagation": "Propagation",
+  "open_details": "Open details",
+  "book_management": "Book management",
+  "premium_unlocked": "Premium Unlocked",
+  "activityfeed_": "ActivityFeed ",
+  "bookdetailresponse_": "BookDetailResponse ",
+  "unlockpremium": "UnlockPremium",
+  "adminbookdetailpage": "AdminBookDetailPage",
+  "bookdetailresponse": "BookDetailResponse",
+  "book_could_not_be_loaded": "Book could not be loaded",
+  "book_detail": "Book detail",
+  "generation_state": "Generation state",
+  "unlockpremium_": "UnlockPremium ",
+  "unlock_premium": "Unlock Premium",
+  "notes_section_": "Notes Section ",
+  "admin_notes": "Admin notes",
+  "activityfeed_items": "ActivityFeed\r\n        items",
+  "flex_items_start_justify_between_gap_4": "flex items-start justify-between gap-4",
+  "toggleright_": "ToggleRight ",
+  "flagspayload_": "FlagsPayload ",
+  "flagspayload": "FlagsPayload",
+  "could_not_be_created": "Could not be created",
+  "plus_classname": "Plus className",
+  "new_flag_": "New Flag\r\n        ",
+  "what_does_this_flag_do": "What does this flag do",
+  "flag_classname": "Flag className",
+  "toggleright_classname": "ToggleRight className",
+  "toggleleft_classname": "ToggleLeft className",
+  "pencil_classname": "Pencil className",
+  "what_does_this_flag_do_": "What does this flag do?",
+  "text_xs_text_rose_600": "text-xs text-rose-600",
+  "mt_0_5_text_xs_admin_muted": "mt-0.5 text-xs admin-muted",
+  "size_5_text_emerald_500": "size-5 text-emerald-500",
+  "size_5_admin_muted": "size-5 admin-muted",
+  "text_xs_font_medium": "text-xs font-medium",
+  "tekrar_dene_": "Tekrar Dene\r\n            ",
+  "queue_depth": "Queue depth",
+  "the_queue_appears_to_be_empty_right_now": "The queue appears to be empty right now",
+  "_row_progress_": "`${row.progress}%`",
+  "_size_4_loading_animate_spin_": "`size-4 ${loading ? \"animate-spin\" : \"\"}`",
+  "grid_gap_4_md_grid_cols_4": "grid gap-4 md:grid-cols-4",
+  "adminshell_": "AdminShell ",
+  "adminsession_": "AdminSession ",
+  "adminlayout": "AdminLayout",
+  "layoutprops": "LayoutProps",
+  "adminsession": "AdminSession",
+  "adminshell_user": "AdminShell\n      user",
+  "moderationrow_": "ModerationRow ",
+  "adminmoderationpage": "AdminModerationPage",
+  "moderationrow": "ModerationRow",
+  "onayla_": "Onayla\n          ",
+  "revizyon_": "Revizyon\n          ",
+  "reddet_": "Reddet\n          ",
+  "partial_moderation_queue": "Partial moderation queue",
+  "_api_admin_moderation_queue_query_": "`/api/admin/moderation/queue?${query}`",
+  "_api_admin_moderation_id_approve_": "`/api/admin/moderation/${id}/approve`",
+  "adminoverviewpayload_": "AdminOverviewPayload ",
+  "chartconfig_": "ChartConfig ",
+  "adminoverviewpayload": "AdminOverviewPayload",
+  "active_subscription": "Active subscription",
+  "subscriptions": "Subscriptions",
+  "trendingup_classname": "TrendingUp className",
+  "conversionrate": "ConversionRate",
+  "bookopen_classname": "BookOpen className",
+  "chartconfig": "ChartConfig",
+  "active_and_free_user_distribution": "Active and free user distribution",
+  "pie_data": "Pie\n                data",
+  "distribution_": "Distribution ",
+  "mousepointerclick": "MousePointerClick",
+  "chevrondown": "ChevronDown",
+  "conversionrow_": "ConversionRow ",
+  "referrerrow_": "ReferrerRow ",
+  "conversionrow": "ConversionRow",
+  "referralpayload_": "ReferralPayload ",
+  "referrerrow": "ReferrerRow",
+  "adminreferralspage": "AdminReferralsPage",
+  "referralpayload": "ReferralPayload",
+  "referral_program_statistics_and_conversion_details": "Referral program statistics and conversion details",
+  "total_clicks": "Total Clicks",
+  "mousepointerclick_classname": "MousePointerClick className",
+  "trophy_classname": "Trophy className",
+  "reward_granted": "Reward granted",
+  "gift_classname": "Gift className",
+  "toplam_komisyon": "Toplam Komisyon",
+  "dollarsign_classname": "DollarSign className",
+  "referral_tablosu": "Referral Tablosu",
+  "total_earnings": "Total Earnings",
+  "fragment_key": "Fragment key",
+  "chevronup_classname": "ChevronUp className",
+  "chevrondown_classname": "ChevronDown className",
+  "conversions_": "Conversions ",
+  "recent_conversions": "Recent Conversions",
+  "payout_requests_": "Payout Requests\r\n                              ",
+  "wallet_classname": "Wallet className",
+  "no_requests_yet": "No requests yet",
+  "_data_summary_conversionrate_": "`%${data.summary.conversionRate}`",
+  "_row_rewardsgranted_verildi_": "`${row.rewardsGranted} verildi`",
+  "min_w_full_text_left_text_sm": "min-w-full text-left text-sm",
+  "divide_y_divide_black_5_dark_divide_white_8": "divide-y divide-black/5 dark:divide-white/8",
+  "px_4_py_4_align_top": "px-4 py-4 align-top",
+  "px_4_py_4_align_top_text_xs_admin_muted_whitespace_nowrap": "px-4 py-4 align-top text-xs admin-muted whitespace-nowrap",
+  "dollarsign_": "DollarSign ",
+  "filetext_classname": "FileText className",
+  "other_fields_remain_as_structured_placeholders": "Other fields remain as structured placeholders",
+  "key_rotation": "Key rotation",
+  "api_keys_webhooks": "API keys & webhooks",
+  "subscriptionrow_": "SubscriptionRow ",
+  "adminsubscriptionspage": "AdminSubscriptionsPage",
+  "subscriptionrow": "SubscriptionRow",
+  "manual_payment": "Manual payment",
+  "manual_entitlement": "Manual entitlement",
+  "total_subscriptions": "Total Subscriptions",
+  "no_subscriptions_found": "No subscriptions found",
+  "no_active_subscription_entitlements": "No active subscription entitlements",
+  "_api_admin_subscriptions_query_": "`/api/admin/subscriptions?${query}`",
+  "_api_admin_subscriptions_id_": "`/api/admin/subscriptions/${id}`",
+  "_admin_subscriptions_params_tostring_": "`/admin/subscriptions?${params.toString()}`",
+  "text_xs_text_amber_600_dark_text_amber_400": "text-xs text-amber-600 dark:text-amber-400",
+  "alertcircle": "AlertCircle",
+  "checkcircle": "CheckCircle",
+  "alertcircle_classname": "AlertCircle className",
+  "user_management": "User management",
+  "super_admin": "Super Admin",
+  "filtreleri_temizleyip_tekrar_dene": "Filtreleri temizleyip tekrar dene",
+  "font_medium": "font-medium",
+  "userdetailresponse_": "UserDetailResponse ",
+  "resendverification": "ResendVerification",
+  "adminuserdetailpage": "AdminUserDetailPage",
+  "userdetailresponse": "UserDetailResponse",
+  "change_this_user": "Change this user",
+  "user_could_not_be_loaded": "User could not be loaded",
+  "never_logged_in": "Never logged in",
+  "resendverification_": "ResendVerification ",
+  "crown_classname": "Crown className",
+  "arrowright_classname": "ArrowRight className",
+  "active_": "Active\r\n                            ",
+  "changerole_": "ChangeRole ",
+  "role_change": "Role change",
+  "add_internal_note": "Add internal note",
+  "link_key": "Link\r\n                key",
+  "sebep_opsiyonel_": "Sebep (opsiyonel)",
+  "size_4_text_amber_500": "size-4 text-amber-500",
+  "size_4_admin_muted": "size-4 admin-muted",
+  "font_medium_admin_muted": "font-medium admin-muted",
+  "inactive": "Inactive",
+  "rejected": "Rejected",
+  "archived": "Archived",
+  "decline": "Decline",
+  "percentage": "Percentage",
+  "amount": "Amount",
+  "payment_processed": "Payment processed",
+  "refund_issued": "Refund issued",
+  "view_details": "View details",
+  "deactivate": "Deactivate",
+  "resume": "Resume",
+  "confirm": "Confirm",
+  "actions": "Actions",
+  "retention": "Retention",
+  "subscriptionandpayment": "SubscriptionAndPayment",
+  "items_": "Items\n      ",
+  "sections_": "Sections\n    ",
+  "labelkey_as_never": "LabelKey as never",
+  "_key_title": "${key}.title",
+  "_key_items": "${key}.items",
+  "sectionctas_section_title_": "sectionCtas.${section.title}",
+  "flex_items_center_justify_between_gap_4": "flex items-center justify-between gap-4"
 }

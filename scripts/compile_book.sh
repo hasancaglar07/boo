@@ -96,6 +96,7 @@ OPTIONS:
     --author "Name"   - Set author name (default: AI-Assisted Author)
     --cover "path"    - Path to cover image (JPG/PNG/PDF, min 1600x2560 pixels)
     --backcover "path" - Path to back cover image (JPG/PNG/PDF, min 1600x2560 pixels)
+    --logo "path"     - Path to publisher logo image used in PDF/EPUB pages
     --isbn "number"   - Set ISBN for the book
     --publisher "name" - Set publisher name
     --year "YYYY"     - Publication year (default: current year)
@@ -132,6 +133,7 @@ PUBLISHER="Speedy Quick Publishing"
 PUBLICATION_YEAR=$(date +"%Y")
 GENERATE_COVER=false
 ATTACH_COVER=false
+CUSTOM_LOGO_PATH=""
 BOOK_LANGUAGE="English"
 PANDOC_LANGUAGE="en-US"
 EBOOK_LANGUAGE="en"
@@ -251,6 +253,9 @@ publisher: "$PUBLISHER"
 toc-title: "$TOC_TITLE"
 papersize: 6in,9in
 geometry: "top=2in, bottom=2in, inner=2in, outer=2in"
+classoption:
+  - oneside
+  - openany
 identifier:
   - scheme: ISBN
     text: "${ISBN:-[No ISBN Provided]}"
@@ -360,25 +365,24 @@ generate_book_cover() {
 
     echo "🎨 Creating simple black and white book covers with ImageMagick..."
     
-    # Check for publisher logo
-    local logo_path="$SCRIPT_DIR/speedy-quick-publishing-logo.png"
+    # Check for publisher logo (prefer --logo override from dashboard metadata)
+    local logo_path=""
     local logo_exports_path="${assets_dir}/speedy-quick-publishing-logo.png"
-    
-    if [ -f "$logo_path" ]; then
-        # Copy logo to exports directory
+    if [ -n "$CUSTOM_LOGO_PATH" ] && [ -f "$CUSTOM_LOGO_PATH" ]; then
+        logo_path="$CUSTOM_LOGO_PATH"
+    elif [ -f "$SCRIPT_DIR/speedy-quick-publishing-logo.png" ]; then
+        logo_path="$SCRIPT_DIR/speedy-quick-publishing-logo.png"
+    elif [ -f "speedy-quick-publishing-logo.png" ]; then
+        logo_path="speedy-quick-publishing-logo.png"
+    fi
+    if [ -n "$logo_path" ] && [ -f "$logo_path" ]; then
         cp "$logo_path" "$logo_exports_path"
     else
-        # Check in current directory
-        if [ -f "speedy-quick-publishing-logo.png" ]; then
-            cp "speedy-quick-publishing-logo.png" "$logo_exports_path"
-        else
-            echo "⚠️ Publisher logo not found, creating a placeholder"
-            # Create a placeholder logo
-            $img_cmd -size 300x100 xc:white -gravity center \
-                "${font_args[@]}" \
-                -pointsize 24 -fill black -annotate +0+0 "$PUBLISHER" \
-                "$logo_exports_path"
-        fi
+        echo "⚠️ Publisher logo not found, creating a placeholder"
+        $img_cmd -size 300x100 xc:white -gravity center \
+            "${font_args[@]}" \
+            -pointsize 24 -fill black -annotate +0+0 "$PUBLISHER" \
+            "$logo_exports_path"
     fi
 
     # Check for author photo
@@ -400,18 +404,6 @@ generate_book_cover() {
                 -pointsize 24 -fill black -annotate +0+0 "Author Photo" \
                 "$author_photo_exports_path"
         fi
-    fi
-
-    # Check in current directory
-    if [ -f "speedy-quick-publishing-logo.png" ]; then
-        cp "speedy-quick-publishing-logo.png" "$logo_exports_path"
-    else
-        echo "⚠️ Publisher logo not found, creating a placeholder"
-        # Create a placeholder logo
-        $img_cmd -size 300x100 xc:white -gravity center \
-            "${font_args[@]}" \
-            -pointsize 24 -fill black -annotate +0+0 "$PUBLISHER" \
-            "$logo_exports_path"
     fi
 
     # Simple black & white cover generation (no external AI)
@@ -848,6 +840,10 @@ while [[ $# -gt 0 ]]; do
             BACK_COVER_IMAGE="$2"
             shift 2
             ;;
+        --logo)
+            CUSTOM_LOGO_PATH="$2"
+            shift 2
+            ;;
         --isbn)
             ISBN="$2"
             shift 2
@@ -1106,12 +1102,17 @@ EXPORTS_DIR="${BOOK_DIR}/exports_${TIMESTAMP}"
 mkdir -p "$EXPORTS_DIR"
 
 # Copy publisher logo into exports dir for inclusion in manuscript (small logo on title/copyright pages)
-PUBLISHER_LOGO_SRC="$SCRIPT_DIR/speedy-quick-publishing-logo.png"
+if [ -n "$CUSTOM_LOGO_PATH" ] && [ -f "$CUSTOM_LOGO_PATH" ]; then
+    PUBLISHER_LOGO_SRC="$CUSTOM_LOGO_PATH"
+else
+    PUBLISHER_LOGO_SRC="$SCRIPT_DIR/speedy-quick-publishing-logo.png"
+fi
 if [ -f "$PUBLISHER_LOGO_SRC" ]; then
     cp -f "$PUBLISHER_LOGO_SRC" "$EXPORTS_DIR/$(basename "$PUBLISHER_LOGO_SRC")" 2>/dev/null || true
+    LOGO_BASENAME="$(basename "$PUBLISHER_LOGO_SRC")"
+else
+    LOGO_BASENAME=""
 fi
-# Basename for referencing the logo in the manuscript and exports
-LOGO_BASENAME="$(basename "$PUBLISHER_LOGO_SRC")"
 
 # Copy author photo into exports dir for inclusion in manuscript
 AUTHOR_PHOTO_SRC="$SCRIPT_DIR/author-photo.png"

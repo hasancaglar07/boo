@@ -52,7 +52,7 @@ export function ChapterListSidebar({
 
     // If locked, show upgrade prompt
     if (chapter.status === "locked") {
-      router.push(`/app/book/${bookSlug}/checkout?from=preview`);
+      router.push(`/app/book/${bookSlug}/upgrade`);
       return;
     }
 
@@ -196,14 +196,16 @@ export function ChapterListSidebar({
                     </div>
 
                     {/* Edit button */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => handleEditChapter(index, e)}
-                      className="h-7 px-2 shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
-                    >
-                      <PenTool className="size-3" />
-                    </Button>
+                    {premium ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => handleEditChapter(index, e)}
+                        className="h-7 px-2 shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+                      >
+                        <PenTool className="size-3" />
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               );
@@ -217,9 +219,9 @@ export function ChapterListSidebar({
                 <div className="flex items-start gap-2">
                   <Lock className="size-3.5 text-amber-600 shrink-0 mt-0.5" />
                   <div className="text-xs text-amber-900 dark:text-amber-200">
-                    <div className="font-medium">Premium chapters</div>
+                    <div className="font-medium">What unlock adds</div>
                     <div className="mt-0.5 text-[10px] leading-tight">
-                      {lockedSectionCount} chapters locked. Unlock to read and edit all content.
+                      {lockedSectionCount} locked chapters, PDF + EPUB downloads, covers, and workspace editing.
                     </div>
                   </div>
                 </div>
@@ -229,16 +231,26 @@ export function ChapterListSidebar({
 
           {/* Quick actions */}
           <div className="pt-3 border-t space-y-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start h-9"
-              onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=writing`)}
-            >
-              <PenTool className="mr-2 size-4" />
-              Edit Full Book
-            </Button>
-
+            {premium ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start h-9"
+                onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=writing`)}
+              >
+                <PenTool className="mr-2 size-4" />
+                Edit Full Book
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="w-full justify-start h-9"
+                onClick={() => router.push(`/app/book/${bookSlug}/upgrade`)}
+              >
+                <Lock className="mr-2 size-4" />
+                Unlock Full Book for $4
+              </Button>
+            )}
             {premium && (
               <Button
                 variant="outline"
@@ -330,17 +342,19 @@ export function ChapterListSidebar({
                         </div>
 
                         {/* Edit button */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditChapter(index, e);
-                          }}
-                          className="h-10 w-10 shrink-0"
-                        >
-                          <PenTool className="size-4" />
-                        </Button>
+                        {premium ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditChapter(index, e);
+                            }}
+                            className="h-10 w-10 shrink-0"
+                          >
+                            <PenTool className="size-4" />
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
                   );
@@ -353,9 +367,9 @@ export function ChapterListSidebar({
                   <div className="flex items-start gap-3">
                     <Lock className="size-5 text-amber-600 shrink-0 mt-0.5" />
                     <div className="text-sm text-amber-900 dark:text-amber-200">
-                      <div className="font-semibold">Premium chapters</div>
+                      <div className="font-semibold">Unlock the full package</div>
                       <div className="mt-1 text-xs leading-tight">
-                        {lockedSectionCount} chapters locked. Unlock to read and edit all content.
+                        {lockedSectionCount} locked chapters plus exports, cover files, and the editing workspace.
                       </div>
                     </div>
                   </div>
@@ -364,16 +378,26 @@ export function ChapterListSidebar({
 
               {/* Quick actions */}
               <div className="pt-4 border-t space-y-3">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full justify-start h-12"
-                  onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=writing`)}
-                >
-                  <PenTool className="mr-3 size-5" />
-                  <span className="text-sm font-medium">Edit Full Book</span>
-                </Button>
-
+                {premium ? (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full justify-start h-12"
+                    onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=writing`)}
+                  >
+                    <PenTool className="mr-3 size-5" />
+                    <span className="text-sm font-medium">Edit Full Book</span>
+                  </Button>
+                ) : (
+                  <Button
+                    size="lg"
+                    className="w-full justify-start h-12"
+                    onClick={() => router.push(`/app/book/${bookSlug}/upgrade`)}
+                  >
+                    <Lock className="mr-3 size-5" />
+                    <span className="text-sm font-medium">Unlock Full Book for $4</span>
+                  </Button>
+                )}
                 {premium && (
                   <Button
                     variant="outline"

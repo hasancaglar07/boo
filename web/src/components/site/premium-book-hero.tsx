@@ -5,6 +5,8 @@ import Image from "next/image";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
@@ -283,19 +285,28 @@ export const PremiumBookHero = React.forwardRef<
 >((
   {
     className,
-    title = "Prepare Your Book in 15 Minutes",
-    subtitle = "Write your idea, AI generates the chapters, receive as EPUB and PDF",
-    ctaText = "Start Your First Book Free →",
+    title,
+    subtitle,
+    ctaText,
     ctaHref = "/start/topic",
-    badge = "Free Preview",
-    trustNote = `See a free preview first. No credit card required; open the full book if you like it. · ${FULL_TRUST_CLAIM}`,
-    socialProof = { count: "1000+ KDP books published", rating: "Kindle-compatible EPUB output" },
-    secondaryCtaText = "See Examples",
+    badge,
+    trustNote,
+    socialProof,
+    secondaryCtaText,
     secondaryCtaHref = "/examples",
     ...props
   },
   ref,
 ) => {
+  const t = useTranslations("PremiumHero");
+  const resolvedTitle = title ?? t("title");
+  const resolvedSubtitle = subtitle ?? t("subtitle");
+  const resolvedCtaText = ctaText ?? t("ctaText");
+  const resolvedBadge = badge ?? t("badge");
+  const resolvedSecondaryCtaText = secondaryCtaText ?? t("secondaryCtaText");
+  const resolvedTrustNote = trustNote ?? `See a free preview first. No credit card required; open the full book if you like it. · ${FULL_TRUST_CLAIM}`;
+  const resolvedSocialProof = socialProof ?? { count: "1000+ KDP books published", rating: "Kindle-compatible EPUB output" };
+  const features = [t("features.0"), t("features.1"), t("features.2")];
   const mouseX = React.useRef(0);
   const mouseY = React.useRef(0);
 
@@ -354,7 +365,7 @@ export const PremiumBookHero = React.forwardRef<
       {/* Hero content */}
       <div className="relative z-20 px-4 text-center">
         {/* Social Proof Bar */}
-        {socialProof && (
+        {resolvedSocialProof && (
           <motion.div
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -363,14 +374,14 @@ export const PremiumBookHero = React.forwardRef<
           >
             <span className="flex items-center gap-1.5">
               <span className="flex size-2 rounded-full bg-green-500" />
-              <span className="font-semibold text-foreground">{socialProof.count}</span>
+              <span className="font-semibold text-foreground">{resolvedSocialProof.count}</span>
             </span>
             <span className="h-3.5 w-px bg-border" />
-            <span className="text-muted-foreground">{socialProof.rating}</span>
+            <span className="text-muted-foreground">{resolvedSocialProof.rating}</span>
           </motion.div>
         )}
 
-        {/* Badge — More minimal and striking */}
+        {/* Badge */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -378,30 +389,27 @@ export const PremiumBookHero = React.forwardRef<
           className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border-2 border-primary/30 bg-primary/5 px-5 py-2 text-sm font-bold uppercase tracking-wider text-primary shadow-lg"
         >
           <Sparkles className="h-4 w-4" />
-          {badge}
+          {resolvedBadge}
         </motion.div>
 
-        {/* H1 — Larger and more impactful */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.8 }}
           className="mx-auto max-w-5xl text-balance font-serif text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-7xl lg:text-8xl"
         >
-          {title}
+          {resolvedTitle}
         </motion.h1>
 
-        {/* Subtitle — clearer category + outcome */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45, duration: 0.7 }}
           className="mx-auto mt-6 max-w-xl text-pretty text-xl font-semibold leading-tight text-foreground/90 md:text-2xl"
         >
-          {subtitle}
+          {resolvedSubtitle}
         </motion.p>
 
-        {/* CTA Buttons — Larger and more prominent */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -418,20 +426,20 @@ export const PremiumBookHero = React.forwardRef<
               className="inline-flex items-center gap-2"
               onClick={() => trackEvent("landing_hero_cta_click", { href: ctaHref })}
             >
-              {ctaText}
+              {resolvedCtaText}
               <ArrowRight className="h-5 w-5" />
             </a>
           </Button>
 
-          {secondaryCtaText && secondaryCtaHref && (
-            <Button 
-              asChild 
-              size="lg" 
-              variant="outline" 
+          {resolvedSecondaryCtaText && secondaryCtaHref && (
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
               className="h-12 px-7 text-base font-semibold backdrop-blur-sm hover:bg-primary/10 md:h-16 md:px-10 md:text-lg"
             >
               <a href={secondaryCtaHref} className="inline-flex items-center gap-2">
-                {secondaryCtaText}
+                {resolvedSecondaryCtaText}
               </a>
             </Button>
           )}
@@ -443,7 +451,7 @@ export const PremiumBookHero = React.forwardRef<
           transition={{ delay: 0.72, duration: 0.5 }}
           className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs font-medium text-muted-foreground"
         >
-          {["5 short questions", "Preview first", "No credit card required"].map((item) => (
+          {features.map((item) => (
             <span key={item} className="rounded-full border border-border/80 bg-card/70 px-3 py-1 backdrop-blur-sm">
               {item}
             </span>
@@ -451,14 +459,14 @@ export const PremiumBookHero = React.forwardRef<
         </motion.div>
 
         {/* Trust Microcopy */}
-        {trustNote && (
+        {resolvedTrustNote && (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.6 }}
             className="mt-6 text-sm font-medium text-muted-foreground/80"
           >
-            {trustNote}
+            {resolvedTrustNote}
           </motion.p>
         )}
       </div>

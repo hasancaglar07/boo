@@ -105,7 +105,7 @@ build_existing_segment_context() {
             opening="$(printf '%s\n' "$body" | awk 'BEGIN{RS=""; ORS=""} NF{gsub(/\n+/, " "); print; exit}' | head -c "$max_chars_per_segment")"
             closing="$(printf '%s\n' "$body" | awk 'BEGIN{RS=""; ORS=""} NF{gsub(/\n+/, " "); paragraph=$0} END{print paragraph}' | tail -c "$max_chars_per_segment")"
             context+=$'\n\n'
-            context+="== Current Chapter Segment ${current_segment} ==" $'\n'
+            context+="== Current Chapter Segment ${current_segment} =="$'\n'
             [ -n "$opening" ] && context+="Opening: ${opening}"$'\n'
             [ -n "$closing" ] && context+="Closing: ${closing}"$'\n'
         fi

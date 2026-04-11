@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
   BookOpen,
   Sparkles,
@@ -96,14 +97,12 @@ export const AboutPageHero = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & AboutPageHeroProps
 >(({ className, ...props }, ref) => {
-  const principles = [
-    { icon: Target, label: "Az Kelime" },
-    { icon: Layers, label: "Tek Yol" },
-    { icon: FileText, label: "Editable" },
-    { icon: BookOpen, label: "Publishing-Focused" },
-    { icon: Shield, label: "Reliable" },
-    { icon: Sparkles, label: "AI + Sade" },
-  ];
+  const t = useTranslations("PageHeroes.about");
+  const principleIcons = [Target, Layers, FileText, BookOpen, Shield, Sparkles];
+  const principles = [0, 1, 2, 3, 4, 5].map((i) => ({
+    icon: principleIcons[i],
+    label: t(`principles.${i}`),
+  }));
 
   return (
     <section
@@ -149,7 +148,7 @@ export const AboutPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <Lightbulb className="h-3.5 w-3.5 text-primary" />
-          About
+          {t("badge")}
         </motion.div>
 
         <motion.h1
@@ -158,8 +157,8 @@ export const AboutPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Not more panels,{" "}
-          <span className="text-primary">more completed books.</span>
+          {t("title")}{" "}
+          <span className="text-primary">{t("titleHighlight")}</span>
         </motion.h1>
 
         <motion.p
@@ -168,7 +167,7 @@ export const AboutPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Our single goal: remove unnecessary complexity and enable anyone with expertise to actually finish their book.
+          {t("description")}
         </motion.p>
 
         {/* Principles Grid */}
@@ -212,6 +211,7 @@ export const PricingPageHero = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & PricingPageHeroProps
 >(({ className, ...props }, ref) => {
+  const t = useTranslations("PageHeroes.pricing");
   return (
     <section
       ref={ref}
@@ -233,7 +233,7 @@ export const PricingPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <Award className="h-3.5 w-3.5 text-primary" />
-          Pricing
+          {t("badge")}
         </motion.div>
 
         <motion.h1
@@ -242,8 +242,8 @@ export const PricingPageHero = React.forwardRef<
           transition={{ delay: 0.1, duration: 0.6 }}
           className="mx-auto mt-5 max-w-3xl text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl"
         >
-          Your book will be ready this weekend.{" "}
-          <span className="text-primary">Start for $4, download your EPUB.</span>
+          {t("title")}{" "}
+          <span className="text-primary">{t("titleHighlight")}</span>
         </motion.h1>
 
         <motion.p
@@ -252,7 +252,7 @@ export const PricingPageHero = React.forwardRef<
           transition={{ delay: 0.2, duration: 0.6 }}
           className="mx-auto mt-3 max-w-xl text-pretty text-sm leading-7 text-muted-foreground md:text-base"
         >
-          See your draft for free, full book $4. No subscription, 30-day refund guarantee.
+          {t("description")}
         </motion.p>
 
         {/* Ghostwriter anchor comparison */}
@@ -263,17 +263,17 @@ export const PricingPageHero = React.forwardRef<
           className="mx-auto mt-4 inline-flex items-center justify-center gap-5 rounded-2xl border border-border/80 bg-card/80 px-5 py-2.5 backdrop-blur-sm text-sm"
         >
           <div className="text-center">
-            <p className="font-semibold text-muted-foreground line-through">$500–$5,000</p>
-            <p className="text-[11px] text-muted-foreground/60">Agency / ghostwriter</p>
+            <p className="font-semibold text-muted-foreground line-through">{t("agencyPrice")}</p>
+            <p className="text-[11px] text-muted-foreground/60">{t("agencyLabel")}</p>
           </div>
           <div className="h-7 w-px bg-border" />
           <div className="text-center">
-            <p className="text-lg font-bold text-primary">$4</p>
-            <p className="text-[11px] text-muted-foreground/60">Book Creator</p>
+            <p className="text-lg font-bold text-primary">{t("ourPrice")}</p>
+            <p className="text-[11px] text-muted-foreground/60">{t("ourLabel")}</p>
           </div>
         </motion.div>
 
-        {/* Trust Badges — kompakt */}
+        {/* Trust Badges */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -281,17 +281,17 @@ export const PricingPageHero = React.forwardRef<
           className="mt-4 flex flex-wrap items-center justify-center gap-2"
         >
           {[
-            { icon: Shield, text: "30-Day Refund" },
-            { icon: CheckCircle2, text: "Preview First" },
-            { icon: Zap, text: "$4 Tek Seferlik" },
-            { icon: BookOpen, text: "No CC Required" },
-          ].map((badge) => (
+            { icon: Shield, key: "0" },
+            { icon: CheckCircle2, key: "1" },
+            { icon: Zap, key: "2" },
+            { icon: BookOpen, key: "3" },
+          ].map(({ icon: Icon, key }) => (
             <span
-              key={badge.text}
+              key={key}
               className="flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm"
             >
-              <badge.icon className="h-3 w-3 text-primary" />
-              <span className="font-medium">{badge.text}</span>
+              <Icon className="h-3 w-3 text-primary" />
+              <span className="font-medium">{t(`badges.${key}`)}</span>
             </span>
           ))}
         </motion.div>
@@ -320,6 +320,7 @@ export const ExamplesPageHero = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & ExamplesPageHeroProps
 >(({ className, ...props }, ref) => {
+  const t = useTranslations("PageHeroes.examples");
   const { items, ...rest } = props;
   const fallbackExamples: HeroExampleCard[] = [
     ...SITE_REAL_BOOKS.slice(0, 3).map((book) => ({
@@ -368,7 +369,7 @@ export const ExamplesPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <BookOpen className="h-3.5 w-3.5 text-primary" />
-          Examples
+          {t("badge")}
         </motion.div>
 
         <motion.h1
@@ -377,8 +378,8 @@ export const ExamplesPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Not promises,{" "}
-          <span className="text-primary">real outputs.</span>
+          {t("title")}{" "}
+          <span className="text-primary">{t("titleHighlight")}</span>
         </motion.h1>
 
         <motion.p
@@ -387,7 +388,7 @@ export const ExamplesPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Book titles, draft structures, and EPUB output examples generated from real topics.
+          {t("description")}
         </motion.p>
 
         {/* Example Cards */}
@@ -448,13 +449,14 @@ export const HowItWorksPageHero = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & HowItWorksPageHeroProps
 >(({ className, ...props }, ref) => {
-  const steps = [
-    { number: "01", title: "Topic", icon: FileText, description: "Topic and target reader" },
-    { number: "02", title: "Draft", icon: Settings, description: "Chapter architecture" },
-    { number: "03", title: "Production", icon: Sparkles, description: "Chapter writing" },
-    { number: "04", title: "Cover", icon: BookOpen, description: "Visual workflow" },
-    { number: "05", title: "Output", icon: Download, description: "EPUB + PDF" },
-  ];
+  const t = useTranslations("PageHeroes.howItWorks");
+  const stepIcons = [FileText, Settings, Sparkles, BookOpen, Download];
+  const steps = [0, 1, 2, 3, 4].map((i) => ({
+    number: t(`steps.${i}.number`),
+    title: t(`steps.${i}.title`),
+    description: t(`steps.${i}.description`),
+    icon: stepIcons[i],
+  }));
 
   return (
     <section
@@ -487,7 +489,7 @@ export const HowItWorksPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <Zap className="h-3.5 w-3.5 text-primary" />
-          How It Works
+          {t("badge")}
         </motion.div>
 
         <motion.h1
@@ -496,8 +498,8 @@ export const HowItWorksPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Not from a blank page,{" "}
-          <span className="text-primary">start with a guided preview.</span>
+          {t("title")}{" "}
+          <span className="text-primary">{t("titleHighlight")}</span>
         </motion.h1>
 
         <motion.p
@@ -506,7 +508,7 @@ export const HowItWorksPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          First topic, then outline, then preview. You progress knowing what happens at each step.
+          {t("description")}
         </motion.p>
 
         {/* Steps Timeline */}
@@ -562,11 +564,11 @@ export const FAQPageHero = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & FAQPageHeroProps
 >(({ className, ...props }, ref) => {
-  const stats = [
-    { value: "7", label: "Kategori" },
-    { value: "30+", label: "Q&A" },
-    { value: "1 min", label: "Average read" },
-  ];
+  const t = useTranslations("PageHeroes.faq");
+  const stats = [0, 1, 2].map((i) => ({
+    value: t(`stats.${i}.value`),
+    label: t(`stats.${i}.label`),
+  }));
 
   return (
     <section
@@ -588,7 +590,7 @@ export const FAQPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <Lightbulb className="h-3.5 w-3.5 text-primary" />
-          SSS
+          {t("badge")}
         </motion.div>
 
         <motion.h1
@@ -597,8 +599,8 @@ export const FAQPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-4xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          Before deciding,{" "}
-          <span className="text-primary">commonly asked questions.</span>
+          {t("title")}{" "}
+          <span className="text-primary">{t("titleHighlight")}</span>
         </motion.h1>
 
         <motion.p
@@ -607,7 +609,7 @@ export const FAQPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          What the product does, who it's for, how it works, and what you get — short and clear answers.
+          {t("description")}
         </motion.p>
 
         {/* Stats row */}
@@ -645,11 +647,13 @@ export const ContactPageHero = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & ContactPageHeroProps
 >(({ className, ...props }, ref) => {
-  const contactMethods = [
-    { icon: MessageCircle, label: "Support", description: "Usage and technical questions" },
-    { icon: Clock, label: "1 Business Day", description: "Average response time" },
-    { icon: Shield, label: "Secure", description: "Your data is safe with us" },
-  ];
+  const t = useTranslations("PageHeroes.contact");
+  const methodIcons = [MessageCircle, Clock, Shield];
+  const contactMethods = [0, 1, 2].map((i) => ({
+    icon: methodIcons[i],
+    label: t(`methods.${i}.label`),
+    description: t(`methods.${i}.description`),
+  }));
 
   return (
     <section
@@ -682,7 +686,7 @@ export const ContactPageHero = React.forwardRef<
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm"
         >
           <Users className="h-3.5 w-3.5 text-primary" />
-          Contact
+          {t("badge")}
         </motion.div>
 
         <motion.h1
@@ -691,8 +695,8 @@ export const ContactPageHero = React.forwardRef<
           transition={{ delay: 0.15, duration: 0.7 }}
           className="mx-auto mt-8 max-w-3xl text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl"
         >
-          For support{" "}
-          <span className="text-primary">shortcut.</span>
+          {t("title")}{" "}
+          <span className="text-primary">{t("titleHighlight")}</span>
         </motion.h1>
 
         <motion.p
@@ -701,7 +705,7 @@ export const ContactPageHero = React.forwardRef<
           transition={{ delay: 0.3, duration: 0.7 }}
           className="mx-auto mt-5 max-w-xl text-pretty text-base leading-8 text-muted-foreground md:text-lg"
         >
-          Technical issues, account, payment, or delivery — whatever the topic, write briefly and clearly.
+          {t("description")}
         </motion.p>
 
         {/* Contact Method Pills */}

@@ -692,6 +692,8 @@ generate_chapter_segment_with_smart_api() {
     local segment_role=""
     local segment_max_tokens="${BOOK_CHAPTER_SEGMENT_MAX_TOKENS:-2400}"
     local segment_max_retries="${BOOK_CHAPTER_SEGMENT_MAX_RETRIES:-4}"
+    local segment_timeout_seconds="${BOOK_CHAPTER_SEGMENT_PROVIDER_TIMEOUT_SECONDS:-$CODEFAST_CURL_MAX_TIME}"
+    local segment_fast_failover="${BOOK_CHAPTER_SEGMENT_FAST_FAILOVER:-1}"
 
     case "$(printf '%s' "$language" | tr '[:upper:]' '[:lower:]')" in
         tr*|turkish|türkçe|turkce|turk)
@@ -746,7 +748,16 @@ Requirements:
 
 Begin the segment body now:"
 
-    smart_api_call "$user_prompt" "$system_prompt" "chapter_segment" 0.75 "$segment_max_tokens" "$segment_max_retries" "$segment_word_floor"
+    smart_api_call \
+        "$user_prompt" \
+        "$system_prompt" \
+        "chapter_segment" \
+        0.75 \
+        "$segment_max_tokens" \
+        "$segment_max_retries" \
+        "$segment_word_floor" \
+        "$segment_timeout_seconds" \
+        "$segment_fast_failover"
 }
 
 review_chapter_quality() {

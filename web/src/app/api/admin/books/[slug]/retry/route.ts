@@ -21,7 +21,10 @@ export async function POST(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({
+        trigger: "admin",
+        bypass_manual_retry_limit: true,
+      }),
       cache: "no-store",
     },
   ).catch(() => null);

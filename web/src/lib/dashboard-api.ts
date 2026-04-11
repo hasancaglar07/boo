@@ -136,6 +136,7 @@ export type BookStatus = {
   preview_ready?: boolean;
   cover_state?: string;
   first_chapter_state?: string;
+  exports_dirty?: boolean;
   started_at?: string;
   updated_at?: string;
   completed_at?: string;
@@ -145,6 +146,15 @@ export type BookStatus = {
   current_step_label?: string;
   cover_eta_seconds?: number;
   first_chapter_eta_seconds?: number;
+  preview_retry?: {
+    limit: number;
+    used: number;
+    remaining: number;
+    allowed: boolean;
+    reason?: string;
+    policy?: "bounded" | "transient";
+    retry_after_seconds?: number;
+  };
   cover_gate_state?: "waiting_for_cover" | "cover_ready" | "timed_out";
   activity_timeline?: Array<{
     code: string;
@@ -651,7 +661,13 @@ export async function saveBook(payload: Partial<Book>) {
   return nextBook;
 }
 
-export async function startBookPreviewPipeline(slug: string) {
+export async function startBookPreviewPipeline(
+  slug: string,
+  options?: {
+    trigger?: "manual" | "admin" | "system";
+    bypassManualRetryLimit?: boolean;
+  },
+) {
   const path = `/api/books/${encodeURIComponent(slug)}/preview-bootstrap`;
   const retryDelays = [700, 1500, 3000];
   let lastError: unknown;
@@ -660,7 +676,10 @@ export async function startBookPreviewPipeline(slug: string) {
     try {
       const result = await api<{ ok: boolean; started: boolean; slug?: string; generation: BookStatus }>(path, {
         method: "POST",
-        json: {},
+        json: {
+          trigger: options?.trigger || "system",
+          bypass_manual_retry_limit: Boolean(options?.bypassManualRetryLimit),
+        },
       });
       clearBooksCache();
       return result;
@@ -677,9 +696,22 @@ export async function startBookPreviewPipeline(slug: string) {
   throw lastError instanceof Error ? lastError : new BackendUnavailableError();
 }
 
-export async function startBookFullPipeline(slug: string) {
+export async function startBookFullPipeline(
+  slug: string,
+  options?: { force?: boolean },
+) {
+  const path = `/api/books/${encodeURIComponent(slug)}/full-bootstrap`;
+  if (options?.force) {
+    return api<{ ok: boolean; started: boolean; generation?: BookStatus; full_generation?: BookStatus["full_generation"] }>(
+      path,
+      {
+        method: "POST",
+        json: { force: true },
+      },
+    );
+  }
   return api<{ ok: boolean; started: boolean; generation?: BookStatus; full_generation?: BookStatus["full_generation"] }>(
-    `/api/books/${encodeURIComponent(slug)}/full-bootstrap`,
+    path,
     { method: "GET" },
   );
 }

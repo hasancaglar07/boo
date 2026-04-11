@@ -100,7 +100,7 @@ export function GenerateLoadingScreen({
   useEffect(() => {
     if (!slug || bootstrapTriggeredRef.current) return;
     bootstrapTriggeredRef.current = true;
-    void startBookPreviewPipeline(slug).catch(() => undefined);
+    void startBookPreviewPipeline(slug, { trigger: "system" }).catch(() => undefined);
   }, [slug]);
 
   useEffect(() => {

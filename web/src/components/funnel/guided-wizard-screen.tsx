@@ -599,7 +599,7 @@ export function GuidedWizardScreen({
       if (existingSlug) {
         trackEvent("generate_started", { slug: existingSlug, resumed: true });
         trackEvent("preview_cover_gate_started", { slug: existingSlug, resumed: true });
-        await startBookPreviewPipeline(existingSlug).catch(() => undefined);
+        await startBookPreviewPipeline(existingSlug, { trigger: "system" }).catch(() => undefined);
         setPendingRedirect(`/app/book/${encodeURIComponent(existingSlug)}/preview`);
         return;
       }
@@ -619,7 +619,7 @@ export function GuidedWizardScreen({
       saveFunnelDraft(nextDraft);
       trackEvent("generate_started", { slug: book.slug });
       trackEvent("preview_cover_gate_started", { slug: book.slug });
-      await startBookPreviewPipeline(book.slug).catch(() => undefined);
+      await startBookPreviewPipeline(book.slug, { trigger: "system" }).catch(() => undefined);
       setPendingRedirect(`/app/book/${encodeURIComponent(book.slug)}/preview`);
     } catch (cause) {
       if (isBackendUnavailableError(cause)) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Coins, BookOpen, Sparkles, Layers } from "lucide-react";
 
 import {
@@ -20,6 +21,7 @@ export function PricingCreativeSection({
   description?: string;
   className?: string;
 }) {
+  const t = useTranslations("PricingCreative");
   const tiers = useMemo<PricingTier[]>(() => [
     {
       name: premiumPlan.name,
@@ -31,8 +33,7 @@ export function PricingCreativeSection({
       features: premiumPlan.features,
       popular: false,
       accentClassName: "text-foreground",
-      ctaLabel: "Unlock This Book for $4",
-      ctaHref: "/start/topic?plan=single-book",
+      ctaLabel: t("plans.single.ctaLabel"),      ctaHref: "/start/topic?plan=single-book",
     },
     {
       name: plans[0].name,
@@ -44,7 +45,7 @@ export function PricingCreativeSection({
       features: plans[0].features,
       popular: false,
       accentClassName: "text-foreground",
-      ctaLabel: "Start with Starter Plan",
+      ctaLabel: t("plans.starter.ctaLabel"),
       ctaHref: "/billing?plan=starter&autostart=1",
     },
     {
@@ -58,7 +59,7 @@ export function PricingCreativeSection({
       features: plans[1].features,
       popular: true,
       accentClassName: "text-primary border-primary bg-primary/10",
-      ctaLabel: "Best Value Plan: Author",
+      ctaLabel: t("plans.creator.ctaLabel"),
       ctaHref: "/billing?plan=creator&autostart=1",
     },
     {
@@ -71,10 +72,10 @@ export function PricingCreativeSection({
       features: plans[2].features,
       popular: false,
       accentClassName: "text-muted-foreground",
-      ctaLabel: "Go to Studio",
+      ctaLabel: t("plans.studio.ctaLabel"),
       ctaHref: "/billing?plan=pro&autostart=1",
     },
-  ], []);
+  ], [t]);
 
   return (
     <section className={className}>
