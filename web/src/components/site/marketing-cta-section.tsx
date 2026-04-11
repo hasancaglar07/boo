@@ -1,19 +1,25 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { Cta4 } from "@/components/ui/cta-4";
 
 export function MarketingCtaSection({
-  title = "The single clear starting point for publishing your first book.",
-  description = "A book system that takes you from topic idea to first publishable file without unnecessary dashboard fatigue.",
+  title,
+  description,
   items,
 }: {
   title?: string;
   description?: string;
   items?: readonly string[];
 }) {
+  const t = useTranslations("MarketingCta");
+
   return (
     <Cta4
-      title={title}
-      description={description}
-      buttonText="Start Your Free Preview"
+      title={title ?? t("title")}
+      description={description ?? t("description")}
+      buttonText={t("buttonText")}
       buttonUrl="/start/topic"
       items={items}
     />

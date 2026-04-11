@@ -49,6 +49,7 @@ web/node_modules/
 .agents/
 .claude/
 .tools/
+.local-tools/
 
 # Logs
 multi_provider_logs/

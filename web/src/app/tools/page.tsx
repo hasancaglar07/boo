@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Layers3, Magnet, PenSquare, Search, Sparkles, type LucideIcon } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { MarketingCtaSection } from "@/components/site/marketing-cta-section";
 import { DirectAnswerBlock } from "@/components/site/direct-answer";
@@ -14,38 +14,23 @@ import { buildPageMetadata, absoluteUrl } from "@/lib/seo";
 import { marketingToolCatalog, type ToolIconKey } from "@/lib/marketing-tools";
 
 const iconMap: Record<ToolIconKey, LucideIcon> = {
-  sparkles: Sparkles,
-  target: Sparkles,
-  compass: Sparkles,
-  trending: Sparkles,
-  layers: Layers3,
-  search: Search,
-  magnet: Magnet,
-  book: BookOpen,
-  pen: PenSquare,
+  sparkles: Sparkles, target: Sparkles, compass: Sparkles, trending: Sparkles,
+  layers: Layers3, search: Search, magnet: Magnet, book: BookOpen, pen: PenSquare,
 };
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Free Book Tools | Book Generator",
-  description:
-    "Score your idea, extract an outline, test your KDP niche. Prepare your book for publishing with AI-powered free tools.",
-  path: "/tools",
-  keywords: [
-    "free book tools",
-    "book idea test",
-    "book outline creator",
-    "KDP niche analysis",
-    "book title checker",
-  ],
-});
+export async function generateMetadata() {
+  const t = await getTranslations("ToolsPage.metadata");
+  return buildPageMetadata({
+    title: t("title"),
+    description: t("description"),
+    path: "/tools",
+    keywords: ["free book tools", "book idea test", "book outline creator", "KDP niche analysis"],
+  });
+}
 
-const pillars = [
-  "Score your idea, extract your outline",
-  "Instant score, detailed report sent to your email",
-  "Jump directly from any tool to book preview",
-];
+export default async function ToolsPage() {
+  const t = await getTranslations("ToolsPage");
 
-export default function ToolsPage() {
   const toolsListSchema = buildItemListSchema({
     name: "Book Generator Free Tools",
     description: "AI-powered book tools: idea scoring, outline extraction, KDP niche analysis, and more",
@@ -68,27 +53,19 @@ export default function ToolsPage() {
       <section className="border-b border-border/80 py-20 md:py-24">
         <div className="shell">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="mb-4">Free Tools</Badge>
+            <Badge className="mb-4">{t("hero.badge")}</Badge>
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              <span className="text-primary">Free tools</span> that accelerate your book
+              <span className="text-primary">{t("hero.titleHighlight")}</span> {t("hero.title")}
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
-              Score your idea, extract your outline, test your title. Each tool brings you one step closer to your book preview.
-            </p>
-
-            {/* Direct Answer Block for AI Extraction */}
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">{t("hero.description")}</p>
             <div className="mt-8 text-left">
-              <DirectAnswerBlock
-                question="What free book tools are available?"
-                answer="Access 6+ free AI-powered tools: book idea validator for scoring concepts, outline generator for structure, content-to-book converter for repurposing, KDP niche analyzer for market research, lead magnet finder for client attraction, and title critic for optimization. Each tool provides instant scoring and detailed email reports to accelerate your book production decisions."
-              />
+              <DirectAnswerBlock question={t("directAnswer.question")} answer={t("directAnswer.answer")} />
               <LastUpdated date="2026-04-09" className="mt-4 text-sm" />
             </div>
-
             <div className="mx-auto mt-8 grid max-w-3xl gap-3 md:grid-cols-3">
-              {pillars.map((item) => (
-                <div key={item} className="rounded-[22px] border border-border/80 bg-card/70 px-4 py-4 text-sm text-muted-foreground">
-                  {item}
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="rounded-[22px] border border-border/80 bg-card/70 px-4 py-4 text-sm text-muted-foreground">
+                  {t(`pillars.${i}`)}
                 </div>
               ))}
             </div>
@@ -98,33 +75,25 @@ export default function ToolsPage() {
 
       <section className="border-b border-border/80 py-16">
         <div className="shell">
-          <SectionHeading
-            badge="Tool Library"
-            title="Powerful individually, comprehensive together."
-            description="Each tool works the same way: quick score, clear recommendations, detailed report, and a seamless path to preview."
-          />
-
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <SectionHeading badge={t("toolsSection.badge")} title={t("toolsSection.title")} description={t("toolsSection.description")} />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {marketingToolCatalog.map((tool) => {
-              const Icon = iconMap[tool.icon];
+              const Icon = iconMap[tool.icon] ?? Sparkles;
               return (
-                <Card key={tool.slug} className="flex flex-col border-border/80">
-                  <CardContent className="flex flex-1 flex-col gap-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-background">
-                        <Icon className="size-5 text-primary" />
+                <Card key={tool.path} className="group">
+                  <CardContent className="flex flex-col gap-4 p-6">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-accent text-primary">
+                        <Icon className="size-5" />
                       </div>
-                      <Badge>{tool.badge}</Badge>
+                      <Badge className="text-xs">{tool.badge}</Badge>
                     </div>
-
                     <div className="flex-1">
-                      <h2 className="text-xl font-semibold tracking-tight text-foreground">{tool.name}</h2>
-                      <p className="mt-3 text-sm leading-7 text-muted-foreground">{tool.description}</p>
+                      <h3 className="text-base font-semibold text-foreground">{tool.name}</h3>
+                      <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{tool.description}</p>
                     </div>
-
                     <Link href={tool.path} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
-                      {tool.ctaLabel}
-                      <ArrowRight className="size-3.5" />
+                      Try it free <ArrowRight className="size-3.5" />
                     </Link>
                   </CardContent>
                 </Card>
@@ -135,23 +104,12 @@ export default function ToolsPage() {
       </section>
 
       <MarketingCtaSection
-        title="Stop tinkering with tools, start your book."
-        description="Clarify direction with tools, then move to the preview workflow. The decision is here, production is in the wizard."
-        items={[
-          "Go from idea to outline in one click",
-          "Test KDP and customer angles early",
-          "Detailed report sent to your email",
-          "Preview → full book → EPUB/PDF chain",
-        ]}
+        title={t("cta.title")}
+        description={t("cta.description")}
+        items={[t("cta.items.0"), t("cta.items.1"), t("cta.items.2"), t("cta.items.3")]}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(toolsListSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toolsListSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
     </MarketingPage>
   );
 }

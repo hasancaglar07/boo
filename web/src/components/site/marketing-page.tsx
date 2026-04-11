@@ -7,8 +7,9 @@ export function MarketingPage({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <SiteHeader />
+      <div className="h-[72px] shrink-0" aria-hidden="true" />
       <main className="flex-1">{children}</main>
       <SiteFooter />
     </div>

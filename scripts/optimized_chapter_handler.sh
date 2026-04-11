@@ -50,6 +50,41 @@ calculate_chapter_extension_tokens() {
     echo "$tokens"
 }
 
+extract_recent_chapter_excerpt() {
+    local chapter_file="$1"
+    local max_words="${2:-1200}"
+    python3 - "$chapter_file" "$max_words" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+limit = max(1, int(sys.argv[2]))
+text = path.read_text(encoding="utf-8", errors="replace").strip()
+words = text.split()
+if len(words) > limit:
+    text = " ".join(words[-limit:])
+sys.stdout.write(text)
+PY
+}
+
+sanitize_extension_block() {
+    python3 - <<'PY'
+import re
+import sys
+
+text = sys.stdin.read().replace("\r\n", "\n").replace("\r", "\n").strip()
+lines = text.splitlines()
+while lines and (
+    re.match(r"^\s*#{1,6}\s+", lines[0])
+    or re.match(r"^\s*(chapter|bölüm)\s+\d+\s*[:.-]", lines[0], re.IGNORECASE)
+):
+    lines.pop(0)
+cleaned = "\n".join(lines).strip()
+cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+sys.stdout.write(cleaned)
+PY
+}
+
 # Function to review and process chapter based on length
 process_chapter_by_length() {
     local chapter_file="$1"
@@ -68,16 +103,26 @@ process_chapter_by_length() {
     else
         # Chapter needs extension
         echo "⚠️ Chapter below minimum word count: $current_word_count/$min_words words"
-        extend_chapter_to_min_length "$chapter_file" "$min_words" "$max_words"
+        if ! extend_chapter_to_min_length "$chapter_file" "$min_words" "$max_words"; then
+            echo "⚠️ First extension pass did not produce a usable continuation"
+        fi
         
         # Check if extension succeeded
         local final_word_count=$(wc -w < "$chapter_file" | tr -d ' ')
         if [ "$final_word_count" -lt "$min_words" ]; then
             echo "⚠️ Chapter still below minimum after extension: $final_word_count/$min_words words"
             echo "🔄 Trying one final extension attempt..."
-            extend_chapter_to_min_length "$chapter_file" "$min_words" "$max_words" "final"
+            if ! extend_chapter_to_min_length "$chapter_file" "$min_words" "$max_words" "final"; then
+                echo "⚠️ Final extension pass did not produce a usable continuation"
+            fi
         fi
-        
+
+        final_word_count=$(wc -w < "$chapter_file" | tr -d ' ')
+        if [ "$final_word_count" -lt "$min_words" ]; then
+            echo "❌ Chapter remains below minimum after extension attempts: $final_word_count/$min_words words"
+            return 1
+        fi
+
         return 0
     fi
 }
@@ -145,33 +190,60 @@ extend_chapter_to_min_length() {
     local chapter_content=$(cat "$chapter_file")
     local current_word_count=$(wc -w < "$chapter_file" | tr -d ' ')
     local words_needed=$((min_words - current_word_count))
+    local target_addition_words
+    local minimum_addition_threshold
+    local recent_excerpt
+    local extension_block
+    local added_word_count
     
     echo "🔍 Extending chapter by approximately $words_needed words..."
     
     # Calculate tokens based on our formula
     local extension_tokens=$(calculate_chapter_extension_tokens "$current_word_count" "$min_words")
     echo "ℹ️ Using $extension_tokens tokens for chapter extension"
+
+    if [ "$words_needed" -le 0 ]; then
+        echo "✅ No extension needed"
+        return 0
+    fi
+
+    target_addition_words="$words_needed"
+    if [ "$target_addition_words" -lt 220 ]; then
+        target_addition_words=220
+    fi
+    minimum_addition_threshold=$((words_needed / 3))
+    if [ "$minimum_addition_threshold" -lt 140 ]; then
+        minimum_addition_threshold=140
+    fi
+    if [ "$attempt_type" = "final" ]; then
+        minimum_addition_threshold=$((minimum_addition_threshold * 2 / 3))
+        if [ "$minimum_addition_threshold" -lt 100 ]; then
+            minimum_addition_threshold=100
+        fi
+    fi
+    recent_excerpt="$(extract_recent_chapter_excerpt "$chapter_file" 1100)"
     
     # Create an extension prompt
-    local extension_prompt="Extend this chapter to reach a minimum of ${min_words} words (currently ${current_word_count} words).
+    local extension_prompt="Write ONLY the missing continuation paragraphs for this chapter so they can be appended after the current ending.
 
 REQUIREMENTS:
-- Add approximately ${words_needed} more words
-- Expand existing ideas with more depth, examples, and explanations
-- Maintain the same style, tone, and voice as the original
-- Add substantive content, not just filler text
-- Integrate new content seamlessly with existing content
-- Return the COMPLETE chapter with your additions integrated
+- Add approximately ${target_addition_words} new words
+- Continue naturally from the exact current ending
+- Expand the existing scene, ideas, examples, and emotional momentum with substantive material
+- Maintain the same style, tone, tense, and voice as the original chapter
+- DO NOT rewrite or summarize earlier paragraphs
+- DO NOT return the full chapter
+- DO NOT add a heading, title line, label, bullet list, or recap
+- Return only the new paragraphs to append
 
-CHAPTER CONTENT:
-$chapter_content"
+CURRENT CHAPTER WORD COUNT: ${current_word_count}
+TARGET MINIMUM WORD COUNT: ${min_words}
+CURRENT CHAPTER ENDING CONTEXT:
+${recent_excerpt}"
 
-    local extension_system_prompt="You are an expert book author who excels at extending chapters with substantive, valuable content."
-    
-    # Use a more capable model for the final attempt
-    local model="llama3.2:1b"
+    local extension_system_prompt="You are an expert book author extending a chapter with seamless continuation paragraphs. Produce only appendable prose."
+
     if [ "$attempt_type" = "final" ]; then
-        model="gemma2:2b"
         # Increase token count by 20% for final attempt
         extension_tokens=$(( extension_tokens * 120 / 100 ))
     fi
@@ -180,23 +252,36 @@ $chapter_content"
     local cooldown_base="${DELAY_BETWEEN_CHAPTERS:-0}"
     show_wait_animation "$((cooldown_base + jitter))" "Chapter cooldown"
     # Call API to extend the chapter
-    echo "🤖 Generating extended content using model: $model..."
-    local extended_content=$(smart_api_call "$extension_prompt" "$extension_system_prompt" "chapter_extension" 0.7 "$extension_tokens" 1 "$model")
+    echo "🤖 Generating append-only continuation..."
+    local extended_content
+    extended_content=$(smart_api_call "$extension_prompt" "$extension_system_prompt" "chapter_extension" 0.7 "$extension_tokens" 2)
     
     # Check if API call was successful
     if [ $? -eq 0 ] && [ -n "$extended_content" ]; then
         # Clean up the content
-        extended_content=$(clean_llm_output "$extended_content")
-        
-        # Save the extended chapter
+        extension_block="$(printf '%s' "$extended_content" | clean_llm_output | sanitize_extension_block)"
+        added_word_count=$(printf '%s' "$extension_block" | wc -w | tr -d ' ')
+
+        if [ -z "$extension_block" ] || [ "$added_word_count" -lt "$minimum_addition_threshold" ]; then
+            echo "⚠️ Extension output was too short to trust (${added_word_count} words, expected at least ${minimum_addition_threshold})"
+            return 1
+        fi
+
+        # Save the extended chapter by appending only the new continuation.
         local backup_file="${chapter_file}.before_extension"
         cp "$chapter_file" "$backup_file"
-        echo "$extended_content" > "$chapter_file"
+        printf '%s\n\n%s\n' "$(printf '%s' "$chapter_content" | sed '${/^$/d;}')" "$extension_block" > "$chapter_file"
         echo "✅ Chapter extension completed and saved"
         
         # Final word count
         local final_word_count=$(wc -w < "$chapter_file" | tr -d ' ')
         echo "📊 Final word count after extension: $final_word_count words"
+
+        if [ "$final_word_count" -le "$current_word_count" ]; then
+            cp "$backup_file" "$chapter_file"
+            echo "⚠️ Extension would have reduced chapter length; original chapter restored"
+            return 1
+        fi
         
         # Check if we're still below minimum
         if [ "$final_word_count" -lt "$min_words" ] && [ "$attempt_type" != "final" ]; then
@@ -204,7 +289,9 @@ $chapter_content"
         elif [ "$final_word_count" -ge "$min_words" ]; then
             echo "✅ Successfully extended chapter to meet minimum word count"
         fi
+        return 0
     else
         echo "⚠️ Chapter extension failed, keeping original chapter"
+        return 1
     fi
 }

@@ -14,6 +14,7 @@ DASHBOARD_HOST="${BOOK_DASHBOARD_HOST:-127.0.0.1}"
 DASHBOARD_PORT="${BOOK_DASHBOARD_PORT:-8765}"
 DASHBOARD_HEALTH_URL="http://${DASHBOARD_HOST}:${DASHBOARD_PORT}/api/health"
 DASHBOARD_FORCE_RESTART="${BOOK_DASHBOARD_FORCE_RESTART:-0}"
+ALLOW_WEB_WITHOUT_DASHBOARD="${BOOK_ALLOW_WEB_WITHOUT_DASHBOARD:-0}"
 
 NODE_HOME="${BOOK_NODE_HOME:-$ROOT_DIR/.tools/node-current}"
 NODE_BIN="$NODE_HOME/bin/node"
@@ -26,6 +27,17 @@ dashboard_started_by_serve=0
 
 dashboard_force_restart_enabled() {
   case "${DASHBOARD_FORCE_RESTART,,}" in
+    1|true|yes|on)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+allow_web_without_dashboard_enabled() {
+  case "${ALLOW_WEB_WITHOUT_DASHBOARD,,}" in
     1|true|yes|on)
       return 0
       ;;
@@ -449,8 +461,15 @@ ensure_dashboard_running_optional() {
     return
   fi
 
-  echo "Uyari: dashboard baslatilamadi, web dev yine de aciliyor."
-  echo "Dashboard gerekli akislarda backend baglanti hatasi gorebilirsiniz."
+  if allow_web_without_dashboard_enabled; then
+    echo "Uyari: dashboard baslatilamadi, web dev yine de aciliyor."
+    echo "Dashboard gerekli akislarda backend baglanti hatasi gorebilirsiniz."
+    return
+  fi
+
+  echo "Hata: dashboard baslatilamadi, web dev baslatma iptal edildi."
+  echo "Zorla devam etmek istersen BOOK_ALLOW_WEB_WITHOUT_DASHBOARD=1 kullan."
+  exit 1
 }
 
 start_server() {

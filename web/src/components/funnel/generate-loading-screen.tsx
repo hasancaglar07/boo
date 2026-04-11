@@ -1,225 +1,283 @@
 "use client";
 
-import { Check, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { getSession } from "@/lib/preview-auth";
+import { Button } from "@/components/ui/button";
+import { GradientBackground } from "@/components/ui/loading/particle-effect";
 import { trackEvent } from "@/lib/analytics";
-import { cn } from "@/lib/utils";
+import {
+  isBackendUnavailableError,
+  loadBookPreview,
+  startBookPreviewPipeline,
+  type BookPreview,
+} from "@/lib/dashboard-api";
+import { formatEta } from "@/lib/utils";
 
-const FAST_STAGES = [
-  { id: "cover" as const, label: "Cover draft", durationMs: 2000, emoji: "🎨" },
-  { id: "chapter" as const, label: "First chapter", durationMs: 3000, emoji: "✍️" },
-];
+const AUTO_REDIRECT_MS = 18000;
+const TIMER_TICK_MS = 250;
+const PREVIEW_POLL_MS = 1500;
 
-type FastStageId = "cover" | "chapter";
-
-interface GenerateLoadingScreenProps {
-  onComplete?: () => void;
-  redirectPath?: string;
+function parseSlugFromRedirectPath(redirectPath?: string) {
+  if (!redirectPath) return "";
+  const match = redirectPath.match(/\/book\/([^/]+)\/preview/);
+  if (!match?.[1]) return "";
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
 }
 
-export function GenerateLoadingScreen({ onComplete, redirectPath }: GenerateLoadingScreenProps) {
+export function GenerateLoadingScreen({
+  onComplete,
+  redirectPath,
+}: {
+  onComplete?: () => void;
+  redirectPath?: string;
+}) {
   const router = useRouter();
-  const [activeStageIndex, setActiveStageIndex] = useState(0);
-  const [completedStages, setCompletedStages] = useState<FastStageId[]>([]);
-  const [animationDone, setAnimationDone] = useState(false);
-  const canNavigate = Boolean(onComplete || redirectPath);
+  const slug = useMemo(() => parseSlugFromRedirectPath(redirectPath), [redirectPath]);
+  const redirectedRef = useRef(false);
+  const bootstrapTriggeredRef = useRef(false);
+  const pollInFlightRef = useRef(false);
+  const [remainingMs, setRemainingMs] = useState(AUTO_REDIRECT_MS);
+  const [preview, setPreview] = useState<BookPreview | null>(null);
+  const [coverGateTimedOut, setCoverGateTimedOut] = useState(false);
+  const [statusLabel, setStatusLabel] = useState("Creating your real book cover");
+
+  const previewPath = useMemo(() => {
+    if (redirectPath) return redirectPath;
+    if (slug) return `/app/book/${encodeURIComponent(slug)}/preview`;
+    return "/app/library";
+  }, [redirectPath, slug]);
+
+  const navigateToPreview = useCallback(() => {
+    if (redirectedRef.current) return;
+    redirectedRef.current = true;
+    trackEvent("fast_preview_loading_completed", {
+      slug,
+      cover_gate_timed_out: coverGateTimedOut,
+    });
+    if (onComplete) {
+      onComplete();
+      return;
+    }
+    router.push(previewPath);
+  }, [coverGateTimedOut, onComplete, previewPath, router, slug]);
 
   useEffect(() => {
     trackEvent("fast_preview_loading_started");
 
-    const coverTimer = window.setTimeout(() => {
-      setCompletedStages(["cover"]);
-      setActiveStageIndex(1);
-    }, FAST_STAGES[0].durationMs);
+    const startedAt = Date.now();
 
-    const chapterTimer = window.setTimeout(() => {
-      setCompletedStages(["cover", "chapter"]);
-      setAnimationDone(true);
-      trackEvent("fast_preview_loading_completed");
-    }, FAST_STAGES[0].durationMs + FAST_STAGES[1].durationMs);
+    const timer = window.setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      const nextRemaining = Math.max(0, AUTO_REDIRECT_MS - elapsed);
+      setRemainingMs(nextRemaining);
+    }, TIMER_TICK_MS);
+
+    const autoRedirect = window.setTimeout(() => {
+      setCoverGateTimedOut(true);
+      trackEvent("preview_cover_gate_timeout", { slug });
+      navigateToPreview();
+    }, AUTO_REDIRECT_MS);
 
     return () => {
-      window.clearTimeout(coverTimer);
-      window.clearTimeout(chapterTimer);
+      window.clearInterval(timer);
+      window.clearTimeout(autoRedirect);
     };
-  }, []);
+  }, [navigateToPreview, slug]);
 
   useEffect(() => {
-    if (!animationDone || !canNavigate) return;
+    if (!slug) return;
+    bootstrapTriggeredRef.current = false;
+    pollInFlightRef.current = false;
+  }, [slug]);
 
-    const navigationTimer = window.setTimeout(() => {
-      if (onComplete) {
-        onComplete();
-      } else if (redirectPath) {
-        router.push(redirectPath);
+  useEffect(() => {
+    if (!slug || bootstrapTriggeredRef.current) return;
+    bootstrapTriggeredRef.current = true;
+    void startBookPreviewPipeline(slug).catch(() => undefined);
+  }, [slug]);
+
+  useEffect(() => {
+    if (!slug) return;
+    let cancelled = false;
+    let pollTimer: number | undefined;
+
+    const pollPreview = async () => {
+      if (cancelled || redirectedRef.current || pollInFlightRef.current) return;
+      pollInFlightRef.current = true;
+      let shouldContinuePolling = true;
+      try {
+        const payload = await loadBookPreview(slug);
+        if (cancelled) return;
+        setPreview(payload);
+
+        const generation = payload.generation || {};
+        const nextLabel =
+          String(generation.current_step_label || "").trim() ||
+          (!generation.cover_ready
+            ? "Creating your real book cover"
+            : !generation.preview_ready
+              ? "Writing the first readable chapter"
+              : "Opening your live preview");
+        setStatusLabel(nextLabel);
+
+        if (generation.cover_ready || generation.preview_ready) {
+          trackEvent("preview_cover_gate_passed", {
+            slug,
+            cover_ready: Boolean(generation.cover_ready),
+            preview_ready: Boolean(generation.preview_ready),
+          });
+          navigateToPreview();
+          shouldContinuePolling = false;
+        }
+      } catch (error) {
+        if (cancelled) return;
+        if (isBackendUnavailableError(error)) {
+          setStatusLabel("Preview service is waking up");
+          return;
+        }
+        setStatusLabel("Preparing your live preview");
+      } finally {
+        pollInFlightRef.current = false;
+        if (!cancelled && !redirectedRef.current && shouldContinuePolling) {
+          pollTimer = window.setTimeout(() => {
+            void pollPreview();
+          }, PREVIEW_POLL_MS);
+        }
       }
-    }, 600);
+    };
+
+    void pollPreview();
 
     return () => {
-      window.clearTimeout(navigationTimer);
+      cancelled = true;
+      if (pollTimer !== undefined) {
+        window.clearTimeout(pollTimer);
+      }
     };
-  }, [animationDone, canNavigate, onComplete, redirectPath, router]);
+  }, [navigateToPreview, slug]);
 
-  const totalMs = FAST_STAGES.reduce((sum, s) => sum + s.durationMs, 0);
-  const elapsedMs = completedStages.reduce((sum, id) => {
-    const stage = FAST_STAGES.find((s) => s.id === id);
-    return sum + (stage?.durationMs ?? 0);
-  }, 0);
-  const done = animationDone && canNavigate;
-  const progressPercent = done ? 100 : animationDone ? 92 : Math.round((elapsedMs / totalMs) * 100);
-
-  // SVG circle params
-  const radius = 58;
-  const circumference = 2 * Math.PI * radius;
-  const strokeOffset = circumference - (progressPercent / 100) * circumference;
+  const secondsLeft = Math.max(0, Math.ceil(remainingMs / 1000));
+  const progressPercent = Math.max(
+    0,
+    Math.min(100, Math.round(((AUTO_REDIRECT_MS - remainingMs) / AUTO_REDIRECT_MS) * 100)),
+  );
+  const generation = preview?.generation;
+  const coverEta = formatEta(generation?.cover_eta_seconds);
+  const chapterEta = formatEta(generation?.first_chapter_eta_seconds);
+  const stageCards = [
+    {
+      key: "cover",
+      label: "Cover",
+      done: Boolean(generation?.cover_ready),
+      active: !generation?.cover_ready,
+      detail: generation?.cover_ready
+        ? "Real cover is ready"
+        : coverEta
+          ? `Estimated ${coverEta}`
+          : "Generating first",
+    },
+    {
+      key: "chapter",
+      label: "First chapter",
+      done: Boolean(generation?.preview_ready),
+      active: Boolean(generation?.cover_ready) && !generation?.preview_ready,
+      detail: generation?.preview_ready
+        ? "Readable pages are ready"
+        : chapterEta
+          ? `Estimated ${chapterEta}`
+          : "Writing after cover",
+    },
+    {
+      key: "full",
+      label: "Full book",
+      done: Boolean(generation?.product_ready),
+      active: Boolean(generation?.preview_ready) && !generation?.product_ready,
+      detail: generation?.product_ready
+        ? "Unlocked"
+        : "Continues in background",
+    },
+  ];
 
   return (
-    <div className="flex min-h-[85dvh] items-center justify-center px-4" aria-busy={!done} aria-label="Book is being prepared">
-      <style>{`
-        @keyframes ring-pulse {
-          0%, 100% { filter: drop-shadow(0 0 6px rgba(var(--ring-rgb), 0.25)); }
-          50% { filter: drop-shadow(0 0 18px rgba(var(--ring-rgb), 0.50)); }
-        }
-        @keyframes fade-up {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes check-pop {
-          0% { transform: scale(0); opacity: 0; }
-          60% { transform: scale(1.2); }
-          100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
+    <div className="relative flex min-h-[80dvh] items-center justify-center overflow-hidden px-4 py-10" aria-busy="true">
+      <GradientBackground className="opacity-35" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(254,215,170,0.35),transparent_45%),radial-gradient(circle_at_80%_20%,rgba(251,191,36,0.2),transparent_40%)]" />
 
-      <div className="w-full max-w-[400px] flex flex-col items-center gap-8">
-        {/* ── Circular Progress Indicator ───────────────────────────────── */}
-        <div
-          className="relative flex items-center justify-center"
-          style={
-            {
-              "--ring-rgb": done ? "16, 185, 129" : "124, 58, 237",
-              animation: done ? "none" : "ring-pulse 2.4s ease-in-out infinite",
-            } as React.CSSProperties
-          }
-        >
-          <svg
-            width="152"
-            height="152"
-            viewBox="0 0 152 152"
-            className="-rotate-90"
-            role="progressbar"
-            aria-valuenow={progressPercent}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            {/* Track */}
-            <circle
-              cx="76"
-              cy="76"
-              r={radius}
-              fill="none"
-              strokeWidth="5"
-              className="stroke-muted/40"
-            />
-            {/* Progress arc */}
-            <circle
-              cx="76"
-              cy="76"
-              r={radius}
-              fill="none"
-              strokeWidth="5"
-              strokeLinecap="round"
-              className={cn(
-                "transition-all duration-700 ease-out",
-                done ? "stroke-emerald-500" : "stroke-primary"
-              )}
-              style={{
-                strokeDasharray: circumference,
-                strokeDashoffset: strokeOffset,
-              }}
-            />
-          </svg>
-
-          {/* Center content */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            {done ? (
-              <div style={{ animation: "check-pop 0.4s ease-out forwards" }}>
-                <Check className="size-10 text-emerald-500" strokeWidth={2.5} aria-hidden="true" />
-              </div>
-            ) : (
-              <span
-                className={cn(
-                  "text-4xl font-extralight tabular-nums tracking-tight transition-colors duration-500",
-                  done ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
-                )}
-              >
-                {progressPercent}
-                <span className="text-lg text-muted-foreground">%</span>
-              </span>
-            )}
+      <div className="relative z-10 w-full max-w-xl rounded-[28px] border border-border/60 bg-background/95 p-6 shadow-[0_24px_60px_rgba(20,14,9,0.16)] backdrop-blur-sm md:p-10">
+        <div className="space-y-6 text-center">
+          <div className="mx-auto flex size-16 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
+            <Loader2 className="size-8 animate-spin text-primary" />
           </div>
-        </div>
 
-        {/* ── Status Text ────────────────────────────────────────────────── */}
-        <div className="flex flex-col items-center gap-1 text-center">
-          <p className="text-lg font-medium text-foreground leading-tight">
-            {done
-              ? "Preview is ready!"
-              : !canNavigate
-                ? "Your book is being saved…"
-                : "Your book preview is being generated…"}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {done
-              ? "Opening…"
-              : `Step ${completedStages.length + 1} / ${FAST_STAGES.length}`}
-          </p>
-        </div>
+          <div className="space-y-2">
+            <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+              Preparing Your Live Preview
+            </h2>
+            <p className="text-base leading-7 text-muted-foreground md:text-lg">
+              {statusLabel}
+            </p>
+          </div>
 
-        {/* ── Minimal Stage Pills ─────────────────────────────────────────── */}
-        <div
-          className="flex items-center gap-3"
-          style={{ animation: "fade-up 0.6s ease-out 0.3s both" }}
-        >
-          {FAST_STAGES.map((stage, index) => {
-            const isDone = completedStages.includes(stage.id);
-            const isActive = !isDone && index === activeStageIndex;
-
-            return (
-              <div key={stage.id} className="flex items-center gap-2">
-                {index > 0 && (
-                  <div
-                    className={cn(
-                      "h-px w-4 transition-colors duration-500",
-                      completedStages.includes(FAST_STAGES[index - 1].id)
-                        ? "bg-emerald-500/60"
-                        : "bg-border"
+          <div className="rounded-2xl border border-border/60 bg-muted/30 p-4 md:p-5">
+            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Cover Gate
+            </div>
+            <div className="mt-2 grid gap-3 md:grid-cols-3">
+              {stageCards.map((item) => (
+                <div key={item.key} className="rounded-2xl border border-border/60 bg-background/80 px-4 py-4 text-left">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    {item.done ? (
+                      <CheckCircle2 className="size-4 text-emerald-600" />
+                    ) : item.active ? (
+                      <Loader2 className="size-4 animate-spin text-primary" />
+                    ) : (
+                      <div className="size-4 rounded-full border border-border" />
                     )}
-                  />
-                )}
-                <div
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-all duration-400",
-                    isActive && "bg-primary/10 text-primary ring-1 ring-primary/20",
-                    isDone && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-                    !isDone && !isActive && "bg-muted/50 text-muted-foreground"
-                  )}
-                >
-                  {isDone ? (
-                    <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />
-                  ) : isActive ? (
-                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <span className="text-xs">{stage.emoji}</span>
-                  )}
-                  <span className="text-xs font-medium whitespace-nowrap">{stage.label}</span>
+                    {item.label}
+                  </div>
+                  <div className="mt-2 text-xs leading-5 text-muted-foreground">
+                    {item.detail}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              ))}
+            </div>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-border/60">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-100"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <div className="mt-3 text-xs text-muted-foreground">
+              Redirects automatically in <span className="font-semibold text-foreground">{secondsLeft}s</span> if the cover is still pending.
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            size="lg"
+            className="h-12 w-full text-base font-semibold"
+            onClick={navigateToPreview}
+          >
+            Open Live Preview Now
+            <ArrowRight className="ml-2 size-4" />
+          </Button>
+
+          <p className="text-xs text-muted-foreground">
+            Generation continues in the background even if you close this page.
+            {" "}
+            <Link href={previewPath} className="font-medium text-foreground underline underline-offset-2">
+              Open manually
+            </Link>
+            {" "}
+            if automatic redirect is blocked.
+          </p>
         </div>
       </div>
     </div>

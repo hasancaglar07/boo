@@ -137,6 +137,9 @@ function deriveTemplateName(config) {
   if (family === "calm-focus") return "personal-growth";
   if (family === "soft-discipline") return "executive-minimal";
   if (family === "elevated-reset") return "narrative-story";
+  if (family === "midnight-platform") return "narrative-story";
+  if (family === "ember-carriage") return "narrative-story";
+  if (family === "echo-rail") return "narrative-story";
   if (family === "storyworld") return "children-storyworld";
   if (family === "learning-adventure") return "children-learning";
   if (family === "bedtime-calm") return "children-bedtime";
@@ -165,6 +168,9 @@ function deriveTitleTone(config, templateName) {
   }
   if (["storyworld", "learning-adventure", "bedtime-calm"].includes(family)) {
     return "playful";
+  }
+  if (["midnight-platform", "ember-carriage", "echo-rail"].includes(family)) {
+    return "classic";
   }
   if (templateName === "business-playbook" || templateName === "executive-minimal") return "sharp";
   return "classic";
@@ -197,6 +203,38 @@ function coverBodyFamily(config) {
     return "'Trebuchet MS', 'Segoe UI', Arial, sans-serif";
   }
   return bodyFontFamily(config.languageCode);
+}
+
+function visiblePublisherLabel(config) {
+  const publisher = String(config.publisher || "").trim();
+  const normalized = publisher.toLowerCase();
+  if (!publisher || ["book generator", "book creator", "studio press"].includes(normalized)) return "";
+  return `${publisher}${config.year ? ` / ${config.year}` : ""}`;
+}
+
+function visibleAuthorName(config) {
+  const author = String(config.author || "").trim();
+  const normalized = author.toLowerCase();
+  if (!author || ["book creator", "book generator", "studio author", "unknown author"].includes(normalized)) {
+    return "";
+  }
+  return author;
+}
+
+function visibleAuthorBio(config) {
+  const bio = String(config.authorBio || "").trim();
+  if (!bio) return "";
+  if (/^(book creator|book generator|studio author|unknown author)\b/iu.test(bio)) {
+    return "";
+  }
+  return bio;
+}
+
+function isNarrativeFiction(config) {
+  const branch = String(config.coverBranch || "").trim().toLowerCase();
+  const genre = String(config.coverGenre || "").trim().toLowerCase();
+  const templateHint = String(config.coverTemplateHint || "").trim().toLowerCase();
+  return branch === "fiction" || genre === "narrative-fiction" || templateHint === "narrative-story";
 }
 
 function tokenize(text, languageCode) {
@@ -558,9 +596,13 @@ function titlePanelSvg(config, template) {
     }
     <g>
       <text x="${footerX}" y="${footerY}" fill="${config.textAccent || "#fff8ef"}" font-family="${bodyFamily}" font-size="${authorBlock.fontSize}" font-weight="700" text-anchor="${panel.footerAlign === "middle" ? "middle" : panel.footerAlign === "end" ? "end" : "start"}" ${directionAttrs}>${safeXml(authorBlock.lines[0] || config.author)}</text>
-      <text x="${footerX}" y="${footerY + 34}" fill="${rgba(config.textAccent || "#fff8ef", 0.74)}" font-family="${bodyFamily}" font-size="${publisherBlock.fontSize}" font-weight="600" text-anchor="${panel.footerAlign === "middle" ? "middle" : panel.footerAlign === "end" ? "end" : "start"}" letter-spacing="1.2" ${directionAttrs}>${safeXml(
-        `${config.publisher}  ${config.year ? ` / ${config.year}` : ""}`,
-      )}</text>
+      ${
+        visiblePublisherLabel(config)
+          ? `<text x="${footerX}" y="${footerY + 34}" fill="${rgba(config.textAccent || "#fff8ef", 0.74)}" font-family="${bodyFamily}" font-size="${publisherBlock.fontSize}" font-weight="600" text-anchor="${panel.footerAlign === "middle" ? "middle" : panel.footerAlign === "end" ? "end" : "start"}" letter-spacing="1.2" ${directionAttrs}>${safeXml(
+              visiblePublisherLabel(config),
+            )}</text>`
+          : ""
+      }
     </g>
     ${
       config.brandingMark
@@ -911,9 +953,13 @@ function renderSideSlabFront(config, template, logoUri) {
     <text x="${textX}" y="${footerY}" fill="${config.textAccent || "#fff8ef"}" font-family="${bodyFamily}" font-size="30" font-weight="700" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
       config.author || "",
     )}</text>
-    <text x="${textX}" y="${footerY + 36}" fill="${rgba(config.textAccent || "#fff8ef", 0.78)}" font-family="${bodyFamily}" font-size="17" font-weight="600" letter-spacing="1.1" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
-      `${config.publisher || ""}${config.year ? ` / ${config.year}` : ""}`,
-    )}</text>
+    ${
+      visiblePublisherLabel(config)
+        ? `<text x="${textX}" y="${footerY + 36}" fill="${rgba(config.textAccent || "#fff8ef", 0.78)}" font-family="${bodyFamily}" font-size="17" font-weight="600" letter-spacing="1.1" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
+            visiblePublisherLabel(config),
+          )}</text>`
+        : ""
+    }
     ${
       logoUri
         ? `<g transform="translate(${logoX} ${HEIGHT - 170})">
@@ -997,9 +1043,13 @@ function renderCenteredFront(config, template, logoUri) {
     <text x="${textX}" y="${authorY}" fill="${config.textAccent || "#fff8ef"}" font-family="${bodyFamily}" font-size="${isHeroVisual ? 24 : 28}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${safeXml(
       config.author || "",
     )}</text>
-    <text x="${textX}" y="${authorY + 34}" fill="${rgba(config.textAccent || "#fff8ef", 0.78)}" font-family="${bodyFamily}" font-size="${isHeroVisual ? 15 : 17}" font-weight="600" letter-spacing="1.1" text-anchor="${align}" ${directionAttrs}>${safeXml(
-      `${config.publisher || ""}${config.year ? ` / ${config.year}` : ""}`,
-    )}</text>
+    ${
+      visiblePublisherLabel(config)
+        ? `<text x="${textX}" y="${authorY + 34}" fill="${rgba(config.textAccent || "#fff8ef", 0.78)}" font-family="${bodyFamily}" font-size="${isHeroVisual ? 15 : 17}" font-weight="600" letter-spacing="1.1" text-anchor="${align}" ${directionAttrs}>${safeXml(
+            visiblePublisherLabel(config),
+          )}</text>`
+        : ""
+    }
     ${
       logoUri
         ? `<g transform="translate(${WIDTH - 156} ${HEIGHT - 180})">
@@ -1011,7 +1061,764 @@ function renderCenteredFront(config, template, logoUri) {
   `;
 }
 
+function isBookstoreFlatMode(config) {
+  return String(config.coverStyleMode || "").trim().toLowerCase() === "bookstore_flat";
+}
+
+function isBookstoreBoldMode(config) {
+  return String(config.coverStyleMode || "").trim().toLowerCase() === "bookstore_bold";
+}
+
+function isBookstoreComposedMode(config) {
+  return isBookstoreFlatMode(config) || isBookstoreBoldMode(config);
+}
+
+function normalizedCoverBranch(config) {
+  return String(config.coverBranch || "").trim().toLowerCase();
+}
+
+function normalizedCoverGenre(config) {
+  return String(config.coverGenre || "").trim().toLowerCase();
+}
+
+function flatInkColor(config) {
+  const textAccent = String(config.textAccent || "").trim().toLowerCase();
+  return textAccent.startsWith("#1") || textAccent.startsWith("#2") || textAccent.startsWith("#3")
+    ? config.textAccent
+    : "#171717";
+}
+
+function flatPalette(config) {
+  const [gradA, gradB, gradC] = gradientColors(config.coverGradient);
+  const branch = normalizedCoverBranch(config);
+  const genre = normalizedCoverGenre(config);
+  let paper = "#fff7ed";
+  if (branch === "children") paper = "#fffaf0";
+  else if (genre === "education") paper = "#fffdf5";
+  else if (genre === "personal-development") paper = "#fffbf5";
+  else if (genre === "ai-systems") paper = "#f7fbff";
+  return {
+    gradA,
+    gradB,
+    gradC,
+    paper,
+    accent: config.accentColor || gradC || "#d46b2c",
+    ink: flatInkColor(config),
+  };
+}
+
+function flatCoverProfile(config) {
+  const branch = normalizedCoverBranch(config);
+  const genre = normalizedCoverGenre(config);
+  if (branch === "children") return { id: "children", align: "center", textWidth: 900 };
+  if (branch === "fiction" || genre === "narrative-fiction") return { id: "narrative", align: "center", textWidth: 820 };
+  if (genre === "education") return { id: "education", align: "edge", textWidth: 510 };
+  if (genre === "ai-systems") return { id: "systems", align: "edge", textWidth: 520 };
+  if (genre === "personal-development") return { id: "personal", align: "center", textWidth: 860 };
+  if (genre === "expertise-authority") return { id: "authority", align: "center", textWidth: 860 };
+  return { id: "business", align: "center", textWidth: 900 };
+}
+
+function renderBookstoreBoldFront(config, artUri) {
+  const palette = flatPalette(config);
+  const profile = flatCoverProfile(config);
+  const isNarrative = profile.id === "narrative";
+  const titleTone = deriveTitleTone(config, deriveTemplateName(config));
+  const titleFamily = titleFontFamily(config.languageCode, titleTone);
+  const bodyFamily = coverBodyFamily(config);
+  const ink = flatInkColor(config);
+  const accent = palette.accent;
+  const paper = palette.paper;
+  const authorName = visibleAuthorName(config);
+  const directionAttrs = isRtl(config.languageCode) ? 'direction="rtl" unicode-bidi="plaintext"' : "";
+  const edgeTextX = isRtl(config.languageCode) ? WIDTH - 112 : 112;
+  const centeredTextX = isRtl(config.languageCode) ? WIDTH - 120 : WIDTH / 2;
+  const textX = profile.id === "education" || profile.id === "systems" ? edgeTextX : centeredTextX;
+  const align = profile.id === "education" || profile.id === "systems"
+    ? (isRtl(config.languageCode) ? "end" : "start")
+    : (isRtl(config.languageCode) ? "end" : "middle");
+  const textWidth = profile.id === "education" || profile.id === "systems" ? 560 : profile.textWidth;
+  const titleBlock = fitTextBlock(config.title, textWidth, config.languageCode, {
+    maxSize: profile.id === "children" ? 128 : isNarrative ? 106 : 118,
+    minSize: isNarrative ? 42 : 48,
+    step: 4,
+    maxLines: profile.id === "children" ? 4 : isNarrative ? 4 : 5,
+    kind: "title",
+    tone: titleTone,
+  });
+  const subtitleBlock = fitTextBlock(String(config.subtitle || ""), textWidth * (isNarrative ? 0.88 : 0.94), config.languageCode, {
+    maxSize: isNarrative ? 22 : 24,
+    minSize: 18,
+    step: 2,
+    maxLines: 3,
+    kind: "subtitle",
+  });
+  const authorBlock = fitTextBlock(String(authorName || ""), Math.min(760, textWidth * (isNarrative ? 0.7 : 0.84)), config.languageCode, {
+    maxSize: 30,
+    minSize: 19,
+    step: 1,
+    maxLines: 1,
+    kind: "body",
+  });
+  const kicker = isNarrative ? "" : categoryKicker(config);
+  const titleY = profile.id === "children" ? 184 : isNarrative ? 244 : 198;
+  const titleLineHeight = titleBlock.fontSize * 1.04;
+  const subtitleY = titleY + titleBlock.lines.length * titleLineHeight + 42;
+  const subtitleLineHeight = subtitleBlock.fontSize * 1.3;
+  const subtitleLines = subtitleBlock.lines.slice(0, 3);
+  const authorY = isNarrative ? HEIGHT - 116 : HEIGHT - 128;
+  const titleBandHeight = profile.id === "children" ? 596 : isNarrative ? 700 : 632;
+
+  let defs = "";
+  let artMarkup = "";
+
+  if (profile.id === "children") {
+    defs = `
+      <clipPath id="bold-front-art">
+        <rect x="90" y="650" width="1020" height="910" rx="64" />
+      </clipPath>`;
+    artMarkup = `
+      <circle cx="218" cy="742" r="64" fill="${rgba(accent, 0.16)}" />
+      <circle cx="${WIDTH - 220}" cy="1500" r="78" fill="${rgba(palette.gradC, 0.16)}" />
+      <rect x="90" y="650" width="1020" height="910" rx="64" fill="${rgba("#ffffff", 0.86)}" />
+      <g clip-path="url(#bold-front-art)">
+        <image href="${artUri}" x="90" y="650" width="1020" height="910" preserveAspectRatio="xMidYMid slice" />
+      </g>`;
+  } else if (profile.id === "education" || profile.id === "systems") {
+    defs = `
+      <clipPath id="bold-front-art">
+        <rect x="654" y="734" width="382" height="620" rx="52" />
+      </clipPath>`;
+    artMarkup = `
+      <rect x="626" y="704" width="438" height="676" rx="66" fill="${rgba("#ffffff", 0.24)}" />
+      <rect x="654" y="734" width="382" height="620" rx="52" fill="${rgba("#ffffff", 0.94)}" stroke="${rgba(accent, 0.74)}" stroke-width="8" />
+      <g clip-path="url(#bold-front-art)">
+        <image href="${artUri}" x="654" y="734" width="382" height="620" preserveAspectRatio="xMidYMid slice" />
+      </g>`;
+  } else if (profile.id === "personal") {
+    defs = `
+      <clipPath id="bold-front-art">
+        <path d="M274 1514V1016C274 844 418 708 600 708C782 708 926 844 926 1016V1514Z" />
+      </clipPath>`;
+    artMarkup = `
+      <circle cx="184" cy="788" r="84" fill="${rgba(accent, 0.14)}" />
+      <path d="M250 1540V1000C250 816 404 676 600 676C796 676 950 816 950 1000V1540Z" fill="${rgba("#ffffff", 0.3)}" />
+      <path d="M274 1514V1016C274 844 418 708 600 708C782 708 926 844 926 1016V1514Z" fill="${rgba("#ffffff", 0.92)}" stroke="${rgba(accent, 0.7)}" stroke-width="8" />
+      <g clip-path="url(#bold-front-art)">
+        <image href="${artUri}" x="274" y="708" width="652" height="832" preserveAspectRatio="xMidYMid slice" />
+      </g>`;
+  } else if (profile.id === "authority") {
+    defs = `
+      <clipPath id="bold-front-art">
+        <rect x="284" y="760" width="632" height="548" rx="42" />
+      </clipPath>`;
+    artMarkup = `
+      <rect x="252" y="728" width="696" height="612" rx="58" fill="${rgba("#ffffff", 0.26)}" />
+      <rect x="284" y="760" width="632" height="548" rx="42" fill="${rgba("#ffffff", 0.94)}" stroke="${rgba(accent, 0.74)}" stroke-width="8" />
+      <g clip-path="url(#bold-front-art)">
+        <image href="${artUri}" x="284" y="760" width="632" height="548" preserveAspectRatio="xMidYMid slice" />
+      </g>`;
+  } else if (isNarrative) {
+    defs = `
+      <clipPath id="bold-front-art">
+        <circle cx="${WIDTH / 2}" cy="1062" r="248" />
+      </clipPath>`;
+    artMarkup = `
+      <circle cx="${WIDTH / 2}" cy="1062" r="272" fill="${rgba("#ffffff", 0.24)}" />
+      <circle cx="${WIDTH / 2}" cy="1062" r="248" fill="${rgba("#ffffff", 0.95)}" stroke="${rgba(accent, 0.62)}" stroke-width="8" />
+      <g clip-path="url(#bold-front-art)">
+        <image href="${artUri}" x="${WIDTH / 2 - 248}" y="814" width="496" height="496" preserveAspectRatio="xMidYMid slice" />
+      </g>`;
+  } else {
+    defs = `
+      <clipPath id="bold-front-art">
+        <circle cx="${WIDTH / 2}" cy="1020" r="262" />
+      </clipPath>`;
+    artMarkup = `
+      <circle cx="${WIDTH / 2}" cy="1020" r="286" fill="${rgba("#ffffff", 0.26)}" />
+      <circle cx="${WIDTH / 2}" cy="1020" r="262" fill="${rgba("#ffffff", 0.94)}" stroke="${rgba(accent, 0.78)}" stroke-width="10" />
+      <g clip-path="url(#bold-front-art)">
+        <image href="${artUri}" x="${WIDTH / 2 - 262}" y="758" width="524" height="524" preserveAspectRatio="xMidYMid slice" />
+      </g>`;
+  }
+
+  return `
+    <defs>
+      <linearGradient id="bold-front-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${palette.gradA}" />
+        <stop offset="55%" stop-color="${palette.gradB}" />
+        <stop offset="100%" stop-color="${palette.gradC}" />
+      </linearGradient>
+      <linearGradient id="bold-front-band" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="${rgba("#ffffff", 0.9)}" />
+        <stop offset="100%" stop-color="${rgba(paper, 0.74)}" />
+      </linearGradient>
+${defs}
+    </defs>
+    <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#bold-front-bg)" />
+    <rect x="54" y="54" width="${WIDTH - 108}" height="${titleBandHeight}" rx="44" fill="url(#bold-front-band)" />
+    <rect x="54" y="${titleBandHeight - 18}" width="${WIDTH - 108}" height="${HEIGHT - titleBandHeight - 36}" rx="54" fill="${rgba("#ffffff", 0.08)}" />
+    ${artMarkup}
+    ${
+      kicker
+        ? `<text x="${textX}" y="116" fill="${rgba(ink, 0.72)}" font-family="${bodyFamily}" font-size="17" font-weight="700" letter-spacing="1.8" text-anchor="${align}" ${directionAttrs}>${safeXml(kicker)}</text>`
+        : ""
+    }
+    <text x="${textX}" y="${titleY}" fill="${ink}" font-family="${titleFamily}" font-size="${titleBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(titleBlock.lines, textX, titleY, titleLineHeight, directionAttrs)}</text>
+    ${
+      subtitleLines.length
+        ? `<text x="${textX}" y="${subtitleY}" fill="${rgba(ink, 0.9)}" font-family="${bodyFamily}" font-size="${subtitleBlock.fontSize}" font-weight="600" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(
+            subtitleLines,
+            textX,
+            subtitleY,
+            subtitleLineHeight,
+            directionAttrs,
+          )}</text>`
+        : ""
+    }
+    ${
+      authorName
+        ? `<text x="${WIDTH / 2}" y="${authorY}" fill="#ffffff" font-family="${bodyFamily}" font-size="${authorBlock.fontSize}" font-weight="700" text-anchor="middle" ${directionAttrs}>${safeXml(authorBlock.lines[0] || authorName)}</text>`
+        : ""
+    }
+  `;
+}
+
+function renderBookstoreBoldBack(config, artUri) {
+  const palette = flatPalette(config);
+  const profile = flatCoverProfile(config);
+  const isNarrative = profile.id === "narrative";
+  const bodyFamily = coverBodyFamily(config);
+  const titleFamily = titleFontFamily(config.languageCode, deriveTitleTone(config, deriveTemplateName(config)));
+  const ink = flatInkColor(config);
+  const accent = palette.accent;
+  const paper = palette.paper;
+  const authorName = visibleAuthorName(config);
+  const kicker = isNarrative ? "" : categoryKicker(config);
+  const directionAttrs = isRtl(config.languageCode) ? 'direction="rtl" unicode-bidi="plaintext"' : "";
+  const anchor = isRtl(config.languageCode) ? "end" : "start";
+  const x = isRtl(config.languageCode) ? 1020 : 118;
+  const summary = fitTextBlock(config.summary || "", isNarrative ? 650 : 700, config.languageCode, {
+    maxSize: 27,
+    minSize: 18,
+    step: 2,
+    maxLines: 5,
+    kind: "body",
+  });
+  const bio = fitTextBlock(config.authorBio || "", isNarrative ? 650 : 700, config.languageCode, {
+    maxSize: 21,
+    minSize: 17,
+    step: 1,
+    maxLines: 4,
+    kind: "body",
+  });
+  const bioY = authorName ? 1080 : 1024;
+  let defs = "";
+  let motifMarkup = "";
+
+  if (profile.id === "children") {
+    defs = `
+      <clipPath id="bold-back-mark">
+        <rect x="664" y="1020" width="390" height="500" rx="46" />
+      </clipPath>`;
+    motifMarkup = `
+      <rect x="632" y="988" width="454" height="564" rx="60" fill="${rgba("#ffffff", 0.2)}" />
+      <rect x="664" y="1020" width="390" height="500" rx="46" fill="${rgba("#ffffff", 0.9)}" />
+      <g clip-path="url(#bold-back-mark)">
+        <image href="${artUri}" x="664" y="1020" width="390" height="500" preserveAspectRatio="xMidYMid slice" opacity="0.18" />
+      </g>`;
+  } else if (profile.id === "education" || profile.id === "systems") {
+    defs = `
+      <clipPath id="bold-back-mark">
+        <rect x="770" y="990" width="262" height="382" rx="34" />
+      </clipPath>`;
+    motifMarkup = `
+      <rect x="742" y="960" width="318" height="438" rx="46" fill="${rgba("#ffffff", 0.18)}" />
+      <rect x="770" y="990" width="262" height="382" rx="34" fill="${rgba("#ffffff", 0.9)}" />
+      <g clip-path="url(#bold-back-mark)">
+        <image href="${artUri}" x="770" y="990" width="262" height="382" preserveAspectRatio="xMidYMid slice" opacity="0.16" />
+      </g>`;
+  } else if (profile.id === "personal") {
+    defs = `
+      <clipPath id="bold-back-mark">
+        <path d="M736 1546V1288C736 1168 832 1082 954 1082C1076 1082 1172 1168 1172 1288V1546Z" />
+      </clipPath>`;
+    motifMarkup = `
+      <path d="M736 1546V1288C736 1168 832 1082 954 1082C1076 1082 1172 1168 1172 1288V1546Z" fill="${rgba("#ffffff", 0.22)}" />
+      <g clip-path="url(#bold-back-mark)">
+        <image href="${artUri}" x="736" y="1082" width="436" height="464" preserveAspectRatio="xMidYMid slice" opacity="0.14" />
+      </g>`;
+  } else if (profile.id === "authority") {
+    defs = `
+      <clipPath id="bold-back-mark">
+        <rect x="756" y="1088" width="274" height="274" rx="30" />
+      </clipPath>`;
+    motifMarkup = `
+      <rect x="728" y="1060" width="330" height="330" rx="42" fill="${rgba("#ffffff", 0.2)}" />
+      <rect x="756" y="1088" width="274" height="274" rx="30" fill="${rgba("#ffffff", 0.9)}" />
+      <g clip-path="url(#bold-back-mark)">
+        <image href="${artUri}" x="756" y="1088" width="274" height="274" preserveAspectRatio="xMidYMid slice" opacity="0.16" />
+      </g>`;
+  } else {
+    defs = `
+      <clipPath id="bold-back-mark">
+        <circle cx="920" cy="1270" r="170" />
+      </clipPath>`;
+    motifMarkup = `
+      <circle cx="920" cy="1270" r="192" fill="${rgba("#ffffff", 0.2)}" />
+      <circle cx="920" cy="1270" r="170" fill="${rgba("#ffffff", 0.9)}" />
+      <g clip-path="url(#bold-back-mark)">
+        <image href="${artUri}" x="750" y="1100" width="340" height="340" preserveAspectRatio="xMidYMid slice" opacity="0.16" />
+      </g>`;
+  }
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" fill="none">
+  <defs>
+    <linearGradient id="bold-back-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${palette.gradA}" />
+      <stop offset="58%" stop-color="${palette.gradB}" />
+      <stop offset="100%" stop-color="${palette.gradC}" />
+    </linearGradient>
+    <linearGradient id="bold-back-band" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="${rgba("#ffffff", 0.88)}" />
+      <stop offset="100%" stop-color="${rgba(paper, 0.72)}" />
+    </linearGradient>
+${defs}
+  </defs>
+  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#bold-back-bg)" />
+  <rect x="54" y="54" width="${WIDTH - 108}" height="1120" rx="44" fill="url(#bold-back-band)" />
+  <rect x="54" y="1144" width="${WIDTH - 108}" height="${HEIGHT - 1198}" rx="52" fill="${rgba("#ffffff", 0.08)}" />
+  ${motifMarkup}
+  ${
+    kicker
+      ? `<text x="${x}" y="146" fill="${rgba(ink, 0.74)}" font-family="${bodyFamily}" font-size="18" font-weight="700" letter-spacing="1.8" text-anchor="${anchor}" ${directionAttrs}>${safeXml(kicker)}</text>`
+      : ""
+  }
+  <text x="${x}" y="232" fill="${ink}" font-family="${titleFamily}" font-size="42" font-weight="700" text-anchor="${anchor}" ${directionAttrs}>${safeXml(config.title)}</text>
+  <text x="${x}" y="330" fill="${rgba(ink, 0.9)}" font-family="${bodyFamily}" font-size="${summary.fontSize}" font-weight="500" text-anchor="${anchor}" ${directionAttrs}>${buildTspanLines(summary.lines, x, 330, summary.fontSize * 1.42, directionAttrs)}</text>
+  <rect x="110" y="940" width="${WIDTH - 220}" height="2" fill="${rgba(accent, 0.56)}" />
+  ${
+    authorName
+      ? `<text x="${x}" y="1024" fill="${ink}" font-family="${bodyFamily}" font-size="22" font-weight="700" text-anchor="${anchor}" ${directionAttrs}>${safeXml(authorName)}</text>`
+      : ""
+  }
+  ${
+    bio.lines.length
+      ? `<text x="${x}" y="${bioY}" fill="${rgba(ink, 0.84)}" font-family="${bodyFamily}" font-size="${bio.fontSize}" font-weight="500" text-anchor="${anchor}" ${directionAttrs}>${buildTspanLines(
+          bio.lines,
+          x,
+          bioY,
+          bio.fontSize * 1.45,
+          directionAttrs,
+        )}</text>`
+      : ""
+  }
+</svg>`;
+}
+
+function renderBookstoreFlatFront(config, artUri) {
+  const palette = flatPalette(config);
+  const profile = flatCoverProfile(config);
+  const isChildren = profile.id === "children";
+  const titleTone = deriveTitleTone(config, deriveTemplateName(config));
+  const titleFamily = titleFontFamily(config.languageCode, titleTone);
+  const bodyFamily = coverBodyFamily(config);
+  const ink = palette.ink;
+  const accent = palette.accent;
+  const paper = palette.paper;
+  const edgeTextX = isRtl(config.languageCode) ? WIDTH - 118 : 118;
+  const centeredTextX = isRtl(config.languageCode) ? WIDTH - 120 : WIDTH / 2;
+  const textX = profile.align === "edge" ? edgeTextX : centeredTextX;
+  const align = profile.align === "edge" ? (isRtl(config.languageCode) ? "end" : "start") : (isRtl(config.languageCode) ? "end" : "middle");
+  const directionAttrs = isRtl(config.languageCode) ? 'direction="rtl" unicode-bidi="plaintext"' : "";
+  const textWidth = isRtl(config.languageCode) ? WIDTH - 220 : profile.textWidth;
+  const titleBlock = fitTextBlock(config.title, textWidth, config.languageCode, {
+    maxSize: isChildren ? 132 : profile.id === "authority" ? 124 : profile.id === "personal" ? 120 : 118,
+    minSize: isChildren ? 58 : 48,
+    step: 4,
+    maxLines: isChildren ? 4 : profile.id === "education" || profile.id === "systems" ? 4 : 5,
+    kind: "title",
+    tone: titleTone,
+  });
+  const subtitleBlock = fitTextBlock(String(config.subtitle || ""), textWidth * 0.92, config.languageCode, {
+    maxSize: isChildren ? 28 : profile.id === "authority" ? 25 : 24,
+    minSize: 18,
+    step: 2,
+    maxLines: 3,
+    kind: "subtitle",
+  });
+  const authorBlock = fitTextBlock(String(config.author || ""), textWidth * 0.66, config.languageCode, {
+    maxSize: 30,
+    minSize: 18,
+    step: 1,
+    maxLines: 1,
+    kind: "body",
+  });
+  const kicker = categoryKicker(config);
+  const titleY = isChildren ? 170 : profile.id === "business" ? 224 : profile.id === "authority" ? 212 : profile.id === "personal" ? 170 : 216;
+  const titleLineHeight = titleBlock.fontSize * (isChildren ? 1.06 : 1.03);
+  const subtitleY = titleY + titleBlock.lines.length * titleLineHeight + 48;
+  const subtitleLineHeight = subtitleBlock.fontSize * 1.3;
+  const subtitleLines = subtitleBlock.lines.slice(0, 3);
+  const authorY = isChildren ? HEIGHT - 142 : profile.id === "education" || profile.id === "systems" ? HEIGHT - 174 : HEIGHT - 152;
+
+  if (isChildren) {
+    return `
+      <defs>
+        <clipPath id="flat-kids-art">
+          <rect x="118" y="520" width="964" height="860" rx="60" />
+        </clipPath>
+      </defs>
+      <rect width="${WIDTH}" height="${HEIGHT}" fill="${paper}" />
+      <rect x="0" y="0" width="${WIDTH}" height="430" fill="${paper}" />
+      <path d="M120 1450C280 1290 500 1210 700 1230C900 1250 1040 1360 1080 1500" stroke="${rgba(accent, 0.26)}" stroke-width="18" fill="none" stroke-linecap="round" />
+      <circle cx="248" cy="824" r="54" fill="${rgba("#ec4b2f", 0.95)}" />
+      <circle cx="948" cy="706" r="60" fill="${rgba("#3c8fc9", 0.95)}" />
+      <path d="M834 1160L930 988L1022 1160Z" fill="${rgba("#1a9b6f", 0.92)}" />
+      <rect x="118" y="520" width="964" height="860" rx="60" fill="${rgba("#ffffff", 0.74)}" />
+      <g clip-path="url(#flat-kids-art)">
+        <image href="${artUri}" x="118" y="520" width="964" height="860" preserveAspectRatio="xMidYMid slice" />
+      </g>
+      <text x="${textX}" y="88" fill="${rgba(ink, 0.74)}" font-family="${bodyFamily}" font-size="18" font-weight="700" letter-spacing="1.8" text-anchor="${align}" ${directionAttrs}>${safeXml(kicker)}</text>
+      <text x="${textX}" y="${titleY}" fill="${ink}" font-family="${titleFamily}" font-size="${titleBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(titleBlock.lines, textX, titleY, titleLineHeight, directionAttrs)}</text>
+      ${
+        subtitleLines.length
+          ? `<text x="${textX}" y="${subtitleY}" fill="${rgba(ink, 0.88)}" font-family="${bodyFamily}" font-size="${subtitleBlock.fontSize}" font-weight="600" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(
+              subtitleLines,
+              textX,
+              subtitleY,
+              subtitleLineHeight,
+              directionAttrs,
+            )}</text>`
+          : ""
+      }
+      <text x="${textX}" y="${authorY}" fill="${ink}" font-family="${bodyFamily}" font-size="${authorBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${safeXml(authorBlock.lines[0] || config.author || "")}</text>
+    `;
+  }
+
+  if (profile.id === "education") {
+    return `
+      <defs>
+        <linearGradient id="flat-education-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${paper}" />
+          <stop offset="74%" stop-color="${palette.gradA}" />
+          <stop offset="100%" stop-color="${palette.gradB}" />
+        </linearGradient>
+        <clipPath id="flat-education-art">
+          <rect x="646" y="278" width="414" height="690" rx="54" />
+        </clipPath>
+      </defs>
+      <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#flat-education-bg)" />
+      <rect x="0" y="0" width="120" height="${HEIGHT}" fill="${rgba(accent, 0.94)}" />
+      <rect x="598" y="224" width="512" height="806" rx="70" fill="${rgba("#ffffff", 0.74)}" />
+      <rect x="646" y="278" width="414" height="690" rx="54" fill="${rgba("#ffffff", 0.96)}" stroke="${rgba(accent, 0.72)}" stroke-width="8" />
+      <path d="M646 368H1060M646 486H1060M646 604H1060M646 722H1060M646 840H1060" stroke="${rgba(accent, 0.16)}" stroke-width="2" />
+      <path d="M760 278V968M878 278V968M996 278V968" stroke="${rgba(ink, 0.08)}" stroke-width="2" />
+      <g clip-path="url(#flat-education-art)">
+        <image href="${artUri}" x="646" y="278" width="414" height="690" preserveAspectRatio="xMidYMid slice" />
+      </g>
+      <rect x="118" y="116" width="124" height="14" rx="7" fill="${ink}" />
+      <text x="${textX}" y="92" fill="${rgba(ink, 0.68)}" font-family="${bodyFamily}" font-size="17" font-weight="700" letter-spacing="1.8" text-anchor="${align}" ${directionAttrs}>${safeXml(kicker)}</text>
+      <text x="${textX}" y="${titleY}" fill="${ink}" font-family="${titleFamily}" font-size="${titleBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(titleBlock.lines, textX, titleY, titleLineHeight, directionAttrs)}</text>
+      ${
+        subtitleLines.length
+          ? `<text x="${textX}" y="${subtitleY}" fill="${rgba(ink, 0.86)}" font-family="${bodyFamily}" font-size="${subtitleBlock.fontSize}" font-weight="600" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(
+              subtitleLines,
+              textX,
+              subtitleY,
+              subtitleLineHeight,
+              directionAttrs,
+            )}</text>`
+          : ""
+      }
+      <rect x="118" y="${HEIGHT - 228}" width="150" height="12" rx="6" fill="${rgba(accent, 0.88)}" />
+      <text x="${textX}" y="${authorY}" fill="${ink}" font-family="${bodyFamily}" font-size="${authorBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${safeXml(authorBlock.lines[0] || config.author || "")}</text>
+    `;
+  }
+
+  if (profile.id === "systems") {
+    return `
+      <defs>
+        <linearGradient id="flat-systems-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${paper}" />
+          <stop offset="66%" stop-color="${palette.gradA}" />
+          <stop offset="100%" stop-color="${palette.gradB}" />
+        </linearGradient>
+        <clipPath id="flat-systems-art">
+          <rect x="662" y="292" width="392" height="612" rx="46" />
+        </clipPath>
+      </defs>
+      <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#flat-systems-bg)" />
+      <circle cx="980" cy="146" r="106" fill="${rgba(accent, 0.16)}" />
+      <rect x="642" y="262" width="428" height="648" rx="58" fill="${rgba("#ffffff", 0.82)}" />
+      <rect x="662" y="292" width="392" height="612" rx="46" fill="${rgba("#ffffff", 0.96)}" stroke="${rgba(accent, 0.76)}" stroke-width="8" />
+      <g clip-path="url(#flat-systems-art)">
+        <image href="${artUri}" x="662" y="292" width="392" height="612" preserveAspectRatio="xMidYMid slice" />
+      </g>
+      <path d="M118 110H278M118 152H338M118 194H258" stroke="${rgba(accent, 0.9)}" stroke-width="10" stroke-linecap="round" />
+      <path d="M642 994H1070M642 1070H1070M642 1146H1070" stroke="${rgba(accent, 0.18)}" stroke-width="2" />
+      <path d="M760 994V1184M880 994V1184M1000 994V1184" stroke="${rgba(ink, 0.08)}" stroke-width="2" />
+      <text x="${textX}" y="92" fill="${rgba(ink, 0.7)}" font-family="${bodyFamily}" font-size="17" font-weight="700" letter-spacing="1.8" text-anchor="${align}" ${directionAttrs}>${safeXml(kicker)}</text>
+      <text x="${textX}" y="${titleY}" fill="${ink}" font-family="${titleFamily}" font-size="${titleBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(titleBlock.lines, textX, titleY, titleLineHeight, directionAttrs)}</text>
+      ${
+        subtitleLines.length
+          ? `<text x="${textX}" y="${subtitleY}" fill="${rgba(ink, 0.86)}" font-family="${bodyFamily}" font-size="${subtitleBlock.fontSize}" font-weight="600" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(
+              subtitleLines,
+              textX,
+              subtitleY,
+              subtitleLineHeight,
+              directionAttrs,
+            )}</text>`
+          : ""
+      }
+      <rect x="118" y="${HEIGHT - 230}" width="160" height="12" rx="6" fill="${rgba(accent, 0.88)}" />
+      <text x="${textX}" y="${authorY}" fill="${ink}" font-family="${bodyFamily}" font-size="${authorBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${safeXml(authorBlock.lines[0] || config.author || "")}</text>
+    `;
+  }
+
+  if (profile.id === "personal") {
+    return `
+      <defs>
+        <linearGradient id="flat-personal-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${paper}" />
+          <stop offset="58%" stop-color="${palette.gradA}" />
+          <stop offset="100%" stop-color="${palette.gradB}" />
+        </linearGradient>
+        <clipPath id="flat-personal-art">
+          <path d="M250 1440V1010C250 820 405 674 600 674C795 674 950 820 950 1010V1440Z" />
+        </clipPath>
+      </defs>
+      <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#flat-personal-bg)" />
+      <circle cx="178" cy="186" r="110" fill="${rgba(accent, 0.18)}" />
+      <circle cx="${WIDTH - 176}" cy="1464" r="124" fill="${rgba(palette.gradC, 0.18)}" />
+      <path d="M250 1440V1010C250 820 405 674 600 674C795 674 950 820 950 1010V1440Z" fill="${rgba("#ffffff", 0.84)}" />
+      <path d="M274 1440V1018C274 840 417 702 600 702C783 702 926 840 926 1018V1440Z" fill="${rgba("#ffffff", 0.96)}" stroke="${rgba(accent, 0.7)}" stroke-width="8" />
+      <g clip-path="url(#flat-personal-art)">
+        <image href="${artUri}" x="250" y="674" width="700" height="766" preserveAspectRatio="xMidYMid slice" opacity="0.94" />
+      </g>
+      <path d="M152 118H304" stroke="${rgba(accent, 0.88)}" stroke-width="12" stroke-linecap="round" />
+      <text x="${textX}" y="92" fill="${rgba(ink, 0.72)}" font-family="${bodyFamily}" font-size="18" font-weight="700" letter-spacing="1.8" text-anchor="${align}" ${directionAttrs}>${safeXml(kicker)}</text>
+      <text x="${textX}" y="${titleY}" fill="${ink}" font-family="${titleFamily}" font-size="${titleBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(titleBlock.lines, textX, titleY, titleLineHeight, directionAttrs)}</text>
+      ${
+        subtitleLines.length
+          ? `<text x="${textX}" y="${subtitleY}" fill="${rgba(ink, 0.86)}" font-family="${bodyFamily}" font-size="${subtitleBlock.fontSize}" font-weight="600" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(
+              subtitleLines,
+              textX,
+              subtitleY,
+              subtitleLineHeight,
+              directionAttrs,
+            )}</text>`
+          : ""
+      }
+      <text x="${textX}" y="${authorY}" fill="${ink}" font-family="${bodyFamily}" font-size="${authorBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${safeXml(authorBlock.lines[0] || config.author || "")}</text>
+    `;
+  }
+
+  if (profile.id === "authority") {
+    return `
+      <defs>
+        <linearGradient id="flat-authority-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${paper}" />
+          <stop offset="62%" stop-color="${palette.gradA}" />
+          <stop offset="100%" stop-color="${palette.gradB}" />
+        </linearGradient>
+        <clipPath id="flat-authority-art">
+          <rect x="314" y="720" width="572" height="540" rx="42" />
+        </clipPath>
+      </defs>
+      <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#flat-authority-bg)" />
+      <rect x="314" y="720" width="572" height="540" rx="42" fill="${rgba("#ffffff", 0.92)}" stroke="${rgba(accent, 0.74)}" stroke-width="8" />
+      <rect x="350" y="756" width="500" height="468" rx="28" fill="${rgba("#fffaf3", 0.84)}" />
+      <g clip-path="url(#flat-authority-art)">
+        <image href="${artUri}" x="314" y="720" width="572" height="540" preserveAspectRatio="xMidYMid slice" opacity="0.9" />
+      </g>
+      <rect x="322" y="700" width="556" height="16" rx="8" fill="${rgba(accent, 0.84)}" />
+      <rect x="154" y="112" width="110" height="14" rx="7" fill="${rgba(accent, 0.84)}" />
+      <rect x="${WIDTH - 264}" y="112" width="110" height="14" rx="7" fill="${rgba(accent, 0.48)}" />
+      <text x="${textX}" y="92" fill="${rgba(ink, 0.72)}" font-family="${bodyFamily}" font-size="18" font-weight="700" letter-spacing="1.8" text-anchor="${align}" ${directionAttrs}>${safeXml(kicker)}</text>
+      <text x="${textX}" y="${titleY}" fill="${ink}" font-family="${titleFamily}" font-size="${titleBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(titleBlock.lines, textX, titleY, titleLineHeight, directionAttrs)}</text>
+      ${
+        subtitleLines.length
+          ? `<text x="${textX}" y="${subtitleY}" fill="${rgba(ink, 0.88)}" font-family="${bodyFamily}" font-size="${subtitleBlock.fontSize}" font-weight="600" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(
+              subtitleLines,
+              textX,
+              subtitleY,
+              subtitleLineHeight,
+              directionAttrs,
+            )}</text>`
+          : ""
+      }
+      <text x="${textX}" y="${authorY}" fill="${ink}" font-family="${bodyFamily}" font-size="${authorBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${safeXml(authorBlock.lines[0] || config.author || "")}</text>
+    `;
+  }
+
+  return `
+    <defs>
+      <linearGradient id="flat-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${paper}" />
+        <stop offset="62%" stop-color="${palette.gradA}" />
+        <stop offset="100%" stop-color="${palette.gradB}" />
+      </linearGradient>
+      <clipPath id="flat-emblem">
+        <circle cx="${WIDTH / 2}" cy="980" r="226" />
+      </clipPath>
+    </defs>
+    <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#flat-bg)" />
+    <circle cx="${WIDTH / 2}" cy="980" r="258" fill="${rgba("#ffffff", 0.7)}" />
+    <circle cx="${WIDTH / 2}" cy="980" r="226" fill="${rgba("#fffaf4", 0.98)}" stroke="${rgba(accent, 0.82)}" stroke-width="10" />
+    <g clip-path="url(#flat-emblem)">
+      <image href="${artUri}" x="${WIDTH / 2 - 226}" y="754" width="452" height="452" preserveAspectRatio="xMidYMid slice" opacity="0.92" />
+    </g>
+    <rect x="126" y="117" width="140" height="14" rx="7" fill="${accent}" />
+    <rect x="${WIDTH - 266}" y="${HEIGHT - 254}" width="140" height="14" rx="7" fill="${rgba(accent, 0.72)}" />
+    <text x="${textX}" y="92" fill="${rgba(ink, 0.72)}" font-family="${bodyFamily}" font-size="18" font-weight="700" letter-spacing="1.8" text-anchor="${align}" ${directionAttrs}>${safeXml(kicker)}</text>
+    <text x="${textX}" y="${titleY}" fill="${ink}" font-family="${titleFamily}" font-size="${titleBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(titleBlock.lines, textX, titleY, titleLineHeight, directionAttrs)}</text>
+    ${
+      subtitleLines.length
+        ? `<text x="${textX}" y="${subtitleY}" fill="${rgba(ink, 0.88)}" font-family="${bodyFamily}" font-size="${subtitleBlock.fontSize}" font-weight="600" text-anchor="${align}" ${directionAttrs}>${buildTspanLines(
+            subtitleLines,
+            textX,
+            subtitleY,
+            subtitleLineHeight,
+            directionAttrs,
+          )}</text>`
+        : ""
+    }
+    <text x="${textX}" y="${authorY}" fill="${ink}" font-family="${bodyFamily}" font-size="${authorBlock.fontSize}" font-weight="700" text-anchor="${align}" ${directionAttrs}>${safeXml(authorBlock.lines[0] || config.author || "")}</text>
+  `;
+}
+
+function renderBookstoreFlatBack(config, artUri) {
+  const palette = flatPalette(config);
+  const profile = flatCoverProfile(config);
+  const bodyFamily = coverBodyFamily(config);
+  const titleFamily = titleFontFamily(config.languageCode, deriveTitleTone(config, deriveTemplateName(config)));
+  const ink = palette.ink;
+  const accent = palette.accent;
+  const paper = palette.paper;
+  const directionAttrs = isRtl(config.languageCode) ? 'direction="rtl" unicode-bidi="plaintext"' : "";
+  const anchor = isRtl(config.languageCode) ? "end" : "start";
+  const x = isRtl(config.languageCode) ? 1010 : 110;
+  const summaryWidth = profile.id === "education" || profile.id === "systems" ? 650 : 760;
+  const summary = fitTextBlock(config.summary || "", summaryWidth, config.languageCode, {
+    maxSize: 28,
+    minSize: 19,
+    step: 2,
+    maxLines: String(config.backCoverMode || "") === "minimal_blurb" ? 6 : 9,
+    kind: "body",
+  });
+  const bio = fitTextBlock(config.authorBio || "", summaryWidth, config.languageCode, {
+    maxSize: 21,
+    minSize: 17,
+    step: 1,
+    maxLines: 4,
+    kind: "body",
+  });
+  let motifMarkup = `
+  <circle cx="320" cy="1380" r="170" fill="${rgba("#ffffff", 0.42)}" />
+  <g clip-path="url(#flat-back-mark)">
+    <image href="${artUri}" x="150" y="1210" width="340" height="340" preserveAspectRatio="xMidYMid slice" opacity="0.18" />
+  </g>`;
+  let defs = `
+    <clipPath id="flat-back-mark">
+      <circle cx="320" cy="1380" r="170" />
+    </clipPath>`;
+
+  if (profile.id === "education") {
+    defs = `
+    <clipPath id="flat-back-mark">
+      <rect x="748" y="214" width="320" height="520" rx="42" />
+    </clipPath>`;
+    motifMarkup = `
+  <rect x="720" y="188" width="376" height="572" rx="54" fill="${rgba("#ffffff", 0.68)}" />
+  <rect x="748" y="214" width="320" height="520" rx="42" fill="${rgba("#ffffff", 0.96)}" stroke="${rgba(accent, 0.7)}" stroke-width="6" />
+  <path d="M748 298H1068M748 394H1068M748 490H1068M748 586H1068" stroke="${rgba(accent, 0.18)}" stroke-width="2" />
+  <path d="M834 214V734M920 214V734M1006 214V734" stroke="${rgba(ink, 0.08)}" stroke-width="2" />
+  <g clip-path="url(#flat-back-mark)">
+    <image href="${artUri}" x="748" y="214" width="320" height="520" preserveAspectRatio="xMidYMid slice" opacity="0.18" />
+  </g>`;
+  } else if (profile.id === "systems") {
+    defs = `
+    <clipPath id="flat-back-mark">
+      <rect x="750" y="236" width="304" height="430" rx="36" />
+    </clipPath>`;
+    motifMarkup = `
+  <circle cx="986" cy="236" r="120" fill="${rgba(accent, 0.14)}" />
+  <rect x="728" y="210" width="348" height="482" rx="48" fill="${rgba("#ffffff", 0.72)}" />
+  <rect x="750" y="236" width="304" height="430" rx="36" fill="${rgba("#ffffff", 0.96)}" stroke="${rgba(accent, 0.72)}" stroke-width="6" />
+  <g clip-path="url(#flat-back-mark)">
+    <image href="${artUri}" x="750" y="236" width="304" height="430" preserveAspectRatio="xMidYMid slice" opacity="0.18" />
+  </g>
+  <path d="M750 722H1054M750 782H1054M750 842H1054" stroke="${rgba(accent, 0.18)}" stroke-width="2" />
+  <path d="M816 722V878M904 722V878M992 722V878" stroke="${rgba(ink, 0.08)}" stroke-width="2" />`;
+  } else if (profile.id === "personal") {
+    defs = `
+    <clipPath id="flat-back-mark">
+      <path d="M706 1540V1240C706 1100 818 994 960 994C1102 994 1214 1100 1214 1240V1540Z" />
+    </clipPath>`;
+    motifMarkup = `
+  <path d="M706 1540V1240C706 1100 818 994 960 994C1102 994 1214 1100 1214 1240V1540Z" fill="${rgba("#ffffff", 0.5)}" />
+  <g clip-path="url(#flat-back-mark)">
+    <image href="${artUri}" x="706" y="994" width="508" height="546" preserveAspectRatio="xMidYMid slice" opacity="0.14" />
+  </g>`;
+  } else if (profile.id === "authority") {
+    defs = `
+    <clipPath id="flat-back-mark">
+      <rect x="754" y="1088" width="274" height="274" rx="30" />
+    </clipPath>`;
+    motifMarkup = `
+  <rect x="728" y="1060" width="326" height="326" rx="44" fill="${rgba("#ffffff", 0.52)}" />
+  <rect x="754" y="1088" width="274" height="274" rx="30" fill="${rgba("#ffffff", 0.92)}" stroke="${rgba(accent, 0.62)}" stroke-width="6" />
+  <g clip-path="url(#flat-back-mark)">
+    <image href="${artUri}" x="754" y="1088" width="274" height="274" preserveAspectRatio="xMidYMid slice" opacity="0.16" />
+  </g>`;
+  }
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" fill="none">
+  <defs>
+    <linearGradient id="flat-back-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${paper}" />
+      <stop offset="62%" stop-color="${palette.gradA}" />
+      <stop offset="100%" stop-color="${palette.gradB}" />
+    </linearGradient>
+${defs}
+  </defs>
+  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#flat-back-bg)" />
+${motifMarkup}
+  <rect x="104" y="128" width="160" height="10" rx="5" fill="${accent}" />
+  <text x="${x}" y="210" fill="${ink}" font-family="${titleFamily}" font-size="44" font-weight="700" text-anchor="${anchor}" ${directionAttrs}>${safeXml(config.title)}</text>
+  <text x="${x}" y="328" fill="${rgba(ink, 0.9)}" font-family="${bodyFamily}" font-size="${summary.fontSize}" font-weight="500" text-anchor="${anchor}" ${directionAttrs}>${buildTspanLines(summary.lines, x, 328, summary.fontSize * 1.42, directionAttrs)}</text>
+  <rect x="110" y="1018" width="${WIDTH - 220}" height="2" fill="${rgba(accent, 0.54)}" />
+  <text x="${x}" y="1110" fill="${ink}" font-family="${bodyFamily}" font-size="22" font-weight="700" text-anchor="${anchor}" ${directionAttrs}>${safeXml(config.author || "")}</text>
+  ${
+    bio.lines.length
+      ? `<text x="${x}" y="1166" fill="${rgba(ink, 0.84)}" font-family="${bodyFamily}" font-size="${bio.fontSize}" font-weight="500" text-anchor="${anchor}" ${directionAttrs}>${buildTspanLines(
+          bio.lines,
+          x,
+          1166,
+          bio.fontSize * 1.45,
+          directionAttrs,
+        )}</text>`
+      : ""
+  }
+</svg>`;
+}
+
 function createFrontSvg(config, artUri, logoUri) {
+  if (isBookstoreBoldMode(config)) {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" fill="none">
+  ${renderBookstoreBoldFront(config, artUri)}
+</svg>`;
+  }
+  if (isBookstoreFlatMode(config)) {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" fill="none">
+  ${renderBookstoreFlatFront(config, artUri)}
+</svg>`;
+  }
   const templateName = deriveTemplateName(config);
   const preferredZone = String(config.preferredZone || "").trim();
   const template = templateConfig(templateName, preferredZone);
@@ -1062,6 +1869,12 @@ function createFrontSvg(config, artUri, logoUri) {
 }
 
 function createBackSvg(config, artUri, logoUri) {
+  if (isBookstoreBoldMode(config)) {
+    return renderBookstoreBoldBack(config, artUri);
+  }
+  if (isBookstoreFlatMode(config)) {
+    return renderBookstoreFlatBack(config, artUri);
+  }
   const [gradA, gradB, gradC] = gradientColors(config.coverGradient);
   const templateName = deriveTemplateName(config);
   const template = templateConfig(templateName, String(config.preferredZone || "").trim());
@@ -1110,9 +1923,13 @@ function createBackSvg(config, artUri, logoUri) {
   <text x="${x}" y="194" fill="${config.textAccent || "#fff8ef"}" font-family="${titleFamily}" font-size="54" font-weight="700" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
     config.title,
   )}</text>
-  <text x="${x}" y="246" fill="${rgba(config.textAccent || "#fff8ef", 0.72)}" font-family="${bodyFamily}" font-size="18" font-weight="700" letter-spacing="2" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
-    `${config.publisher}${config.year ? ` / ${config.year}` : ""}`,
-  )}</text>
+  ${
+    visiblePublisherLabel(config)
+      ? `<text x="${x}" y="246" fill="${rgba(config.textAccent || "#fff8ef", 0.72)}" font-family="${bodyFamily}" font-size="18" font-weight="700" letter-spacing="2" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
+          visiblePublisherLabel(config),
+        )}</text>`
+      : ""
+  }
   <text x="${x}" y="368" fill="${config.textAccent || "#fff8ef"}" font-family="${bodyFamily}" font-size="${summary.fontSize}" font-weight="500" text-anchor="${anchor}" ${directionAttrs}>
     ${buildTspanLines(summary.lines, x, 368, summary.fontSize * 1.42, directionAttrs)}
   </text>
@@ -1123,9 +1940,6 @@ function createBackSvg(config, artUri, logoUri) {
   <text x="${x}" y="1140" fill="${rgba(config.textAccent || "#fff8ef", 0.82)}" font-family="${bodyFamily}" font-size="${bio.fontSize}" font-weight="500" text-anchor="${anchor}" ${directionAttrs}>
     ${buildTspanLines(bio.lines, x, 1140, bio.fontSize * 1.48, directionAttrs)}
   </text>
-  <text x="${x}" y="1600" fill="${rgba(config.textAccent || "#fff8ef", 0.76)}" font-family="${bodyFamily}" font-size="20" font-weight="600" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
-    config.coverBrief || "",
-  )}</text>
   ${
     logoUri
       ? `<g transform="translate(${isRtl(config.languageCode) ? 936 : 120} 1642)">
@@ -1134,12 +1948,6 @@ function createBackSvg(config, artUri, logoUri) {
          </g>`
       : ""
   }
-  <rect x="${WIDTH - 256}" y="${HEIGHT - 240}" width="140" height="140" rx="14" fill="rgba(255,255,255,0.92)" />
-  <rect x="${WIDTH - 238}" y="${HEIGHT - 216}" width="14" height="96" fill="#0b1020" />
-  <rect x="${WIDTH - 210}" y="${HEIGHT - 216}" width="8" height="96" fill="#0b1020" />
-  <rect x="${WIDTH - 194}" y="${HEIGHT - 216}" width="18" height="96" fill="#0b1020" />
-  <rect x="${WIDTH - 164}" y="${HEIGHT - 216}" width="10" height="96" fill="#0b1020" />
-  <rect x="${WIDTH - 146}" y="${HEIGHT - 216}" width="22" height="96" fill="#0b1020" />
 </svg>`;
 }
 
@@ -1168,6 +1976,11 @@ function main() {
   }
 
   const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  config.author = visibleAuthorName(config);
+  config.authorBio = visibleAuthorBio(config);
+  if (!visiblePublisherLabel(config)) {
+    config.publisher = "";
+  }
   const frontSvgPath = path.resolve(args["front-svg"] || path.join(path.dirname(artPath), "front_cover_final.svg"));
   const frontPngPath = path.resolve(args["front-png"] || path.join(path.dirname(artPath), "front_cover_final.png"));
   const backSvgPath = path.resolve(args["back-svg"] || path.join(path.dirname(artPath), "back_cover_final.svg"));

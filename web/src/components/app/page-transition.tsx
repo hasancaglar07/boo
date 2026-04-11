@@ -21,7 +21,7 @@
 
 "use client";
 
-import { useRef, useEffect, ReactNode, useMemo } from "react";
+import { useEffect, ReactNode, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { pageTransition } from "@/lib/animation-variants";
@@ -36,6 +36,7 @@ interface PageTransitionProps {
  * Module-level variable to persist across renders
  */
 const historyStack = new Set<string>();
+let lastPathname: string | null = null;
 
 /**
  * PageTransition wrapper component
@@ -45,31 +46,15 @@ const historyStack = new Set<string>();
  */
 export function PageTransition({ children }: PageTransitionProps) {
   const pathname = usePathname();
-  const previousPathRef = useRef<string | null>(null);
-  const directionRef = useRef<"forward" | "backward">("forward");
+  const direction = useMemo<"forward" | "backward">(() => {
+    if (!lastPathname) return "forward";
+    return historyStack.has(pathname) ? "backward" : "forward";
+  }, [pathname]);
 
   // Detect navigation direction
   useEffect(() => {
-    if (previousPathRef.current) {
-      // Check if navigating back (path exists in history)
-      if (historyStack.has(pathname)) {
-        directionRef.current = "backward";
-      } else {
-        directionRef.current = "forward";
-        // Add to history stack
-        historyStack.add(pathname);
-      }
-    } else {
-      // Initial load
-      historyStack.add(pathname);
-    }
-
-    previousPathRef.current = pathname;
-  }, [pathname]);
-
-  // Calculate direction for current render
-  const direction = useMemo(() => {
-    return directionRef.current || "forward";
+    historyStack.add(pathname);
+    lastPathname = pathname;
   }, [pathname]);
 
   // Skip animations if reduced motion is preferred
@@ -78,7 +63,7 @@ export function PageTransition({ children }: PageTransitionProps) {
   }
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence mode="sync" initial={false}>
       <motion.div
         key={pathname}
         variants={pageTransition(direction)}
@@ -103,16 +88,15 @@ export function PageTransition({ children }: PageTransitionProps) {
  */
 export function useNavigationDirection(): "forward" | "backward" {
   const pathname = usePathname();
-  const directionRef = useRef<"forward" | "backward">("forward");
-
-  useEffect(() => {
-    if (historyStack.has(pathname)) {
-      directionRef.current = "backward";
-    } else {
-      directionRef.current = "forward";
-      historyStack.add(pathname);
-    }
+  const direction = useMemo<"forward" | "backward">(() => {
+    if (!lastPathname) return "forward";
+    return historyStack.has(pathname) ? "backward" : "forward";
   }, [pathname]);
 
-  return directionRef.current;
+  useEffect(() => {
+    historyStack.add(pathname);
+    lastPathname = pathname;
+  }, [pathname]);
+
+  return direction;
 }

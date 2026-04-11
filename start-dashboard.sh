@@ -10,6 +10,18 @@ PORT="${BOOK_DASHBOARD_PORT:-8765}"
 HEALTH_URL="http://${HOST}:${PORT}/api/health"
 PID_FILE="$ROOT_DIR/.dashboard-server.pid"
 LOG_FILE="$ROOT_DIR/.dashboard-server.log"
+FORCE_RESTART="${BOOK_DASHBOARD_FORCE_RESTART:-0}"
+
+dashboard_force_restart_enabled() {
+    case "${FORCE_RESTART,,}" in
+        1|true|yes|on)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
 
 is_healthy() {
     curl -fsS --max-time 2 "$HEALTH_URL" >/dev/null 2>&1
@@ -35,17 +47,77 @@ finally:
 PY
 }
 
-stop_server() {
-    if [ -f "$PID_FILE" ]; then
-        pid="$(cat "$PID_FILE")"
-        if kill -0 "$pid" >/dev/null 2>&1; then
-            kill "$pid"
-            rm -f "$PID_FILE"
-            echo "Dashboard stopped."
-            exit 0
-        fi
+listener_pid_for_port() {
+    ss -ltnp "sport = :$PORT" 2>/dev/null | awk 'match($0,/pid=([0-9]+)/,m){print m[1]; exit}'
+}
+
+pid_is_running() {
+    local pid="${1:-}"
+    [ -n "$pid" ] && kill -0 "$pid" >/dev/null 2>&1
+}
+
+remove_stale_pid_file() {
+    if [ ! -f "$PID_FILE" ]; then
+        return
     fi
-    echo "No tracked dashboard process found."
+    local pid
+    pid="$(cat "$PID_FILE" 2>/dev/null || true)"
+    if ! pid_is_running "$pid"; then
+        rm -f "$PID_FILE"
+    fi
+}
+
+kill_pid_gracefully() {
+    local pid="${1:-}"
+    if ! pid_is_running "$pid"; then
+        return 1
+    fi
+    kill "$pid" >/dev/null 2>&1 || true
+    for _ in $(seq 1 20); do
+        if ! pid_is_running "$pid"; then
+            return 0
+        fi
+        sleep 0.1
+    done
+    kill -9 "$pid" >/dev/null 2>&1 || true
+    ! pid_is_running "$pid"
+}
+
+kill_listener_if_dashboard() {
+    local pid args
+    pid="$(listener_pid_for_port || true)"
+    if [ -z "$pid" ]; then
+        return 1
+    fi
+    args="$(ps -p "$pid" -o args= 2>/dev/null || true)"
+    if [[ "$args" != *"dashboard_server.py"* ]]; then
+        return 1
+    fi
+    kill_pid_gracefully "$pid"
+}
+
+stop_server() {
+    remove_stale_pid_file
+    local stopped=0
+
+    if [ -f "$PID_FILE" ]; then
+        local pid
+        pid="$(cat "$PID_FILE" 2>/dev/null || true)"
+        if kill_pid_gracefully "$pid"; then
+            stopped=1
+        fi
+        rm -f "$PID_FILE"
+    fi
+
+    if kill_listener_if_dashboard; then
+        stopped=1
+    fi
+
+    if [ "$stopped" -eq 1 ]; then
+        echo "Dashboard stopped."
+    else
+        echo "No tracked dashboard process found."
+    fi
 }
 
 serve_foreground() {
@@ -53,9 +125,21 @@ serve_foreground() {
 }
 
 start_server() {
+    remove_stale_pid_file
+
+    if dashboard_force_restart_enabled; then
+        stop_server >/dev/null 2>&1 || true
+    fi
+
     if is_healthy; then
         echo "Dashboard already running at $HEALTH_URL"
         exit 0
+    fi
+
+    if port_in_use; then
+        if dashboard_force_restart_enabled && kill_listener_if_dashboard; then
+            sleep 0.3
+        fi
     fi
 
     if port_in_use; then
@@ -70,7 +154,7 @@ start_server() {
         nohup python3 "$ROOT_DIR/dashboard_server.py" < /dev/null >"$LOG_FILE" 2>&1 &
         disown || true
     fi
-    pid=$!
+    local pid=$!
     echo "$pid" > "$PID_FILE"
 
     for _ in $(seq 1 40); do
@@ -81,6 +165,10 @@ start_server() {
         sleep 0.25
     done
 
+    if pid_is_running "$pid"; then
+        kill_pid_gracefully "$pid" >/dev/null 2>&1 || true
+    fi
+    rm -f "$PID_FILE"
     echo "Dashboard failed to start. Last log output:"
     tail -n 40 "$LOG_FILE" 2>/dev/null || true
     exit 1
@@ -90,6 +178,10 @@ case "${1:-start}" in
     start|ensure)
         start_server
         ;;
+    restart)
+        stop_server >/dev/null 2>&1 || true
+        start_server
+        ;;
     serve)
         serve_foreground
         ;;
@@ -97,7 +189,7 @@ case "${1:-start}" in
         stop_server
         ;;
     *)
-        echo "Usage: $0 [start|ensure|serve|stop]"
+        echo "Usage: $0 [start|ensure|restart|serve|stop]"
         exit 1
         ;;
 esac

@@ -1,24 +1,30 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { SectionHeading } from "@/components/site/section-heading";
-import { TestimonialsColumnsSection } from "@/components/ui/testimonials-columns-1";
-import { testimonialData } from "@/lib/testimonials-data";
+import { TestimonialsMarqueeSection } from "@/components/ui/testimonials-marquee";
+import { testimonialData, testimonialsAggregateRating } from "@/lib/testimonials-data";
 
 export function HomeTestimonialsSection() {
+  const t = useTranslations("HomePage.testimonials");
+
   return (
-    <section className="border-b border-border/80 bg-background py-8 md:py-10">
+    <section className="border-b border-border/80 bg-background py-8 md:py-12">
       <div className="shell">
         <SectionHeading
-          badge="Customer Reviews"
-          title="What Authors Say"
-          description="Real results from real authors."
+          badge={t("badge")}
+          title={t("title")}
+          description={t("description")}
           align="center"
-          className="mb-6 md:mb-8"
+          className="mb-5 md:mb-7"
         />
 
-        <TestimonialsColumnsSection
+        <TestimonialsMarqueeSection
           items={testimonialData}
           showHeader={false}
+          aggregateRating={testimonialsAggregateRating}
+          aggregateLabel={t("aggregateLabel", { count: testimonialsAggregateRating.reviewCount })}
         />
       </div>
     </section>

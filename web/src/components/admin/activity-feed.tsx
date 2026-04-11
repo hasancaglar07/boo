@@ -43,6 +43,7 @@ export function ActivityFeed({
     createdAt: string;
     entityType?: string;
     entityId?: string | null;
+    metadata?: Record<string, unknown> | null;
   }>;
 }) {
   return (
@@ -61,7 +62,11 @@ export function ActivityFeed({
                   <p className="text-sm text-[color:var(--admin-text)]">
                     <span className="font-semibold">{item.actor}</span> {item.action}
                   </p>
+                  {typeof item.metadata?.detail === "string" && item.metadata.detail ? (
+                    <p className="mt-1 text-xs leading-5 admin-muted">{item.metadata.detail}</p>
+                  ) : null}
                   <p className="text-xs admin-muted">
+                    {typeof item.metadata?.status === "string" ? `${item.metadata.status} · ` : ""}
                     {item.entityType || "system"} {item.entityId ? `· ${item.entityId}` : ""} · {formatRelativeTime(item.createdAt)}
                   </p>
                 </div>

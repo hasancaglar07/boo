@@ -34,6 +34,105 @@ chapter_file_for() {
     echo "$book_dir/chapter_${chapter_num}_final.md"
 }
 
+chapter_segment_file_for() {
+    local book_dir="$1"
+    local chapter_num="$2"
+    local segment_index="$3"
+    echo "$book_dir/segments/chapter_${chapter_num}_segment_${segment_index}.md"
+}
+
+build_existing_chapter_context() {
+    local book_dir="$1"
+    local current_chapter_num="$2"
+    local max_chapters="${BOOK_CONTINUITY_CHAPTER_WINDOW:-2}"
+    local max_chars_per_chapter="${BOOK_CONTINUITY_MAX_CHARS_PER_CHAPTER:-1800}"
+    local current_path
+    current_path="$(chapter_file_for "$book_dir" "$current_chapter_num")"
+    local files=()
+    local file=""
+    local context=""
+    local start_index=0
+
+    while IFS= read -r file; do
+        [ -n "$file" ] || continue
+        [ "$file" = "$current_path" ] && continue
+        files+=("$file")
+    done < <(find "$book_dir" -maxdepth 1 -type f -name 'chapter_*_final.md' | sort -V)
+
+    if [ "${#files[@]}" -gt "$max_chapters" ]; then
+        start_index=$((${#files[@]} - max_chapters))
+    fi
+
+    for ((i = start_index; i < ${#files[@]}; i += 1)); do
+        file="${files[$i]}"
+        local chapter_heading=""
+        local body=""
+        local intro=""
+        local closing=""
+        local word_count="0"
+        chapter_heading="$(sed -n '1p' "$file" | sed 's/^# *//; s/\r$//')"
+        body="$(sed '/^#/d' "$file")"
+        intro="$(printf '%s\n' "$body" | awk 'BEGIN{RS=""; ORS=""} NF{gsub(/\n+/, " "); print; exit}' | head -c "$max_chars_per_chapter")"
+        closing="$(printf '%s\n' "$body" | awk 'BEGIN{RS=""; ORS=""} NF{gsub(/\n+/, " "); paragraph=$0} END{print paragraph}' | tail -c "$max_chars_per_chapter")"
+        word_count="$(wc -w < "$file" | tr -d ' ')"
+        context+=$'\n\n'
+        context+="== Continuity Packet: $(basename "$file") =="$'\n'
+        context+="Heading: ${chapter_heading}"$'\n'
+        context+="Words: ${word_count}"$'\n'
+        [ -n "$intro" ] && context+="Opening synopsis: ${intro}"$'\n'
+        [ -n "$closing" ] && context+="Closing carry-forward: ${closing}"$'\n'
+    done
+
+    printf '%s' "$context"
+}
+
+build_existing_segment_context() {
+    local book_dir="$1"
+    local chapter_num="$2"
+    local segment_index="$3"
+    local max_chars_per_segment="${BOOK_SEGMENT_CONTEXT_MAX_CHARS:-1100}"
+    local context=""
+    local current_segment=1
+    local file=""
+
+    while [ "$current_segment" -lt "$segment_index" ]; do
+        file="$(chapter_segment_file_for "$book_dir" "$chapter_num" "$current_segment")"
+        if [ -f "$file" ]; then
+            local body=""
+            local opening=""
+            local closing=""
+            body="$(cat "$file")"
+            opening="$(printf '%s\n' "$body" | awk 'BEGIN{RS=""; ORS=""} NF{gsub(/\n+/, " "); print; exit}' | head -c "$max_chars_per_segment")"
+            closing="$(printf '%s\n' "$body" | awk 'BEGIN{RS=""; ORS=""} NF{gsub(/\n+/, " "); paragraph=$0} END{print paragraph}' | tail -c "$max_chars_per_segment")"
+            context+=$'\n\n'
+            context+="== Current Chapter Segment ${current_segment} ==" $'\n'
+            [ -n "$opening" ] && context+="Opening: ${opening}"$'\n'
+            [ -n "$closing" ] && context+="Closing: ${closing}"$'\n'
+        fi
+        current_segment=$((current_segment + 1))
+    done
+
+    printf '%s' "$context"
+}
+
+extract_outline_context_for_chapter() {
+    local outline_file="$1"
+    local chapter_num="$2"
+    local chapter_title="$3"
+    [ -n "$outline_file" ] && [ -f "$outline_file" ] || return 0
+
+    local escaped_title=""
+    local match_line=""
+    escaped_title="$(printf '%s' "$chapter_title" | sed 's/[][(){}.^$*+?|\\/]/\\&/g')"
+    match_line="$(grep -niE "(^|[^0-9])${chapter_num}([^0-9]|$)|${escaped_title}" "$outline_file" | head -n 1 | cut -d: -f1 || true)"
+
+    if [ -n "$match_line" ]; then
+        sed -n "${match_line},$((match_line + 12))p" "$outline_file" | head -c 2200
+    else
+        sed -n '1,60p' "$outline_file" | head -c 2200
+    fi
+}
+
 ensure_book_layout() {
     local book_dir="$1"
     mkdir -p \
@@ -201,6 +300,10 @@ topic_suggest() {
     local niche="$1"
     local audience="${2:-general readers}"
     local category="${3:-non-fiction}"
+    local provider_order="${BOOK_WIZARD_TEXT_PROVIDER_ORDER:-claude-main glm-main vertex-main}"
+    local provider_timeout="${BOOK_WIZARD_TOPIC_PROVIDER_TIMEOUT_SECONDS:-3}"
+    local max_retries="${BOOK_WIZARD_TOPIC_MAX_RETRIES:-1}"
+    local fast_failover="${BOOK_WIZARD_TOPIC_FAST_FAILOVER:-1}"
     local language
     language="$(normalize_book_language "${4:-}")"
     if [ -z "$language" ]; then
@@ -235,7 +338,7 @@ Rules:
 - output JSON only"
 
     local raw
-    raw="$(smart_api_call "$user_prompt" "$system_prompt" "creative" 0.7 4096 2 "${OLLAMA_PREFERRED_MODEL:-}")"
+    raw="$(CODEFAST_TEXT_PROVIDER_ORDER="$provider_order" smart_api_call "$user_prompt" "$system_prompt" "creative" 0.7 4096 "$max_retries" "${OLLAMA_PREFERRED_MODEL:-}" "$provider_timeout" "$fast_failover")"
     extract_json_payload "$raw"
 }
 
@@ -245,6 +348,10 @@ outline_json() {
     local audience="$3"
     local style="${4:-detailed}"
     local tone="${5:-professional}"
+    local provider_order="${BOOK_WIZARD_TEXT_PROVIDER_ORDER:-claude-main glm-main vertex-main}"
+    local provider_timeout="${BOOK_WIZARD_OUTLINE_PROVIDER_TIMEOUT_SECONDS:-5}"
+    local max_retries="${BOOK_WIZARD_OUTLINE_MAX_RETRIES:-1}"
+    local fast_failover="${BOOK_WIZARD_OUTLINE_FAST_FAILOVER:-1}"
     local language
     language="$(normalize_book_language "${6:-}")"
     [ -n "$language" ] || language="English"
@@ -270,15 +377,63 @@ Return JSON with this exact shape:
 }
 
 Rules:
-- 8 to 12 chapters
+- 10 to 12 chapters
 - chapters must be practical and specific
 - summary values must be 2 sentences max
+- design the structure to support a ~25,000 word practical book
 - title, subtitle, description, chapter titles, and summaries must all be written in ${language}
 - if the language is Turkish, do not leave labels or headings in English
 - output JSON only"
 
     local raw
-    raw="$(smart_api_call "$user_prompt" "$system_prompt" "outline" 0.7 4096 2 "${OLLAMA_PREFERRED_MODEL:-}")"
+    raw="$(CODEFAST_TEXT_PROVIDER_ORDER="$provider_order" smart_api_call "$user_prompt" "$system_prompt" "outline" 0.7 4096 "$max_retries" "${OLLAMA_PREFERRED_MODEL:-}" "$provider_timeout" "$fast_failover")"
+    extract_json_payload "$raw"
+}
+
+style_suggest() {
+    local topic="$1"
+    local audience="${2:-general readers}"
+    local book_type="${3:-non-fiction}"
+    local language
+    language="$(normalize_book_language "${4:-English}")"
+    local tone="${5:-professional}"
+    local depth="${6:-balanced}"
+    local cover_direction="${7:-editorial}"
+    local provider_order="${BOOK_WIZARD_TEXT_PROVIDER_ORDER:-claude-main glm-main vertex-main}"
+    local provider_timeout="${BOOK_WIZARD_STYLE_PROVIDER_TIMEOUT_SECONDS:-2}"
+    local max_retries="${BOOK_WIZARD_STYLE_MAX_RETRIES:-1}"
+    local fast_failover="${BOOK_WIZARD_STYLE_FAST_FAILOVER:-1}"
+
+    local system_prompt="You are a book branding strategist. Return valid JSON only."
+    local user_prompt="Generate fast style defaults for a guided book wizard.
+
+Topic: ${topic}
+Audience: ${audience}
+Book type: ${book_type}
+Language: ${language}
+Preferred tone: ${tone}
+Preferred depth: ${depth}
+Preferred cover direction: ${cover_direction}
+
+Return JSON with this exact shape:
+{
+  \"tone\": \"clear|professional|warm|inspiring\",
+  \"depth\": \"quick|balanced|detailed\",
+  \"coverDirection\": \"editorial|tech|minimal|energetic\",
+  \"authorName\": \"...\",
+  \"imprint\": \"...\",
+  \"coverBrief\": \"...\",
+  \"authorBio\": \"...\"
+}
+
+Rules:
+- Keep outputs short and practical.
+- Author bio max 2 short sentences.
+- All strings must be in ${language}.
+- Output JSON only."
+
+    local raw
+    raw="$(CODEFAST_TEXT_PROVIDER_ORDER="$provider_order" smart_api_call "$user_prompt" "$system_prompt" "creative" 0.7 2048 "$max_retries" "${OLLAMA_PREFERRED_MODEL:-}" "$provider_timeout" "$fast_failover")"
     extract_json_payload "$raw"
 }
 
@@ -301,16 +456,7 @@ chapter_generate() {
     [ -n "$outline_file" ] && outline_content="$(cat "$outline_file")"
 
     local existing_chapters=""
-    local file
-    for file in "$book_dir"/chapter_*_final.md; do
-        [ -f "$file" ] || continue
-        if [ "$file" = "$(chapter_file_for "$book_dir" "$chapter_num")" ]; then
-            continue
-        fi
-        existing_chapters+=$'\n\n'
-        existing_chapters+="== $(basename "$file") =="$'\n'
-        existing_chapters+="$(cat "$file")"
-    done
+    existing_chapters="$(build_existing_chapter_context "$book_dir" "$chapter_num")"
 
     local content
     content="$(generate_chapter_with_smart_api "$chapter_num" "$chapter_title" "$existing_chapters" "$outline_content" "$min_words" "$max_words" "$style" "$tone" "$language")"
@@ -320,6 +466,57 @@ chapter_generate() {
     chapter_path="$(chapter_file_for "$book_dir" "$chapter_num")"
     printf '# %s: %s\n\n%s\n' "$chapter_prefix" "$chapter_title" "$(clean_llm_output "$content")" > "$chapter_path"
     echo "Saved chapter to $chapter_path"
+}
+
+chapter_generate_segment() {
+    local book_dir="$1"
+    local chapter_num="$2"
+    local chapter_title="$3"
+    local segment_index="$4"
+    local segment_count="$5"
+    local min_words="$6"
+    local max_words="$7"
+    local chapter_summary="${8:-}"
+    local style="${9:-clear}"
+    local tone="${10:-professional}"
+    local language
+    language="$(normalize_book_language "${11:-}")"
+
+    ensure_book_layout "$book_dir"
+    mkdir -p "$book_dir/segments"
+    [ -n "$language" ] || language="$(infer_book_language_for_dir "$book_dir")"
+
+    local outline_file=""
+    local outline_context=""
+    outline_file="$(find_outline_file "$book_dir" || true)"
+    outline_context="$(extract_outline_context_for_chapter "$outline_file" "$chapter_num" "$chapter_title")"
+
+    local continuity_packet=""
+    local segment_context=""
+    local content=""
+    local segment_path=""
+
+    continuity_packet="$(build_existing_chapter_context "$book_dir" "$chapter_num")"
+    segment_context="$(build_existing_segment_context "$book_dir" "$chapter_num" "$segment_index")"
+    content="$(
+        generate_chapter_segment_with_smart_api \
+            "$chapter_num" \
+            "$chapter_title" \
+            "$segment_index" \
+            "$segment_count" \
+            "$segment_context" \
+            "$continuity_packet" \
+            "$outline_context" \
+            "$chapter_summary" \
+            "$min_words" \
+            "$max_words" \
+            "$style" \
+            "$tone" \
+            "$language"
+    )"
+    segment_path="$(chapter_segment_file_for "$book_dir" "$chapter_num" "$segment_index")"
+    printf '%s\n' "$(clean_llm_output "$content")" > "$segment_path"
+    echo "Saved chapter segment to $segment_path"
 }
 
 chapter_plagiarism() {
@@ -807,7 +1004,9 @@ main() {
     case "$action" in
         topic-suggest) topic_suggest "$@" ;;
         outline-json) outline_json "$@" ;;
+        style-suggest) style_suggest "$@" ;;
         chapter-generate) chapter_generate "$@" ;;
+        chapter-generate-segment) chapter_generate_segment "$@" ;;
         chapter-plagiarism) chapter_plagiarism "$@" ;;
         chapter-rewrite) chapter_rewrite "$@" ;;
         chapter-review) chapter_review "$@" ;;
@@ -832,7 +1031,9 @@ main() {
             echo "Usage:"
             echo "  $0 topic-suggest <niche> [audience] [category]"
             echo "  $0 outline-json <topic> <genre> <audience> [style] [tone] [language]"
+            echo "  $0 style-suggest <topic> [audience] [book-type] [language] [tone] [depth] [cover-direction]"
             echo "  $0 chapter-generate <book_dir> <chapter_num> <chapter_title> <min_words> <max_words> [style] [tone] [language]"
+            echo "  $0 chapter-generate-segment <book_dir> <chapter_num> <chapter_title> <segment_index> <segment_count> <min_words> <max_words> <chapter_summary> [style] [tone] [language]"
             echo "  $0 chapter-plagiarism <book_dir> <chapter_num>"
             echo "  $0 chapter-rewrite <book_dir> <chapter_num>"
             echo "  $0 chapter-review <book_dir> <chapter_num>"

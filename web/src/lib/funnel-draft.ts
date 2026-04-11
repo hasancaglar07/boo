@@ -332,21 +332,21 @@ export function canOpenStep(draft: FunnelDraft, step: FunnelStep) {
 }
 
 export function localTitleSuggestions(draft: FunnelDraft) {
-  const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Book Idea" : "Book Idea"));
-  const audience = draft.audience?.trim() || (isTurkishLanguage(draft.language) ? "first-time readers" : "first-time readers");
+  const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Kitap Fikri" : "Book Idea"));
+  const audience = draft.audience?.trim() || (isTurkishLanguage(draft.language) ? "ilk kez başlayan okurlar" : "first-time readers");
   if (isTurkishLanguage(draft.language)) {
     return [
       {
-        title: `${subject} Guide`,
-        subtitle: `A clear roadmap from beginner to advanced for ${audience}`,
+        title: `${subject} Rehberi`,
+        subtitle: `${audience} için başlangıçtan ileri seviyeye uzanan net bir yol haritası`,
       },
       {
-        title: `${subject}: Step-by-Step Application Book`,
-        subtitle: `A simple, practical, and consistent learning flow for ${audience}`,
+        title: `${subject}: Adım Adım Uygulama Kitabı`,
+        subtitle: `${audience} için sade, pratik ve düzenli bir öğrenme akışı`,
       },
       {
-        title: `${subject} Mastery`,
-        subtitle: `Core logic, critical tactics, and actionable systems for ${audience}`,
+        title: `${subject} Ustalığı`,
+        subtitle: `${audience} için temel mantık, kritik taktikler ve uygulanabilir sistemler`,
       },
     ];
   }
@@ -368,17 +368,17 @@ export function localTitleSuggestions(draft: FunnelDraft) {
 }
 
 export function localOutlineSuggestions(draft: FunnelDraft) {
-  const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Topic" : "Topic"));
+  const subject = titleCase(draft.topic || (isTurkishLanguage(draft.language) ? "Konu" : "Topic"));
   const language = draft.language;
   if (isTurkishLanguage(language)) {
     return enrichOutlineItems([
-      { title: `Introduction to ${subject}`, summary: `Core concepts, expectations, and starting framework for ${subject}.` },
-      { title: "First Steps and Basic Setup", summary: "Preparations, settings, and first applications needed to get started." },
-      { title: "Core Mechanics and Critical Logic", summary: "Chapter explaining the most important systems with simple examples." },
-      { title: "Common Mistakes", summary: "Mistakes seen at the beginner level and ways to fix them." },
-      { title: "Strategy and Foundation for Progress", summary: "A regular progress plan to follow for better results." },
-      { title: "Advanced Tactics", summary: "Methods and fine-tunings that make a difference after the basics are established." },
-      { title: "Long-Term Development Plan", summary: "Practice, review, and improvement suggestions to make gains permanent." },
+      { title: `${subject} İçin Yol Haritası`, summary: `${subject} için temel kavramlar, beklentiler ve başlangıç çerçevesi.` },
+      { title: "İlk Adımlar ve Temel Kurulum", summary: "Başlamak için gereken hazırlıklar, seçimler ve ilk uygulamalar." },
+      { title: "Ana Sistem ve Kritik Mantık", summary: "En önemli yapıların sade örneklerle açıklandığı ana bölüm." },
+      { title: "Sık Yapılan Hatalar", summary: "Başlangıç seviyesinde görülen hatalar ve bunları düzeltme yolları." },
+      { title: "İlerleme Stratejisi", summary: "Daha iyi sonuçlar için izlenebilecek düzenli gelişim planı." },
+      { title: "İleri Seviye Taktikler", summary: "Temeller oturduktan sonra fark yaratan yöntemler ve ince ayarlar." },
+      { title: "Uzun Vadeli Gelişim Planı", summary: "Kazanımları kalıcı hale getirecek pratik, tekrar ve iyileştirme önerileri." },
     ], draft);
   }
 
@@ -504,7 +504,7 @@ export function suggestedStyleProfile(draft: FunnelDraft) {
 
 export function buildDraftDescription(draft: FunnelDraft) {
   if (isTurkishLanguage(draft.language)) {
-    return `A step-by-step ${bookTypeLabel(draft.bookType).toLowerCase()} prepared on ${draft.topic} for ${draft.audience || "target readers"}.`;
+    return `${draft.audience || "hedef okurlar"} için ${draft.topic} konusunda hazırlanmış adım adım bir ${bookTypeLabel(draft.bookType).toLowerCase()}.`;
   }
   return `A ${bookTypeLabel(draft.bookType).toLowerCase()} about ${draft.topic} for ${draft.audience || "the target reader"}.`;
 }
@@ -528,17 +528,17 @@ export function chapterRoleLabel(role: FunnelChapterRole, language: FunnelLangua
   }
   switch (role) {
     case "opening":
-      return "Opening";
+      return "Açılış";
     case "foundation":
       return "Temel";
     case "core":
-      return "Main chapter";
+      return "Ana bölüm";
     case "case":
       return "Uygulama";
     case "advanced":
-      return "Advanced";
+      return "İleri";
     case "closing":
-      return "Closing";
+      return "Kapanış";
   }
 }
 
@@ -561,17 +561,17 @@ export function chapterRoleDescription(role: FunnelChapterRole, language: Funnel
   }
   switch (role) {
     case "opening":
-      return "Establishes the book's promise, context, and why it matters.";
+      return "Kitabın vaadini, bağlamını ve neden önemli olduğunu kurar.";
     case "foundation":
-      return "Grounds the reader before heavier chapters.";
+      return "Daha yoğun bölümlerden önce okurun temelini güçlendirir.";
     case "core":
-      return "Carries the main method, system, or transformation.";
+      return "Ana yöntem, sistem veya dönüşümü taşır.";
     case "case":
-      return "Shows application, examples, and real-world counterpart.";
+      return "Uygulamayı, örnekleri ve gerçek karşılığını gösterir.";
     case "advanced":
-      return "Adds nuance, exceptions, and higher-leverage insights.";
+      return "Nüans, istisna ve daha yüksek kaldıraçlı içgörüler ekler.";
     case "closing":
-      return "Wraps up the book, provides next steps, and delivers the closing rhythm.";
+      return "Kitabı toparlar, sonraki adımları verir ve kapanış ritmini sağlar.";
   }
 }
 
@@ -579,14 +579,14 @@ export function chapterLengthLabel(length: FunnelChapterLength, language: Funnel
   if (!isTurkishLanguage(language)) {
     return length === "short" ? "Short" : length === "medium" ? "Medium" : "Long";
   }
-  return length === "short" ? "Short" : length === "medium" ? "Medium" : "Long";
+  return length === "short" ? "Kısa" : length === "medium" ? "Orta" : "Uzun";
 }
 
 export function bookLengthLabel(bookLength: FunnelBookLength, language: FunnelLanguage) {
   if (!isTurkishLanguage(language)) {
     return bookLength === "compact" ? "Compact book" : bookLength === "extended" ? "Extended book" : "Standard book";
   }
-  return bookLength === "compact" ? "Compact book" : bookLength === "extended" ? "Detailed book" : "Standard book";
+  return bookLength === "compact" ? "Kompakt kitap" : bookLength === "extended" ? "Detaylı kitap" : "Standart kitap";
 }
 
 export function bookLengthDescription(bookLength: FunnelBookLength, language: FunnelLanguage) {
@@ -614,7 +614,7 @@ function buildChapterGenerationBrief(item: FunnelOutlineItem, bookLength: Funnel
   if (!isTurkishLanguage(language)) {
     return `${item.summary.trim()} Chapter role: ${chapterRoleLabel(item.role, language)}. Suggested depth: ${chapterLengthLabel(item.length, language)}. Target length: ${words.min}-${words.max} words.`;
   }
-  return `${item.summary.trim()} Chapter role: ${chapterRoleLabel(item.role, language)}. Suggested depth: ${chapterLengthLabel(item.length, language)}. Target lengluk: ${words.min}-${words.max} kelime.`;
+  return `${item.summary.trim()} Bölüm rolü: ${chapterRoleLabel(item.role, language)}. Önerilen derinlik: ${chapterLengthLabel(item.length, language)}. Hedef uzunluk: ${words.min}-${words.max} kelime.`;
 }
 
 function derivedBookSlug(draft: FunnelDraft, resolvedTitle: string) {

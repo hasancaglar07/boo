@@ -37,10 +37,10 @@ export function TopicStep({
   onError: (msg: string) => void;
 }) {
   const topicPlaceholder = isTurkishLanguage(draft.language)
-    ? "Write your book topic... E.g.: AI content generation, Digital marketing guide..."
+    ? "Kitabınızın konusunu yazın... Örn: Yapay zekâ ile içerik üretimi, dijital pazarlama rehberi..."
     : "Write your book topic... e.g. AI-assisted content creation, practical digital marketing playbook...";
   const audiencePlaceholder = isTurkishLanguage(draft.language)
-    ? "e.g.: beginner players and parents"
+    ? "örn: koçlar, danışmanlar ve içerik üreticileri"
     : "example: first-time founders and content creators";
 
   return (
@@ -136,7 +136,7 @@ export function TopicStep({
               topic:
                 draft.topic ||
                 (isTurkishLanguage(draft.language)
-                  ? "an authority book guide for consultants who want to turn their expertise into a book"
+                  ? "uzmanlığını kitaba dönüştürmek isteyen danışmanlar için otorite kitabı rehberi"
                   : "authority book playbook for consultants who want to turn expertise into a book"),
               audience:
                 draft.audience ||

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import {
   FloatingIconsHero,
   type FloatingIconsHeroProps,
@@ -39,17 +41,19 @@ const heroCovers: FloatingIconsHeroProps["assets"] = heroBooks.map((book, index)
 }));
 
 export function HomeFloatingIconsHero() {
+  const t = useTranslations("HomeHero");
+
   return (
     <FloatingIconsHero
       className="border-b border-border/80"
-      badge="AI-Powered Book Writing"
-      title="Turn your expertise into a book. Get your first EPUB this week."
-      subtitle="For consultants, instructors, and content creators: Enter your topic, approve the chapter outline, generate chapters, add a cover, and your publication file is ready."
-      ctaText="Start your first book"
+      badge={t("badge")}
+      title={t("title")}
+      subtitle={t("subtitle")}
+      ctaText={t("ctaText")}
       ctaHref="/start/topic"
-      secondaryCtaText="View Sample Outputs"
+      secondaryCtaText={t("secondaryCtaText")}
       secondaryCtaHref="/examples"
-      trustNote={`No credit card required · Preview first · ${NO_API_COST_CLAIM} · ${KDP_GUARANTEE_CLAIM}`}
+      trustNote={t("trustNote")}
       socialProof={{ count: NO_API_COST_CLAIM, rating: KDP_LIVE_BOOKS_CLAIM }}
       assets={heroCovers}
     />

@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SkeletonCard } from "@/components/ui/loading";
+import { CircularCountdown } from "@/components/ui/loading/circular-countdown";
 import { saveBook, type Book } from "@/lib/dashboard-api";
 import { trackEvent } from "@/lib/analytics";
 
@@ -280,8 +281,13 @@ export function EditableBookDetails({
               </span>
             )}
           </div>
-          <div className="text-[10px] md:text-xs text-muted-foreground hidden sm:block">
-            Auto-save in {autoSaveCountdown}s
+          <div className="hidden sm:block">
+            <CircularCountdown
+              seconds={autoSaveCountdown}
+              size="sm"
+              showLabel={false}
+              className="opacity-80"
+            />
           </div>
         </div>
 

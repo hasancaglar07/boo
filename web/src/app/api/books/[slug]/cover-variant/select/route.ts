@@ -61,6 +61,8 @@ export async function POST(
       ...existing,
       slug,
       selected_cover_variant: parsed.data.variantId,
+      front_cover_source: "variant",
+      back_cover_source: "variant",
     }),
   });
 

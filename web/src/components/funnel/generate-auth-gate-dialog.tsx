@@ -59,13 +59,13 @@ export function GenerateAuthGateDialog({
         </div>
 
         <h2 id={titleId} className="mt-4 text-2xl font-semibold tracking-tight text-[#2f1f17] sm:text-[30px]">
-          The prepared book
+          Keep this preview
           <br />
-          let's save it to your account
+          in your free library
         </h2>
 
         <p id={descriptionId} className="mt-3 text-sm leading-7 text-[#6f5547]">
-          This step doesn't require payment. We're creating your account so your book doesn't get lost during preview generation and appears in your library when ready.
+          Preview generation can continue as guest. A free account simply saves this book to your library so you can come back to it later without losing the cover, preview pages, or exports.
         </p>
 
         <div className="mt-5 inline-flex rounded-[16px] border border-[#dcc1ae]/80 bg-white/88 p-1">
@@ -107,7 +107,7 @@ export function GenerateAuthGateDialog({
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <p className="text-xs leading-6 text-[#8b6a59]">
-            We don't require payment. Once you sign in, the preview starts and you continue on the same account.
+            No payment required. You can still start as guest and save the preview whenever you want.
           </p>
           <Button
             type="button"

@@ -1,0 +1,1561 @@
+{
+  "Common": {
+    "skipToMain": "Ana içeriğe geç",
+    "loading": "Yükleniyor..."
+  },
+  "Metadata": {
+    "defaultTitle": "Kitap Oluşturucu - Yapay Zeka ile Kitap Yazın",
+    "defaultDescription": "Yapay zeka destekli kitap oluşturma platformu. Fikrinizi 5 soruyla yayına hazır bir kitaba, kapağa ve EPUB/PDF çıktısına dönüştürün."
+  },
+  "LocaleSwitcher": {
+    "label": "Dil",
+    "title": "Dili değiştir"
+  },
+  "localeNames": {
+    "en": "İngilizce",
+    "tr": "Türkçe",
+    "de": "Almanca",
+    "fr": "Fransızca",
+    "es": "İspanyolca",
+    "ar": "Arapça",
+    "ru": "Rusça",
+    "zh": "Çince",
+    "ja": "Japonca",
+    "ko": "Korece",
+    "it": "İtalyanca",
+    "pt": "Portekizce"
+  },
+  "nav": {
+    "howItWorks": "Nasıl Çalışır",
+    "examples": "Örnekler",
+    "pricing": "Fiyatlandırma",
+    "tools": "Araçlar",
+    "faq": "SSS",
+    "login": "Giriş Yap",
+    "myBooks": "Kitaplarım",
+    "newBook": "Yeni Kitap",
+    "freePreview": "Ücretsiz Önizleme",
+    "goHome": "Ana sayfaya git",
+    "mainMenu": "Ana menü",
+    "openMenu": "Menüyü aç",
+    "closeMenu": "Menüyü kapat",
+    "mobileMenu": "Mobil menü",
+    "mobileSecondaryMenu": "Mobil ikincil menü",
+    "more": "Daha fazla",
+    "brandName": "Kitap Oluşturucu",
+    "howItWorksDesc": "5 soruyla eksiksiz bir kitap",
+    "examplesDesc": "Yapay zeka ile oluşturulmuş gerçek kitaplar",
+    "useCasesDesc": "Eğitimciler, danışmanlar ve içerik üreticileri için",
+    "pricingDesc": "Kitap başına 4 dolardan başlayan planlar",
+    "compareDesc": "Nasıl öne çıktığımızı görün",
+    "toolsDesc": "Ücretsiz yazma ve yayıncılık araçları",
+    "resourcesDesc": "Kılavuzlar, şablonlar ve ipuçları",
+    "blogDesc": "Yazarlık tavsiyeleri ve ürün güncellemeleri"
+  },
+  "footer": {
+    "freePreview": "Ücretsiz Önizleme",
+    "compare": "Karşılaştır",
+    "freeTools": "Ücretsiz Araçlar",
+    "blog": "Blog",
+    "resources": "Kaynaklar",
+    "useCases": "Kullanım Alanları",
+    "about": "Hakkında",
+    "contact": "İletişim",
+    "affiliate": "Ortaklık Programı",
+    "privacy": "Gizlilik Politikası",
+    "terms": "Hizmet Şartları",
+    "refund": "İade Politikası",
+    "product": "Ürün",
+    "company": "Şirket",
+    "legal": "Yasal",
+    "writingTips": "Yazarlık ipuçları ve kampanyalar",
+    "newsletterDesc": "Haftalık bültenimize katılın, ilk kitabınızı daha hızlı yazın.",
+    "emailPlaceholder": "E-posta adresiniz",
+    "emailLabel": "E-posta adresi",
+    "subscribe": "Abone Ol",
+    "subscribed": "Abone Olundu!",
+    "ctaTitle": "Kitabınızı yazmaya <em>bugün</em> başlayın",
+    "ctaSub": "Ücretsiz önizleme ile ilk kitabınızı dakikalar içinde oluşturun.",
+    "ctaBtn": "Ücretsiz Önizlemeyi Başlat",
+    "brandDesc": "Yapay zeka destekli, sade ve premium kitap yazma arayüzü. İlk kitabınızı profesyonel standartlarda oluşturun.",
+    "copyright": "Kitap Oluşturucu. Tüm hakları saklıdır.",
+    "tagline": "Yapay zeka destekli kitap yazma.",
+    "theme": "Tema",
+    "goHome": "Ana sayfaya git",
+    "trust": {
+      "kdp": "KDP uyumluluğunu kolaylaştıran teslimat yaklaşımı",
+      "refund": "30 gün içinde iade talebi",
+      "noApiCost": "Model maliyeti plan fiyatına dahildir"
+    }
+  },
+  "HomePage": {
+    "metadata": {
+      "title": "Yapay Zeka ile Kitap Yazın | 15 Dakikada KDP'ye Hazır EPUB Oluşturun",
+      "description": "Uzmanlığınızı yapay zeka ile yayına hazır bir kitaba dönüştürün. 5 soruyla taslaklar, kapaklar ve EPUB/PDF çıktısı oluşturun. Kredi kartı gerekmeden ücretsiz önizleyin.",
+      "ogTitle": "Yapay Zeka ile Kitap Yazın",
+      "ogDescription": "Uzmanlığınızı 15 dakikada yayına hazır bir kitaba dönüştürün. Ücretsiz önizleyin."
+    },
+    "middleBlock": {
+      "title": "Yapay Zeka ile Kitap Yazın: Fikrinizi EPUB ve PDF'e Dönüştürün",
+      "description": "Uzmanlığınızı Book Creator ile yayına hazır bir kitaba dönüştürün. Tek bir iş akışında yapay zeka destekli taslak oluşturma, kapak tasarımı ve KDP uyumlu EPUB/PDF çıktısı.",
+      "subDescription": "Kitabınızı ücretsiz önizleyin, beğendiğinizde tam erişimin kilidini açın. Hemen başlayın — kredi kartı gerekmez.",
+      "cards": {
+        "a": {
+          "title": "Eğitimciler, Danışmanlar ve İçerik Üreticileri İçin",
+          "description": "Uzmanlığını KDP kitabına dönüştürmek isteyen herkes için yapay zeka destekli bir kitap yazma platformu. E-kitap oluşturma artık tek bir iş akışı.",
+          "cta": "Tüm kullanım senaryolarını gör →"
+        },
+        "b": {
+          "title": "Boş Sayfa veya Dağınık Araçlara Son",
+          "description": "Kitabınızı yapay zeka ile yazın — taslak, içerik ve çıktı hepsi tek platformda. Farklı araçlara ihtiyaç duymadan kitabınızı tamamlayın.",
+          "cta": "Nasıl karşılaştırıldığımızı gör →"
+        },
+        "c": {
+          "title": "KDP Uyumlu EPUB ve PDF Dosyaları",
+          "description": "Düzenlenebilir bölümler, profesyonel kapak ve yayına hazır EPUB + PDF çıktıları. Kindle ve KDP ile uyumlu."
+        }
+      }
+    },
+    "pricing": {
+      "tag": "Kitap Fiyatlandırması",
+      "title": "İlk Kitabınızı 4 $ ile Hazırlayın — KDP'ye Hazır EPUB ve PDF Dahil",
+      "description": "4 $'a eksiksiz bir kitaba erişin: yapay zeka destekli taslak, profesyonel kapak, EPUB ve PDF çıktıları. Ücretsiz önizleyin, ardından tam erişimin kilidini açın."
+    },
+    "faq": {
+      "heading": {
+        "badge": "En Çok Sorulan Sorular",
+        "title": "Yapay Zeka ile Kitap Yazma Hakkında Sıkça Sorulan Sorular",
+        "description": "Yapay zeka kitap oluşturucu nasıl çalışır, çıktı kalitesi nedir ve KDP uyumlu mu? Kitap yazma süreci hakkında en kritik sorular.",
+        "actionLabel": "Tüm sorular"
+      },
+      "quality": {
+        "question": "Yapay zeka tarafından yazılan bir kitap gerçekten yüksek kaliteli olabilir mi?",
+        "answer": "Yapay zeka taslağı oluşturur — kaliteyi siz kontrol edersiniz. Her bölümü düzenleyin, beğenmediklerinizi yeniden oluşturun. Kitaplarımızın {kdpLiveBooksClaim}'i {kdpGuaranteeClaim} güvencesiyle yayında."
+      },
+      "duration": {
+        "question": "Yapay zeka ile bir kitap yazmak ne kadar sürer?",
+        "answer": "Konunuzu girin ve 30–90 dakika içinde yayına hazır EPUB ve PDF alın. Kitapların büyük çoğunluğu tek oturumda tamamlanır. Kullanıcı anketlerine göre yazarların %92'si, geleneksel yazım yöntemlerindeki 3-6 aya kıyasla 7 gün içinde yayınlamaktadır."
+      },
+      "kdp": {
+        "question": "EPUB ve PDF çıktılarını doğrudan KDP'ye yükleyebilir miyim?",
+        "answer": "Evet. KDP uyumlu EPUB ve PDF çıktıları alırsınız. Yüklemeden önce kendi kontrol listenizle son bir inceleme yapmanızı öneririz."
+      },
+      "creditCard": {
+        "question": "Başlamak için kredi kartına ihtiyacım var mı?",
+        "answer": "Hayır. Ücretsiz önizlemeyle başlayın — herhangi bir ödeme bilgisi girmeden kitabınızın taslağını, kapağını ve ana hatlarını keşfedin. Yalnızca sonuçtan memnun kaldığınızda yükseltin."
+      },
+      "formats": {
+        "question": "Hangi çıktı formatları mevcut?",
+        "answer": "EPUB (Kindle ve tüm e-okuyucular için), PDF (talep üzerine baskı için) ve paylaşılabilir HTML önizlemesi alırsınız. Tüm çıktılar düzenlenebilir ve KDP'ye hazırdır."
+      },
+      "claims": {
+        "kdpAccept": "KDP tarafından kabul edildi",
+        "guarantee": "güvence"
+      },
+      "ctaLabel": "Ücretsiz Önizlemeyi Başlat"
+    },
+    "testimonials": {
+      "badge": "Müşteri Yorumları",
+      "title": "Yazarlar Ne Diyor",
+      "description": "Gerçek yazarlardan gerçek sonuçlar.",
+      "aggregateLabel": "Gerçek yazarlardan {count}+ doğrulanmış yorum"
+    },
+    "showcase": {
+      "badge": "Gerçek Kitaplar, Gerçek Kapaklar",
+      "title": "Yapay Zeka ile Oluşturulmuş Gerçek Kitap Örnekleri",
+      "description": "Her biri konu özetinden taslağa, taslaktan EPUB ve PDF iş akışına geçti. Aynı süreçle bu hafta kendi kitabınıza başlayabilirsiniz.",
+      "ctaLabel": "Ücretsiz Kitap Önizlemesini Başlat"
+    },
+    "cta": {
+      "title": "Bugün Yapay Zeka ile Kitap Yazmaya Başlayın",
+      "description": "Konunuzu girin ve 15 dakikada ücretsiz önizlemenizi oluşturun. {noApiCostClaim}, kredi kartı gerekmez.",
+      "items": {
+        "0": "Yapay zeka destekli taslak, kapak ve içerik hazır",
+        "1": "Ücretsiz önizleme — beğendiğinizde tam erişimin kilidini açın",
+        "2": "KDP uyumlu EPUB + PDF çıktısı"
+      }
+    }
+  },
+  "PricingPage": {
+    "metadata": {
+      "title": "Kitap Oluşturucu Fiyatlandırması | Yapay Zeka Kitap Yazma Planları",
+      "description": "Kitap Oluşturucu fiyatlandırma planlarını karşılaştırın. 4 $ tek seferlik ödemeyle deneyin, aylık planlarla büyüyün. İlk kitabınızdan tam üretim iş akışlarına kadar her seviye için bir plan var."
+    },
+    "summary": "İlk kitabınız 4 $, sonraki kitaplar aylık 19 $'dan başlıyor — önizleme ücretsiz.",
+    "plans": {
+      "tag": "Planlar",
+      "title": "Bir kez ödeyin ya da aylık planla üretin.",
+      "description": "İlk kitabınızı 4 $'a açın, ayda 10 kitapla bir ritim oluşturun ya da 30 veya 80 kitapla bir yayın sistemine dönüşün."
+    },
+    "comparison": {
+      "title": "Aynı kitap, çok farklı fiyat.",
+      "description": "Diğer yöntemlerle bir kitap üretmenin maliyeti.",
+      "link": "Ayrıntılı özellik karşılaştırmasını görün →",
+      "items": {
+        "0": {
+          "label": "Hayalet Yazar / Ajans",
+          "price": "500 $–5.000 $",
+          "perBook": "kitap başına"
+        },
+        "1": {
+          "label": "Scrivener + ChatGPT + Canva + Calibre",
+          "price": "Ücretsiz ama…",
+          "perBook": "kitap başına 10–30 saat"
+        },
+        "2": {
+          "label": "Kitap Oluşturucu — Tek Kitap",
+          "price": "4 $",
+          "perBook": "tek seferlik, abonelik yok"
+        },
+        "3": {
+          "label": "Kitap Oluşturucu — Başlangıç",
+          "price": "1,90 $",
+          "perBook": "kitap başına (19 $/ay, 10 kitap)"
+        }
+      }
+    },
+    "whoFor": {
+      "title": "Hangi plan size uygun?",
+      "description": "Hedeflerinize göre doğru başlangıç noktasını bulun.",
+      "items": {
+        "0": {
+          "plan": "Tek Kitap — 4 $",
+          "title": "İlk kez kullanan",
+          "description": "Bir kez ödeyin, kitap sizin olsun. Tüm süreci 4 $'a deneyimleyin — memnun kalmazsanız 30 gün içinde tam iade alın.",
+          "bullets": {
+            "0": "Yazarlık deneyimi gerekmez",
+            "1": "5 dakikada taslak hazır",
+            "2": "Sıfır risk"
+          }
+        },
+        "1": {
+          "plan": "Başlangıç — 19 $/ay",
+          "title": "Düzenli içerik üreticisi",
+          "description": "Ayda 10 kitapla serinizi oluşturun, KDP'de nişinizi genişletin. Kitap başına yalnızca 1,90 $.",
+          "bullets": {
+            "0": "Ayda 10 kitap, 20 kapak",
+            "1": "Her kitap için EPUB + PDF",
+            "2": "Kitap başına 1,90 $"
+          }
+        },
+        "2": {
+          "plan": "İçerik Üretici — 39 $/ay",
+          "title": "KDP'de büyüyen",
+          "description": "Araştırma merkezi ile hangi kitabın satacağını öğrenin ve ayda 30 kitapla hızlı üretin.",
+          "bullets": {
+            "0": "KDP anahtar kelime + pazar analizi",
+            "1": "Ayda 30 kitap, 60 kapak",
+            "2": "Ek dışa aktarma seçenekleri"
+          }
+        },
+        "3": {
+          "plan": "Stüdyo — 79 $/ay",
+          "title": "Yüksek hacimli üretim / ajans",
+          "description": "Ayda 80 kitap, API ve otomasyon iş akışları açık. Ekstra maliyet yok.",
+          "bullets": {
+            "0": "Ayda 80 kitap, 200 kapak",
+            "1": "API ve otomasyon erişimi",
+            "2": "Model maliyeti plan fiyatına dahildir"
+          }
+        }
+      }
+    },
+    "featureTable": {
+      "title": "Özellik karşılaştırması",
+      "description": "Her plana nelerin dahil olduğunu yan yana görün."
+    },
+    "faq": {
+      "title": "Aklınızdaki sorular",
+      "description": "Bir plan seçmeden önce bilmeniz gereken her şey.",
+      "items": {
+        "0": {
+          "q": "Hangi planı seçmeliyim?",
+          "a": "İlk kitabınızı deniyorsanız Tek Kitap planıyla başlayın (4 $) — sıfır risk, abonelik yok. Ayda birkaç kitap üretmeyi planlıyorsanız Başlangıç (19 $/ay, 10 kitap) çok daha ekonomik. Düzenli yayın yapmak istiyorsanız İçerik Üretici (39 $/ay, 30 kitap) en ideal seçenek — araştırma merkezi ve KDP analitiği dahil."
+        },
+        "1": {
+          "q": "Önizleme gerçekten ücretsiz mi?",
+          "a": "Evet. Sihirbaza kayıt olmadan erişebilirsiniz. Taslağı, kapak önizlemesini ve ilk bölümleri görüntülemek için ödeme gerekmez. Yalnızca tam kitap + dışa aktarma için ödeme yaparsınız."
+        },
+        "2": {
+          "q": "Doğrudan KDP'ye yükleyebilir miyim?",
+          "a": "Evet. EPUB ve PDF çıktıları Amazon KDP yükleme gereksinimlerini karşılayacak şekilde üretilir. Üretim iş akışı KDP odaklı bir mantık etrafında tasarlanmış olup teslimat paketi KDP uyumluluğu gözetilerek hazırlanır."
+        },
+        "3": {
+          "q": "Bir dilde yazıp başka bir dilde kitap üretebilir miyim?",
+          "a": "Evet. Arayüz tercih ettiğiniz dilde kalırken kitap içeriği İngilizce veya seçtiğiniz başka bir dilde üretilir. İngilizce, KDP'nin en büyük pazarıdır — bunu avantajınıza kullanabilirsiniz."
+        },
+        "4": {
+          "q": "Planımı değiştirebilir miyim?",
+          "a": "Evet. İstediğiniz zaman yükseltin, düşürün veya iptal edin. Her şeyi faturalama alanından tek tıkla yönetin — onay gerekmez."
+        },
+        "5": {
+          "q": "Kullanılmayan kitap kredileri bir sonraki aya devredilir mi?",
+          "a": "Hayır, aylık krediler bir sonraki aya devredilmez. Bu nedenle ihtiyacınız olan planı seçmelisiniz — gereğinden büyük bir plan almanın anlamı yoktur."
+        }
+      },
+      "stillQuestions": "Hâlâ sorunuz mu var?",
+      "fullFaq": "Tüm SSS",
+      "contactUs": "bize ulaşın"
+    },
+    "cta": {
+      "title": "Önce kitabınızı görün —",
+      "titleHighlight": "sonra 4 $ ödeyin.",
+      "description": "Taslak ve kapak önizlemesi ücretsiz. Tam kitap + EPUB/PDF 4 $ — bir kez ödeyin, sizin olsun.",
+      "btn1": "Ücretsiz Önizlemeyi Başlat",
+      "btn2": "Aylık Planla Başla",
+      "items": {
+        "0": "Ücretsiz önizleme",
+        "1": "4 $ tek seferlik",
+        "2": "KDP uyumluluk garantisi",
+        "3": "30 gün içinde iade"
+      }
+    }
+  },
+  "HowItWorksPage": {
+    "metadata": {
+      "title": "Kitap Oluşturucu Nasıl Çalışır | 3 Adımlı Kitap Üretimi",
+      "description": "Kitap üretim sürecinin nasıl işlediğini adım adım görün — kısa bir konu özetinden bölüm planlarına, önizlemelere ve EPUB/PDF çıktısına kadar."
+    },
+    "hero": {
+      "badge": "Nasıl çalışır",
+      "title": "Konunuzu girin, planınızı onaylayın,",
+      "titleHighlight": "kitabınızı çıktıya dönüştürün.",
+      "description": "Kitap Oluşturucu, kısa bir konu özetini görünür bir bölüm planına, önizlemeye ve EPUB/PDF çıktısına dönüştüren rehberli bir kitap üretim iş akışıdır.",
+      "cta": "Kitabınızı oluşturmaya başlayın",
+      "ctaSubtext": "Kısa yanıtlarla başlayın. Taslağı görün, ardından devam edin."
+    },
+    "directAnswer": {
+      "question": "Yapay zeka kitap üretimi nasıl çalışır?",
+      "answer": "Kitap Oluşturucu, uzmanlığınızı 3 adımda yayına hazır kitaplara dönüştürür. Önce konunuz ve hedef kitleniz hakkında 5 rehberli soruyu yanıtlayın. Yapay zeka, onayınız için eksiksiz bir bölüm taslağı oluşturur. Onaylandıktan sonra her bölümü tutarlı bir üslup ve tonla yazar, ardından Amazon KDP yayıncılığına hazır profesyonel EPUB ve PDF dosyaları üretir."
+    },
+    "steps": {
+      "0": {
+        "step": "1",
+        "title": "Konunuzu ve hedef okuyucunuzu girin",
+        "text": "Kısa bir özet, hedef okuyucunuz ve iletmek istediğiniz sonucu paylaşın. Uzun formlar yok — rehberli sorularla başlıyorsunuz.",
+        "output": "Net kitap yönü, başlık açısı ve başlangıç çerçevesi",
+        "cta": "Konu özetinizi girin"
+      },
+      "1": {
+        "step": "2",
+        "title": "Taslağı inceleyin ve onaylayın",
+        "text": "Sistem bir başlık, bölüm akışı ve kitap yapısı önerir. Üretime geçmeden önce düzenleyebilir, geliştirebilir ve onaylayabilirsiniz.",
+        "output": "Görünür bölüm planı ve daha kontrollü bir üretim iş akışı",
+        "cta": "Bölüm planınızı oluşturun"
+      },
+      "2": {
+        "step": "3",
+        "title": "Kitabınızı önizleyin ve çıktılarınızı alın",
+        "text": "İlk sonucu görün ve beğendiğinizde kitabınızı tam çıktıya dönüştürün. EPUB ve PDF dosyaları tek bir iş akışında hazırlanır.",
+        "output": "Önizleme, düzenlenebilir içerik ve EPUB/PDF çıktıları",
+        "cta": "Üretime başlayın"
+      }
+    },
+    "stepsSection": {
+      "badge": "3 adımlı süreç",
+      "title": "Süreç tam olarak nasıl işliyor?",
+      "description": "Yeni bir ziyaretçi olarak yalnızca ne olduğunu değil, her adımın sonunda ne elde edeceğinizi de görmelisiniz. Bu sayfa bunun için var.",
+      "resultLabel": "Bu adımın sonucu",
+      "stepPrefix": "Adım"
+    },
+    "reassurance": {
+      "badge": "Güven ve netlik",
+      "title": "Boş sayfa kaygısı değil, görünür bir iş akışıyla rehberlik eder",
+      "description": "Bu sayfa yalnızca özellikleri sergilemekle kalmaz — ne kadar çaba harcayacağınızı, ne kadar kontrole sahip olacağınızı ve sonunda ne alacağınızı netleştirir.",
+      "items": {
+        "0": {
+          "title": "Hızlı başlangıç",
+          "text": "Birkaç kısa yanıtla başlayın — uzun bir hazırlık gerekmez."
+        },
+        "1": {
+          "title": "Kontrol sizde",
+          "text": "Taslağı görüp onaylamadan asla kör bir üretime girmezsiniz."
+        },
+        "2": {
+          "title": "Çıktı odaklı iş akışı",
+          "text": "Süreç yalnızca metin üretmez — sonunda EPUB/PDF teslim etmeyi hedefler."
+        },
+        "3": {
+          "title": "Uzmanlar için tasarlandı",
+          "text": "Bilgisini kitaba dönüştürmek isteyen eğitmenler, danışmanlar ve içerik üreticileri için tasarlandı."
+        }
+      }
+    },
+    "behindScenes": {
+      "badge": "Neden daha net?",
+      "title": "Özetten yayına giden yolu görünür parçalara böler",
+      "description": "Süreç yalnızca tek bir \"oluştur\" düğmesinden ibaret değildir. Önce yön belirlenir, ardından plan netleşir, sonra çıktı odaklı üretim başlar.",
+      "items": {
+        "0": {
+          "eyebrow": "Yön",
+          "title": "Sadece ne yazdığınızı değil, neden yazdığınızı netleştirin",
+          "description": "Kimin için yazdığınız, okuyucuya ne vaat ettiğiniz ve hangi dili kullanacağınız baştan belirlenir. Böylece kitabınız ilk adımdan itibaren odaklı kalır."
+        },
+        "1": {
+          "eyebrow": "Plan",
+          "title": "Bölüm yapısı görünür hale gelir",
+          "description": "Başlık, alt başlıklar ve bölüm sırası birlikte şekillenir. Metni sonradan bir araya getirmek yerine baştan yapılandırılmış bir taslak oluşturursunuz."
+        },
+        "2": {
+          "eyebrow": "Üretim",
+          "title": "Önizlemeyle ilerleyin",
+          "description": "Sistem yalnızca metin dökmez. Önce görünür bir sonuç üretir — böylece bitmiş ürüne dönüştüreceğiniz şeyi çok daha erken görürsünüz."
+        },
+        "3": {
+          "eyebrow": "Teslimat",
+          "title": "Çıktılar sona eklenmez, sürecin içine işlenir",
+          "description": "EPUB, PDF ve temel yayın dosyaları sona eklenen ayrı bir yük olmaktan çıkar — üretimin doğal bir parçası haline gelir."
+        }
+      }
+    },
+    "whoFor": {
+      "badge": "Kimler için?",
+      "title": "Özellikle uzmanlığını kitaba dönüştürmek isteyenler için",
+      "description": "Bu iş akışı yalnızca yazmak isteyenler için değil — bilgisini ürüne, sisteme ve somut çıktıya dönüştürmek isteyenler için daha uygundur.",
+      "audience": {
+        "0": "Uzmanlığını kitaba dönüştürmek isteyen danışmanlar ve eğitmenler",
+        "1": "Boş sayfadan başlamak yerine rehberli bir iş akışını tercih eden ilk kez yazar olanlar",
+        "2": "Hızlı taslaklar, görünür bölüm planları ve çıktı odaklı ilerleme isteyen içerik üreticileri"
+      }
+    },
+    "deliverables": {
+      "badge": "Sürecin sonunda",
+      "title": "Elinizde ne kalır?",
+      "description": "Yalnızca fikirler değil — ilerlemeyi sağlayan görünür ara çıktılar ve teslimata hazır dosyalar elde edersiniz.",
+      "items": {
+        "0": {
+          "label": "Kitap yönü",
+          "text": "Başlık açısı, konumlandırma ve kitabın temel vaadi"
+        },
+        "1": {
+          "label": "Plan",
+          "text": "Bölüm bölüm görünür taslak ve kitap yapısı"
+        },
+        "2": {
+          "label": "İçerik",
+          "text": "Düzenlenebilir bölüm içeriği ve önizleme çıktısı"
+        },
+        "3": {
+          "label": "Teslimat",
+          "text": "Yayın hazırlığını kolaylaştıran EPUB, PDF ve temel dosyalar"
+        }
+      }
+    },
+    "faq": {
+      "badge": "Sıkça sorulan sorular",
+      "title": "Karar vermeden önce en çok sorulan sorular",
+      "description": "Nasıl çalışır sayfası, ikna etmeye çalışırken belirsizlik bırakmamalıdır. Bu kısa yanıtlar o boşluğu doldurur.",
+      "items": {
+        "0": {
+          "question": "Başlamak için neye ihtiyacım var?",
+          "answer": "Genellikle kısa bir konu özeti, hedef okuyucu bilgisi ve kitabın ne başarmasını istediğinize dair birkaç net yanıt yeterlidir."
+        },
+        "1": {
+          "question": "Taslağı görmeden üretime mi giriyorum?",
+          "answer": "Hayır. Süreç, yönünüzü ve bölüm planınızı önce görüp onaylayabilecek şekilde tasarlanmıştır."
+        },
+        "2": {
+          "question": "Yalnızca metin mi alıyorum, yoksa çıktı dosyaları da var mı?",
+          "answer": "Amaç yalnızca metin üretmek değil — EPUB/PDF teslimatı dahil önizleme ve kitap çıktılarına kadar ilerlemeyi sağlamaktır."
+        },
+        "3": {
+          "question": "Bu ürün en çok kimler için uygundur?",
+          "answer": "Özellikle bilgisini, deneyimini veya metodolojisini kitaba dönüştürmek isteyen uzmanlar, eğitmenler, danışmanlar ve içerik üreticileri için uygundur."
+        }
+      }
+    },
+    "cta": {
+      "badge": "Başlamaya hazır mısınız?",
+      "title": "Boş ekrana bakmayın —",
+      "titleHighlight": "rehberli bir sistemle başlayın.",
+      "description": "Konunuzu netleştirin, bölüm planınızı görün, önizlemeyi inceleyin ve kitabınızı çıktıya dönüştürün. Süreci parça parça oluşturmak yerine görünür adımlarla ilerleyin.",
+      "button": "Ücretsiz önizlemenizi başlatın",
+      "buttonSubtext": "Kısa bir girişle başlayın · Planı görün · Sonra karar verin"
+    }
+  },
+  "AboutPage": {
+    "metadata": {
+      "title": "Book Generator Hakkında | Yapay Zeka Destekli Kitap Üretim Yaklaşımımız",
+      "description": "Book Generator'ın neden sade bir arayüzle çalıştığını, yapay zeka destekli kitap üretimimizi yönlendiren ilkeleri ve ilk kez yazar olan kişilerin daha hızlı ilerlemesine nasıl yardımcı olduğumuzu öğrenin."
+    },
+    "directAnswer1": {
+      "question": "Book Generator nedir?",
+      "answer": "Book Generator, uzmanlığınızı 30-90 dakika içinde KDP'ye hazır kitaplara dönüştüren yapay zeka destekli bir yayıncılık stüdyosudur. Genel yapay zeka araçlarının aksine, tek bir iş akışında özel kitap yapısı, tutarlı bölüm oluşturma, profesyonel kapak tasarımı ve EPUB/PDF çıktıları sunar. Kullanıcılar arasında dünya genelinde danışmanlar, eğitimciler ve içerik üreticileri yer almakta olup %92'si 7 gün içinde yayınlamaktadır."
+    },
+    "metrics": {
+      "0": {
+        "value": "KDP odaklı",
+        "label": "KDP odaklı üretim iş akışı"
+      },
+      "1": {
+        "value": "30 örnek",
+        "label": "çok dilli vitrin kitapları"
+      },
+      "2": {
+        "value": "Ücretsiz önizleme",
+        "label": "ödeme öncesi görünür"
+      },
+      "3": {
+        "value": "Rehberli teslimat",
+        "label": "yayıncılık sürecini basitleştiren bir yaklaşım"
+      }
+    },
+    "directAnswer2": {
+      "question": "Book Generator nedir?",
+      "answer": "Book Generator, uzmanlığınızı 5 soruyla yayına hazır kitaplara dönüştüren yapay zeka destekli bir yayıncılık platformudur. Araştırma, taslak oluşturma, yazma ve biçimlendirmeyi otomatik olarak yöneterek eksiksiz el yazmaları, profesyonel kapaklar ve KDP uyumlu EPUB/PDF çıktıları üretir. Model maliyeti plan fiyatına dahildir ve yayın hedefi KDP ise teslimat paketi KDP uyumluluğu odağıyla hazırlanır."
+    },
+    "about": {
+      "badge": "Hakkında",
+      "title": "Bu ürün, kitabını yayınlamak isteyen ancak karmaşık araçlara boğulmak istemeyenler için tasarlandı.",
+      "description": "Amacımız daha fazla panel göstermek değil — daha fazla insanın kitabını gerçekten tamamlamasına yardımcı olmak. Bu yüzden arkasında güçlü bir üretim sistemi olan sade bir arayüz oluşturduk.",
+      "additionalText": "Bizim için asıl rakip başka bir yapay zeka aracı değil — erteleme, boş sayfa korkusu ve dağınık iş akışlarıdır. Bu psikolojik engelleri azaltmak için özellikle ürün kararları aldık."
+    },
+    "principles": {
+      "badge": "İlkeler",
+      "title": "Ürünü hangi ilkeler üzerine inşa ettik?",
+      "description": "Hem pazarlama sayfası hem de uygulama içi deneyim aynı karara dayanmaktadır: ilk kez kullanan bir kullanıcı bile nereye tıklayacağını merak etmeden ilerleyebilmelidir.",
+      "items": {
+        "0": {
+          "title": "Daha az kelime",
+          "description": "Uzun talimatlar ve teknik jargon yerine kullanıcıyı sonuca götüren kısa ve net adımlar."
+        },
+        "1": {
+          "title": "Tek yol",
+          "description": "İlk kez kullananlar için görünür akış, basit bir oluştur, yaz, yayınla mantığını izler."
+        },
+        "2": {
+          "title": "Düzenlenebilir içerik",
+          "description": "Oluşturulan her bölüm yeniden ziyaret edilebilir, genişletilebilir ve geliştirilebilir."
+        },
+        "3": {
+          "title": "Yayıncılık odaklı",
+          "description": "Amaç yalnızca yazmak değil — EPUB, PDF ve teslimat klasörleriyle gerçek çıktı üretmektir."
+        },
+        "4": {
+          "title": "Güven oluşturan kalite",
+          "description": "Araştırma, inceleme ve düzeltme katmanları, ilk kez kullananı bunaltmadan arka planda çalışır."
+        },
+        "5": {
+          "title": "Yapay zeka ama sade",
+          "description": "Yapay zeka görünür bir kaos yaratmaz; yalnızca gerektiği yerde hız ve netlik sağlar."
+        }
+      }
+    },
+    "approach": {
+      "badge": "Yaklaşım",
+      "title": "Sade görünüyor çünkü güç arka planda toplanmış.",
+      "description": "Araştırma, bölüm planlaması, kapak, bölüm oluşturma ve çıktı — hepsi aynı kitap etrafında düzenlenmiştir. Bu hem profesyonel hem de anlaşılır bir ürün hissi verir.",
+      "items": {
+        "0": {
+          "eyebrow": "Neden böyle?",
+          "title": "Yüzeyde sade çünkü karmaşıklık arka planda yönetiliyor",
+          "description": "İlk kez kitap üreten biri için en büyük sorun çok fazla seçenektir. Bu yüzden gelişmiş görevleri tek tek görünür kılmak yerine akışı yöneten bir omurga oluşturduk.",
+          "metric": "İlk kez kullananlar için uygun",
+          "bullets": {
+            "0": "Önce sihirbaz",
+            "1": "Sonra panel",
+            "2": "Geliştirilmiş arka plan",
+            "3": "Temiz teslimat mantığı"
+          }
+        },
+        "1": {
+          "eyebrow": "Ürün kararı",
+          "title": "Düğme eklemek yerine karar yorgunluğunu azaltıyoruz",
+          "description": "Kullanıcıların önce ne yapacaklarını düşünmelerini değil — sadece yapmalarını istiyoruz.",
+          "bullets": {
+            "0": "Tek başlangıç noktası",
+            "1": "Tek ana eylem çağrısı",
+            "2": "Net sıralama",
+            "3": "Kısa metinler"
+          }
+        },
+        "2": {
+          "eyebrow": "Yayıncılık",
+          "title": "İlk hedef her zaman gerçek çıktıdır",
+          "description": "Bu yüzden çıktı ve kitap bilgisi akışlarını ürünün merkezine yerleştirdik.",
+          "bullets": {
+            "0": "EPUB",
+            "1": "PDF"
+          }
+        },
+        "3": {
+          "eyebrow": "Geliştirilmiş",
+          "title": "Araştırma ve inceleme araçları gizli kalabilir",
+          "description": "Gerektiğinde açılırlar; ilk ekranda kullanıcıyı bunaltmazlar.",
+          "bullets": {
+            "0": "Anahtar kelimeler",
+            "1": "KDP",
+            "2": "İnceleme"
+          }
+        },
+        "4": {
+          "eyebrow": "Sonuç",
+          "title": "Amaç daha fazla özellik göstermek değil — daha fazla kitabın tamamlanmasına yardımcı olmak",
+          "description": "Bu yüzden ürünü bir vitrin paneli olarak değil, sonuç odaklı bir yayıncılık sistemi olarak ele aldık.",
+          "bullets": {
+            "0": "Yüksek tamamlanma hissi",
+            "1": "Temiz ilerleme",
+            "2": "Kontrolü siz elinizde tutuyorsunuz",
+            "3": "Sistem arka planda çalışıyor"
+          }
+        }
+      }
+    },
+    "missionApproach": {
+      "mission": {
+        "title": "Misyon",
+        "description": "Bilgisi, uzmanlığı veya deneyimi olan herkesin teknik engellerle takılmadan bunu bir kitaba dönüştürebilmesini sağlamak."
+      },
+      "approach": {
+        "title": "Yaklaşım",
+        "description": "Önce güven oluşturan bir mesaj, ardından net bir başlangıç deneyimi, ardından gerçekten işe yarayan bir kitap üretim akışı. Model maliyeti plan fiyatına dahildir ve yayın hedefi KDP ise teslimat paketi KDP uyumluluğu odağıyla hazırlanır."
+      },
+      "contact": "Sorularınız veya önerileriniz mi var? Bizimle iletişime geçin →"
+    },
+    "cta": {
+      "title": "Bu ürün kitap yayınlamak için var, gösteriş yapmak için değil.",
+      "description": "Tüm tasarım kararları tek bir amaca hizmet eder: kullanıcının ilk kitabını tamamlamasını kolaylaştırmak. Önce önizlemeye bakın, ardından tam kitaba geçin.",
+      "items": {
+        "0": "Daha az kelime, net yönlendirme",
+        "1": "Yüzeyde sade panel",
+        "2": "Arka planda güçlü üretim sistemi",
+        "3": "Önce önizleme, sonra tam kitap"
+      }
+    }
+  },
+  "FaqPage": {
+    "metadata": {
+      "title": "Kitap Oluşturucu SSS | Yapay Zeka ile Kitap Yazma Soruları",
+      "description": "Kitap Oluşturucu'nun iş akışı, planlar, çıktı formatları, haklar, kapaklar, ödemeler ve destek süreçleri hakkında en sık sorulan soruların kısa yanıtlarına göz atın."
+    },
+    "mainSection": {
+      "badge": "SSS",
+      "title": "Kararları geciktiren temel sorular.",
+      "description": "Ne üretildiği, nasıl çalıştığı, hangi çıktıları aldığınız ve ilk kez kullanan biri için ne kadar anlaşılır olduğu — hepsi burada açıklanmıştır.",
+      "helpText": "Teknik sorular için {contactLink} sayfasını, plan detayları için {pricingLink} sayfasını ve süreç adımları için {howItWorksLink} sayfasını ziyaret edin.",
+      "contactLabel": "iletişim",
+      "pricingLabel": "fiyatlandırma",
+      "howItWorksLabel": "nasıl çalışır"
+    },
+    "quickAnswers": {
+      "badge": "Hızlı yanıtlar",
+      "heading": "İlk bakışta bilmek isteyeceğiniz 4 yanıt",
+      "description": "Bunlar genellikle kullanıcının deneme veya satın alma kararını şekillendiren ilk sorulardır."
+    },
+    "allQuestions": {
+      "badge": "Tüm sorular",
+      "title": "Konuya göre düzenlenmiş daha ayrıntılı yanıtlar.",
+      "description": "Genel kullanım, kitap üretimi, kapak, teslimat, haklar, ödeme ve destek başlıkları altında gruplandırılmıştır."
+    },
+    "sectionCtas": {
+      "General": "Nasıl çalıştığını gör",
+      "Book Production": "Örnekleri keşfet",
+      "Cover and Design": "Örneklere bak",
+      "Delivery and Outputs": "Planları karşılaştır",
+      "Rights and Publishing": "Ücretsiz önizlemeyi başlat",
+      "Subscription and Payment": "Fiyatlandırmayı gör",
+      "Support": "İletişime geç"
+    },
+    "fitSection": {
+      "title": "Kimler için uygun değil?",
+      "link": "Kimler için olduğunu gör",
+      "whereExcel": {
+        "title": "Öne çıktığımız alanlar",
+        "description": "Rehber kitaplar, uzmanlık kitapları, kısa lead-magnet kitaplar ve yayına hazır bilgi kitapları. Özellikle uzmanlar, eğitmenler, içerik üreticileri ve KDP odaklı kullanıcılar için uygundur."
+      },
+      "notRight": {
+        "title": "Uygun olmayan durumlar",
+        "description": "Romanlar, akademik tezler, yoğun dipnotlu eserler veya teknik dokümantasyon için tasarlanmamıştır. Bu sınırlamayı açıkça belirtmek güven oluşturur; ürünü yanlış tanıtmayız."
+      }
+    },
+    "cta": {
+      "title": "Sorularınız bitti mi? Şimdi kendi kitabınızı başlatın.",
+      "description": "Konu fikrinizi yazın, taslağı görün ve ilk EPUB iş akışını deneyin. Kararınızı bir açılış sayfasında değil, ürünün içinde verin. 30 günlük iade garantisi, kredi kartı gerekmez.",
+      "items": {
+        "0": "İlk iş akışından itibaren net yönlendirme",
+        "1": "Yapay zeka destekli bölüm planlama ve çıktı sistemi",
+        "2": "Bölüm planlama ve çıktı sistemi",
+        "3": "Önce önizleme, sonra tam kitap"
+      }
+    }
+  },
+  "ContactPage": {
+    "metadata": {
+      "title": "Kitap Oluşturucu İletişim | Destek ve Faturalandırma",
+      "description": "Kitap Oluşturucu destek, teknik yardım, hesap erişimi ve faturalandırma talep kanallarını tek sayfada bulun ve hızlı yanıt alın."
+    },
+    "directAnswer": {
+      "question": "Kitap Oluşturucu desteğiyle nasıl iletişime geçebilirim?",
+      "answer": "Kitap Oluşturucu üç destek kanalı sunar: aynı gün yanıt süresiyle e-posta üzerinden genel destek, ödeme ve abonelik soruları için faturalandırma desteği ve kitap üretim sorunları için teknik yardım. En hızlı çözüm için kitap slug'ınızı, önizleme bağlantınızı veya ekran görüntüsünü ekleyin. Ortalama yanıt süresi mesai saatlerinde 2 saattir."
+    },
+    "infoBanner": {
+      "0": {
+        "title": "Genel yanıt süresi",
+        "text": "Çoğu mesaja aynı iş günü içinde yanıt vermeyi hedefliyoruz."
+      },
+      "1": {
+        "title": "En hızlı çözüm için",
+        "text": "Kitap slug'ınızı, önizleme bağlantınızı veya ekran görüntüsünü paylaşın."
+      },
+      "2": {
+        "title": "Konu seçimi önemlidir",
+        "text": "Faturalandırma, erişim ve teknik destek için doğru konuyu seçmek süreci hızlandırır."
+      }
+    },
+    "formSection": {
+      "badge": "İletişim",
+      "title": "Nerede takıldığınızı söyleyin. Hızlıca çözelim.",
+      "description": "Doğru ekibin daha hızlı yanıt verebilmesi için konunuzu açık belirtin."
+    },
+    "supportChannels": {
+      "0": {
+        "title": "Genel destek",
+        "text": "Kullanım soruları, hesap erişimi ve teslimat akışı için ana destek kanalı."
+      },
+      "1": {
+        "title": "Faturalandırma",
+        "text": "Plan, iptal ve ödeme sorunları için faturalandırma odaklı destek."
+      },
+      "2": {
+        "title": "Yanıt hedefi",
+        "text": "Standart talepler için ilk iş günü içinde, kritik ödeme sorunları için daha hızlı."
+      }
+    }
+  },
+  "ToolsPage": {
+    "metadata": {
+      "title": "Ücretsiz Kitap Araçları | Kitap Oluşturucu",
+      "description": "Fikrinizi puanlayın, taslak çıkarın, KDP nişinizi test edin. Yapay zeka destekli ücretsiz araçlarla kitabınızı yayına hazırlayın."
+    },
+    "hero": {
+      "badge": "Ücretsiz Araçlar",
+      "title": "Kitabınızı hızlandıran ücretsiz araçlar",
+      "titleHighlight": "Ücretsiz araçlar",
+      "description": "Fikrinizi puanlayın, taslağınızı çıkarın, başlığınızı test edin. Her araç sizi kitap önizlemenize bir adım daha yaklaştırır."
+    },
+    "directAnswer": {
+      "question": "Hangi ücretsiz kitap araçları mevcut?",
+      "answer": "6'dan fazla ücretsiz yapay zeka destekli araca erişin: fikirleri puanlamak için kitap fikri doğrulayıcı, yapı için taslak oluşturucu, yeniden kullanım için içerikten kitaba dönüştürücü, pazar araştırması için KDP niş analizörü, müşteri çekmek için lead magnet bulucu ve optimizasyon için başlık eleştirmeni."
+    },
+    "pillars": {
+      "0": "Fikrinizi puanlayın, taslağınızı çıkarın",
+      "1": "Anında puan, e-postanıza gönderilen ayrıntılı rapor",
+      "2": "Herhangi bir araçtan doğrudan kitap önizlemesine geçin"
+    },
+    "toolsSection": {
+      "badge": "Araç Kütüphanesi",
+      "title": "Tek başına güçlü, birlikte kapsamlı.",
+      "description": "Her araç aynı şekilde çalışır: hızlı puan, net öneriler, ayrıntılı rapor ve önizlemeye sorunsuz geçiş."
+    },
+    "cta": {
+      "title": "Araçlarla uğraşmayı bırakın, kitabınıza başlayın.",
+      "description": "Araçlarla yönünüzü netleştirin, ardından önizleme iş akışına geçin. Karar burada, üretim sihirbazda.",
+      "items": {
+        "0": "Tek tıkla fikirden taslağa geçin",
+        "1": "KDP ve müşteri açılarını erken test edin",
+        "2": "E-postanıza gönderilen ayrıntılı rapor",
+        "3": "Önizleme → tam kitap → EPUB/PDF zinciri"
+      }
+    }
+  },
+  "ResourcesPage": {
+    "metadata": {
+      "title": "Ücretsiz Kaynaklar | Kitap Oluşturucu",
+      "description": "Yapay zeka ile kitap yazmak için pratik rehberler, kontrol listeleri ve şablonlar. Kitap yazma sürecinizi hızlandırmak için ücretsiz kaynakları keşfedin."
+    },
+    "hero": {
+      "badge": "Ücretsiz Kaynaklar",
+      "title": "Kitap kararınızı hızlandıracak ücretsiz kaynaklar",
+      "description": "Rehberler, şablonlar, kontrol listeleri ve eğitimler. Amaç yalnızca okumak değil — sizi daha hızlı önizlemeye, bölüm planlamaya ve gerçek kitap akışına taşımaktır."
+    },
+    "directAnswer": {
+      "question": "Kitap yazımı için hangi ücretsiz kaynaklar mevcut?",
+      "answer": "Book Generator 7 ücretsiz kaynak sunar: Yapay Zeka ile Kitap Yazma Başlangıç Paketi, 6 etkileşimli araç, kapsamlı 30 maddelik yayın öncesi kontrol listesi, niş araştırma çalışma sayfası, 15 dakikalık hızlı başlangıç rehberi, 100 kârlı kitap fikri listesi ve KDP Başlangıç Araç Seti."
+    },
+    "resources": {
+      "0": {
+        "badge": "E-posta Başlangıç Paketi",
+        "title": "Yapay Zeka ile Kitap Yazma Başlangıç Paketi",
+        "description": "Boş bir sayfaya bakmadan ilk kitabınıza başlamanız için kısa bir rehber, kalite filtresi ve yayın öncesi kontrol notları.",
+        "highlights": {
+          "0": "Konu özeti oluşturma teknikleri",
+          "1": "Bölüm planı nasıl oluşturulur",
+          "2": "Bölüm oluşturma sırasında nelere dikkat edilmeli",
+          "3": "EPUB/PDF teslimat süreci"
+        },
+        "cta": "Sihirbazda adım adım uygulayın"
+      },
+      "1": {
+        "badge": "Araç Kütüphanesi",
+        "title": "Ücretsiz Kitap Araçları",
+        "description": "Kitap fikrinizi puanlayın, taslak oluşturun, KDP nişinizi test edin, müşteri çeken bir açı bulun ve başlığınızı geliştirin.",
+        "highlights": {
+          "0": "6 farklı etkileşimli araç",
+          "1": "Kısmi ücretsiz puan + e-posta ile tam rapor",
+          "2": "Başlangıç hunisine yönlendiren CTA zinciri",
+          "3": "Doğrulayıcı, taslak, KDP ve başlık araçları"
+        },
+        "cta": "Araç Merkezini Aç"
+      },
+      "2": {
+        "badge": "Kontrol Listesi",
+        "title": "Yayın Öncesi Kitap Kontrol Listesi",
+        "description": "Amazon KDP veya başka bir platformda yayınlamadan önce gözden geçirmeniz gereken kapsamlı 30 maddelik kontrol listesi.",
+        "highlights": {
+          "0": "Meta veri ve açıklama kontrolleri",
+          "1": "Kapak tasarımı standartları",
+          "2": "EPUB doğrulama adımları",
+          "3": "KDP yükleme gereksinimleri"
+        },
+        "cta": "Kitabınızı oluşturun ve kontrol edin"
+      },
+      "3": {
+        "badge": "Şablon",
+        "title": "Niş Araştırma Çalışma Sayfası",
+        "description": "Kitabınız için doğru nişi ve hedef kitleyi bulmanıza yardımcı olmak üzere tasarlanmış doldurulabilir bir çalışma sayfası.",
+        "highlights": {
+          "0": "Hedef okuyucu profili şablonu",
+          "1": "Rekabet analizi tablosu",
+          "2": "Anahtar kelime araştırma çerçevesi",
+          "3": "Fiyatlandırma ve pazar notları"
+        },
+        "cta": "Sihirbazda nişinizi belirleyin"
+      },
+      "4": {
+        "badge": "Rehber",
+        "title": "Book Generator Hızlı Başlangıç (15 dk)",
+        "description": "İlk girişinizden ilk kitabınızı oluşturmaya kadar tüm süreci kapsayan adım adım bir rehber.",
+        "highlights": {
+          "0": "Sihirbazı doldurma",
+          "1": "Bölüm planını onaylama ve düzenleme",
+          "2": "Bölüm oluşturma ve kaydetme",
+          "3": "Çıktı ve indirme adımları"
+        },
+        "cta": "Rehberi uygulayın — hemen başlayın"
+      },
+      "5": {
+        "badge": "Fikir Listesi",
+        "title": "100 Kârlı Kitap Fikri Listesi",
+        "description": "Amazon KDP'deki en çok satan niş kategorilerde araştırılmış 100 kitap fikri. Her fikir hedef kitle notları içerir.",
+        "highlights": {
+          "0": "10 kategoride 100 fikir",
+          "1": "Her fikir için hedef kitle notları",
+          "2": "Rekabet düzeyi değerlendirmesi",
+          "3": "Fiyat aralığı önerileri"
+        },
+        "cta": "Bir fikir seçin ve başlayın"
+      },
+      "6": {
+        "badge": "KDP Araç Seti",
+        "title": "KDP Başlangıç Araç Seti",
+        "description": "Amazon KDP'de ilk kitabınızı yayınlamak için ihtiyaç duyduğunuz şablonları ve rehberleri bir araya getiren başlangıç yolu.",
+        "highlights": {
+          "0": "Kitap açıklaması şablonu",
+          "1": "Kategori seçim rehberi",
+          "2": "Fiyatlandırma stratejisi notları",
+          "3": "Yayınlama başlangıç kontrol listesi"
+        },
+        "cta": "KDP kitabınızı şimdi oluşturun"
+      }
+    },
+    "allResourcesSection": {
+      "badge": "Tüm Kaynaklar",
+      "title": "Süreci kolaylaştıran araçlar.",
+      "description": "Rehberlerden şablonlara, kontrol listelerinden video eğitimlerine kadar her aşama için hazırlanmış kaynaklar."
+    },
+    "crossLinks": {
+      "lookingFor": "Daha fazla içerik mi arıyorsunuz:"
+    },
+    "cta": {
+      "title": "Sadece okumak yerine kendi kitabınızı yazmaya başlayın.",
+      "description": "Rehberleri incelediniz ve şablonları gördünüz. Şimdi aynı mantığı kendi konu özetinizle test edin: önce önizleyin, ardından devam edip etmeyeceğinize karar verin. 30 günlük para iade garantisi.",
+      "items": {
+        "0": "Sihirbazla hızlı başlangıç",
+        "1": "Bölüm planı + bölüm oluşturma",
+        "2": "Önce önizleyin, sonra tam kitap",
+        "3": "EPUB ve PDF çıktısı"
+      }
+    }
+  },
+  "BlogPage": {
+    "metadata": {
+      "title": "Book Generator Blog | Yapay Zeka ile Kitap Yazma Rehberleri",
+      "description": "Book Generator blogunda yapay zeka ile kitap yazma, KDP hazırlığı, EPUB/PDF yayınlama adımları ve içerik planlaması hakkında pratik rehberler okuyun."
+    },
+    "hero": {
+      "badge": "Blog",
+      "title": "İtirazları aşan ve kararları hızlandıran makaleler.",
+      "description": "Bu sayfa bir haber akışı değil; ilk kez kitap yazan bir yazarın kritik sorularını hızla yanıtlayan kısa makalelerden oluşan bir koleksiyondur."
+    },
+    "introText": "Başlamak için önce nasıl çalıştığını inceleyebilir, ardından SSS ve fiyatlandırma sayfalarıyla kararınızı netleştirebilirsiniz.",
+    "introText2": "Ancak gerçek netlik genellikle okumaktan değil, kendi konu fikrinizi girerek önizlemeyi görmekten gelir.",
+    "topics": {
+      "badge": "Konular",
+      "title": "Blog hangi soruları yanıtlıyor?",
+      "description": "Haklardan ilk planlamaya, format seçiminden kapak kararlarına kadar farklı karar noktalarını hızlandıran kategoriler.",
+      "items": {
+        "0": {
+          "title": "Haklar",
+          "description": "Yapay zeka tarafından oluşturulan içeriklerde kontrol, sahiplik ve kullanıcı rolü nasıl konumlandırılır?"
+        },
+        "1": {
+          "title": "Başlarken",
+          "description": "İlk kitabınız için konu, bölüm sayısı ve kapsam nasıl seçilir?"
+        },
+        "2": {
+          "title": "Yayıncılık",
+          "description": "EPUB, PDF ve platform uyumluluğu gibi dağıtım sorularına kısa yanıtlar."
+        },
+        "3": {
+          "title": "Araştırma",
+          "description": "Konu seçimi, anahtar kelime mantığı ve talep doğrulama için basit karar makaleleri."
+        },
+        "4": {
+          "title": "Prompt Yazımı",
+          "description": "İngilizce konu özeti, ton, hedef okuyucu ve bölüm planı netliği için pratik ipuçları."
+        },
+        "5": {
+          "title": "Kapak",
+          "description": "Kapağınızın yalnızca güzel görünmekle kalmayıp satışa da hizmet etmesi için dikkat edilmesi gerekenler."
+        }
+      }
+    },
+    "articles": {
+      "badge": "Makaleler",
+      "title": "Tüm makaleler",
+      "description": "Önce temel itirazları ele alan, ardından daha ayrıntılı karar noktalarını kapsayan sade içerikler.",
+      "featuredLabel": "Öne Çıkan",
+      "readLabel": "oku"
+    },
+    "cta": {
+      "title": "Okuduktan sonra en iyi adım kendi önizlemenizi görmektir.",
+      "description": "Blog kararınızı hızlandırır, ancak gerçek netlik kendi kitap fikrinizi sisteme girdiğinizde gelir. Önce önizlemeyi görün, ardından tam kitabın kilidini açmaya karar verin.",
+      "items": {
+        "0": "Konu ve hedef okuyucu girişi",
+        "1": "Ana hat ve bölüm planı oluşturma",
+        "2": "Bölüm oluşturma ve düzenleme",
+        "3": "Önce önizleme, ardından tam kitap"
+      }
+    }
+  },
+  "LoginPage": {
+    "metadata": {
+      "title": "Giriş Yap | Kitap Oluşturucu",
+      "description": "Kitap Oluşturucu oturumunu açın, sihirbaz akışına gidin ve kitap üretimine kaldığınız yerden devam edin."
+    },
+    "emailVerified": "E-posta doğrulandı. Giriş yapabilirsiniz.",
+    "welcomeBack": "Tekrar Hoş Geldiniz",
+    "continueBook": "Kitabınıza kaldığınız yerden devam edin",
+    "dontHaveAccount": "Hesabınız yok mu?",
+    "signupLink": "Kayıt ol",
+    "trustNote": "Verileriniz bizimle güvende"
+  },
+  "SignupPage": {
+    "metadata": {
+      "title": "Kayıt Ol | Kitap Oluşturucu",
+      "description": "Bir Kitap Oluşturucu hesabı oluşturun, önizlemenizi kaydedin ve kitap iş akışınıza devam edin."
+    },
+    "createAccount": "Hesap Oluştur",
+    "startForFree": "Ücretsiz başlayın • 2 dakika",
+    "alreadyHaveAccount": "Zaten bir hesabınız var mı?",
+    "loginLink": "Giriş yap",
+    "trustNote": "Kredi kartı gerekmez • Güvenli kayıt"
+  },
+  "HomeHero": {
+    "badge": "Yapay Zeka Destekli Kitap Yazımı",
+    "title": "Uzmanlığınızı bir kitaba dönüştürün. Bu hafta ilk EPUB'ınızı alın.",
+    "subtitle": "Danışmanlar, eğitmenler ve içerik üreticileri için: Konunuzu girin, bölüm ana hatlarını onaylayın, bölümleri oluşturun, kapak ekleyin ve yayın dosyanız hazır.",
+    "ctaText": "İlk kitabınıza başlayın",
+    "secondaryCtaText": "Örnek Çıktıları Görüntüle",
+    "trustNote": "Kredi kartı gerekmez · Önce önizleme · Model maliyeti plan fiyatına dahildir · KDP uyumluluğunu kolaylaştıran teslimat yaklaşımı"
+  },
+  "HomeGallery": {
+    "badge": "Gerçek Kitap Vitrini",
+    "heading": "Maket fikirler değil — bunlar galeride dönen gerçek, üretilmiş kapaklardır.",
+    "description": "Buradaki her kitap gerçek örnek çıktılardan gelmektedir. Aynı kapak hattı, aynı dışa aktarma zinciri ve aynı kitap üretim iş akışı site genelinde yeniden kullanılmaktadır."
+  },
+  "MarketingCta": {
+    "title": "İlk kitabınızı yayımlamak için tek ve net başlangıç noktası.",
+    "description": "Sizi konu fikriden ilk yayımlanabilir dosyaya, gereksiz gösterge paneli yorgunluğu olmadan götüren bir kitap sistemi.",
+    "buttonText": "Ücretsiz Önizlemenizi Başlatın"
+  },
+  "AuthForm": {
+    "errors": {
+      "incorrectCredentials": {
+        "title": "Hatalı kimlik bilgileri",
+        "description": "E-posta veya şifre eşleşmiyor."
+      },
+      "verificationRequired": {
+        "title": "Doğrulama gerekli",
+        "description": "E-posta adresinizi doğrulamanız gerekiyor."
+      },
+      "loginFailed": {
+        "title": "Giriş başarısız"
+      },
+      "emailRequired": {
+        "title": "E-posta gerekli",
+        "description": "Lütfen e-posta adresinizi girin."
+      },
+      "passwordRequired": {
+        "title": "Şifre gerekli",
+        "description": "Lütfen şifrenizi girin."
+      },
+      "nameRequired": {
+        "title": "Ad gerekli",
+        "description": "Lütfen adınızı girin."
+      },
+      "couldNotSend": {
+        "title": "Gönderilemedi",
+        "description": "Lütfen tekrar deneyin."
+      },
+      "registrationFailed": {
+        "title": "Kayıt başarısız",
+        "description": "Lütfen tekrar deneyin."
+      },
+      "generic": {
+        "title": "Bir hata oluştu",
+        "description": "Lütfen tekrar deneyin."
+      }
+    },
+    "feedback": {
+      "linkSent": {
+        "title": "Bağlantı gönderildi",
+        "description": "E-postanızı kontrol edin."
+      },
+      "verified": {
+        "title": "Doğrulandı",
+        "description": "Hesabınız hazır."
+      },
+      "invalidLink": {
+        "title": "Geçersiz bağlantı",
+        "description": "Süresi dolmuş olabilir."
+      },
+      "magicLinkSent": {
+        "title": "Bağlantı gönderildi",
+        "description": "E-postanızdaki bağlantıya tıklayın."
+      }
+    },
+    "google": {
+      "signIn": "Google ile giriş yap",
+      "signUp": "Google ile kayıt ol"
+    },
+    "divider": "veya",
+    "fields": {
+      "fullName": {
+        "label": "Ad Soyad",
+        "placeholder": "Adınız"
+      },
+      "email": {
+        "label": "E-posta",
+        "placeholder": "ornek@mail.com"
+      },
+      "password": {
+        "label": "Şifre",
+        "placeholderLogin": "Şifreniz",
+        "placeholderRegister": "En az 8 karakter"
+      }
+    },
+    "links": {
+      "forgotPassword": "Unuttum?"
+    },
+    "buttons": {
+      "login": "Giriş Yap",
+      "register": "Kayıt Ol",
+      "processing": "İşleniyor...",
+      "magicLink": "Şifre girmek istemiyorum • E-posta bağlantısı gönder",
+      "magicLinkSending": "Gönderiliyor..."
+    },
+    "aria": {
+      "showPassword": "Şifreyi göster",
+      "hidePassword": "Şifreyi gizle"
+    }
+  },
+  "FaqData": {
+    "General": {
+      "title": "Genel",
+      "items": {
+        "0": {
+          "q": "Bu ürün ne işe yarar?",
+          "a": "Fikrinizi alır, bir taslak oluşturur, bölümler üretir ve kitabınızı yayımlanabilir çıktı dosyalarına dönüştürür."
+        },
+        "1": {
+          "q": "İngilizce içerik üretebilir miyim?",
+          "a": "Evet. Arayüz Türkçe kalır, ancak kitap içeriği İngilizce veya seçtiğiniz herhangi bir dilde üretilebilir."
+        },
+        "2": {
+          "q": "İlk kez kullanan biri bunu anlayabilir mi?",
+          "a": "Evet. Ana iş akışı 5 soruluk bir sihirbazdan ve 3 temel adımdan oluşur: fikir, taslak, yayınla."
+        },
+        "3": {
+          "q": "Önizleme gerçekten ücretsiz mi? Kart bilgisi gerekiyor mu?",
+          "a": "Evet, tamamen ücretsiz. Sihirbazı tamamlayabilir, kapağınızı ve bölüm planınızı kayıt veya kart bilgisi olmadan görebilirsiniz. İlk %20 içerik önizlemesi de dahildir. Ödeme yalnızca tam kitabı ve çıktı dosyalarını istediğinizde gereklidir."
+        },
+        "4": {
+          "q": "Yapay zeka tarafından üretilen içerik gerçekten kullanılabilir kalitede mi?",
+          "a": "Çıktı, profesyonel bir editör gibi değil, boş bir sayfadan başlamak yerine düzenlemeye hazır bir iskelet olan yapılandırılmış bir taslaktır. Herhangi bir bölümü değiştirebilir, yeniden oluşturabilir veya kendi metninizle değiştirebilirsiniz. KDP odaklı üretim iş akışı ve kitaplarımız KDP uyumluluğu gözetilerek hazırlanmaktadır."
+        },
+        "5": {
+          "q": "Bu ürün kimler için UYGUN DEĞİLDİR?",
+          "a": "Roman veya kurgu yazarları, akademik biçimlendirme (dipnotlar, kaynakça) arayanlar veya teknik dokümantasyon ihtiyacı olanlar için tasarlanmamıştır. Rehberler, uzmanlık kitapları, bilgi ürünleri veya KDP kurgusal olmayan içerikler için doğru araçtır."
+        }
+      }
+    },
+    "BookProduction": {
+      "title": "Kitap Üretimi",
+      "items": {
+        "0": {
+          "q": "Kitap nasıl oluştururum?",
+          "a": "Konu, hedef okuyucu, ton ve dil gibi kısa bilgileri girin. Sistem buna göre bir taslak ve bölüm akışı oluşturur."
+        },
+        "1": {
+          "q": "Taslağı onaylamadan önce bölümleri oluşturmak zorunda mıyım?",
+          "a": "Hayır. Önce taslağa karar vermeniz, ardından bölüm oluşturmaya geçmeniz önerilir."
+        },
+        "2": {
+          "q": "Kitabı daha sonra düzenleyebilir miyim?",
+          "a": "Evet. Bölüm içerikleri ve kitap meta verileri çalışma alanında güncellenebilir."
+        },
+        "3": {
+          "q": "Yalnızca giriş veya özet gibi tek bir parça oluşturabilir miyim?",
+          "a": "Ana iş akışı tam kitap üretimine odaklanmıştır. Gelişmiş iş akışlarında belirli bölümler üzerinde de çalışabilirsiniz."
+        },
+        "4": {
+          "q": "Türkçe yazıp İngilizce kitap üretebilir miyim?",
+          "a": "Evet. Sihirbazı tamamen Türkçe doldurabilirsiniz; sistem içeriği İngilizce dahil seçtiğiniz dilde üretir. Çeviri aracına gerek yoktur."
+        },
+        "5": {
+          "q": "Kaç bölüm oluşturuluyor? Uzunluğu kontrol edebilir miyim?",
+          "a": "Taslak aşamasında bölüm sayısını ve başlıklarını onaylarsınız; sistem genellikle 7–12 bölümlük bir taslak önerir. Bölüm ekleyebilir, kaldırabilir veya yeniden sıralayabilirsiniz."
+        }
+      }
+    },
+    "CoverAndDesign": {
+      "title": "Kapak ve Tasarım",
+      "items": {
+        "0": {
+          "q": "Kapak ekleyebilir miyim?",
+          "a": "Evet. Desteklenen iş akışlarında yerel kapak oluşturma, manuel yükleme ve yapay zeka destekli kapak seçenekleri mevcuttur."
+        },
+        "1": {
+          "q": "Arka kapak ve ek görseller destekleniyor mu?",
+          "a": "Evet. Ön ve arka kapak dosyaları, çalışma alanındaki yayınlama ve varlık iş akışlarında yönetilebilir."
+        },
+        "2": {
+          "q": "Kapaklar otomatik olarak oluşturuluyor mu?",
+          "a": "İsterseniz otomatik iş akışı kullanılır; ya da tamamen kendi yüklediğiniz görsellerle devam edebilirsiniz."
+        }
+      }
+    },
+    "DeliveryAndOutputs": {
+      "title": "Teslimat ve Çıktılar",
+      "items": {
+        "0": {
+          "q": "Hangi dosyaları alırım?",
+          "a": "Planınıza ve seçiminize bağlı olarak EPUB, PDF, HTML, Markdown ve uygulanabilir durumlarda ek e-kitap formatları alırsınız."
+        },
+        "1": {
+          "q": "Önce hangi çıktı önerilir?",
+          "a": "Önce EPUB almanız önerilir. Yapıyı kontrol ettikten sonra PDF ve diğer formatlara geçebilirsiniz."
+        },
+        "2": {
+          "q": "Çıktılar nerede saklanır?",
+          "a": "Her kitap, zaman damgalı çıktı klasörleriyle kendi klasöründe saklanır."
+        },
+        "3": {
+          "q": "EPUB dosyasını doğrudan Amazon KDP'ye yükleyebilir miyim?",
+          "a": "Evet. Oluşturulan EPUB, Amazon KDP'nin standart yükleme iş akışıyla uyumludur. KDP odaklı üretim iş akışı ve kitaplarımız KDP uyumluluğu gözetilerek hazırlanmaktadır."
+        }
+      }
+    },
+    "RightsAndPublishing": {
+      "title": "Haklar ve Yayıncılık",
+      "items": {
+        "0": {
+          "q": "İçeriğin sahibi ben miyim?",
+          "a": "Konuyu, yönü, düzenlemeleri ve nihai onayı siz sağladığınız için ortaya çıkan kitabın kontrolü kullanıcıya aittir."
+        },
+        "1": {
+          "q": "KDP veya diğer platformlarda yayınlayabilir miyim?",
+          "a": "Evet. Ürün dijital çıktılar üretir; yayınlama kararı ve platform kurallarına uyum kullanıcının sorumluluğundadır."
+        },
+        "2": {
+          "q": "ISBN sağlıyor musunuz?",
+          "a": "Hayır. Meta veri yönetimi mevcuttur, ancak ISBN temini kullanıcı veya yayıncı tarafından yapılmalıdır."
+        }
+      }
+    },
+    "SubscriptionAndPayment": {
+      "title": "Abonelik ve Ödeme",
+      "items": {
+        "0": {
+          "q": "Planımı değiştirebilir miyim?",
+          "a": "Evet. Paket yükseltme, düşürme veya iptal işlemleri faturalama alanından yönetilebilir."
+        },
+        "1": {
+          "q": "Kullanılmayan krediler devredilir mi?",
+          "a": "Hayır. Aylık krediler bir sonraki döneme aktarılmaz."
+        },
+        "2": {
+          "q": "Yanlış plan seçtiysem ne olur?",
+          "a": "Destek aracılığıyla değişiklik veya iade talebi gönderin; mümkün olan en kısa sürede değerlendirip yanıt veririz."
+        },
+        "3": {
+          "q": "4 dolarlık tek seferlik ödeme neyi kapsar?",
+          "a": "4 $ Tek Kitap planı, aylık abonelik olmaksızın bir kitap için tam erişim sağlar: tüm bölümler, kapak, EPUB ve PDF çıktısı. Süre sınırı yoktur."
+        }
+      }
+    },
+    "Support": {
+      "title": "Destek",
+      "items": {
+        "0": {
+          "q": "Nasıl destek alabilirim?",
+          "a": "İletişim sayfasındaki destek kanalları aracılığıyla teknik, teslimat veya faturalama desteği alabilirsiniz."
+        },
+        "1": {
+          "q": "Yanıt almak ne kadar sürer?",
+          "a": "Standart hedef, ilk iş günü içinde yanıt vermektir. Kritik ödeme sorunları daha hızlı ele alınır."
+        },
+        "2": {
+          "q": "Sonuç beklediğim gibi olmadıysa ne yapmalıyım?",
+          "a": "Önce konu özetini ve taslağı gözden geçirin. Gerekirse yeniden yazma, genişletme veya destek yönlendirmesiyle iş akışını düzeltin."
+        }
+      }
+    }
+  },
+  "UseCasesPage": {
+    "metadata": {
+      "title": "Kimler İçin? | Kitap Oluşturucu",
+      "description": "Kitap Oluşturucu'yu kimin ve neden kullandığını keşfedin. Yazarlar, danışmanlar, eğitmenler, kurs oluşturucular ve içerik üreticileri için yapay zeka destekli bir kitap üretim sistemi."
+    },
+    "hero": {
+      "badge": "Kim Kullanıyor?",
+      "title": "Herkes için değil.",
+      "titleHighlight": "Doğru kullanıcı için inanılmaz derecede güçlü.",
+      "description": "Bireysel yazarlardan kurumsal ekiplere, danışmanlardan KDP yayıncılarına. Kitap Oluşturucu farklı amaçlar için farklı çalışır — ancak yayına hazır bir bilgi kitabı iş akışı olduğunda en güçlü hâlini alır."
+    },
+    "directAnswer1": {
+      "question": "Kitap Oluşturucu kime yönelik?",
+      "answer": "Kitap Oluşturucu altı temel kullanıcı segmentine hizmet eder: bireysel yazarlar, danışmanlar ve koçlar, eğitmenler, KDP yayıncıları, içerik üreticileri ve organizasyonlar. Kullanıcıların %92'si 7 gün içinde yayınlıyor."
+    },
+    "directAnswer2": {
+      "question": "Kitap Oluşturucu'yu kim kullanmalı?",
+      "answer": "Kitap Oluşturucu, paylaşacak uzmanlığı olan herkes için idealdir: yazar tıkanıklığını aşmaya çalışan ilk kez yazar olanlar, otorite inşa eden danışmanlar ve koçlar, kurs içeriklerini kitaba dönüştüren eğitmenler, üretimi ölçeklendiren KDP yayıncıları."
+    },
+    "segmentsSection": {
+      "badge": "Kullanım Senaryoları",
+      "title": "Hangi senaryo size uyuyor?",
+      "description": "Altı farklı kullanıcı profili arasından size en yakın olanı bulun.",
+      "outcomeLabel": "Tipik sonuç"
+    },
+    "segments": {
+      "0": {
+        "badge": "Bireysel Yazarlar",
+        "title": "İlk kitabını yayınlamak isteyen yazarlar",
+        "description": "Yazmak istediğiniz bir fikriniz var, ancak başlamak zor geliyor. Bölüm taslağı kafanızda bir türlü oturmuyor ve aylar geçip gidiyor.",
+        "benefits": {
+          "0": "Fikrinizden 5 dakikada bölüm taslağı oluşturun",
+          "1": "Bölüm bölüm üretim — kaybolmadan yolda kalın",
+          "2": "Her seferinde tutarlı ses tonu",
+          "3": "Doğrudan EPUB ve PDF olarak indirin"
+        },
+        "outcome": "Uzun süredir ertelenen ilk rehber kitap, bölüm yapısı netleştikten sonra haftalar içinde taslağa dönüşebilir.",
+        "cta": "Yazarlar için başlangıç rehberi"
+      },
+      "1": {
+        "badge": "Danışmanlar ve Koçlar",
+        "title": "Uzmanlığını kitaba dönüştürmek isteyen profesyoneller",
+        "description": "Yıllar içinde biriktirilen bilgiyi kitaba dönüştürmek hem güvenilirliğinizi artırır hem de yeni müşterilere kapı açar. Ama zaman yok. Kitap Oluşturucu uzmanlığınızı yapılandırılmış içeriğe dönüştürür.",
+        "benefits": {
+          "0": "Potansiyel müşteri oluşturan kısa tanıtım kitapları",
+          "1": "Markanıza uygun ses tonu",
+          "2": "Metodolojinizi aktaran bölüm yapısı",
+          "3": "Kısa sürede birden fazla niş kitap"
+        },
+        "outcome": "Danışmanlık bilgisini kısa bir otorite kitabına dönüştürmek, hizmetleriniz için bir giriş ürünü ve güven inşa edici olarak işlev görebilir.",
+        "cta": "Danışmanlar için rehber"
+      },
+      "2": {
+        "badge": "Eğitmenler ve Kurs Oluşturucular",
+        "title": "Öğretim içeriklerini rehber kitaplara dönüştüren eğitimciler",
+        "description": "Kurs materyalleriniz, atölye notlarınız ve kurs modülleriniz zaten hazır. Kitap Oluşturucu bunları tutarlı bir rehber kitap yapısında bir araya getirir.",
+        "benefits": {
+          "0": "Kurs modüllerinden kitap taslağı",
+          "1": "Öğretici ton ve bölüm yapısı",
+          "2": "Bölüm sonu özetleri ve eylem maddeleri",
+          "3": "Potansiyel müşteri oluşturan kısa kitap veya ücretli rehber olarak kullanın"
+        },
+        "outcome": "Kurs veya atölye içerikleri, öğrencilerin okuyup uygulayabileceği bir rehber kitaba daha hızlı dönüştürülebilir.",
+        "cta": "Eğitimciler için başlayın"
+      },
+      "3": {
+        "badge": "KDP Yayıncıları",
+        "title": "Amazon KDP'de birden fazla başlık yayınlayan yayıncılar",
+        "description": "Aylık birden fazla başlık hedefliyorsunuz. Elle yazmak sizi yavaşlatıyor. Kitap Oluşturucu tüm yayın sürecini otomatikleştirir.",
+        "benefits": {
+          "0": "Aylık çok başlıklı üretim kapasitesi",
+          "1": "Niş araştırması ve bölüm taslağı önerileri",
+          "2": "KDP uyumlu EPUB/PDF çıktısı",
+          "3": "Maliyet-çıktı optimizasyonu"
+        },
+        "outcome": "KDP odaklı kullanıcılar için araştırma, taslak ve çıktıyı tek bir iş akışında elde etmek tekrarlayan üretim kapasitesini artırır.",
+        "cta": "KDP yayıncı planını görüntüle"
+      },
+      "4": {
+        "badge": "İçerik Üreticileri",
+        "title": "Blog, podcast ve kurslarını kitaba dönüştüren içerik üreticileri",
+        "description": "Yazılı içeriğiniz, podcastiniz, kurs materyalleriniz var. Bunları bir araya getirip kitap olarak sunmak yeni bir gelir kapısı açar.",
+        "benefits": {
+          "0": "Mevcut içerikten kitap taslağı",
+          "1": "Okuyucu kitlenize hitap eden dil",
+          "2": "Ek gelir ve potansiyel müşteri toplama fırsatı",
+          "3": "Hızlı güncellemeler ve yeni baskılar"
+        },
+        "outcome": "Dağınık blog, podcast veya kurs parçaları tek bir kitap anlatısında bir araya getirilerek yeni bir gelir yüzeyine dönüştürülebilir.",
+        "cta": "İçerik üreticisi olarak başlayın"
+      },
+      "5": {
+        "badge": "Organizasyonlar ve Ekipler",
+        "title": "Kurumsal bilgiyi yayına dönüştüren ekipler",
+        "description": "Şirket bilgisi çalışanlar arasında dağınık hâlde. Oryantasyon rehberleri, süreç kılavuzları, dahili eğitim materyalleri — hepsini tutarlı bir kitap formatına dönüştürün.",
+        "benefits": {
+          "0": "Şirket içi bilgi transferi",
+          "1": "Standartlaştırılmış oryantasyon materyalleri",
+          "2": "Kurumsal kültür ve süreç kılavuzları",
+          "3": "Çok yazarlı destek (ekip üretimi)"
+        },
+        "outcome": "Şirket içi bilgi, süreçler veya oryantasyon iş akışları tek bir kitaba dönüştürüldüğünde yeniden kullanılabilir bir varlığa dönüşür.",
+        "cta": "Kurumsal planlar için bize ulaşın"
+      }
+    },
+    "cta": {
+      "title": "Hangi segmente ait olursanız olun, ilk adım aynı — ve ücretsiz.",
+      "description": "Kredi kartı olmadan önizleyin. Konu özetinizi oluşturun, bölüm taslağını görün — bu kitabın gerçekten yayınlanmaya değer olup olmadığını netleştirin. 30 günlük para iade garantisi.",
+      "items": {
+        "0": "5 dakikada ilk konu özeti",
+        "1": "Anında bölüm taslağı oluşturma",
+        "2": "Önce önizleme, sonra tam kitap",
+        "3": "EPUB/PDF çıktısı"
+      }
+    }
+  },
+  "ComparePage": {
+    "metadata": {
+      "title": "Karşılaştırma | Kitap Oluşturucu ve Alternatifler",
+      "description": "Kitap Oluşturucu'yu manuel yazım, genel yapay zeka asistanları ve rakip araçlarla karşılaştırın. Neden özelleşmiş bir kitap üretim aracının gerekli olduğunu öğrenin."
+    },
+    "hero": {
+      "badge": "Karşılaştırma",
+      "title": "ChatGPT ile başlayabilirsiniz.",
+      "titleHighlight": "Ama bitirmek için yeterli olmayabilir.",
+      "description": "Sorun model kalitesi değil — her bölüm için promptları yeniden yazmak, tutarlı bir ton sürdürmek, kapağı ayrıca çözmek ve çıktıyı ayrıca tamamlamak."
+    },
+    "directAnswer": {
+      "question": "Kitap Oluşturucu, ChatGPT veya manuel yazımla nasıl karşılaştırılır?",
+      "answer": "Book Generator, ChatGPT'nin yerini almaz; özelleşmiş bir kitap üretim sistemidir. ChatGPT her bölüm için istem mühendisliği gerektirirken, Book Generator tek bir iş akışında konu-kitap dönüşümü, tutarlı bölüm oluşturma, KDP uyumlu EPUB/PDF çıktısı ve kapak tasarımı sunar."
+    },
+    "hiddenCost": {
+      "label": "Manuel yaklaşımın gizli maliyeti",
+      "text": "10–30 saatlik bir iş akışı tek bir araçla yönetilemez: araştırma bir yerde, taslak başka bir yerde, kapak ayrı, çıktı ayrı. Bu parçalanma, kitapların tamamlanamamasının en yaygın nedenidir."
+    },
+    "featureTable": {
+      "badge": "Özellik Tablosu",
+      "title": "Neler yapabilir, neler yapamaz?",
+      "description": "Kitap üretimi için özel olarak tasarlanmış özellikler — genel yapay zeka araçlarının sahip olmadığı şeyler.",
+      "headers": {
+        "feature": "Özellik",
+        "bookCreator": "Book Creator",
+        "manualAI": "Manuel Yapay Zeka",
+        "generalTools": "Genel Araçlar"
+      },
+      "legend": {
+        "yes": "Tam destek",
+        "partial": "Kısmi / manuel",
+        "no": "Yok"
+      },
+      "rows": {
+        "0": {
+          "feature": "Kitap odaklı konu giriş sistemi",
+          "note": "Diğer araçlar genel istemler kabul eder; kitap yapısını anlamazlar."
+        },
+        "1": {
+          "feature": "Otomatik taslak oluşturma"
+        },
+        "2": {
+          "feature": "Bölüm bölüm tutarlı içerik üretimi",
+          "note": "Uzun biçimli içerikler bağlam kaymasından zarar görür."
+        },
+        "3": {
+          "feature": "EPUB çıktısı"
+        },
+        "4": {
+          "feature": "KDP uyumlu PDF"
+        },
+        "5": {
+          "feature": "Kapak görseli oluşturma"
+        },
+        "6": {
+          "feature": "Kaynakça / referans desteği"
+        },
+        "7": {
+          "feature": "Kullanıcılar için ayrı API maliyeti yok",
+          "note": "Book Creator'da model maliyetleri plana dahildir; bazı genel araçlar ayrıca ücret alır."
+        },
+        "8": {
+          "feature": "Yayın geçmişi ve revizyonlar"
+        },
+        "9": {
+          "feature": "Türkçe kitap üretimi",
+          "note": "Genel yapay zeka araçları Türkçe içerik üretebilir, ancak yapı bozulabilir."
+        },
+        "10": {
+          "feature": "KDP niş araştırması"
+        },
+        "11": {
+          "feature": "Kurulum gerektirmez (web tabanlı)"
+        },
+        "12": {
+          "feature": "Fiyatlandırma modeli — kitap başına değer",
+          "note": "Token tabanlı araçlarda daha uzun kitap = daha yüksek maliyet demektir."
+        }
+      }
+    },
+    "alternatives": {
+      "badge": "Alternatifleri Anlamak",
+      "title": "Diğer araçlar neden yetersiz kalır?",
+      "prosLabel": "Artılar",
+      "consLabel": "Eksiler",
+      "items": {
+        "0": {
+          "name": "ChatGPT / Claude (manuel)",
+          "pros": {
+            "0": "Güçlü dil modeli",
+            "1": "Esneklik"
+          },
+          "cons": {
+            "0": "Kitap yapısı yok",
+            "1": "Her bölüm için yeni istemler yazmanız gerekir",
+            "2": "Bağlam kaymasından kaynaklanan tutarsızlık",
+            "3": "EPUB/PDF çıktısı yok",
+            "4": "Uzun kitaplar için yüksek token maliyeti"
+          }
+        },
+        "1": {
+          "name": "Jasper / Copy.ai",
+          "pros": {
+            "0": "İyi kısa biçimli içerik üretimi",
+            "1": "Şablon desteği"
+          },
+          "cons": {
+            "0": "Kitap uzunluğunda içerik için tasarlanmamış",
+            "1": "KDP çıktısı yok",
+            "2": "Türkçe kalitesi tutarsız",
+            "3": "Pahalı abonelik"
+          }
+        },
+        "2": {
+          "name": "Scrivener + Yapay Zeka eklentileri",
+          "pros": {
+            "0": "Güçlü yazarlık aracı",
+            "1": "Yapılandırılmış yazım"
+          },
+          "cons": {
+            "0": "Dik öğrenme eğrisi",
+            "1": "Karmaşık yapay zeka entegrasyonu",
+            "2": "Ücretli + eklenti maliyetleri",
+            "3": "KDP çıktısı manuel düzenleme gerektirir"
+          }
+        },
+        "3": {
+          "name": "Manuel yazım",
+          "pros": {
+            "0": "Tam kontrol",
+            "1": "Yapay zeka bağımlılığı yok"
+          },
+          "cons": {
+            "0": "Aylar veya yıllar alabilir",
+            "1": "Başlamak zor",
+            "2": "Yüksek düzenleme maliyetleri",
+            "3": "Taslak oluşturmak başlı başına bir projedir"
+          }
+        }
+      }
+    },
+    "cta": {
+      "title": "Genel araçlarla zaman kaybetmeyi bırakın — farkı kendi konunuzla görün.",
+      "items": {
+        "0": "Konu özeti → bölüm planı → kitap iş akışı",
+        "1": "KDP uyumlu EPUB / PDF",
+        "2": "Türkçe kitap desteği",
+        "3": "Önce önizleme, sonra tam kitap"
+      }
+    }
+  },
+  "ExamplesPage": {
+    "metadata": {
+      "title": "Örnek Kitaplar ve Gerçek Çıktılar | Book Creator",
+      "description": "Gerçek kapaklar, bölüm planları, ilk bölüm önizlemeleri ve EPUB/PDF/HTML çıktılarıyla örnek kitapları keşfedin. Ardından aynı iş akışıyla kendi kitabınızı oluşturmaya başlayın."
+    },
+    "directAnswer": {
+      "question": "Hangi kitap örneklerini görebilirim?",
+      "answer": "Görünür bölüm planları, ilk bölüm önizlemeleri, profesyonel kapak tasarımları ve indirilebilir EPUB/PDF çıktılarıyla 50'den fazla gerçek yapay zeka tarafından oluşturulmuş kitabı keşfedin."
+    },
+    "intro": {
+      "badge": "Örnekler neyi kanıtlar?",
+      "title": "Bu sayfa yalnızca bir vitrin değil — bir karar verme aracıdır",
+      "description": "İlk kez ziyaret eden biri burada yalnızca kapaklara bakmaz. Her örnek, yapı, içerik ve teslimat formatının gerçek düzeyini hızla anlamanıza yardımcı olmak için mevcuttur.",
+      "fourThingsHeading": "Bu örnekler size 4 şeyi gösterir",
+      "items": {
+        "0": {
+          "title": "Yapısal kalite",
+          "text": "Bölüm planı gerçekten okunabilir mi? Konu mantıklı bir iskelet oluşturuyor mu?"
+        },
+        "1": {
+          "title": "İçerik düzeyi",
+          "text": "İlk bölüm önizlemeleri sayesinde yalnızca kapakları değil, içeriğin gerçek bir hissini de görürsünüz."
+        },
+        "2": {
+          "title": "Kapak ve konumlandırma",
+          "text": "Kapak, başlık ve kategori uyumu size yayınlanabilirlik hissi veriyor mu? İşte bunu test ediyorsunuz."
+        },
+        "3": {
+          "title": "Teslimat formatı",
+          "text": "Mevcut olduğunda, HTML, PDF ve EPUB çıktılarının gerçekten hazır olup olmadığını görebilirsiniz."
+        }
+      },
+      "usageBadge": "Bu sayfa nasıl kullanılır?",
+      "instructions": {
+        "0": "Önce konunuza yakın örnekleri bulmak için kategori, dil ve arama filtrelerini kullanın.",
+        "1": "İçindekiler tablosunu, ilk bölümü ve çıktı sekmelerini keşfetmek için hızlı bakışı kullanın.",
+        "2": "Dikkatinizi çeken herhangi bir örneğin tam sayfasını daha ayrıntılı incelemek için açın.",
+        "3": "Ardından kendi konunuzu kullanarak aynı iş akışıyla kendi kitabınızı yazmaya başlayın."
+      }
+    },
+    "faqs": {
+      "0": {
+        "question": "Bu örnekler gerçek mi, yoksa sadece demo tasarımlar mı?",
+        "answer": "Bu sayfadaki örnekler gerçek üretim iş akışından geliyor — konu özeti, taslak, bölüm oluşturma, kapak ve çıktı."
+      },
+      "1": {
+        "question": "Her örnekte neleri inceleyebilirim?",
+        "answer": "Kapağı, kategoriyi, dili, bölüm sayısını, özeti, hızlı bakış önizlemesini, ilk bölümden metin örneğini ve — mevcut olduğunda — HTML/PDF/EPUB çıktılarını inceleyebilirsiniz."
+      },
+      "2": {
+        "question": "Sonuçlarım bu örneklerle tamamen aynı olacak mı?",
+        "answer": "Hayır, birebir aynı olmayacak. Ancak bu sayfa size bekleyebileceğiniz kalite düzeyini, yapısal mantığı ve teslimat formatını gösteriyor."
+      },
+      "3": {
+        "question": "Beğendiğim bir örneğe benzer bir kitap başlatabilir miyim?",
+        "answer": "Evet. Herhangi bir örnekten aynı başlangıç iş akışına geçerek kendi konunuzla benzer bir üretim sürecine başlayabilirsiniz."
+      }
+    },
+    "nextStep": {
+      "badge": "Sonraki adım",
+      "heading": "Örnekler yeterince iyi görünüyorsa, şimdi kendi konunuzu deneyin.",
+      "description": "Aynı iş akışıyla başlıyorsunuz: konu özeti, bölüm planı, önizleme, kapak ve çıktı. Örnekleri gördünüz; şimdi kendi kitabınız için aynı süreci çalıştırabilirsiniz.",
+      "btn1": "Kendi kitabınızı başlatın",
+      "btn2": "Önce nasıl çalıştığını görün",
+      "btn3": "Fiyatlandırmayı görüntüle"
+    }
+  }
+}

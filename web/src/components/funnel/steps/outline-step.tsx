@@ -33,7 +33,7 @@ const BOOK_LENGTH_ESTIMATES: Record<FunnelBookLength, string> = {
 };
 
 function formatWordCount(value: number) {
-  return new Intl.NumberFormat("en-US").format(Math.max(0, Math.round(value)));
+  return new Intl.NumberFormat("tr-TR").format(Math.max(0, Math.round(value)));
 }
 
 function defaultChapterReference(language: string, number: number) {
@@ -48,22 +48,26 @@ export function OutlineStep({
   draft,
   onUpdate,
   onUpdateOutline,
+  onManualChange,
   onNext,
   onBack,
   onAiGenerate,
   error,
   aiLoading,
   wordEstimate,
+  suggestionState,
 }: {
   draft: FunnelDraft;
   onUpdate: (changes: Partial<FunnelDraft>) => void;
   onUpdateOutline: (index: number, changes: Partial<FunnelOutlineItem>) => void;
+  onManualChange: () => void;
   onNext: () => void;
   onBack: () => void;
   onAiGenerate: () => Promise<void>;
   error: string;
   aiLoading: "" | "outline";
   wordEstimate: { min: number; max: number };
+  suggestionState: "idle" | "local_fast" | "glm_refined" | "failed";
 }) {
   const [openIndexes, setOpenIndexes] = useState<number[]>([0]);
 
@@ -88,7 +92,7 @@ export function OutlineStep({
         ...draft.outline,
         {
           title: defaultChapterReference(draft.language, nextIndex + 1),
-          summary: isTurkishLanguage(draft.language) ? "Brief purpose of this chapter." : "Short purpose of this chapter.",
+          summary: isTurkishLanguage(draft.language) ? "Bu bölümün kısa amacı." : "Short purpose of this chapter.",
           role: "core",
           length: draft.bookLength === "extended" ? "long" : "medium",
         },
@@ -108,6 +112,14 @@ export function OutlineStep({
 
   const avgWordEstimate = Math.round((wordEstimate.min + wordEstimate.max) / 2);
   const estimatedPages = Math.round(avgWordEstimate / 167);
+  const suggestionStatusLabel =
+    suggestionState === "glm_refined"
+      ? "AI refined"
+      : suggestionState === "failed"
+        ? "AI unavailable, using fast suggestions"
+        : aiLoading === "outline"
+          ? "AI is refining"
+          : "Fast suggestions ready";
 
   return (
     <form
@@ -120,7 +132,9 @@ export function OutlineStep({
     >
       {/* ── Word Count Estimate ── */}
       <p className="text-base font-medium text-muted-foreground rounded-xl bg-muted/50 px-4 py-3">
-        📊 ~{formatWordCount(avgWordEstimate)} words · {draft.outline.length} chapter · ~{estimatedPages} pages
+        {isTurkishLanguage(draft.language)
+          ? `📊 ~${formatWordCount(avgWordEstimate)} kelime · ${draft.outline.length} bölüm · ~${estimatedPages} sayfa`
+          : `📊 ~${formatWordCount(avgWordEstimate)} words · ${draft.outline.length} chapter · ~${estimatedPages} pages`}
       </p>
 
       {/* ── Book Length Selector — Horizontal Pill Buttons ── */}
@@ -142,7 +156,10 @@ export function OutlineStep({
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-card text-foreground border-border/60 hover:border-primary/30",
                 )}
-                onClick={() => onUpdate({ bookLength: value })}
+                onClick={() => {
+                  onManualChange();
+                  onUpdate({ bookLength: value });
+                }}
               >
                 {bookLengthLabel(value, draft.language)}{" "}
                 <span className="opacity-60">({BOOK_LENGTH_ESTIMATES[value]})</span>
@@ -157,15 +174,22 @@ export function OutlineStep({
         <label className="text-base sm:text-lg font-bold text-foreground">
           Chapter Plan
         </label>
-        <button
-          type="button"
-          onClick={() => void onAiGenerate()}
-          disabled={aiLoading === "outline"}
-          className="inline-flex h-12 items-center gap-2 rounded-2xl bg-primary/8 border border-primary/20 px-5 text-sm sm:text-base font-semibold text-primary hover:bg-primary/15 active:scale-[0.97] transition-all disabled:opacity-50 disabled:pointer-events-none"
-        >
-          <Sparkles className="size-4" />
-          {aiLoading === "outline" ? "Generateuluyor…" : "✨ AI ile Generate"}
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+            {suggestionStatusLabel}
+          </span>
+          <button
+            type="button"
+            onClick={() => void onAiGenerate()}
+            disabled={aiLoading === "outline"}
+            className="inline-flex h-12 items-center gap-2 rounded-2xl bg-primary/8 border border-primary/20 px-5 text-sm sm:text-base font-semibold text-primary hover:bg-primary/15 active:scale-[0.97] transition-all disabled:opacity-50 disabled:pointer-events-none"
+          >
+            <Sparkles className="size-4" />
+            {aiLoading === "outline"
+              ? (isTurkishLanguage(draft.language) ? "Oluşturuluyor…" : "Generating…")
+              : (isTurkishLanguage(draft.language) ? "✨ AI ile Oluştur" : "✨ Generate with AI")}
+          </button>
+        </div>
       </div>
 
       {/* ── Chapter Accordion ── */}
@@ -220,13 +244,16 @@ export function OutlineStep({
                       >
                         Title
                       </label>
-                      <Input
-                        id={`outline-title-${index}`}
-                        value={item.title}
-                        onChange={(event) => onUpdateOutline(index, { title: event.target.value })}
-                        placeholder="Chapter title"
-                        className="h-11 text-sm px-3 rounded-xl"
-                      />
+                        <Input
+                          id={`outline-title-${index}`}
+                          value={item.title}
+                          onChange={(event) => {
+                            onManualChange();
+                            onUpdateOutline(index, { title: event.target.value });
+                          }}
+                          placeholder="Chapter title"
+                          className="h-11 text-sm px-3 rounded-xl"
+                        />
                     </div>
 
                     {/* Summary */}
@@ -240,7 +267,10 @@ export function OutlineStep({
                       <Textarea
                         id={`outline-summary-${index}`}
                         value={item.summary}
-                        onChange={(event) => onUpdateOutline(index, { summary: event.target.value })}
+                        onChange={(event) => {
+                          onManualChange();
+                          onUpdateOutline(index, { summary: event.target.value });
+                        }}
                         placeholder="What will be covered in this chapter?"
                         rows={3}
                         className="min-h-[80px] text-sm px-3 py-2.5 rounded-xl resize-none leading-relaxed"
@@ -254,12 +284,15 @@ export function OutlineStep({
                           htmlFor={`outline-role-${index}`}
                           className="text-sm font-bold text-muted-foreground mb-2 block"
                         >
-                          Rol
+                          {isTurkishLanguage(draft.language) ? "Rol" : "Role"}
                         </label>
                         <select
                           id={`outline-role-${index}`}
                           value={item.role}
-                          onChange={(event) => onUpdateOutline(index, { role: event.target.value as FunnelChapterRole })}
+                          onChange={(event) => {
+                            onManualChange();
+                            onUpdateOutline(index, { role: event.target.value as FunnelChapterRole });
+                          }}
                           className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-ring/50 focus:ring-2 focus:ring-ring/20"
                         >
                           {CHAPTER_ROLES.map((role) => (
@@ -279,7 +312,10 @@ export function OutlineStep({
                         <select
                           id={`outline-length-${index}`}
                           value={item.length}
-                          onChange={(event) => onUpdateOutline(index, { length: event.target.value as FunnelChapterLength })}
+                          onChange={(event) => {
+                            onManualChange();
+                            onUpdateOutline(index, { length: event.target.value as FunnelChapterLength });
+                          }}
                           className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-ring/50 focus:ring-2 focus:ring-ring/20"
                         >
                           {CHAPTER_LENGTHS.map((length) => (
@@ -301,7 +337,10 @@ export function OutlineStep({
                         size="sm"
                         className="h-auto gap-1 px-2 text-sm text-destructive/60 hover:text-destructive"
                         disabled={draft.outline.length <= 3}
-                        onClick={() => removeChapter(index)}
+                        onClick={() => {
+                          onManualChange();
+                          removeChapter(index);
+                        }}
                       >
                         <Trash2 className="size-3.5" />
                         🗑️ Sil
@@ -318,7 +357,10 @@ export function OutlineStep({
       {/* ── Add Chapter Button ── */}
       <button
         type="button"
-        onClick={addChapter}
+        onClick={() => {
+          onManualChange();
+          addChapter();
+        }}
         className="w-full h-12 rounded-2xl border border-dashed border-border/60 px-5 text-base font-medium text-muted-foreground hover:border-primary/40 hover:text-primary transition-all"
       >
         <Plus className="size-4 inline-block mr-1.5 -mt-0.5" />

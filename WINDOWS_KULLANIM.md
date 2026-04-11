@@ -43,7 +43,9 @@ start-web.bat
 
 Notes:
 
-- `start-web.bat` runs in `serve` mode by default.
+- `start-web.bat` runs in `dev` mode by default (stabil profile).
+- Default `dev` mode starts dashboard and runs dependency/prisma checks.
+- Use `start-web.bat dev-fast` for fast startup that skips dashboard/check steps.
 - The server runs as long as the window stays open; closing the window stops the server.
 - `book-generator.bat web` now cleanly shuts down old web and dashboard processes and restarts fresh.
 - Use `start-web.bat reset` if needed.
@@ -66,6 +68,13 @@ To clean restart:
 ```bat
 cd C:\Users\ihsan\Desktop\BOOK
 start-web.bat reset
+```
+
+To start with fast profile (skip dashboard/check steps):
+
+```bat
+cd C:\Users\ihsan\Desktop\BOOK
+start-web.bat dev-fast
 ```
 
 To repair Next.js dependencies and restart:

@@ -1,0 +1,179 @@
+{
+  "Common": {
+    "skipToMain": "跳至主要内容",
+    "loading": "加载中..."
+  },
+  "Metadata": {
+    "defaultTitle": "图书生成器 - 用AI写书",
+    "defaultDescription": "AI驱动的图书生成平台。通过5个问题，将您的想法转化为可出版的书籍、封面和EPUB/PDF输出。"
+  },
+  "LocaleSwitcher": {
+    "label": "语言",
+    "title": "更改语言"
+  },
+  "localeNames": {
+    "en": "英语",
+    "tr": "土耳其语",
+    "de": "德语",
+    "fr": "法语",
+    "es": "西班牙语",
+    "ar": "阿拉伯语",
+    "ru": "俄语",
+    "zh": "中文",
+    "ja": "日语",
+    "ko": "韩语",
+    "it": "意大利语",
+    "pt": "葡萄牙语"
+  },
+  "nav": {
+    "howItWorks": "工作原理",
+    "examples": "示例",
+    "pricing": "定价",
+    "tools": "工具",
+    "faq": "常见问题",
+    "login": "登录",
+    "myBooks": "我的图书",
+    "newBook": "新建图书",
+    "freePreview": "免费预览",
+    "goHome": "返回首页",
+    "mainMenu": "主菜单",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单",
+    "mobileMenu": "移动端菜单",
+    "mobileSecondaryMenu": "移动端辅助菜单",
+    "more": "更多",
+    "brandName": "图书生成器",
+    "howItWorksDesc": "5个问题完成一本书",
+    "examplesDesc": "用AI创作的真实书籍",
+    "useCasesDesc": "适用于教育工作者、顾问和创作者",
+    "pricingDesc": "每本书仅需$4起",
+    "compareDesc": "查看我们的优势",
+    "toolsDesc": "免费写作和出版工具",
+    "resourcesDesc": "指南、模板和技巧",
+    "blogDesc": "写作建议和产品更新"
+  },
+  "footer": {
+    "freePreview": "免费预览",
+    "compare": "比较",
+    "freeTools": "免费工具",
+    "blog": "博客",
+    "resources": "资源",
+    "useCases": "使用案例",
+    "about": "关于",
+    "contact": "联系我们",
+    "affiliate": "联盟计划",
+    "privacy": "隐私政策",
+    "terms": "服务条款",
+    "refund": "退款政策",
+    "product": "产品",
+    "company": "公司",
+    "legal": "法律",
+    "writingTips": "写作技巧与活动",
+    "newsletterDesc": "加入我们的每周通讯，更快地写出您的第一本书。",
+    "emailPlaceholder": "您的电子邮件地址",
+    "emailLabel": "电子邮件地址",
+    "subscribe": "订阅",
+    "subscribed": "已订阅！",
+    "ctaTitle": "<em>今天</em>就开始写您的书",
+    "ctaSub": "通过免费预览在几分钟内创建您的第一本书。",
+    "ctaBtn": "开始免费预览",
+    "brandDesc": "AI驱动、简单且优质的图书写作界面。以专业标准创建您的第一本书。",
+    "copyright": "图书生成器。保留所有权利。",
+    "tagline": "AI驱动的图书写作。",
+    "theme": "主题",
+    "goHome": "返回首页",
+    "trust": {
+      "kdp": "简化KDP合规性的交付方法",
+      "refund": "30天内退款",
+      "noApiCost": "模型费用已包含在套餐价格中"
+    }
+  },
+  "HomePage": {
+    "metadata": {
+      "title": "Write a Book with AI | Create KDP-Ready EPUB in 15 Minutes",
+      "description": "Turn your expertise into a publish-ready book with AI. Generate drafts, covers, and EPUB/PDF output in 5 questions. Preview for free — no credit card required.",
+      "ogTitle": "Write a Book with AI",
+      "ogDescription": "Turn your expertise into a publish-ready book in 15 minutes. Preview for free."
+    },
+    "middleBlock": {
+      "title": "Write a Book with AI: Turn Your Idea into EPUB and PDF",
+      "description": "Turn your expertise into a publish-ready book with Book Creator. AI-powered draft generation, cover design, and KDP-compatible EPUB/PDF output in a single workflow.",
+      "subDescription": "Preview your book for free, unlock full access when you like it. Start immediately — no credit card required.",
+      "cards": {
+        "a": {
+          "title": "For Educators, Consultants, and Content Creators",
+          "description": "An AI-powered book writing platform for anyone who wants to turn their expertise into a KDP book. E-book creation is now a single workflow.",
+          "cta": "See all use cases →"
+        },
+        "b": {
+          "title": "No More Blank Page or Scattered Tools",
+          "description": "Write your book with AI — draft, content, and output all on one platform. Complete your book without needing different tools.",
+          "cta": "See how we compare →"
+        },
+        "c": {
+          "title": "KDP-Compatible EPUB and PDF Files",
+          "description": "Editable chapters, professional cover, and publish-ready EPUB + PDF outputs. Compatible with Kindle and KDP."
+        }
+      }
+    },
+    "pricing": {
+      "tag": "Book Pricing",
+      "title": "Prepare Your First Book for $4 — KDP-Ready EPUB and PDF Included",
+      "description": "Access a complete book for $4: AI-powered draft, professional cover, EPUB and PDF outputs. Preview for free, then unlock full access."
+    },
+    "faq": {
+      "heading": {
+        "badge": "Book Writing FAQ",
+        "title": "Frequently Asked Questions About Writing a Book with AI",
+        "description": "How does the AI book creator work, what's the output quality, and is it KDP-compatible? The most critical questions about the book writing process.",
+        "actionLabel": "All questions"
+      },
+      "quality": {
+        "question": "Can an AI-written book really be high quality?",
+        "answer": "AI creates the draft — you control the quality. Edit every chapter, regenerate what you don't like. {kdpLiveBooksClaim} of our books are live with a {kdpGuaranteeClaim} guarantee."
+      },
+      "duration": {
+        "question": "How long does it take to write a book with AI?",
+        "answer": "Enter your topic and get a publish-ready EPUB and PDF in 30–90 minutes. Most books are completed in a single session. According to user surveys, 92% of authors publish within 7 days compared to 3-6 months with traditional writing methods."
+      },
+      "kdp": {
+        "question": "Can I upload the EPUB and PDF outputs directly to KDP?",
+        "answer": "Yes. You get KDP-compatible EPUB and PDF outputs. We recommend a final review with your own checklist before uploading."
+      },
+      "creditCard": {
+        "question": "我需要信用卡才能开始吗?",
+        "answer": "不需要。从免费预览开始——浏览您的书籍草稿、封面和大纲，无需输入任何付款信息。仅在您对结果满意时升级。"
+      },
+      "formats": {
+        "question": "有哪些输出格式可用?",
+        "answer": "您将获得EPUB(用于Kindle和所有电子阅读器)、PDF(用于按需印刷)和可共享的HTML预览。所有输出都可编辑且KDP就绪。"
+      },
+      "claims": {
+        "kdpAccept": "KDP已接受",
+        "guarantee": "保证"
+      },
+      "ctaLabel": "开始免费预览"
+    },
+    "cta": {
+      "title": "Start Writing Your Book with AI Today",
+      "description": "Enter your topic and create your free preview in 15 minutes. {noApiCostClaim}, no credit card required.",
+      "items": {
+        "0": "AI-powered draft, cover, and content ready",
+        "1": "Free preview — unlock full access when you like it",
+        "2": "KDP-compatible EPUB + PDF output"
+      }
+    },
+    "testimonials": {
+      "badge": "客户评价",
+      "title": "作者怎么说",
+      "description": "来自真实作者的真实成果。",
+      "aggregateLabel": "{count}+来自真实作者的已验证评价"
+    },
+    "showcase": {
+      "badge": "真实书籍、真实封面",
+      "title": "AI生成的真实书籍示例",
+      "description": "每本书都从主题摘要到草稿，从草稿到EPUB和PDF工作流程。您可以在本周使用相同的流程开始您自己的书籍。",
+      "ctaLabel": "开始免费书籍预览"
+    }
+  }
+}

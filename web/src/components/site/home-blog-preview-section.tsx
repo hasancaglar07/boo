@@ -7,7 +7,7 @@ export function HomeBlogPreviewSection() {
   const featured = blogPosts.slice(0, 3);
 
   return (
-    <section className="border-b border-border/80 py-18">
+    <section className="border-b border-border/80 py-16 md:py-20">
       <div className="shell">
         <SectionHeading
           badge="Book Writing Guide"
@@ -17,12 +17,12 @@ export function HomeBlogPreviewSection() {
           actionLabel="View all posts"
         />
 
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
+        <div className="mt-10 grid gap-4 md:gap-5 md:grid-cols-3">
           {featured.map((post) => (
             <a
               key={post.slug}
               href={`/blog/${post.slug}`}
-              className="group flex flex-col rounded-[28px] border border-border/80 bg-card/80 p-5 shadow-sm transition-shadow hover:shadow-md"
+              className="group flex h-full flex-col rounded-[28px] border border-border/80 bg-card/80 p-5 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-center justify-between">
                 <span className="rounded-full border border-border/80 bg-background px-3 py-1 text-[11px] font-medium text-muted-foreground">

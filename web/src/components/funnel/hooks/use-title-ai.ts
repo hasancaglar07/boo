@@ -17,6 +17,23 @@ function defaultAudience(language: FunnelLanguage) {
 }
 
 export type TitleOption = { title: string; subtitle: string };
+export type TitleSuggestionSource = "local_fast" | "glm_refined";
+
+function normalizeTitleOptions(items: TitleOption[]) {
+  const seen = new Set<string>();
+  return items
+    .map((item) => ({
+      title: String(item.title || "").trim(),
+      subtitle: String(item.subtitle || "").trim(),
+    }))
+    .filter((item) => {
+      if (!item.title) return false;
+      const key = `${item.title}::${item.subtitle}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
 
 export function useTitleAi(
   draft: FunnelDraft,
@@ -27,7 +44,21 @@ export function useTitleAi(
 ) {
   const [titleOptions, setTitleOptions] = useState<TitleOption[]>([]);
   const [aiLoading, setAiLoading] = useState<"" | "title">("");
+  const [source, setSource] = useState<TitleSuggestionSource>("local_fast");
+  const [isRefining, setIsRefining] = useState(false);
+  const [selectionLocked, setSelectionLocked] = useState(false);
   const autoFillRef = useRef(false);
+  const draftRef = useRef(draft);
+  const selectionLockedRef = useRef(selectionLocked);
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
+
+  useEffect(() => {
+    selectionLockedRef.current = selectionLocked;
+  }, [selectionLocked]);
 
   async function handleTitleAi(forceReplace = false) {
     if (!draft.topic.trim()) {
@@ -35,9 +66,23 @@ export function useTitleAi(
       return;
     }
 
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    const requestSnapshot = {
+      title: draftRef.current.title.trim(),
+      subtitle: draftRef.current.subtitle.trim(),
+    };
+
     setAiLoading("title");
+    setIsRefining(true);
     try {
-      let suggestions = localTitleSuggestions(draft);
+      let suggestions = normalizeTitleOptions(localTitleSuggestions(draft));
+      setTitleOptions(suggestions);
+      setSource("local_fast");
+      trackEvent("title_suggestions_fallback_shown", { language: draft.language, count: suggestions.length });
+      if (suggestions[0] && (forceReplace || !requestSnapshot.title)) {
+        updateDraft({ title: suggestions[0].title, subtitle: suggestions[0].subtitle });
+      }
 
       const response = await runWorkflow({
         action: "topic_suggest",
@@ -45,6 +90,9 @@ export function useTitleAi(
         audience: draft.audience || defaultAudience(draft.language),
         category: bookTypeLabel(draft.bookType),
         language: draft.language,
+      }, {
+        timeoutMs: 8_000,
+        retryDelaysMs: [200],
       });
       if (response.ok === false) {
         const message =
@@ -56,27 +104,52 @@ export function useTitleAi(
       const generatedPayload = response.generated as { titles?: Array<Record<string, unknown>> } | undefined;
       const generated = Array.isArray(generatedPayload?.titles) ? generatedPayload.titles : [];
       if (generated.length) {
-        suggestions = generated.map((item) => ({
+        suggestions = normalizeTitleOptions(generated.map((item) => ({
           title: String(item.title || "").trim(),
           subtitle: String(item.subtitle || "").trim(),
-        }));
+        })));
       }
 
-      setTitleOptions(suggestions.filter((item) => item.title));
-      if ((forceReplace || !draft.title.trim()) && suggestions[0]) {
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+      setTitleOptions(suggestions);
+      setSource("glm_refined");
+      const currentDraft = draftRef.current;
+      const selectionChanged =
+        selectionLockedRef.current ||
+        currentDraft.title.trim() !== requestSnapshot.title ||
+        currentDraft.subtitle.trim() !== requestSnapshot.subtitle;
+      if (
+        suggestions[0] &&
+        (
+          !currentDraft.title.trim() ||
+          (forceReplace && !selectionChanged)
+        )
+      ) {
         updateDraft({ title: suggestions[0].title, subtitle: suggestions[0].subtitle });
       }
+      setError("");
+      trackEvent("title_suggestions_refined", { language: draft.language, count: suggestions.length });
       trackEvent("title_ai_used", { language: draft.language });
     } catch (error) {
-      const suggestions = localTitleSuggestions(draft);
+      const suggestions = normalizeTitleOptions(localTitleSuggestions(draft));
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
       setTitleOptions(suggestions);
-      if (suggestions[0] && (forceReplace || !draft.title.trim())) {
+      setSource("local_fast");
+      if (suggestions[0] && (forceReplace || !draftRef.current.title.trim())) {
         updateDraft({ title: suggestions[0].title, subtitle: suggestions[0].subtitle });
       }
-      setError(error instanceof Error ? error.message : "AI title suggestions could not be retrieved.");
+      setError("");
+      trackEvent("workflow_timeout", { action: "topic_suggest" });
       trackEvent("title_ai_used", { fallback: true });
     } finally {
-      setAiLoading("");
+      if (requestId === requestIdRef.current) {
+        setAiLoading("");
+        setIsRefining(false);
+      }
     }
   }
 
@@ -94,12 +167,14 @@ export function useTitleAi(
   useEffect(() => {
     if (!ready || step !== "title" || autoFillRef.current) return;
     autoFillRef.current = true;
-    const local = localTitleSuggestions(draft);
+    const local = normalizeTitleOptions(localTitleSuggestions(draft));
     if (!draft.title.trim() && local[0]) {
       setTitleOptions(local);
+      setSource("local_fast");
       updateDraft({ title: local[0].title, subtitle: local[0].subtitle || draft.subtitle });
     } else if (!titleOptions.length) {
       setTitleOptions(local);
+      setSource("local_fast");
     }
     if (!draft.topic.trim()) return;
     void handleTitleAi(true);
@@ -109,6 +184,11 @@ export function useTitleAi(
     titleOptions,
     setTitleOptions,
     aiLoading,
+    source,
+    isRefining,
+    selectionLocked,
+    lockSelection: () => setSelectionLocked(true),
+    unlockSelection: () => setSelectionLocked(false),
     handleTitleAi,
     handleSubtitleAi,
   };

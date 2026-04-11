@@ -62,6 +62,22 @@ export function ChapterListSidebar({
     );
   };
 
+  const handleChapterKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    chapterIndex: number,
+    isLocked: boolean,
+    closeSheet = false,
+  ) => {
+    if (isLocked) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onSelectChapter(chapterIndex);
+      if (closeSheet) {
+        setIsMobileSheetOpen(false);
+      }
+    }
+  };
+
   const getStatusIcon = (status?: ChapterItem["status"]) => {
     switch (status) {
       case "complete":
@@ -138,13 +154,15 @@ export function ChapterListSidebar({
               const isLocked = chapter.status === "locked";
 
               return (
-                <button
+                <div
                   key={chapter.number || index}
-                  type="button"
+                  role="button"
+                  tabIndex={isLocked ? -1 : 0}
+                  aria-disabled={isLocked}
                   onClick={() => !isLocked && onSelectChapter(index)}
-                  disabled={isLocked}
+                  onKeyDown={(event) => handleChapterKeyDown(event, index, isLocked)}
                   className={`
-                    w-full text-left rounded-lg px-3 py-2.5 transition-all duration-150
+                    group w-full text-left rounded-lg px-3 py-2.5 transition-all duration-150
                     ${isSelected
                       ? "bg-primary/10 border border-primary/30 shadow-sm"
                       : "hover:bg-accent/50 border border-transparent"
@@ -187,7 +205,7 @@ export function ChapterListSidebar({
                       <PenTool className="size-3" />
                     </Button>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
@@ -264,16 +282,18 @@ export function ChapterListSidebar({
                   const isLocked = chapter.status === "locked";
 
                   return (
-                    <button
+                    <div
                       key={chapter.number || index}
-                      type="button"
+                      role="button"
+                      tabIndex={isLocked ? -1 : 0}
+                      aria-disabled={isLocked}
                       onClick={() => {
                         if (!isLocked) {
                           onSelectChapter(index);
                           setIsMobileSheetOpen(false);
                         }
                       }}
-                      disabled={isLocked}
+                      onKeyDown={(event) => handleChapterKeyDown(event, index, isLocked, true)}
                       className={`
                         w-full text-left rounded-xl px-4 py-4 transition-all duration-150
                         ${isSelected
@@ -322,7 +342,7 @@ export function ChapterListSidebar({
                           <PenTool className="size-4" />
                         </Button>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>

@@ -42,7 +42,7 @@ import {
   type Book,
 } from "@/lib/dashboard-api";
 import { useSessionGuard } from "@/lib/use-session-guard";
-import { cn } from "@/lib/utils";
+import { cn, titleCase } from "@/lib/utils";
 
 const tabOptions = ["home", "book", "writing", "research", "publish"] as const;
 type WorkspaceTab = (typeof tabOptions)[number];
@@ -98,6 +98,27 @@ function resolveSelectedCoverVariant(book: Book | null) {
     variants[0] ||
     null
   );
+}
+
+function humanizeModeLabel(value?: string, fallback = "Auto") {
+  const normalized = String(value || "").trim().replace(/[_-]+/g, " ");
+  return normalized ? titleCase(normalized) : fallback;
+}
+
+function formatWordCount(value?: number) {
+  const amount = Number(value || 0);
+  if (!Number.isFinite(amount) || amount <= 0) return "0";
+  return amount.toLocaleString();
+}
+
+function formatStatusDate(value?: string) {
+  if (!value) return "";
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(parsed);
 }
 
 // --- Toast helpers ---
@@ -520,6 +541,30 @@ export function WorkspaceScreen({
     research_count: 0,
     export_count: 0,
   };
+  const fullGeneration = stats.full_generation;
+  const currentWordCount = stats.current_word_count || fullGeneration?.word_count || 0;
+  const targetWordCount = stats.target_word_count || fullGeneration?.target_word_count || currentDraft.book_target_words || 0;
+  const readyChapterCount = fullGeneration?.ready_count || stats.chapter_ready_count || stats.chapter_count || currentDraft.chapters.length;
+  const targetChapterCount = fullGeneration?.target_count || stats.chapter_target_count || currentDraft.chapter_plan?.length || currentDraft.chapters.length;
+  const coverPairScore = Number(selectedCoverVariant?.pair_score || currentDraft.cover_pair_score || 0);
+  const selectedCoverConfidence = Number(selectedCoverVariant?.selected_cover_confidence || currentDraft.selected_cover_confidence || 0);
+  const frontVisualGrade = Number(selectedCoverVariant?.front_visual_grade || currentDraft.front_visual_grade || 0);
+  const frontGenreFitScore = Number(selectedCoverVariant?.front_genre_fit_score || currentDraft.front_genre_fit_score || 0);
+  const frontTextValidationScore = Number(selectedCoverVariant?.front_text_validation_score || currentDraft.front_text_validation_score || 0);
+  const frontAiAttemptCount = Number(selectedCoverVariant?.front_ai_attempt_count || currentDraft.front_ai_attempt_count || 0);
+  const rejectedVariantCount = Object.keys(currentDraft.cover_rejection_reasons || {}).length;
+  const selectedCoverFrontUrl = selectedCoverVariant?.front_image ? buildBookAssetUrl(slug, selectedCoverVariant.front_image) : undefined;
+  const selectedCoverBackUrl = selectedCoverVariant?.back_image ? buildBookAssetUrl(slug, selectedCoverVariant.back_image) : undefined;
+  const coverTextStrategy = selectedCoverVariant?.text_strategy || currentDraft.cover_text_strategy || "full_ai_front";
+  const coverMode = selectedCoverVariant?.cover_mode || currentDraft.cover_mode || "full_ai_front";
+  const styleDirection = selectedCoverVariant?.style_direction || currentDraft.style_direction || "genre_split";
+  const wrapScope = selectedCoverVariant?.wrap_scope || currentDraft.wrap_scope || "ai_front_only";
+  const qualityGate = selectedCoverVariant?.quality_gate || currentDraft.quality_gate || "best_available";
+  const textSafeZoneStatus = selectedCoverVariant?.text_safe_zone_status || currentDraft.text_safe_zone_status || "";
+  const selectedCoverHardRejects = selectedCoverVariant?.front_hard_reject_reasons || currentDraft.front_hard_reject_reasons || [];
+  const openingSequenceValid = currentDraft.opening_sequence_valid;
+  const nextRetryLabel = formatStatusDate(fullGeneration?.next_retry_at);
+  const isFullGenerationWaiting = fullGeneration?.stage === "waiting";
 
   // --- RESEARCH ---
   const progressScore =
@@ -1121,6 +1166,55 @@ export function WorkspaceScreen({
                       </div>
                     </Button>
                   </div>
+
+                  {fullGeneration ? (
+                    <div className={cn(
+                      "rounded-2xl border px-4 py-3",
+                      isFullGenerationWaiting
+                        ? "border-amber-500/30 bg-amber-500/5"
+                        : "border-border/70 bg-muted/20",
+                    )}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className="border-border/70 bg-background text-foreground">
+                          {humanizeModeLabel(fullGeneration.chapter_generation_mode, "Three Pass Compact")}
+                        </Badge>
+                        {isFullGenerationWaiting ? (
+                          <Badge className="border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                            Waiting To Retry
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <div className="mt-2 text-sm font-medium text-foreground">
+                        {fullGeneration.message || "Generation status unavailable."}
+                      </div>
+                      <div className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+                        <div>
+                          Progress
+                          <div className="mt-1 font-medium text-foreground">
+                            {readyChapterCount} / {targetChapterCount} chapters
+                          </div>
+                        </div>
+                        <div>
+                          Current segment
+                          <div className="mt-1 font-medium text-foreground">
+                            {fullGeneration.current_chapter ? `Chapter ${fullGeneration.current_chapter}` : "Idle"}
+                            {fullGeneration.segment_count ? ` · ${fullGeneration.segment_index || 0}/${fullGeneration.segment_count}` : ""}
+                          </div>
+                        </div>
+                        <div>
+                          Next retry
+                          <div className="mt-1 font-medium text-foreground">
+                            {nextRetryLabel || "Not scheduled"}
+                          </div>
+                        </div>
+                      </div>
+                      {fullGeneration.pause_reason ? (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Pause reason: <span className="font-medium text-foreground">{fullGeneration.pause_reason}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </CardContent>
               </Card>
 
@@ -1197,22 +1291,135 @@ export function WorkspaceScreen({
                         <Badge className="border-border/70 bg-background text-foreground">{selectedCoverVariant.label}</Badge>
                         <Badge className="border-border/70 bg-background text-foreground">{selectedCoverVariant.provider || "vertex"}</Badge>
                         <Badge className="border-border/70 bg-background text-foreground">{selectedCoverVariant.render_mode || "ai-signature"}</Badge>
+                        <Badge className="border-border/70 bg-background text-foreground">{humanizeModeLabel(currentDraft.cover_style_mode, "Bookstore Bold")}</Badge>
+                        <Badge className="border-border/70 bg-background text-foreground">{humanizeModeLabel(coverMode, "Full Ai Front")}</Badge>
+                        <Badge className="border-border/70 bg-background text-foreground">{humanizeModeLabel(styleDirection, "Genre Split")}</Badge>
+                        <Badge className={cn(
+                          "border-border/70 bg-background text-foreground"
+                        )}>
+                          {humanizeModeLabel(coverTextStrategy, "Full Ai Front")}
+                        </Badge>
                         <Badge className={cn(
                           "border-transparent",
-                          selectedCoverValidation?.valid
+                          textSafeZoneStatus === "pass"
                             ? "bg-green-500/15 text-green-700 dark:text-green-400"
-                            : "bg-destructive/15 text-destructive"
+                            : textSafeZoneStatus === "fail"
+                            ? "bg-destructive/15 text-destructive"
+                            : "bg-muted text-muted-foreground"
                         )}>
-                          {selectedCoverValidation?.valid ? "Text Validation Passed" : "Text Validation Required"}
+                          {textSafeZoneStatus === "pass"
+                            ? "Safe Zone Passed"
+                            : textSafeZoneStatus === "fail"
+                            ? "Safe Zone Failed"
+                            : "Safe Zone Pending"}
                         </Badge>
                       </div>
                       <div className="space-y-1 text-sm text-muted-foreground">
                         <div>Family: <span className="font-medium text-foreground">{selectedCoverVariant.family}</span></div>
                         <div>Template: <span className="font-medium text-foreground">{selectedCoverVariant.template || "reference-classic"}</span></div>
                         <div>Layout: <span className="font-medium text-foreground">{selectedCoverVariant.layout || "auto"}</span></div>
+                        <div>Wrap scope: <span className="font-medium text-foreground">{humanizeModeLabel(wrapScope, "Ai Front Only")}</span></div>
                       </div>
-                      {selectedCoverValidation ? (
-                        <div className="grid gap-2 sm:grid-cols-3">
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Book length mode
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {humanizeModeLabel(currentDraft.book_length_mode, "25K Standard")}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Word target
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {formatWordCount(currentWordCount)} / {formatWordCount(targetWordCount)}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Chapter progress
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {readyChapterCount} / {targetChapterCount}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Pair score
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {coverPairScore ? coverPairScore.toFixed(1) : "Pending"}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Cover confidence
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {selectedCoverConfidence ? `${Math.round(selectedCoverConfidence * 100)}%` : "Pending"}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Back-cover mode
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {humanizeModeLabel(currentDraft.back_cover_mode, "Minimal Blurb")}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Quality gate
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {humanizeModeLabel(qualityGate, "Best Available")}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Generation mode
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {humanizeModeLabel(currentDraft.chapter_generation_mode, "Three Pass Compact")}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Visual grade
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {frontVisualGrade || "Pending"}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Genre fit
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {frontGenreFitScore || "Pending"}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          Rejected variants
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {rejectedVariantCount}
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                          PDF opening
+                          <div className="mt-1 text-sm font-semibold text-foreground">
+                            {openingSequenceValid === true ? "Verified" : openingSequenceValid === false ? "Needs Fix" : "Pending"}
+                          </div>
+                        </div>
+                      </div>
+                      {(selectedCoverFrontUrl || selectedCoverBackUrl) ? (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {selectedCoverFrontUrl ? (
+                            <div className="overflow-hidden rounded-2xl border border-border/70 bg-background">
+                              <div className="border-b border-border/70 px-3 py-2 text-xs font-medium text-muted-foreground">Front cover</div>
+                              <img
+                                src={selectedCoverFrontUrl}
+                                alt={`${currentDraft.title} front cover`}
+                                className="aspect-[2/3] w-full object-cover"
+                              />
+                            </div>
+                          ) : null}
+                          {selectedCoverBackUrl ? (
+                            <div className="overflow-hidden rounded-2xl border border-border/70 bg-background">
+                              <div className="border-b border-border/70 px-3 py-2 text-xs font-medium text-muted-foreground">Back cover</div>
+                              <img
+                                src={selectedCoverBackUrl}
+                                alt={`${currentDraft.title} back cover`}
+                                className="aspect-[2/3] w-full object-cover"
+                              />
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {selectedCoverValidation && coverTextStrategy !== "local_overlay" ? (
+                        <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
                           <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
                             Title score
                             <div className="mt-1 text-sm font-semibold text-foreground">
@@ -1231,8 +1438,30 @@ export function WorkspaceScreen({
                               {selectedCoverValidation.authorScore ?? 0}
                             </div>
                           </div>
+                          <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                            Text score
+                            <div className="mt-1 text-sm font-semibold text-foreground">
+                              {frontTextValidationScore ? frontTextValidationScore.toFixed(2) : "Pending"}
+                            </div>
+                          </div>
+                          <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
+                            AI attempts
+                            <div className="mt-1 text-sm font-semibold text-foreground">
+                              {frontAiAttemptCount || "Pending"}
+                            </div>
+                          </div>
                         </div>
                       ) : null}
+                      {!!selectedCoverHardRejects.length && (
+                        <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                          {selectedCoverHardRejects.join(" ")}
+                        </div>
+                      )}
+                      {!!selectedCoverVariant.rejection_reasons?.length && (
+                        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+                          {selectedCoverVariant.rejection_reasons.join(" ")}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
