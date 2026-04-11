@@ -1,0 +1,179 @@
+{
+  "Common": {
+    "skipToMain": "Перейти к основному содержанию",
+    "loading": "Загрузка..."
+  },
+  "Metadata": {
+    "defaultTitle": "Генератор книг - Пишите книги с ИИ",
+    "defaultDescription": "Платформа для создания книг на базе ИИ. Превратите свою идею в готовую к публикации книгу, обложку и файлы EPUB/PDF за 5 вопросов."
+  },
+  "LocaleSwitcher": {
+    "label": "Язык",
+    "title": "Сменить язык"
+  },
+  "localeNames": {
+    "en": "Английский",
+    "tr": "Турецкий",
+    "de": "Немецкий",
+    "fr": "Французский",
+    "es": "Испанский",
+    "ar": "Арабский",
+    "ru": "Русский",
+    "zh": "Китайский",
+    "ja": "Японский",
+    "ko": "Корейский",
+    "it": "Итальянский",
+    "pt": "Португальский"
+  },
+  "nav": {
+    "howItWorks": "Как это работает",
+    "examples": "Примеры",
+    "pricing": "Цены",
+    "tools": "Инструменты",
+    "faq": "ЧЗВ",
+    "login": "Войти",
+    "myBooks": "Мои книги",
+    "newBook": "Новая книга",
+    "freePreview": "Бесплатный предпросмотр",
+    "goHome": "Перейти на главную",
+    "mainMenu": "Главное меню",
+    "openMenu": "Открыть меню",
+    "closeMenu": "Закрыть меню",
+    "mobileMenu": "Мобильное меню",
+    "mobileSecondaryMenu": "Дополнительное мобильное меню",
+    "more": "Ещё",
+    "brandName": "Генератор книг",
+    "howItWorksDesc": "5 вопросов для полной книги",
+    "examplesDesc": "Реальные книги, созданные с помощью ИИ",
+    "useCasesDesc": "Для преподавателей, консультантов и создателей контента",
+    "pricingDesc": "Планы от $4 за книгу",
+    "compareDesc": "Сравните наши возможности",
+    "toolsDesc": "Бесплатные инструменты для письма и публикации",
+    "resourcesDesc": "Руководства, шаблоны и советы",
+    "blogDesc": "Советы по письму и обновления продукта"
+  },
+  "footer": {
+    "freePreview": "Бесплатный предпросмотр",
+    "compare": "Сравнить",
+    "freeTools": "Бесплатные инструменты",
+    "blog": "Блог",
+    "resources": "Ресурсы",
+    "useCases": "Варианты использования",
+    "about": "О нас",
+    "contact": "Контакты",
+    "affiliate": "Партнерская программа",
+    "privacy": "Политика конфиденциальности",
+    "terms": "Условия использования",
+    "refund": "Политика возврата",
+    "product": "Продукт",
+    "company": "Компания",
+    "legal": "Юридическая информация",
+    "writingTips": "Советы по писательству и акции",
+    "newsletterDesc": "Подпишитесь на нашу еженедельную рассылку и напишите свою первую книгу быстрее.",
+    "emailPlaceholder": "Ваш адрес электронной почты",
+    "emailLabel": "Адрес электронной почты",
+    "subscribe": "Подписаться",
+    "subscribed": "Вы подписаны!",
+    "ctaTitle": "Начните писать свою книгу <em>сегодня</em>",
+    "ctaSub": "Создайте свою первую книгу за несколько минут с бесплатным предпросмотром.",
+    "ctaBtn": "Начать бесплатный предпросмотр",
+    "brandDesc": "Простой и премиальный интерфейс для написания книг на базе ИИ. Создайте свою первую книгу на профессиональном уровне.",
+    "copyright": "Генератор книг. Все права защищены.",
+    "tagline": "Написание книг с помощью ИИ.",
+    "theme": "Тема",
+    "goHome": "Перейти на главную",
+    "trust": {
+      "kdp": "Подход к публикации, упрощающий соответствие требованиям KDP",
+      "refund": "Запрос на возврат средств в течение 30 дней",
+      "noApiCost": "Стоимость использования моделей включена в цену тарифа"
+    }
+  },
+  "HomePage": {
+    "metadata": {
+      "title": "Write a Book with AI | Create KDP-Ready EPUB in 15 Minutes",
+      "description": "Turn your expertise into a publish-ready book with AI. Generate drafts, covers, and EPUB/PDF output in 5 questions. Preview for free — no credit card required.",
+      "ogTitle": "Write a Book with AI",
+      "ogDescription": "Turn your expertise into a publish-ready book in 15 minutes. Preview for free."
+    },
+    "middleBlock": {
+      "title": "Write a Book with AI: Turn Your Idea into EPUB and PDF",
+      "description": "Turn your expertise into a publish-ready book with Book Creator. AI-powered draft generation, cover design, and KDP-compatible EPUB/PDF output in a single workflow.",
+      "subDescription": "Preview your book for free, unlock full access when you like it. Start immediately — no credit card required.",
+      "cards": {
+        "a": {
+          "title": "For Educators, Consultants, and Content Creators",
+          "description": "An AI-powered book writing platform for anyone who wants to turn their expertise into a KDP book. E-book creation is now a single workflow.",
+          "cta": "See all use cases →"
+        },
+        "b": {
+          "title": "No More Blank Page or Scattered Tools",
+          "description": "Write your book with AI — draft, content, and output all on one platform. Complete your book without needing different tools.",
+          "cta": "See how we compare →"
+        },
+        "c": {
+          "title": "KDP-Compatible EPUB and PDF Files",
+          "description": "Editable chapters, professional cover, and publish-ready EPUB + PDF outputs. Compatible with Kindle and KDP."
+        }
+      }
+    },
+    "pricing": {
+      "tag": "Book Pricing",
+      "title": "Prepare Your First Book for $4 — KDP-Ready EPUB and PDF Included",
+      "description": "Access a complete book for $4: AI-powered draft, professional cover, EPUB and PDF outputs. Preview for free, then unlock full access."
+    },
+    "faq": {
+      "heading": {
+        "badge": "Book Writing FAQ",
+        "title": "Frequently Asked Questions About Writing a Book with AI",
+        "description": "How does the AI book creator work, what's the output quality, and is it KDP-compatible? The most critical questions about the book writing process.",
+        "actionLabel": "All questions"
+      },
+      "quality": {
+        "question": "Can an AI-written book really be high quality?",
+        "answer": "AI creates the draft — you control the quality. Edit every chapter, regenerate what you don't like. {kdpLiveBooksClaim} of our books are live with a {kdpGuaranteeClaim} guarantee."
+      },
+      "duration": {
+        "question": "How long does it take to write a book with AI?",
+        "answer": "Enter your topic and get a publish-ready EPUB and PDF in 30–90 minutes. Most books are completed in a single session. According to user surveys, 92% of authors publish within 7 days compared to 3-6 months with traditional writing methods."
+      },
+      "kdp": {
+        "question": "Can I upload the EPUB and PDF outputs directly to KDP?",
+        "answer": "Yes. You get KDP-compatible EPUB and PDF outputs. We recommend a final review with your own checklist before uploading."
+      },
+      "creditCard": {
+        "question": "Нужна ли кредитная карта для начала?",
+        "answer": "Нет. Начните с бесплатного предпросмотра — изучите черновик, обложку и структуру вашей книги без ввода платежной информации. Обновитесь только когда вы будете довольны результатом."
+      },
+      "formats": {
+        "question": "Какие форматы вывода доступны?",
+        "answer": "Вы получаете EPUB (для Kindle и всех электронных читалок), PDF (для печати по требованию) и предпросмотр HTML для общего доступа. Все выходные данные редактируемы и готовы к KDP."
+      },
+      "claims": {
+        "kdpAccept": "Принято KDP",
+        "guarantee": "гарантия"
+      },
+      "ctaLabel": "Начать бесплатный предпросмотр"
+    },
+    "cta": {
+      "title": "Start Writing Your Book with AI Today",
+      "description": "Enter your topic and create your free preview in 15 minutes. {noApiCostClaim}, no credit card required.",
+      "items": {
+        "0": "AI-powered draft, cover, and content ready",
+        "1": "Free preview — unlock full access when you like it",
+        "2": "KDP-compatible EPUB + PDF output"
+      }
+    },
+    "testimonials": {
+      "badge": "Отзывы клиентов",
+      "title": "Что говорят авторы",
+      "description": "Реальные результаты от реальных авторов.",
+      "aggregateLabel": "{count}+ проверенных отзывов от реальных авторов"
+    },
+    "showcase": {
+      "badge": "Реальные книги, реальные обложки",
+      "title": "Примеры книг, созданных ИИ",
+      "description": "Каждая прошла путь от краткого описания темы к черновику, от черновика к рабочему процессу EPUB и PDF. Вы можете начать свою собственную книгу на этой неделе, используя тот же процесс.",
+      "ctaLabel": "Начать бесплатный предпросмотр книги"
+    }
+  }
+}

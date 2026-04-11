@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/site/site-header";
-import { SiteFooter } from "@/components/site/site-footer";
 import { AffiliatePage } from "@/components/site/affiliate-page";
+import { MarketingPage } from "@/components/site/marketing-page";
 
 export const metadata: Metadata = {
   title: "Affiliate Program — Book Generator",
@@ -11,12 +10,8 @@ export const metadata: Metadata = {
 
 export default function AffiliatePageRoute() {
   return (
-    <>
-      <SiteHeader />
-      <main>
-        <AffiliatePage />
-      </main>
-      <SiteFooter />
-    </>
+    <MarketingPage>
+      <AffiliatePage />
+    </MarketingPage>
   );
 }

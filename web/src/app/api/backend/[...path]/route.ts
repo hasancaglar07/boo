@@ -36,17 +36,22 @@ const BACKEND_ORIGIN =
 const BACKEND_TIMEOUT_MULTIPLIER = Number(process.env.BACKEND_TIMEOUT_MULTIPLIER || "1.0");
 const BACKEND_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_FETCH_TIMEOUT_MS || "20000") * BACKEND_TIMEOUT_MULTIPLIER;
 const BACKEND_BOOKS_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_BOOKS_FETCH_TIMEOUT_MS || "30000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_BOOKS_POST_TIMEOUT_MS = Number(process.env.BACKEND_BOOKS_POST_TIMEOUT_MS || "45000") * BACKEND_TIMEOUT_MULTIPLIER;
 const BACKEND_BOOK_DETAIL_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_DETAIL_FETCH_TIMEOUT_MS || "40000") * BACKEND_TIMEOUT_MULTIPLIER;
-const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS || "12000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS || "45000") * BACKEND_TIMEOUT_MULTIPLIER;
 const BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS || "45000") * BACKEND_TIMEOUT_MULTIPLIER;
 const BACKEND_WORKFLOW_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_WORKFLOW_FETCH_TIMEOUT_MS || "240000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_HEALTH_PROBE_TIMEOUT_MS = Number(process.env.BACKEND_HEALTH_PROBE_TIMEOUT_MS || "3000");
+const BACKEND_HEALTH_PROBE_TTL_MS = Number(process.env.BACKEND_HEALTH_PROBE_TTL_MS || "3000");
+const BACKEND_LOCAL_FAST_FAIL_ENABLED = process.env.BACKEND_LOCAL_FAST_FAIL !== "0";
 const BACKEND_UNREACHABLE_LOG_THROTTLE_MS = Number(process.env.BACKEND_UNREACHABLE_LOG_THROTTLE_MS || "5000");
 const PREVIEW_STATUS_LOG_THROTTLE_MS = Number(process.env.PREVIEW_STATUS_LOG_THROTTLE_MS || "15000");
 const FULL_BOOTSTRAP_TRIGGER_THROTTLE_MS = Number(process.env.FULL_BOOTSTRAP_TRIGGER_THROTTLE_MS || "45000");
 const BACKEND_UNAVAILABLE_BACKOFF_MS = Number(process.env.BACKEND_UNAVAILABLE_BACKOFF_MS || "5000");
 const BACKEND_AUTO_START_COOLDOWN_MS = Number(process.env.BACKEND_AUTO_START_COOLDOWN_MS || "15000");
-const BACKEND_RECOVERY_RETRY_TIMEOUT_MS = Number(process.env.BACKEND_RECOVERY_RETRY_TIMEOUT_MS || "8000");
+const BACKEND_RECOVERY_RETRY_TIMEOUT_MS = Number(process.env.BACKEND_RECOVERY_RETRY_TIMEOUT_MS || "20000");
 const PREVIEW_CACHE_TTL_MS = Number(process.env.PREVIEW_CACHE_TTL_MS || "600000");
+const BACKEND_BOOKS_STALE_CACHE_TTL_MS = Number(process.env.BACKEND_BOOKS_STALE_CACHE_TTL_MS || "45000");
 const BACKEND_AUTO_START_ENABLED = process.env.BOOK_AUTO_START_DASHBOARD !== "0";
 
 const IMAGE_FILE_PATTERN = /\.(png|jpe?g|webp|gif|svg|ico)$/i;
@@ -67,9 +72,11 @@ declare global {
   var __backendUnavailableUntilByPath: Record<string, number> | undefined;
   var __backendLastStartAttemptAt: number | undefined;
   var __backendStartInFlight: Promise<boolean> | undefined;
+  var __backendHealthProbe: { ok: boolean; checkedAt: number } | undefined;
   var __backendPreviewCacheBySlug: Record<string, { payload: Record<string, unknown>; cachedAt: number }> | undefined;
   var __backendPreviewLastStatusLogBySlug: Record<string, number> | undefined;
   var __backendFullBootstrapLastAttemptBySlug: Record<string, number> | undefined;
+  var __backendBooksCache: { books: Array<Record<string, unknown>>; cachedAt: number } | undefined;
 }
 
 function isBackendUnavailableLike(error: unknown) {
@@ -94,10 +101,12 @@ function logUpstreamUnavailable(details: {
   console.error("[api/backend] upstream unreachable", details);
 }
 
-function backendCircuitKeyForPath(upstreamPath: string) {
-  if (upstreamPath === "/api/settings") return "/api/settings";
-  if (upstreamPath === "/api/books") return "/api/books";
-  if (/^\/api\/books\/[^/]+\/preview$/.test(upstreamPath)) return "/api/books/:slug/preview";
+function backendCircuitKeyForPath(upstreamPath: string, method: string) {
+  if (upstreamPath === "/api/settings" && method === "GET") return "/api/settings:get";
+  if (upstreamPath === "/api/books" && method === "GET") return "/api/books:get";
+  if (upstreamPath === "/api/books" && method === "POST") return "/api/books:post";
+  if (upstreamPath === "/api/workflows" && method === "POST") return "/api/workflows:post";
+  if (/^\/api\/books\/[^/]+\/preview$/.test(upstreamPath) && method === "GET") return "/api/books/:slug/preview:get";
   return null;
 }
 
@@ -120,6 +129,23 @@ function writeCachedPreviewPayload(slug: string, payload: Record<string, unknown
     cachedAt: Date.now(),
   };
   globalThis.__backendPreviewCacheBySlug = cache;
+}
+
+function readCachedBooksPayload(): Array<Record<string, unknown>> | null {
+  const cache = globalThis.__backendBooksCache;
+  if (!cache) return null;
+  if (Date.now() - cache.cachedAt > BACKEND_BOOKS_STALE_CACHE_TTL_MS) {
+    globalThis.__backendBooksCache = undefined;
+    return null;
+  }
+  return cache.books;
+}
+
+function writeCachedBooksPayload(books: Array<Record<string, unknown>>) {
+  globalThis.__backendBooksCache = {
+    books,
+    cachedAt: Date.now(),
+  };
 }
 
 function logPreviewStatus(slug: string, payload: Record<string, unknown>, source: "live" | "stale-cache") {
@@ -171,6 +197,7 @@ function markBackendUnavailable(pathKey: string | null) {
   const cache = globalThis.__backendUnavailableUntilByPath || {};
   cache[pathKey] = Date.now() + BACKEND_UNAVAILABLE_BACKOFF_MS;
   globalThis.__backendUnavailableUntilByPath = cache;
+  globalThis.__backendHealthProbe = { ok: false, checkedAt: Date.now() };
 }
 
 function clearBackendUnavailable(pathKey: string | null) {
@@ -178,6 +205,7 @@ function clearBackendUnavailable(pathKey: string | null) {
   const cache = globalThis.__backendUnavailableUntilByPath;
   if (!cache) return;
   cache[pathKey] = 0;
+  globalThis.__backendHealthProbe = { ok: true, checkedAt: Date.now() };
 }
 
 function shouldShortCircuitBackend(pathKey: string | null) {
@@ -186,6 +214,61 @@ function shouldShortCircuitBackend(pathKey: string | null) {
   if (!cache) return false;
   const until = cache[pathKey] || 0;
   return Date.now() < until;
+}
+
+function shouldProbeBackendBeforeRequest(method: string, upstreamPath: string) {
+  if (!BACKEND_LOCAL_FAST_FAIL_ENABLED || !backendLooksLocal()) return false;
+  if (method === "GET" || method === "HEAD") {
+    if (upstreamPath === "/api/settings") return true;
+    return false;
+  }
+  if (method === "POST") return false;
+  return false;
+}
+
+function shouldUseShortRecoveryTimeout(method: string, upstreamPath: string) {
+  if (method === "GET" && upstreamPath === "/api/books") return false;
+  if (method === "POST" && upstreamPath === "/api/books") return false;
+  if (method === "GET" && /^\/api\/books\/[^/]+\/preview$/.test(upstreamPath)) return false;
+  if (method === "POST" && upstreamPath === "/api/workflows") return false;
+  if (method === "POST" && /^\/api\/books\/[^/]+\/preview-bootstrap$/.test(upstreamPath)) return false;
+  return true;
+}
+
+async function probeBackendHealth(force = false) {
+  if (!BACKEND_LOCAL_FAST_FAIL_ENABLED || !backendLooksLocal()) {
+    return true;
+  }
+  const now = Date.now();
+  const probe = globalThis.__backendHealthProbe;
+  if (!force && probe && now - probe.checkedAt < BACKEND_HEALTH_PROBE_TTL_MS) {
+    return probe.ok;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, BACKEND_HEALTH_PROBE_TIMEOUT_MS);
+  let ok = false;
+  try {
+    const response = await fetch(new URL("/api/health", BACKEND_ORIGIN), {
+      method: "GET",
+      cache: "no-store",
+      redirect: "manual",
+      signal: controller.signal,
+    });
+    ok = response.ok;
+  } catch {
+    ok = false;
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  globalThis.__backendHealthProbe = {
+    ok,
+    checkedAt: now,
+  };
+  return ok;
 }
 
 function backendLooksLocal() {
@@ -235,6 +318,10 @@ async function maybeStartLocalDashboard() {
   const attempt = new Promise<boolean>((resolve) => {
     const child = spawn("bash", [startScript, "start"], {
       stdio: "ignore",
+      env: {
+        ...process.env,
+        BOOK_DASHBOARD_FORCE_RESTART: process.env.BOOK_DASHBOARD_FORCE_RESTART || "1",
+      },
     });
     let settled = false;
     const finish = (ok: boolean) => {
@@ -264,7 +351,7 @@ async function retryUpstreamAfterRecovery(input: {
   url: URL;
   headers: Headers;
   body: ArrayBuffer | null;
-  timeoutMs: number;
+  recoveryRetryTimeoutMs: number;
 }) {
   const started = await maybeStartLocalDashboard();
   if (!started) return null;
@@ -272,7 +359,7 @@ async function retryUpstreamAfterRecovery(input: {
   const controller = new AbortController();
   const timeout = setTimeout(() => {
     controller.abort();
-  }, Math.min(input.timeoutMs, BACKEND_RECOVERY_RETRY_TIMEOUT_MS));
+  }, input.recoveryRetryTimeoutMs);
   try {
     return await fetch(input.url, {
       method: input.request.method,
@@ -300,6 +387,26 @@ function jsonError(status: number, error: string, code?: string) {
       ...(code ? { code } : {}),
     },
     { status },
+  );
+}
+
+function backendUnavailableResponse() {
+  if (!backendLooksLocal()) {
+    return jsonError(
+      503,
+      "Service is temporarily unavailable. Please try again in a few seconds.",
+      "BACKEND_UNAVAILABLE",
+    );
+  }
+  return NextResponse.json(
+    {
+      ok: false,
+      code: "BACKEND_UNAVAILABLE",
+      error: "Local dashboard backend is not reachable.",
+      hint: "Run `./start-dashboard.sh restart` and keep the dashboard process alive.",
+      retry_after_ms: BACKEND_UNAVAILABLE_BACKOFF_MS,
+    },
+    { status: 503 },
   );
 }
 
@@ -350,6 +457,8 @@ async function forwardToBackend(
   const timeoutMs =
     upstreamPath === "/api/books" && request.method === "GET"
       ? BACKEND_BOOKS_FETCH_TIMEOUT_MS
+      : upstreamPath === "/api/books" && request.method === "POST"
+        ? BACKEND_BOOKS_POST_TIMEOUT_MS
       : isBookDetailPath && request.method === "GET"
         ? BACKEND_BOOK_DETAIL_FETCH_TIMEOUT_MS
       : isPreviewBootstrapPath && request.method === "POST"
@@ -361,18 +470,55 @@ async function forwardToBackend(
       : upstreamPath === "/api/workflows" && request.method === "POST"
         ? BACKEND_WORKFLOW_FETCH_TIMEOUT_MS
         : BACKEND_FETCH_TIMEOUT_MS;
-  const circuitPathKey = request.method === "GET" ? backendCircuitKeyForPath(upstreamPath) : null;
+  const useShortRecoveryTimeout = shouldUseShortRecoveryTimeout(request.method, upstreamPath);
+  const circuitPathKey = backendCircuitKeyForPath(upstreamPath, request.method);
+  let preferShortTimeoutAfterFailedProbe = false;
 
   if (shouldShortCircuitBackend(circuitPathKey)) {
-    throw new BackendUnavailableError();
+    const started = await maybeStartLocalDashboard();
+    const recovered = started ? await probeBackendHealth(true) : false;
+    if (recovered) {
+      clearBackendUnavailable(circuitPathKey);
+    } else {
+      // Allow one direct upstream call before returning 503 to avoid false negatives from probe cache.
+      preferShortTimeoutAfterFailedProbe = useShortRecoveryTimeout;
+    }
   }
 
+  if (shouldProbeBackendBeforeRequest(request.method, upstreamPath)) {
+    const healthy = await probeBackendHealth();
+    if (!healthy) {
+      const started = await maybeStartLocalDashboard();
+      const recovered = started ? await probeBackendHealth(true) : false;
+      if (recovered) {
+        clearBackendUnavailable(circuitPathKey);
+      } else {
+        markBackendUnavailable(circuitPathKey);
+        // Probe can fail while backend is recovering; do one real upstream attempt with shorter timeout.
+        preferShortTimeoutAfterFailedProbe = useShortRecoveryTimeout;
+      }
+    }
+  }
+
+  const requestTimeoutMs = preferShortTimeoutAfterFailedProbe
+    ? Math.min(timeoutMs, BACKEND_RECOVERY_RETRY_TIMEOUT_MS)
+    : timeoutMs;
+  const recoveryRetryTimeoutMs = useShortRecoveryTimeout
+    ? Math.min(requestTimeoutMs, BACKEND_RECOVERY_RETRY_TIMEOUT_MS)
+    : requestTimeoutMs;
+  console.info("[api/backend] forwarding", {
+    method: request.method,
+    upstreamPath,
+    timeoutMs: requestTimeoutMs,
+    hadBody: Boolean(body && body.byteLength > 0),
+    search: request.nextUrl.search || "",
+  });
   const controller = new AbortController();
   let didTimeout = false;
   const timeout = setTimeout(() => {
     didTimeout = true;
     controller.abort();
-  }, timeoutMs);
+  }, requestTimeoutMs);
   try {
     const response = await fetch(url, {
       method: request.method,
@@ -386,6 +532,12 @@ async function forwardToBackend(
       signal: controller.signal,
     });
     clearBackendUnavailable(circuitPathKey);
+    console.info("[api/backend] upstream response", {
+      method: request.method,
+      upstreamPath,
+      status: response.status,
+      ok: response.ok,
+    });
     return response;
   } catch (error) {
     const recovered = await retryUpstreamAfterRecovery({
@@ -393,7 +545,7 @@ async function forwardToBackend(
       url,
       headers,
       body,
-      timeoutMs,
+      recoveryRetryTimeoutMs,
     });
     if (recovered) {
       clearBackendUnavailable(circuitPathKey);
@@ -405,14 +557,17 @@ async function forwardToBackend(
         ? `${error.name}: ${error.message}`
         : String(error);
     const isAbortError = error instanceof Error && error.name === "AbortError";
+    const shouldMarkUnavailable = useShortRecoveryTimeout || !isAbortError;
     if (didTimeout || !isAbortError) {
       logUpstreamUnavailable({
         method: request.method,
         upstream: url.toString(),
-        timeoutMs,
+        timeoutMs: requestTimeoutMs,
         reason,
       });
-      markBackendUnavailable(circuitPathKey);
+      if (shouldMarkUnavailable) {
+        markBackendUnavailable(circuitPathKey);
+      }
     }
     throw new BackendUnavailableError();
   } finally {
@@ -507,13 +662,46 @@ async function handleBooksIndex(
     return NextResponse.json({ books: [] });
   }
 
-  const response = await forwardToBackend(request, "/api/books", body);
-  const payload = (await response.json().catch(() => ({ books: [] }))) as {
-    books?: Array<Record<string, unknown>>;
-  };
-  const upstreamBooks = payload.books || [];
+  let upstreamBooks: Array<Record<string, unknown>> = [];
+  let status = 200;
+  let servedFromStaleCache = false;
 
-  if (userId && upstreamBooks.length > 0 && ownedSlugs.size < upstreamBooks.length) {
+  try {
+    const response = await forwardToBackend(request, "/api/books", body);
+    status = response.status;
+    const payload = (await response.json().catch(() => ({ books: [] }))) as {
+      books?: Array<Record<string, unknown>>;
+    };
+    upstreamBooks = payload.books || [];
+
+    if (response.ok) {
+      writeCachedBooksPayload(upstreamBooks);
+    } else if (response.status === 503) {
+      const cachedBooks = readCachedBooksPayload();
+      if (cachedBooks) {
+        upstreamBooks = cachedBooks;
+        status = 200;
+        servedFromStaleCache = true;
+      }
+    }
+
+    if (!response.ok && !servedFromStaleCache) {
+      return NextResponse.json({ books: [] }, { status });
+    }
+  } catch (error) {
+    if (!isBackendUnavailableLike(error)) {
+      throw error;
+    }
+    const cachedBooks = readCachedBooksPayload();
+    if (!cachedBooks) {
+      throw error;
+    }
+    upstreamBooks = cachedBooks;
+    status = 200;
+    servedFromStaleCache = true;
+  }
+
+  if (!servedFromStaleCache && userId && upstreamBooks.length > 0 && ownedSlugs.size < upstreamBooks.length) {
     try {
       const claimedCount = await backfillLegacyBookOwnership({
         userId,
@@ -528,15 +716,23 @@ async function handleBooksIndex(
   }
 
   if (ownedSlugs.size === 0) {
-    return NextResponse.json({ books: [] }, { status: response.status });
+    const emptyResponse = NextResponse.json({ books: [] }, { status });
+    if (servedFromStaleCache) {
+      emptyResponse.headers.set("x-backend-books", "stale-cache");
+    }
+    return emptyResponse;
   }
 
-  return NextResponse.json(
+  const filteredResponse = NextResponse.json(
     {
       books: upstreamBooks.filter((book) => ownedSlugs.has(String(book.slug || ""))),
     },
-    { status: response.status },
+    { status },
   );
+  if (servedFromStaleCache) {
+    filteredResponse.headers.set("x-backend-books", "stale-cache");
+  }
+  return filteredResponse;
 }
 
 async function handleBookCreateOrUpdate(
@@ -676,8 +872,13 @@ async function handleBookScopedRoute(
       if (action === "preview" && isBackendUnavailableLike(error)) {
         const cachedPayload = readCachedPreviewPayload(slug);
         if (cachedPayload) {
-          logPreviewStatus(slug, cachedPayload, "stale-cache");
-          return NextResponse.json(cachedPayload, {
+          const enrichedCachedPayload = await enrichPreviewEntitlements(
+            cachedPayload as { entitlements?: Record<string, boolean> },
+            userId,
+            slug,
+          );
+          logPreviewStatus(slug, enrichedCachedPayload as Record<string, unknown>, "stale-cache");
+          return NextResponse.json(enrichedCachedPayload, {
             status: 200,
             headers: { "x-backend-preview": "stale-cache" },
           });
@@ -689,8 +890,13 @@ async function handleBookScopedRoute(
       if (action === "preview" && response.status === 503) {
         const cachedPayload = readCachedPreviewPayload(slug);
         if (cachedPayload) {
-          logPreviewStatus(slug, cachedPayload, "stale-cache");
-          return NextResponse.json(cachedPayload, {
+          const enrichedCachedPayload = await enrichPreviewEntitlements(
+            cachedPayload as { entitlements?: Record<string, boolean> },
+            userId,
+            slug,
+          );
+          logPreviewStatus(slug, enrichedCachedPayload as Record<string, unknown>, "stale-cache");
+          return NextResponse.json(enrichedCachedPayload, {
             status: 200,
             headers: { "x-backend-preview": "stale-cache" },
           });
@@ -927,11 +1133,7 @@ async function handleProxyRequest(
     return jsonError(404, "Bilinmeyen backend route.");
   } catch (error) {
     if (isBackendUnavailableLike(error)) {
-      return jsonError(
-        503,
-        "Service is temporarily unavailable. Please try again in a few seconds.",
-        "BACKEND_UNAVAILABLE",
-      );
+      return backendUnavailableResponse();
     }
     console.error("[api/backend] unexpected error", error);
     return jsonError(500, "Unexpected server error.");

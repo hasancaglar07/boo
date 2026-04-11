@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { loadExamplesShowcaseData } from "@/lib/examples-data";
+import { defaultLocale, locales } from "@/i18n/routing";
 import { blogPosts } from "@/lib/marketing-data";
 import { marketingToolCatalog } from "@/lib/marketing-tools";
 import { siteConfig } from "@/lib/seo";
@@ -23,6 +24,24 @@ function getSitemapBaseUrl(): string {
 function sitemapAbsoluteUrl(path = "/"): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return new URL(normalizedPath, getSitemapBaseUrl()).toString();
+}
+
+function localizedPath(path: string, locale: string): string {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  if (normalizedPath === "/") return `/${locale}`;
+  return `/${locale}${normalizedPath}`;
+}
+
+function languageAlternates(path: string): Record<string, string> {
+  const languages: Record<string, string> = {
+    "x-default": sitemapAbsoluteUrl(localizedPath(path, defaultLocale)),
+  };
+
+  for (const locale of locales) {
+    languages[locale] = sitemapAbsoluteUrl(localizedPath(path, locale));
+  }
+
+  return languages;
 }
 
 const staticRoutes = [
@@ -70,26 +89,43 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const publicRoutes = Array.from(new Set([...staticRoutes, ...toolRoutes]));
 
-  const staticEntries: MetadataRoute.Sitemap = publicRoutes.map((route) => ({
-    url: sitemapAbsoluteUrl(route),
-    lastModified: DEFAULT_LAST_MODIFIED,
-    changeFrequency: route === "/" ? "daily" : "weekly",
-    priority: priorityMap[route] ?? 0.7,
-  }));
+  const staticEntries: MetadataRoute.Sitemap = publicRoutes.flatMap((route) =>
+    locales.map((locale) => ({
+      url: sitemapAbsoluteUrl(localizedPath(route, locale)),
+      lastModified: DEFAULT_LAST_MODIFIED,
+      changeFrequency: route === "/" ? "daily" : "weekly",
+      priority: priorityMap[route] ?? 0.7,
+      alternates: {
+        languages: languageAlternates(route),
+      },
+    })),
+  );
 
-  const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => ({
-    url: sitemapAbsoluteUrl(`/blog/${post.slug}`),
-    lastModified: new Date(post.dateModified),
-    changeFrequency: "monthly",
-    priority: 0.72,
-  }));
+  const blogEntries: MetadataRoute.Sitemap = blogPosts.flatMap((post) => {
+    const route = `/blog/${post.slug}`;
+    return locales.map((locale) => ({
+      url: sitemapAbsoluteUrl(localizedPath(route, locale)),
+      lastModified: new Date(post.dateModified),
+      changeFrequency: "monthly",
+      priority: 0.72,
+      alternates: {
+        languages: languageAlternates(route),
+      },
+    }));
+  });
 
-  const exampleEntries: MetadataRoute.Sitemap = exampleItems.map((item) => ({
-    url: sitemapAbsoluteUrl(`/examples/${item.slug}`),
-    lastModified: DEFAULT_LAST_MODIFIED,
-    changeFrequency: "monthly",
-    priority: 0.8,
-  }));
+  const exampleEntries: MetadataRoute.Sitemap = exampleItems.flatMap((item) => {
+    const route = `/examples/${item.slug}`;
+    return locales.map((locale) => ({
+      url: sitemapAbsoluteUrl(localizedPath(route, locale)),
+      lastModified: DEFAULT_LAST_MODIFIED,
+      changeFrequency: "monthly",
+      priority: 0.8,
+      alternates: {
+        languages: languageAlternates(route),
+      },
+    }));
+  });
 
   return [...staticEntries, ...blogEntries, ...exampleEntries];
 }

@@ -56,6 +56,7 @@ type BookDetailResponse = {
       action: string;
       actor: string;
       createdAt: string;
+      metadata?: Record<string, unknown> | null;
     }>;
   };
   permissions: {

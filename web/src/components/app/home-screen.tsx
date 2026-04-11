@@ -46,6 +46,20 @@ export function HomeScreen() {
     void refreshBooks();
   }, [ready]);
 
+  useEffect(() => {
+    if (!ready) return;
+
+    void router.prefetch("/start/topic");
+    void router.prefetch("/app/settings/billing");
+
+    const latestSlug = books[0]?.slug;
+    if (!latestSlug) return;
+    const encodedSlug = encodeURIComponent(latestSlug);
+    void router.prefetch(`/app/book/${encodedSlug}/preview`);
+    void router.prefetch(`/app/book/${encodedSlug}/workspace?tab=writing`);
+    void router.prefetch(`/app/book/${encodedSlug}/workspace?tab=publish`);
+  }, [books, ready, router]);
+
   const currentPlan = useMemo(() => plans.find((plan) => plan.id === getPlan()) || plans[0], []);
   const totalExports = books.reduce((total, book) => total + Number(book.status?.export_count || 0), 0);
   const totalResearch = books.reduce((total, book) => total + Number(book.status?.research_count || 0), 0);

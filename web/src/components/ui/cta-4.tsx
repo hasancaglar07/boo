@@ -27,7 +27,7 @@ export function Cta4({
   items = defaultItems,
 }: Cta4Props) {
   return (
-    <section className="py-20 md:py-28">
+    <section className="py-16 md:py-24">
       <div className="shell">
         <div className="mx-auto max-w-5xl">
           <div className="relative overflow-hidden rounded-[32px] bg-[linear-gradient(135deg,#1e1410_0%,#2a1a10_40%,#1e1b18_100%)] px-6 py-10 shadow-[0_32px_80px_-20px_rgba(0,0,0,0.55)] md:px-10 lg:px-16 lg:py-14">

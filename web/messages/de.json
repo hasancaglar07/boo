@@ -1,0 +1,325 @@
+{
+  "Common": {
+    "skipToMain": "Zum Hauptinhalt springen",
+    "loading": "Wird geladen..."
+  },
+  "Metadata": {
+    "defaultTitle": "Buchgenerator – Bücher mit KI schreiben",
+    "defaultDescription": "KI-gestützte Buchgenerierungsplattform. Verwandeln Sie Ihre Idee in 5 Fragen in ein druckfertiges Buch, Cover und EPUB/PDF-Ausgabe."
+  },
+  "LocaleSwitcher": {
+    "label": "Sprache",
+    "title": "Sprache ändern"
+  },
+  "localeNames": {
+    "en": "Englisch",
+    "tr": "Türkisch",
+    "de": "Deutsch",
+    "fr": "Französisch",
+    "es": "Spanisch",
+    "ar": "Arabisch",
+    "ru": "Russisch",
+    "zh": "Chinesisch",
+    "ja": "Japanisch",
+    "ko": "Koreanisch",
+    "it": "Italienisch",
+    "pt": "Portugiesisch"
+  },
+  "nav": {
+    "howItWorks": "So funktioniert es",
+    "examples": "Beispiele",
+    "pricing": "Preise",
+    "tools": "Tools",
+    "faq": "FAQ",
+    "login": "Anmelden",
+    "myBooks": "Meine Bücher",
+    "newBook": "Neues Buch",
+    "freePreview": "Kostenlose Vorschau",
+    "goHome": "Zur Startseite",
+    "mainMenu": "Hauptmenü",
+    "openMenu": "Menü öffnen",
+    "closeMenu": "Menü schließen",
+    "mobileMenu": "Mobiles Menü",
+    "mobileSecondaryMenu": "Mobiles Sekundärmenü",
+    "more": "Mehr",
+    "brandName": "Buchgenerator",
+    "howItWorksDesc": "5 Fragen bis zum fertigen Buch",
+    "examplesDesc": "Echte Bücher, erstellt mit KI",
+    "useCasesDesc": "Für Pädagogen, Berater & Kreative",
+    "pricingDesc": "Pläne ab 4 $ pro Buch",
+    "compareDesc": "Sehen Sie, wie wir abschneiden",
+    "toolsDesc": "Kostenlose Schreib- & Veröffentlichungstools",
+    "resourcesDesc": "Leitfäden, Vorlagen & Tipps",
+    "blogDesc": "Schreibtipps & Produktupdates"
+  },
+  "footer": {
+    "freePreview": "Kostenlose Vorschau",
+    "compare": "Vergleichen",
+    "freeTools": "Kostenlose Tools",
+    "blog": "Blog",
+    "resources": "Ressourcen",
+    "useCases": "Anwendungsfälle",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "affiliate": "Partnerprogramm",
+    "privacy": "Datenschutzrichtlinie",
+    "terms": "Nutzungsbedingungen",
+    "refund": "Rückerstattungsrichtlinie",
+    "product": "Produkt",
+    "company": "Unternehmen",
+    "legal": "Rechtliches",
+    "writingTips": "Schreibtipps & Kampagnen",
+    "newsletterDesc": "Abonnieren Sie unseren wöchentlichen Newsletter und schreiben Sie Ihr erstes Buch schneller.",
+    "emailPlaceholder": "Ihre E-Mail-Adresse",
+    "emailLabel": "E-Mail-Adresse",
+    "subscribe": "Abonnieren",
+    "subscribed": "Abonniert!",
+    "ctaTitle": "Beginnen Sie noch <em>heute</em> mit dem Schreiben Ihres Buches",
+    "ctaSub": "Erstellen Sie Ihr erstes Buch in wenigen Minuten mit einer kostenlosen Vorschau.",
+    "ctaBtn": "Kostenlose Vorschau starten",
+    "brandDesc": "KI-gestützte, einfache und hochwertige Buchschreiboberfläche. Erstellen Sie Ihr erstes Buch nach professionellen Standards.",
+    "copyright": "Buchgenerator. Alle Rechte vorbehalten.",
+    "tagline": "KI-gestütztes Bücherschreiben.",
+    "theme": "Design",
+    "goHome": "Zur Startseite",
+    "trust": {
+      "kdp": "Lieferansatz, der die KDP-Konformität vereinfacht",
+      "refund": "Rückerstattungsanfrage innerhalb von 30 Tagen",
+      "noApiCost": "Modellkosten sind im Planpreis enthalten"
+    }
+  },
+  "HomePage": {
+    "metadata": {
+      "title": "Ein Buch mit KI schreiben | KDP-fertiges EPUB in 15 Minuten erstellen",
+      "description": "Verwandeln Sie Ihr Fachwissen mit KI in ein druckfertiges Buch. Generieren Sie Entwürfe, Cover und EPUB/PDF-Ausgaben in 5 Fragen. Kostenlose Vorschau – keine Kreditkarte erforderlich.",
+      "ogTitle": "Ein Buch mit KI schreiben",
+      "ogDescription": "Verwandeln Sie Ihr Fachwissen in 15 Minuten in ein druckfertiges Buch. Kostenlose Vorschau."
+    },
+    "middleBlock": {
+      "title": "Ein Buch mit KI schreiben: Verwandeln Sie Ihre Idee in EPUB und PDF",
+      "description": "Verwandeln Sie Ihr Fachwissen mit dem Book Creator in ein druckfertiges Buch. KI-gestützte Entwurfserstellung, Cover-Design und KDP-kompatible EPUB/PDF-Ausgabe in einem einzigen Workflow.",
+      "subDescription": "Sehen Sie sich Ihr Buch kostenlos in der Vorschau an und schalten Sie den vollen Zugang frei, wenn es Ihnen gefällt. Sofort starten – keine Kreditkarte erforderlich.",
+      "cards": {
+        "a": {
+          "title": "Für Pädagogen, Berater und Content-Ersteller",
+          "description": "Eine KI-gestützte Buchschreibplattform für alle, die ihr Fachwissen in ein KDP-Buch verwandeln möchten. Die E-Book-Erstellung ist jetzt ein einziger Workflow.",
+          "cta": "Alle Anwendungsfälle ansehen →"
+        },
+        "b": {
+          "title": "Kein leeres Blatt mehr und keine verstreuten Tools",
+          "description": "Schreiben Sie Ihr Buch mit KI – Entwurf, Inhalt und Ausgabe auf einer einzigen Plattform. Vervollständigen Sie Ihr Buch, ohne verschiedene Tools zu benötigen.",
+          "cta": "Sehen Sie, wie wir uns vergleichen →"
+        },
+        "c": {
+          "title": "KDP-kompatible EPUB- und PDF-Dateien",
+          "description": "Bearbeitbare Kapitel, professionelles Cover und druckfertige EPUB- und PDF-Ausgaben. Kompatibel mit Kindle und KDP."
+        }
+      }
+    },
+    "pricing": {
+      "tag": "Buchpreise",
+      "title": "Bereiten Sie Ihr erstes Buch für 4 $ vor – KDP-fertiges EPUB und PDF inklusive",
+      "description": "Erhalten Sie ein vollständiges Buch für 4 $: KI-gestützter Entwurf, professionelles Cover, EPUB- und PDF-Ausgaben. Kostenlose Vorschau, dann vollen Zugang freischalten."
+    },
+    "faq": {
+      "heading": {
+        "badge": "Meistgestellte Fragen",
+        "title": "Häufig gestellte Fragen zum Schreiben eines Buches mit KI",
+        "description": "Wie funktioniert der KI-Buchersteller, wie ist die Ausgabequalität und ist er KDP-kompatibel? Die wichtigsten Fragen zum Buchschreibprozess.",
+        "actionLabel": "Alle Fragen"
+      },
+      "quality": {
+        "question": "Kann ein KI-geschriebenes Buch wirklich hochwertig sein?",
+        "answer": "Die KI erstellt den Entwurf – Sie kontrollieren die Qualität. Bearbeiten Sie jedes Kapitel und generieren Sie neu, was Ihnen nicht gefällt. {kdpLiveBooksClaim} unserer Bücher sind live mit einer {kdpGuaranteeClaim}-Garantie."
+      },
+      "duration": {
+        "question": "Wie lange dauert es, ein Buch mit KI zu schreiben?",
+        "answer": "Geben Sie Ihr Thema ein und erhalten Sie in 30–90 Minuten ein druckfertiges EPUB und PDF. Die meisten Bücher werden in einer einzigen Sitzung fertiggestellt. Laut Nutzerumfragen veröffentlichen 92 % der Autoren innerhalb von 7 Tagen, verglichen mit 3–6 Monaten bei traditionellen Schreibmethoden."
+      },
+      "kdp": {
+        "question": "Kann ich die EPUB- und PDF-Ausgaben direkt bei KDP hochladen?",
+        "answer": "Ja. Sie erhalten KDP-kompatible EPUB- und PDF-Ausgaben. Wir empfehlen eine abschließende Überprüfung anhand Ihrer eigenen Checkliste vor dem Hochladen."
+      },
+      "creditCard": {
+        "question": "Benötige ich eine Kreditkarte, um zu starten?",
+        "answer": "Nein. Starten Sie mit einer kostenlosen Vorschau – erkunden Sie den Entwurf, das Cover und die Gliederung Ihres Buches, ohne Zahlungsinformationen einzugeben. Upgraden Sie erst, wenn Sie mit dem Ergebnis zufrieden sind."
+      },
+      "formats": {
+        "question": "Welche Ausgabeformate sind verfügbar?",
+        "answer": "Sie erhalten EPUB (für Kindle und alle E-Reader), PDF (für Print-on-Demand) und eine teilbare HTML-Vorschau. Alle Ausgaben sind bearbeitbar und KDP-fertig."
+      },
+      "claims": {
+        "kdpAccept": "KDP akzeptiert",
+        "guarantee": "Garantie"
+      },
+      "ctaLabel": "Kostenlose Vorschau starten"
+    },
+    "cta": {
+      "title": "Beginnen Sie noch heute, Ihr Buch mit KI zu schreiben",
+      "description": "Geben Sie Ihr Thema ein und erstellen Sie Ihre kostenlose Vorschau in 15 Minuten. {noApiCostClaim}, keine Kreditkarte erforderlich.",
+      "items": {
+        "0": "KI-gestützter Entwurf, Cover und Inhalt bereit",
+        "1": "Kostenlose Vorschau – vollen Zugang freischalten, wenn es Ihnen gefällt",
+        "2": "KDP-kompatible EPUB- und PDF-Ausgabe"
+      }
+    },
+    "testimonials": {
+      "badge": "Kundenbewertungen",
+      "title": "Was Autoren sagen",
+      "description": "Echte Ergebnisse von echten Autoren.",
+      "aggregateLabel": "{count}+ verifizierte Bewertungen von echten Autoren"
+    },
+    "showcase": {
+      "badge": "Echte Bücher, echte Cover",
+      "title": "KI-generierte echte Buchbeispiele",
+      "description": "Jedes davon durchlief den Weg von der Themenzusammenfassung zum Entwurf und vom Entwurf zum EPUB- und PDF-Workflow. Sie können Ihr eigenes Buch diese Woche mit demselben Prozess starten.",
+      "ctaLabel": "Kostenlose Buchvorschau starten"
+    }
+  },
+  "PricingPage": {
+    "metadata": {
+      "title": "Book Generator Preise | KI-Buchschreibpläne",
+      "description": "Vergleiche die Preispläne des Book Generators. Starte mit einer einmaligen Zahlung von 4 $, wachse mit monatlichen Plänen. Vom ersten Buch bis zu vollständigen Produktions-Workflows – für jedes Level gibt es einen passenden Plan."
+    },
+    "summary": "Dein erstes Buch kostet 4 $, weitere Bücher ab 19 $/Monat – die Vorschau ist kostenlos.",
+    "plans": {
+      "tag": "Pläne",
+      "title": "Einmalig zahlen oder mit einem Monatsplan produzieren.",
+      "description": "Öffne dein erstes Buch für 4 $, baue einen Rhythmus mit 10 Büchern pro Monat auf oder verwandle dich mit 30 oder 80 Büchern in ein Verlagssystem."
+    },
+    "comparison": {
+      "title": "Dasselbe Buch, sehr unterschiedliche Preise.",
+      "description": "Die Kosten für die Produktion eines Buches mit anderen Methoden.",
+      "link": "Detaillierten Funktionsvergleich ansehen →",
+      "items": {
+        "0": {
+          "label": "Ghostwriter / Agentur",
+          "price": "500–5.000 $",
+          "perBook": "pro Buch"
+        },
+        "1": {
+          "label": "Scrivener + ChatGPT + Canva + Calibre",
+          "price": "Kostenlos, aber…",
+          "perBook": "10–30 Stunden / Buch"
+        },
+        "2": {
+          "label": "Book Generator — Einzelnes Buch",
+          "price": "4 $",
+          "perBook": "einmalig, kein Abonnement"
+        },
+        "3": {
+          "label": "Book Generator — Starter",
+          "price": "1,90 $",
+          "perBook": "pro Buch (19 $/Monat, 10 Bücher)"
+        }
+      }
+    },
+    "whoFor": {
+      "title": "Welcher Plan ist der richtige für dich?",
+      "description": "Finde den richtigen Einstiegspunkt basierend auf deinen Zielen.",
+      "items": {
+        "0": {
+          "plan": "Einzelnes Buch — 4 $",
+          "title": "Erstmaliger Nutzer",
+          "description": "Einmal zahlen, das Buch gehört dir. Erlebe den gesamten Prozess für 4 $ – erhalte innerhalb von 30 Tagen eine vollständige Rückerstattung, wenn du nicht zufrieden bist.",
+          "bullets": {
+            "0": "Keine Schreiberfahrung erforderlich",
+            "1": "Entwurf in 5 Minuten fertig",
+            "2": "Kein Risiko"
+          }
+        },
+        "1": {
+          "plan": "Starter — 19 $/Monat",
+          "title": "Regelmäßiger Content-Ersteller",
+          "description": "Baue deine Serie mit 10 Büchern pro Monat auf und erweitere deine Nische auf KDP. Nur 1,90 $ pro Buch.",
+          "bullets": {
+            "0": "10 Bücher/Monat, 20 Cover",
+            "1": "EPUB + PDF für jedes Buch",
+            "2": "1,90 $ pro Buch"
+          }
+        },
+        "2": {
+          "plan": "Creator — 39 $/Monat",
+          "title": "Wachstum auf KDP",
+          "description": "Erkenne mit dem Research-Hub, welches Buch sich verkauft, und produziere schnell mit 30 Büchern pro Monat.",
+          "bullets": {
+            "0": "KDP-Keyword- und Marktanalyse",
+            "1": "30 Bücher/Monat, 60 Cover",
+            "2": "Zusätzliche Exportoptionen"
+          }
+        },
+        "3": {
+          "plan": "Studio — 79 $/Monat",
+          "title": "Hochvolumen-Produktion / Agentur",
+          "description": "80 Bücher/Monat, mit freigeschaltetem API- und Automatisierungs-Workflow. Keine zusätzlichen Kosten.",
+          "bullets": {
+            "0": "80 Bücher/Monat, 200 Cover",
+            "1": "API- und Automatisierungszugang",
+            "2": "Modellkosten sind im Planpreis enthalten"
+          }
+        }
+      }
+    },
+    "featureTable": {
+      "title": "Funktionsvergleich",
+      "description": "Sieh, was in jedem Plan enthalten ist – nebeneinander."
+    },
+    "faq": {
+      "title": "Deine Fragen",
+      "description": "Alles, was du wissen musst, bevor du einen Plan wählst.",
+      "items": {
+        "0": {
+          "q": "Welchen Plan soll ich wählen?",
+          "a": "Wenn du dein erstes Buch testest, starte mit dem Einzelbuch-Plan (4 $) – kein Risiko, kein Abonnement. Wenn du planst, einige Bücher pro Monat zu produzieren, ist Starter (19 $/Monat, 10 Bücher) deutlich wirtschaftlicher. Wenn du regelmäßig veröffentlichen möchtest, ist Creator (39 $/Monat, 30 Bücher) der ideale Mittelweg – inklusive Research-Hub und KDP-Analysen."
+        },
+        "1": {
+          "q": "Ist die Vorschau wirklich kostenlos?",
+          "a": "Ja. Du kannst den Assistenten ohne Anmeldung nutzen. Das Anzeigen der Gliederung, der Cover-Vorschau und der ersten Kapitel erfordert keine Zahlung. Du zahlst nur für das vollständige Buch + Export."
+        },
+        "2": {
+          "q": "Kann ich direkt auf KDP hochladen?",
+          "a": "Ja. EPUB- und PDF-Ausgaben werden so erstellt, dass sie den Upload-Anforderungen von Amazon KDP entsprechen. Der Produktions-Workflow ist auf KDP-orientierte Logik ausgelegt, und das Lieferpaket wird mit Fokus auf KDP-Konformität vorbereitet."
+        },
+        "3": {
+          "q": "Kann ich in einer Sprache schreiben und ein Buch in einer anderen produzieren?",
+          "a": "Ja. Die Benutzeroberfläche bleibt in deiner bevorzugten Sprache, während der Buchinhalt auf Englisch oder in einer anderen Sprache deiner Wahl produziert wird. Englisch ist KDPs größter Markt – das kannst du zu deinem Vorteil nutzen."
+        },
+        "4": {
+          "q": "Kann ich meinen Plan ändern?",
+          "a": "Ja. Upgrade, Downgrade oder Kündigung jederzeit möglich. Verwalte alles mit einem Klick im Abrechnungsbereich – keine Genehmigung erforderlich."
+        },
+        "5": {
+          "q": "Werden nicht genutzte Buchguthaben übertragen?",
+          "a": "Nein, monatliche Guthaben werden nicht auf den nächsten Monat übertragen. Deshalb solltest du den Plan wählen, den du wirklich brauchst – es gibt keinen Grund, einen größeren Plan als nötig zu wählen."
+        }
+      },
+      "stillQuestions": "Noch Fragen?",
+      "fullFaq": "Vollständige FAQ",
+      "contactUs": "Kontaktiere uns"
+    },
+    "cta": {
+      "title": "Sieh dein Buch zuerst –",
+      "titleHighlight": "dann zahle 4 $.",
+      "description": "Gliederung und Cover-Vorschau sind kostenlos. Vollständiges Buch + EPUB/PDF für 4 $ – einmal zahlen, gehört dir.",
+      "btn1": "Kostenlose Vorschau starten",
+      "btn2": "Mit einem Monatsplan starten",
+      "items": {
+        "0": "Kostenlose Vorschau",
+        "1": "4 $ einmalig",
+        "2": "KDP-Konformitätsgarantie",
+        "3": "Rückerstattung innerhalb von 30 Tagen"
+      }
+    }
+  },
+  "HowItWorksPage": {
+    "metadata": {
+      "title": "Wie der Book Creator funktioniert | 3-Schritte-Buchproduktion",
+      "description": "Sieh Schritt für Schritt, wie der Buchproduktionsprozess funktioniert – von einer kurzen Themenzusammenfassung bis zu Kapitelplänen, Vorschauen und EPUB/PDF-Ausgabe."
+    },
+    "hero": {
+      "badge": "So funktioniert es",
+      "title": "Gib dein Thema ein, genehmige deinen Plan,",
+      "titleHighlight": "verwandle dein Buch in ein fertiges Produkt."
+    }
+  }
+}

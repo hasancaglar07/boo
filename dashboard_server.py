@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import base64
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 import html
 import json
 import mimetypes
@@ -16,10 +16,13 @@ import subprocess
 import threading
 import time
 import textwrap
+import unicodedata
+import urllib.error
 import urllib.parse
+import urllib.request
 import weakref
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -36,6 +39,30 @@ BOOK_GENERATOR_ENV_FILES = (
     ROOT_DIR / ".env.codefast.local",
     ROOT_DIR / ".env.local",
 )
+
+
+def load_dashboard_env_files() -> None:
+    for candidate in BOOK_GENERATOR_ENV_FILES:
+        if not candidate.exists():
+            continue
+        try:
+            lines = candidate.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for raw_line in lines:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            if not key or key in os.environ:
+                continue
+            value = value.strip().strip('"').strip("'")
+            os.environ[key] = value
+
+
+load_dashboard_env_files()
+
 HOST = os.environ.get("BOOK_DASHBOARD_HOST", "127.0.0.1")
 PORT = int(os.environ.get("BOOK_DASHBOARD_PORT", "8765"))
 PREVIEW_PIPELINE_MIN_WORDS = 900
@@ -62,7 +89,78 @@ PIPELINE_STALE_SECONDS = max(
     int(os.environ.get("BOOK_PIPELINE_STALE_SECONDS", "180") or "180"),
 )
 IMAGE_PROVIDER_POLICY = os.environ.get("BOOK_IMAGE_PROVIDER_POLICY", "vertex_only").strip().lower().replace("-", "_")
-PREVIEW_COVER_SERVICE = os.environ.get("BOOK_PREVIEW_COVER_SERVICE", "vertex-imagen-standard").strip() or "vertex-imagen-standard"
+PREVIEW_COVER_SERVICE = os.environ.get("BOOK_PREVIEW_COVER_SERVICE", "auto").strip() or "auto"
+PREVIEW_COVER_TIMEOUT_SECONDS = max(
+    90,
+    int(os.environ.get("BOOK_PREVIEW_COVER_TIMEOUT_SECONDS", "180") or "180"),
+)
+STRICT_EXPORT_BUILD_CHECKS = os.environ.get("BOOK_STRICT_EXPORT_BUILD_CHECKS", "0").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+EARLY_EXPORT_MIN_CHAPTERS = max(
+    1,
+    int(os.environ.get("BOOK_EARLY_EXPORT_MIN_CHAPTERS", "3") or "3"),
+)
+EARLY_EXPORT_MIN_CHAPTER_WORDS = max(
+    1,
+    int(os.environ.get("BOOK_EARLY_EXPORT_MIN_CHAPTER_WORDS", "800") or "800"),
+)
+DEFAULT_BOOK_LENGTH_MODE = "25k_standard"
+DEFAULT_COVER_STYLE_MODE = "bookstore_bold"
+DEFAULT_BACK_COVER_MODE = "minimal_blurb"
+DEFAULT_COVER_TEXT_STRATEGY = "full_ai_front"
+DEFAULT_COVER_MODE = "full_ai_front"
+DEFAULT_STYLE_DIRECTION = "genre_split"
+DEFAULT_WRAP_SCOPE = "ai_front_only"
+DEFAULT_QUALITY_GATE = "best_available"
+DEFAULT_CHAPTER_GENERATION_MODE = "three_pass_compact"
+BOOK_LENGTH_MODES: dict[str, dict[str, int]] = {
+    "10k_starter": {
+        "min_chapters": 5,
+        "max_chapters": 6,
+        "chapter_target_words": 1800,
+        "chapter_min_words": 1500,
+        "chapter_max_words": 2200,
+        "target_min_words": 9500,
+        "target_max_words": 12500,
+    },
+    "20k_compact": {
+        "min_chapters": 8,
+        "max_chapters": 10,
+        "chapter_target_words": 2100,
+        "chapter_min_words": 1800,
+        "chapter_max_words": 2500,
+        "target_min_words": 18000,
+        "target_max_words": 23000,
+    },
+    "25k_standard": {
+        "min_chapters": 10,
+        "max_chapters": 12,
+        "chapter_target_words": 2400,
+        "chapter_min_words": 2200,
+        "chapter_max_words": 2600,
+        "target_min_words": 22000,
+        "target_max_words": 26000,
+    },
+    "40k_extended": {
+        "min_chapters": 12,
+        "max_chapters": 14,
+        "chapter_target_words": 3200,
+        "chapter_min_words": 2800,
+        "chapter_max_words": 4000,
+        "target_min_words": 36000,
+        "target_max_words": 43000,
+    },
+}
+BOOK_LENGTH_TIER_TO_MODE: dict[str, str] = {
+    "starter": "10k_starter",
+    "compact": "20k_compact",
+    "standard": "25k_standard",
+    "extended": "40k_extended",
+}
 VERTEX_IMAGE_SERVICES = {
     "vertex-imagen-fast",
     "vertex-imagen-standard",
@@ -98,8 +196,41 @@ def calculate_timeout(base_timeout: int) -> int:
     return int(base_timeout * SUBPROCESS_TIMEOUT_MULTIPLIER)
 
 
+FULL_PIPELINE_CHAPTER_TIMEOUT_SECONDS = max(
+    180,
+    int(
+        os.environ.get(
+            "BOOK_FULL_PIPELINE_CHAPTER_TIMEOUT_SECONDS",
+            str(calculate_timeout(360)),
+        )
+        or str(calculate_timeout(360))
+    ),
+)
+FULL_PIPELINE_SEGMENT_TIMEOUT_SECONDS = max(
+    120,
+    int(
+        os.environ.get(
+            "BOOK_FULL_PIPELINE_SEGMENT_TIMEOUT_SECONDS",
+            str(calculate_timeout(300)),
+        )
+        or str(calculate_timeout(300))
+    ),
+)
+FULL_PIPELINE_EXTEND_TIMEOUT_SECONDS = max(
+    120,
+    int(
+        os.environ.get(
+            "BOOK_FULL_PIPELINE_EXTEND_TIMEOUT_SECONDS",
+            str(calculate_timeout(240)),
+        )
+        or str(calculate_timeout(240))
+    ),
+)
+
+
 # Global thread pool for pipeline management
 PIPELINE_THREAD_POOL_MAX_WORKERS = int(os.environ.get("PIPELINE_THREAD_POOL_MAX_WORKERS", "8"))
+FULL_GENERATION_MAX_CONCURRENT = max(1, int(os.environ.get("BOOK_FULL_GENERATION_MAX_CONCURRENT", "1") or "1"))
 _pipeline_thread_pool: ThreadPoolExecutor | None = None
 _pipeline_thread_pool_lock = threading.Lock()
 _active_threads: weakref.WeakSet[threading.Thread] = weakref.WeakSet()
@@ -238,7 +369,7 @@ class LRUCache:
 
 
 # Global cache instances with proper LRU eviction
-BOOK_SUMMARY_CACHE_TTL_SECONDS = int(os.environ.get("BOOK_SUMMARY_CACHE_TTL_SECONDS", "15"))
+BOOK_SUMMARY_CACHE_TTL_SECONDS = int(os.environ.get("BOOK_SUMMARY_CACHE_TTL_SECONDS", "45"))
 BOOK_SUMMARY_CACHE_LOCK = threading.Lock()
 BOOK_SUMMARY_REFRESH_LOCK = threading.Lock()
 BOOK_SUMMARY_CACHE = LRUCache(max_size=50, default_ttl_seconds=float(BOOK_SUMMARY_CACHE_TTL_SECONDS))
@@ -250,6 +381,19 @@ PYTHON_LAUNCHER_CACHE: list[str] | None = None
 PYTHON_LAUNCHER_LOCK = threading.Lock()
 BASH_PATH_STYLE_CACHE: str | None = None
 BASH_PATH_STYLE_LOCK = threading.Lock()
+HEALTH_VERTEX_CONFIG_CACHE_TTL_SECONDS = max(
+    1.0,
+    float(os.environ.get("BOOK_HEALTH_VERTEX_CONFIG_CACHE_TTL_SECONDS", "5") or "5"),
+)
+HEALTH_VERTEX_CONFIG_CACHE_LOCK = threading.Lock()
+HEALTH_VERTEX_CONFIG_CACHE: dict[str, Any] = {
+    "expires_at": 0.0,
+    "value": {
+        "api_key": "",
+        "project": "",
+        "location": "us-central1",
+    },
+}
 
 # Cache statistics endpoint
 def get_cache_stats() -> dict[str, Any]:
@@ -789,6 +933,8 @@ def build_book_preview(book: dict[str, Any], ratio: float = 0.2) -> dict[str, An
             "cover_brief": book.get("cover_brief", ""),
             "cover_image": book.get("cover_image", ""),
             "back_cover_image": book.get("back_cover_image", ""),
+            "front_cover_source": book.get("front_cover_source", ""),
+            "back_cover_source": book.get("back_cover_source", ""),
             "status": book.get("status", {}),
         },
         "preview": {
@@ -922,6 +1068,8 @@ def read_metadata(
         "cover_art_image": "",
         "cover_image": "",
         "back_cover_image": "",
+        "front_cover_source": "",
+        "back_cover_source": "",
         "cover_template": "",
         "cover_variant_count": 0,
         "cover_variant_target_count": 1,
@@ -932,7 +1080,11 @@ def read_metadata(
         "recommended_cover_variant": "",
         "back_cover_variant_family": "",
         "cover_family": "",
-        "cover_text_strategy": "",
+        "cover_text_strategy": DEFAULT_COVER_TEXT_STRATEGY,
+        "cover_mode": DEFAULT_COVER_MODE,
+        "style_direction": DEFAULT_STYLE_DIRECTION,
+        "wrap_scope": DEFAULT_WRAP_SCOPE,
+        "quality_gate": DEFAULT_QUALITY_GATE,
         "cover_branch": "",
         "cover_genre": "",
         "cover_subtopic": "",
@@ -940,12 +1092,34 @@ def read_metadata(
         "cover_layout_key": "",
         "cover_motif": "",
         "cover_lab_version": "",
+        "cover_style_mode": DEFAULT_COVER_STYLE_MODE,
+        "back_cover_mode": DEFAULT_BACK_COVER_MODE,
+        "text_safe_zone_status": "",
+        "cover_pair_score": 0,
+        "cover_rejection_reasons": {},
+        "front_render_mode": "",
+        "front_ai_attempt_count": 0,
+        "front_text_validation_score": 0,
+        "front_visual_grade": 0,
+        "front_genre_fit_score": 0,
+        "front_hard_reject_reasons": [],
+        "selected_cover_confidence": 0,
         "isbn": "",
         "year": "",
         "fast": False,
+        "book_length_mode": DEFAULT_BOOK_LENGTH_MODE,
         "book_length_tier": "standard",
+        "chapter_generation_mode": DEFAULT_CHAPTER_GENERATION_MODE,
         "target_word_count_min": 0,
         "target_word_count_max": 0,
+        "chapter_target_words": 0,
+        "book_target_words": 0,
+        "book_generation_complete": False,
+        "codefast_text_model": "",
+        "codefast_outline_model": "",
+        "codefast_creative_model": "",
+        "codefast_chapter_segment_model": "",
+        "codefast_chapter_segment_fallback_model": "",
         "chapter_plan": [],
         "preview_stage": "idle",
         "preview_message": "",
@@ -963,13 +1137,22 @@ def read_metadata(
         "full_generation_target_count": 0,
         "full_generation_ready_count": 0,
         "full_generation_failed_count": 0,
+        "full_generation_retry_count": 0,
         "full_generation_eta_seconds": 0,
         "full_generation_avg_chapter_seconds": 0,
         "full_generation_initial_ready_count": 0,
+        "current_chapter": 0,
+        "current_segment": 0,
+        "segment_count": 0,
+        "segment_index": 0,
+        "pause_reason": "",
+        "next_retry_at": "",
+        "opening_sequence_valid": None,
         "full_generation_eta_updated_at": "",
         "full_generation_started_at": "",
         "full_generation_updated_at": "",
         "full_generation_completed_at": "",
+        "activity_log": [],
     }
     return read_json_file(book_dir / METADATA_FILE_NAME, defaults)
 
@@ -983,6 +1166,468 @@ def save_metadata(book_dir: Path, metadata: dict[str, Any]) -> dict[str, Any]:
         encoding="utf-8",
     )
     return merged
+
+
+def normalize_activity_log(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    items: list[dict[str, Any]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        code = str(item.get("code") or "").strip()
+        label = str(item.get("label") or "").strip()
+        status = str(item.get("status") or "").strip().lower()
+        if not code or not label or status not in {"done", "active", "queued", "waiting", "error"}:
+            continue
+        items.append(
+            {
+                "code": code,
+                "label": label,
+                "status": status,
+                "timestamp": str(item.get("timestamp") or "").strip() or now_utc_iso(),
+                "detail": str(item.get("detail") or "").strip(),
+            }
+        )
+    return items[-80:]
+
+
+def append_book_activity(
+    book_dir: Path,
+    code: str,
+    label: str,
+    status: str,
+    detail: str = "",
+) -> list[dict[str, Any]]:
+    items = normalize_activity_log(read_metadata(book_dir).get("activity_log"))
+    payload = {
+        "code": str(code).strip(),
+        "label": str(label).strip(),
+        "status": str(status).strip().lower(),
+        "timestamp": now_utc_iso(),
+        "detail": str(detail or "").strip(),
+    }
+    if not payload["code"] or not payload["label"] or payload["status"] not in {"done", "active", "queued", "waiting", "error"}:
+        return items
+    if items:
+        last = items[-1]
+        if (
+            last.get("code") == payload["code"]
+            and last.get("status") == payload["status"]
+            and str(last.get("detail") or "") == payload["detail"]
+        ):
+            last.update(payload)
+        else:
+            items.append(payload)
+    else:
+        items.append(payload)
+    items = items[-80:]
+    save_metadata(book_dir, {"activity_log": items})
+    return items
+
+
+def extract_provider_trace(output: Any) -> dict[str, Any]:
+    text = str(output or "")
+    attempts: list[dict[str, Any]] = []
+    for match in re.finditer(
+        r"Using\s+(?P<provider>.+?)\s+\(model:\s*(?P<model>[^,]+),\s*task:\s*(?P<task>[^\)]+)\)\s+\[attempt\s+(?P<attempt>\d+)/(?P<max>\d+)\]",
+        text,
+        flags=re.IGNORECASE,
+    ):
+        attempts.append(
+            {
+                "provider": str(match.group("provider") or "").strip(),
+                "model": str(match.group("model") or "").strip(),
+                "task": str(match.group("task") or "").strip(),
+                "attempt": int(match.group("attempt") or 0),
+                "max_attempts": int(match.group("max") or 0),
+            }
+        )
+
+    providers: list[str] = []
+    models: list[str] = []
+    for item in attempts:
+        provider = str(item.get("provider") or "").strip()
+        model = str(item.get("model") or "").strip()
+        if provider and provider not in providers:
+            providers.append(provider)
+        if model and model not in models:
+            models.append(model)
+
+    lower_text = text.lower()
+    return {
+        "attempts": attempts,
+        "providers": providers,
+        "models": models,
+        "used_vertex_text": any("vertex" in provider.lower() for provider in providers)
+        or any("gemini" in model.lower() for model in models),
+        "used_glm_text": any("glm" in provider.lower() for provider in providers)
+        or any("glm" in model.lower() for model in models),
+        "fallback_used": len(providers) > 1 or len(models) > 1 or "retrying/falling back" in lower_text,
+        "rate_limited": "rate/limit" in lower_text or "http 429" in lower_text or "limit response" in lower_text,
+        "transport_error": "transport level" in lower_text or "request failed" in lower_text,
+        "no_provider": "no configured text provider" in lower_text or "all configured text providers failed" in lower_text,
+    }
+
+
+def summarize_provider_trace(action: str, output: Any) -> str:
+    trace = extract_provider_trace(output)
+    providers = trace.get("providers") or []
+    models = trace.get("models") or []
+    attempts = trace.get("attempts") or []
+    if not providers and not models:
+        return ""
+
+    provider_part = ", ".join(str(item) for item in providers) if providers else "Unknown provider"
+    model_part = ", ".join(str(item) for item in models) if models else "unknown model"
+    detail = f"{action} via {provider_part} ({model_part})"
+    if trace.get("fallback_used"):
+        detail += "; fallback/retry used"
+    if trace.get("rate_limited"):
+        detail += "; upstream rate-limit detected"
+    if trace.get("transport_error"):
+        detail += "; transport issue detected"
+    if attempts:
+        last_attempt = attempts[-1]
+        detail += (
+            f"; final attempt {int(last_attempt.get('attempt') or 0)}/"
+            f"{int(last_attempt.get('max_attempts') or 0)}"
+        )
+    return detail
+
+
+def append_workflow_provider_activity(
+    book_dir: Path,
+    action: str,
+    result: dict[str, Any] | None,
+    *,
+    code: str | None = None,
+    label: str | None = None,
+) -> None:
+    trace_summary = summarize_provider_trace(action, (result or {}).get("output") if isinstance(result, dict) else "")
+    if not trace_summary:
+        return
+    append_book_activity(
+        book_dir,
+        code or f"{action}_provider",
+        label or f"{action.replace('_', ' ').title()} provider",
+        "done" if bool((result or {}).get("ok")) else "waiting" if is_transient_workflow_failure(result or {}) else "error",
+        trace_summary,
+    )
+    append_log(f"WORKFLOW provider slug={book_dir.name} action={action} detail={trace_summary}")
+
+
+def preview_cover_eta_seconds(metadata: dict[str, Any], generation: dict[str, Any]) -> int:
+    if bool(generation.get("cover_ready")):
+        return 0
+    cover_state = str(generation.get("cover_state") or "idle").strip().lower()
+    if cover_state == "error":
+        return 0
+    started_at = parse_iso_datetime(metadata.get("preview_started_at") or metadata.get("preview_updated_at"))
+    if started_at is None:
+        return 35
+    elapsed = int((datetime.now(timezone.utc) - started_at).total_seconds())
+    baseline = 55 if cover_state in {"queued", "idle"} else 40
+    return max(8, baseline - max(0, elapsed))
+
+
+def preview_first_chapter_eta_seconds(metadata: dict[str, Any], generation: dict[str, Any]) -> int:
+    if bool(generation.get("first_chapter_ready")):
+        return 0
+    first_state = str(generation.get("first_chapter_state") or "idle").strip().lower()
+    if first_state == "error":
+        return 0
+    updated_at = parse_iso_datetime(metadata.get("preview_updated_at") or metadata.get("preview_started_at"))
+    if updated_at is None:
+        return 90
+    elapsed = int((datetime.now(timezone.utc) - updated_at).total_seconds())
+    baseline = 140 if first_state in {"queued", "idle"} else 110
+    return max(20, baseline - max(0, elapsed))
+
+
+def build_generation_activity_timeline(
+    metadata: dict[str, Any],
+    generation: dict[str, Any],
+    full_generation: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    full_generation = full_generation or {}
+    full_stage = str(full_generation.get("stage") or "").strip().lower()
+    cover_status = (
+        "done"
+        if generation.get("cover_ready")
+        else "error"
+        if str(generation.get("cover_state") or "").strip().lower() == "error"
+        else "active"
+        if str(generation.get("cover_state") or "").strip().lower() in {"queued", "running"}
+        else "queued"
+    )
+    first_status = (
+        "done"
+        if generation.get("first_chapter_ready")
+        else "error"
+        if str(generation.get("first_chapter_state") or "").strip().lower() == "error"
+        else "active"
+        if (
+            str(generation.get("first_chapter_state") or "").strip().lower() in {"queued", "running"}
+            or (generation.get("cover_ready") and not generation.get("first_chapter_ready"))
+        )
+        else "queued"
+    )
+    full_status = (
+        "done"
+        if full_generation.get("complete")
+        else "error"
+        if full_stage in {"error", "needs_attention"}
+        else "waiting"
+        if full_stage == "waiting"
+        else "active"
+        if bool(full_generation.get("active")) or full_stage in {"queued", "running"}
+        else "queued"
+    )
+    return [
+        {
+            "code": "cover",
+            "label": "Cover",
+            "status": cover_status,
+            "timestamp": str(metadata.get("preview_updated_at") or metadata.get("preview_started_at") or ""),
+            "detail": "Real cover ready" if generation.get("cover_ready") else "Creating your real book cover",
+        },
+        {
+            "code": "first_chapter",
+            "label": "First chapter",
+            "status": first_status,
+            "timestamp": str(metadata.get("preview_completed_at") or metadata.get("preview_updated_at") or ""),
+            "detail": (
+                "First readable chapter ready"
+                if generation.get("first_chapter_ready")
+                else "Writing the first readable chapter"
+            ),
+        },
+        {
+            "code": "full_book",
+            "label": "Full book",
+            "status": full_status,
+            "timestamp": str(
+                metadata.get("full_generation_updated_at")
+                or metadata.get("full_generation_started_at")
+                or metadata.get("preview_updated_at")
+                or ""
+            ),
+            "detail": str(full_generation.get("message") or "Remaining chapters continue in the background"),
+        },
+    ]
+
+
+def normalize_book_length_mode(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    tier_mapped = BOOK_LENGTH_TIER_TO_MODE.get(normalized)
+    if tier_mapped:
+        return tier_mapped
+    if normalized in BOOK_LENGTH_MODES:
+        return normalized
+    return DEFAULT_BOOK_LENGTH_MODE
+
+
+def normalize_cover_style_mode(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    return normalized or DEFAULT_COVER_STYLE_MODE
+
+
+def normalize_back_cover_mode(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    return normalized or DEFAULT_BACK_COVER_MODE
+
+
+def normalize_cover_text_strategy(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    return normalized or DEFAULT_COVER_TEXT_STRATEGY
+
+
+def normalize_cover_mode(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    return normalized or DEFAULT_COVER_MODE
+
+
+def normalize_style_direction(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    return normalized or DEFAULT_STYLE_DIRECTION
+
+
+def normalize_wrap_scope(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    return normalized or DEFAULT_WRAP_SCOPE
+
+
+def normalize_quality_gate(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    return normalized or DEFAULT_QUALITY_GATE
+
+
+def normalize_chapter_generation_mode(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    if normalized in {"three_pass_compact", "four_pass_compact"}:
+        return normalized
+    return DEFAULT_CHAPTER_GENERATION_MODE
+
+
+def book_length_mode_config(mode: Any) -> dict[str, int]:
+    return BOOK_LENGTH_MODES[normalize_book_length_mode(mode)]
+
+
+def metadata_word_targets(metadata: dict[str, Any]) -> dict[str, int]:
+    raw_mode = str(metadata.get("book_length_mode") or "").strip().lower().replace("-", "_")
+    raw_tier = str(metadata.get("book_length_tier") or "").strip().lower().replace("-", "_")
+    tier_mode = BOOK_LENGTH_TIER_TO_MODE.get(raw_tier, "")
+    mode = normalize_book_length_mode(raw_mode or raw_tier)
+
+    legacy_mode_adjusted = False
+    if tier_mode and mode != tier_mode:
+        mode_config = book_length_mode_config(mode)
+        target_min_override = int(metadata.get("target_word_count_min") or 0)
+        chapter_target_override = int(metadata.get("chapter_target_words") or 0)
+        looks_legacy_mismatch = (
+            (target_min_override > 0 and target_min_override < int(mode_config["target_min_words"]))
+            or (chapter_target_override > 0 and chapter_target_override < int(mode_config["chapter_target_words"]))
+        )
+        if looks_legacy_mismatch:
+            mode = tier_mode
+            legacy_mode_adjusted = True
+
+    config = book_length_mode_config(mode)
+    chapter_target_words = int(metadata.get("chapter_target_words") or 0) or int(config["chapter_target_words"])
+    target_min_words = int(metadata.get("target_word_count_min") or 0) or int(config["target_min_words"])
+    target_max_words = int(metadata.get("target_word_count_max") or 0) or int(config["target_max_words"])
+    book_target_words_raw = int(metadata.get("book_target_words") or 0)
+    if legacy_mode_adjusted and book_target_words_raw > target_max_words and target_min_words > 0:
+        book_target_words = target_min_words
+    else:
+        book_target_words = book_target_words_raw or target_min_words
+    return {
+        "book_length_mode": mode,
+        "chapter_target_words": chapter_target_words,
+        "target_word_count_min": target_min_words,
+        "target_word_count_max": target_max_words,
+        "book_target_words": book_target_words,
+        "min_chapters": int(config["min_chapters"]),
+        "max_chapters": int(config["max_chapters"]),
+        "chapter_min_words": int(config["chapter_min_words"]),
+        "chapter_max_words": int(config["chapter_max_words"]),
+    }
+
+
+def codefast_env_overrides_for_metadata(
+    metadata: dict[str, Any] | None,
+    *,
+    task_type: str = "",
+) -> dict[str, str]:
+    metadata = metadata or {}
+    overrides: dict[str, str] = {}
+
+    text_model = str(metadata.get("codefast_text_model") or "").strip()
+    outline_model = str(metadata.get("codefast_outline_model") or "").strip()
+    creative_model = str(metadata.get("codefast_creative_model") or "").strip()
+    segment_model = str(metadata.get("codefast_chapter_segment_model") or "").strip()
+    segment_fallback_model = str(metadata.get("codefast_chapter_segment_fallback_model") or "").strip()
+    extension_model = str(
+        metadata.get("codefast_chapter_extension_model")
+        or metadata.get("codefast_chapter_segment_model")
+        or metadata.get("codefast_creative_model")
+        or ""
+    ).strip()
+    extension_fallback_model = str(
+        metadata.get("codefast_chapter_extension_fallback_model")
+        or metadata.get("codefast_chapter_segment_fallback_model")
+        or ""
+    ).strip()
+
+    if text_model:
+        overrides["CODEFAST_TEXT_MODEL"] = text_model
+    if outline_model:
+        overrides["CODEFAST_OUTLINE_MODEL"] = outline_model
+    if creative_model:
+        overrides["CODEFAST_CREATIVE_MODEL"] = creative_model
+    if segment_model:
+        overrides["CODEFAST_CHAPTER_SEGMENT_MODEL"] = segment_model
+    if segment_fallback_model:
+        overrides["CODEFAST_CHAPTER_SEGMENT_FALLBACK_MODEL"] = segment_fallback_model
+    if extension_model:
+        overrides["CODEFAST_CHAPTER_EXTENSION_MODEL"] = extension_model
+    if extension_fallback_model:
+        overrides["CODEFAST_CHAPTER_EXTENSION_FALLBACK_MODEL"] = extension_fallback_model
+
+    return overrides
+
+
+def metadata_chapter_generation_mode(metadata: dict[str, Any]) -> str:
+    explicit = normalize_chapter_generation_mode(metadata.get("chapter_generation_mode"))
+    if normalize_book_length_mode(metadata.get("book_length_mode") or metadata.get("book_length_tier")) == "40k_extended":
+        return "four_pass_compact" if explicit == DEFAULT_CHAPTER_GENERATION_MODE else explicit
+    return explicit
+
+
+def chapter_segment_count(metadata: dict[str, Any]) -> int:
+    return 4 if metadata_chapter_generation_mode(metadata) == "four_pass_compact" else 3
+
+
+def chapter_segment_targets(
+    metadata: dict[str, Any],
+    chapter_min_words: int,
+    chapter_max_words: int,
+) -> dict[str, int]:
+    segment_total = max(1, chapter_segment_count(metadata))
+    base_min = max(560, int(chapter_min_words / segment_total) - 40)
+    base_max = max(base_min + 140, int(chapter_max_words / segment_total) + 140)
+    target_words = max(base_min, int((chapter_min_words + chapter_max_words) / 2 / segment_total))
+    return {
+        "segment_count": segment_total,
+        "segment_min_words": base_min,
+        "segment_max_words": base_max,
+        "segment_target_words": target_words,
+    }
+
+
+def preview_segment_targets(chapter_min_words: int, chapter_max_words: int) -> dict[str, int]:
+    segment_total = 2
+    base_min = max(420, int(chapter_min_words / segment_total) - 60)
+    base_max = max(base_min + 120, int(chapter_max_words / segment_total) + 120)
+    return {
+        "segment_count": segment_total,
+        "segment_min_words": base_min,
+        "segment_max_words": base_max,
+        "segment_target_words": max(base_min, int((chapter_min_words + chapter_max_words) / 2 / segment_total)),
+    }
+
+
+def parse_iso_datetime(value: Any) -> datetime | None:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def retry_wait_seconds_remaining(next_retry_at: Any) -> int:
+    retry_at = parse_iso_datetime(next_retry_at)
+    if retry_at is None:
+        return 0
+    remaining = int((retry_at - datetime.now(timezone.utc)).total_seconds())
+    return max(0, remaining)
+
+
+def full_generation_retry_delay_seconds(retry_count: int) -> int:
+    base_delay = max(20, int(os.environ.get("BOOK_FULL_GENERATION_RETRY_BASE_SECONDS", "45") or "45"))
+    max_delay = max(base_delay, int(os.environ.get("BOOK_FULL_GENERATION_RETRY_MAX_SECONDS", "600") or "600"))
+    clamped_retry_count = max(0, min(4, retry_count))
+    return min(max_delay, base_delay * (2 ** clamped_retry_count))
+
+
+def next_retry_timestamp(retry_count: int) -> str:
+    return (datetime.now(timezone.utc) + timedelta(seconds=full_generation_retry_delay_seconds(retry_count))).isoformat()
 
 
 def now_utc_iso() -> str:
@@ -1017,6 +1662,25 @@ def resolve_vertex_image_config(env: dict[str, str] | None = None) -> dict[str, 
     }
 
 
+def cached_vertex_image_config() -> dict[str, str]:
+    now = time.time()
+    with HEALTH_VERTEX_CONFIG_CACHE_LOCK:
+        cached_expires_at = float(HEALTH_VERTEX_CONFIG_CACHE.get("expires_at") or 0.0)
+        cached_value = HEALTH_VERTEX_CONFIG_CACHE.get("value")
+        if isinstance(cached_value, dict) and now < cached_expires_at:
+            return {
+                "api_key": str(cached_value.get("api_key") or ""),
+                "project": str(cached_value.get("project") or ""),
+                "location": str(cached_value.get("location") or "us-central1"),
+            }
+
+    resolved = resolve_vertex_image_config(command_env())
+    with HEALTH_VERTEX_CONFIG_CACHE_LOCK:
+        HEALTH_VERTEX_CONFIG_CACHE["value"] = dict(resolved)
+        HEALTH_VERTEX_CONFIG_CACHE["expires_at"] = now + HEALTH_VERTEX_CONFIG_CACHE_TTL_SECONDS
+    return resolved
+
+
 def has_vertex_image_provider_config(env: dict[str, str] | None = None) -> bool:
     config = resolve_vertex_image_config(env)
     return bool(config["api_key"] and config["project"])
@@ -1025,12 +1689,16 @@ def has_vertex_image_provider_config(env: dict[str, str] | None = None) -> bool:
 def normalize_cover_service_for_policy(service: Any = None) -> str:
     requested = str(service or "").strip().lower()
     if image_provider_policy_vertex_only():
+        if requested == "auto":
+            return "auto"
         if requested in VERTEX_IMAGE_SERVICES:
             return requested
         configured = str(PREVIEW_COVER_SERVICE or "").strip().lower()
+        if configured == "auto":
+            return "auto"
         if configured in VERTEX_IMAGE_SERVICES:
             return configured
-        return "vertex-imagen-standard"
+        return "auto"
     return requested or "auto"
 
 
@@ -1070,8 +1738,14 @@ def is_full_pipeline_active(slug: str) -> bool:
 def resolve_book_asset_path(book_dir: Path, relative_path: str) -> Path | None:
     if not relative_path:
         return None
-    asset_path = (book_dir / relative_path).resolve()
-    if not asset_path.exists() or (book_dir not in asset_path.parents and asset_path != book_dir):
+    normalized = str(relative_path).replace("\\", "/").strip().lstrip("/")
+    if not normalized:
+        return None
+    relative = Path(normalized)
+    if relative.is_absolute() or ".." in relative.parts:
+        return None
+    asset_path = book_dir / relative
+    if not asset_path.exists():
         return None
     return asset_path
 
@@ -1146,7 +1820,18 @@ def preferred_cover_asset_reference(
     return ""
 
 
-def resolve_cover_image_references(book_dir: Path, metadata: dict[str, Any]) -> tuple[str, str]:
+def resolve_cover_image_references(
+    book_dir: Path,
+    metadata: dict[str, Any],
+    *,
+    fast: bool = False,
+) -> tuple[str, str]:
+    if fast:
+        return (
+            existing_book_asset_reference(book_dir, metadata.get("cover_image")),
+            existing_book_asset_reference(book_dir, metadata.get("back_cover_image")),
+        )
+
     front = preferred_cover_asset_reference(
         book_dir,
         metadata.get("cover_image"),
@@ -1158,6 +1843,41 @@ def resolve_cover_image_references(book_dir: Path, metadata: dict[str, Any]) -> 
         prefixes=BACK_COVER_PREFIX_PRIORITY,
     )
     return front, back
+
+
+def normalize_cover_source(value: Any) -> str:
+    source = str(value or "").strip().lower()
+    if source == "manual":
+        return "manual"
+    if source == "variant":
+        return "variant"
+    return ""
+
+
+def resolved_cover_sources(book_dir: Path, metadata: dict[str, Any]) -> tuple[str, str]:
+    front = normalize_cover_source(metadata.get("front_cover_source"))
+    back = normalize_cover_source(metadata.get("back_cover_source"))
+    front_ref = existing_book_asset_reference(book_dir, metadata.get("cover_image"))
+    back_ref = existing_book_asset_reference(book_dir, metadata.get("back_cover_image"))
+
+    if front == "manual" and not front_ref:
+        front = ""
+    if back == "manual" and not back_ref:
+        back = ""
+
+    if not front:
+        front = "manual" if front_ref.startswith("assets/dashboard_cover") else "variant"
+    if not back:
+        back = "manual" if back_ref.startswith("assets/dashboard_back_cover") else "variant"
+
+    return front, back
+
+
+def manual_cover_override_active(book_dir: Path, metadata: dict[str, Any]) -> bool:
+    front_source, back_source = resolved_cover_sources(book_dir, metadata)
+    front_ref = existing_book_asset_reference(book_dir, metadata.get("cover_image"))
+    back_ref = existing_book_asset_reference(book_dir, metadata.get("back_cover_image"))
+    return (front_source == "manual" and bool(front_ref)) or (back_source == "manual" and bool(back_ref))
 
 
 def read_book_core_fields(book_dir: Path, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -1212,6 +1932,23 @@ def normalize_cover_variants(raw: Any) -> list[dict[str, Any]]:
                 "preferred_zone": str(item.get("preferred_zone") or "").strip(),
                 "render_mode": str(item.get("render_mode") or "").strip(),
                 "text_strategy": str(item.get("text_strategy") or "").strip(),
+                "cover_mode": normalize_cover_mode(item.get("cover_mode")),
+                "style_direction": normalize_style_direction(item.get("style_direction")),
+                "wrap_scope": normalize_wrap_scope(item.get("wrap_scope")),
+                "quality_gate": normalize_quality_gate(item.get("quality_gate")),
+                "cover_style_mode": normalize_cover_style_mode(item.get("cover_style_mode")),
+                "back_cover_mode": normalize_back_cover_mode(item.get("back_cover_mode")),
+                "pair_score": float(item.get("pair_score") or 0),
+                "text_safe_zone_status": str(item.get("text_safe_zone_status") or "").strip(),
+                "visual_flags": item.get("visual_flags") if isinstance(item.get("visual_flags"), dict) else {},
+                "rejection_reasons": [str(reason).strip() for reason in (item.get("rejection_reasons") or []) if str(reason).strip()],
+                "front_render_mode": str(item.get("front_render_mode") or item.get("render_mode") or "").strip(),
+                "front_ai_attempt_count": int(item.get("front_ai_attempt_count") or 0),
+                "front_text_validation_score": float(item.get("front_text_validation_score") or 0),
+                "front_visual_grade": int(item.get("front_visual_grade") or 0),
+                "front_genre_fit_score": int(item.get("front_genre_fit_score") or 0),
+                "front_hard_reject_reasons": [str(reason).strip() for reason in (item.get("front_hard_reject_reasons") or []) if str(reason).strip()],
+                "selected_cover_confidence": float(item.get("selected_cover_confidence") or 0),
                 "text_validation": item.get("text_validation") if isinstance(item.get("text_validation"), dict) else {},
             }
         )
@@ -1241,23 +1978,26 @@ def sync_selected_cover_assets(book_dir: Path, metadata: dict[str, Any]) -> dict
     source_front_svg = resolve_book_asset_path(book_dir, selected.get("front_svg", ""))
     source_back_svg = resolve_book_asset_path(book_dir, selected.get("back_svg", ""))
     source_art = resolve_book_asset_path(book_dir, selected.get("art_image", ""))
+    front_source, back_source = resolved_cover_sources(book_dir, metadata)
+    front_manual = front_source == "manual"
+    back_manual = back_source == "manual"
 
-    if source_front and source_front != assets_dir / "front_cover_final.png":
+    if source_front and not front_manual and source_front != assets_dir / "front_cover_final.png":
         shutil.copyfile(source_front, assets_dir / "front_cover_final.png")
         shutil.copyfile(source_front, assets_dir / "showcase_front_cover.png")
-    if source_back and source_back != assets_dir / "back_cover_final.png":
+    if source_back and not back_manual and source_back != assets_dir / "back_cover_final.png":
         shutil.copyfile(source_back, assets_dir / "back_cover_final.png")
         shutil.copyfile(source_back, assets_dir / "showcase_back_cover.png")
-    if source_front_svg:
+    if source_front_svg and not front_manual:
         shutil.copyfile(source_front_svg, assets_dir / "front_cover_final.svg")
         shutil.copyfile(source_front_svg, assets_dir / "showcase_front_cover.svg")
-    else:
+    elif not front_manual:
         (assets_dir / "front_cover_final.svg").unlink(missing_ok=True)
         (assets_dir / "showcase_front_cover.svg").unlink(missing_ok=True)
-    if source_back_svg:
+    if source_back_svg and not back_manual:
         shutil.copyfile(source_back_svg, assets_dir / "back_cover_final.svg")
         shutil.copyfile(source_back_svg, assets_dir / "showcase_back_cover.svg")
-    else:
+    elif not back_manual:
         (assets_dir / "back_cover_final.svg").unlink(missing_ok=True)
         (assets_dir / "showcase_back_cover.svg").unlink(missing_ok=True)
     if source_art:
@@ -1278,36 +2018,489 @@ def sync_selected_cover_assets(book_dir: Path, metadata: dict[str, Any]) -> dict
             "cover_layout_key": selected.get("layout") or str(metadata.get("cover_layout_key") or ""),
             "cover_motif": selected.get("motif") or str(metadata.get("cover_motif") or ""),
             "cover_art_image": selected.get("art_image", ""),
-            "cover_image": "assets/front_cover_final.png" if source_front else str(metadata.get("cover_image") or ""),
-            "back_cover_image": "assets/back_cover_final.png" if source_back else str(metadata.get("back_cover_image") or ""),
+            "cover_image": (
+                "assets/front_cover_final.png"
+                if source_front and not front_manual
+                else str(metadata.get("cover_image") or "")
+            ),
+            "back_cover_image": (
+                "assets/back_cover_final.png"
+                if source_back and not back_manual
+                else str(metadata.get("back_cover_image") or "")
+            ),
+            "front_cover_source": "manual" if front_manual else "variant",
+            "back_cover_source": "manual" if back_manual else "variant",
             "cover_template": selected.get("template") or str(metadata.get("cover_template") or ""),
             "cover_composed": bool(source_front) or bool(metadata.get("cover_composed")),
+            "cover_text_strategy": selected.get("text_strategy") or str(metadata.get("cover_text_strategy") or DEFAULT_COVER_TEXT_STRATEGY),
+            "cover_mode": normalize_cover_mode(selected.get("cover_mode") or metadata.get("cover_mode")),
+            "style_direction": normalize_style_direction(selected.get("style_direction") or metadata.get("style_direction")),
+            "wrap_scope": normalize_wrap_scope(selected.get("wrap_scope") or metadata.get("wrap_scope")),
+            "quality_gate": normalize_quality_gate(selected.get("quality_gate") or metadata.get("quality_gate")),
+            "text_safe_zone_status": str(selected.get("text_safe_zone_status") or metadata.get("text_safe_zone_status") or "").strip(),
+            "cover_pair_score": float(selected.get("pair_score") or metadata.get("cover_pair_score") or 0),
+            "front_render_mode": str(selected.get("front_render_mode") or selected.get("render_mode") or metadata.get("front_render_mode") or "").strip(),
+            "front_ai_attempt_count": int(selected.get("front_ai_attempt_count") or metadata.get("front_ai_attempt_count") or 0),
+            "front_text_validation_score": float(selected.get("front_text_validation_score") or metadata.get("front_text_validation_score") or 0),
+            "front_visual_grade": int(selected.get("front_visual_grade") or metadata.get("front_visual_grade") or 0),
+            "front_genre_fit_score": int(selected.get("front_genre_fit_score") or metadata.get("front_genre_fit_score") or 0),
+            "front_hard_reject_reasons": selected.get("front_hard_reject_reasons") or metadata.get("front_hard_reject_reasons") or [],
+            "selected_cover_confidence": float(selected.get("selected_cover_confidence") or metadata.get("selected_cover_confidence") or 0),
         },
     )
+
+
+def raw_cover_candidate_assets_exist(book_dir: Path) -> bool:
+    assets_dir = book_dir / "assets"
+    if not assets_dir.is_dir():
+        return False
+
+    ignored_names = {
+        "front_cover_final.png",
+        "front_cover_final.svg",
+        "back_cover_final.png",
+        "back_cover_final.svg",
+        "showcase_front_cover.png",
+        "showcase_front_cover.svg",
+        "showcase_back_cover.png",
+        "showcase_back_cover.svg",
+        "ai_front_cover.png",
+    }
+    for path in assets_dir.iterdir():
+        if not path.is_file():
+            continue
+        name = path.name
+        if name in ignored_names:
+            continue
+        if name.startswith(("front_cover_", "back_cover_", "cover_art_v")):
+            return True
+    return False
+
+
+def recoverable_cover_variants_from_assets(book_dir: Path, metadata: dict[str, Any]) -> list[dict[str, Any]]:
+    assets_dir = book_dir / "assets"
+    if not assets_dir.is_dir():
+        return []
+
+    art_candidates = sorted(
+        (
+            path
+            for path in assets_dir.glob("cover_art_v*.png")
+            if path.is_file()
+        ),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    fallback_art = art_candidates[0].name if art_candidates else ""
+    variants: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+
+    for back_path in sorted(assets_dir.glob("back_cover_*.png")):
+        if not back_path.is_file():
+            continue
+        variant_id = back_path.stem.removeprefix("back_cover_").strip()
+        if not variant_id or variant_id in seen_ids:
+            continue
+        if variant_id in {"final", "showcase"}:
+            continue
+
+        front_exact = assets_dir / f"front_cover_{variant_id}.png"
+        front_studio = assets_dir / f"front_cover_{variant_id}_studio.png"
+        front_path = front_exact if front_exact.is_file() else front_studio if front_studio.is_file() else None
+        if front_path is None:
+            continue
+
+        back_svg = assets_dir / f"back_cover_{variant_id}.svg"
+        front_exact_svg = assets_dir / f"front_cover_{variant_id}.svg"
+        front_studio_svg = assets_dir / f"front_cover_{variant_id}_studio.svg"
+        front_svg = ""
+        if front_path.name.endswith("_studio.png") and front_studio_svg.is_file():
+            front_svg = f"assets/{front_studio_svg.name}"
+        elif front_path == front_exact and front_exact_svg.is_file():
+            front_svg = f"assets/{front_exact_svg.name}"
+
+        front_render_mode = "ai-signature" if front_path == front_exact and not front_svg else "studio-exact"
+        variant_label = variant_id.replace("-", " ").replace("_", " ").strip().title() or "Recovered Variant"
+
+        variants.append(
+            {
+                "id": variant_id,
+                "family": variant_id,
+                "label": variant_label,
+                "genre": str(metadata.get("cover_genre") or "").strip(),
+                "subtopic": str(metadata.get("cover_subtopic") or "").strip(),
+                "layout": str(metadata.get("cover_layout_key") or "").strip(),
+                "motif": str(metadata.get("cover_motif") or "").strip(),
+                "paletteKey": str(metadata.get("cover_palette_key") or "").strip(),
+                "front_image": f"assets/{front_path.name}",
+                "front_svg": front_svg,
+                "back_image": f"assets/{back_path.name}",
+                "back_svg": f"assets/{back_svg.name}" if back_svg.is_file() else "",
+                "art_image": f"assets/{fallback_art}" if fallback_art else "",
+                "score": float(metadata.get("cover_pair_score") or 0.0),
+                "recommended": not variants,
+                "provider": str(metadata.get("cover_generation_provider") or "recovered-assets").strip() or "recovered-assets",
+                "template": str(metadata.get("cover_template") or "").strip(),
+                "preferred_zone": "",
+                "render_mode": front_render_mode,
+                "text_strategy": normalize_cover_text_strategy(metadata.get("cover_text_strategy")),
+                "cover_mode": normalize_cover_mode(metadata.get("cover_mode")),
+                "style_direction": normalize_style_direction(metadata.get("style_direction")),
+                "wrap_scope": normalize_wrap_scope(metadata.get("wrap_scope")),
+                "quality_gate": normalize_quality_gate(metadata.get("quality_gate")),
+                "cover_style_mode": normalize_cover_style_mode(metadata.get("cover_style_mode")),
+                "back_cover_mode": normalize_back_cover_mode(metadata.get("back_cover_mode")),
+                "pair_score": float(metadata.get("cover_pair_score") or 0.0),
+                "text_safe_zone_status": str(metadata.get("text_safe_zone_status") or "").strip(),
+                "visual_flags": {},
+                "rejection_reasons": [],
+                "front_render_mode": str(metadata.get("front_render_mode") or front_render_mode).strip(),
+                "front_ai_attempt_count": int(metadata.get("front_ai_attempt_count") or 0),
+                "front_text_validation_score": float(metadata.get("front_text_validation_score") or 0),
+                "front_visual_grade": int(metadata.get("front_visual_grade") or 0),
+                "front_genre_fit_score": int(metadata.get("front_genre_fit_score") or 0),
+                "front_hard_reject_reasons": [
+                    str(reason).strip()
+                    for reason in (metadata.get("front_hard_reject_reasons") or [])
+                    if str(reason).strip()
+                ],
+                "selected_cover_confidence": float(metadata.get("selected_cover_confidence") or 0.0),
+                "text_validation": {},
+            }
+        )
+        seen_ids.add(variant_id)
+
+    return variants
+
+
+def recover_selected_cover_bundle_from_assets(book_dir: Path, metadata: dict[str, Any]) -> dict[str, Any]:
+    variants = recoverable_cover_variants_from_assets(book_dir, metadata)
+    if not variants:
+        return metadata
+
+    recommended_id = str(metadata.get("recommended_cover_variant") or "").strip()
+    valid_ids = {str(item.get("id") or "").strip() for item in variants}
+    if recommended_id not in valid_ids:
+        recommended_id = str(variants[0]["id"])
+    selected_id = str(metadata.get("selected_cover_variant") or "").strip()
+    if selected_id not in valid_ids:
+        selected_id = recommended_id
+
+    append_log(
+        f"Recovered selected cover bundle from raw assets for '{book_dir.name}' using variant '{selected_id}'."
+    )
+    recovered = save_metadata(
+        book_dir,
+        {
+            "cover_variants": variants,
+            "cover_variant_count": len(variants),
+            "cover_variant_target_count": max(int(metadata.get("cover_variant_target_count") or 1), len(variants)),
+            "recommended_cover_variant": recommended_id,
+            "selected_cover_variant": selected_id,
+            "cover_composed": True,
+            "cover_generation_provider": str(metadata.get("cover_generation_provider") or "recovered-assets").strip()
+            or "recovered-assets",
+            "cover_rejection_reasons": metadata.get("cover_rejection_reasons")
+            if isinstance(metadata.get("cover_rejection_reasons"), dict)
+            else {},
+        },
+    )
+    recovered = sync_selected_cover_assets(book_dir, recovered)
+    sync_preview_generation_metadata(book_dir)
+    return recovered
+
+
+def selected_cover_bundle_ready(
+    book_dir: Path,
+    metadata: dict[str, Any] | None = None,
+    *,
+    require_variant: bool = False,
+) -> bool:
+    metadata = metadata or read_metadata(book_dir)
+    variants = normalize_cover_variants(metadata.get("cover_variants"))
+    final_front = book_dir / "assets" / "front_cover_final.png"
+    final_back = book_dir / "assets" / "back_cover_final.png"
+    final_pair_exists = final_front.is_file() and final_back.is_file()
+    if manual_cover_override_active(book_dir, metadata):
+        cover_image, back_cover_image = resolve_cover_image_references(book_dir, metadata, fast=True)
+        if cover_image and back_cover_image:
+            return True
+
+    if variants or require_variant:
+        if not variants:
+            return False
+        variant_ids = {str(item.get("id") or "").strip() for item in variants}
+        selected_id = str(metadata.get("selected_cover_variant") or "").strip()
+        recommended_id = str(metadata.get("recommended_cover_variant") or "").strip()
+        if not selected_id or not recommended_id:
+            return False
+        if selected_id not in variant_ids or recommended_id not in variant_ids:
+            return False
+        selected = selected_cover_variant_record(metadata)
+        if not selected:
+            return False
+        source_front = resolve_book_asset_path(book_dir, selected.get("front_image"))
+        source_back = resolve_book_asset_path(book_dir, selected.get("back_image"))
+        if not source_front or not source_back:
+            return False
+        if str(metadata.get("cover_image") or "").strip() != "assets/front_cover_final.png":
+            return False
+        if str(metadata.get("back_cover_image") or "").strip() != "assets/back_cover_final.png":
+            return False
+        return final_pair_exists
+
+    cover_image, back_cover_image = resolve_cover_image_references(book_dir, metadata, fast=True)
+    if not cover_image or not back_cover_image:
+        return False
+    front_cover_path = resolve_book_asset_path(book_dir, cover_image)
+    back_cover_path = resolve_book_asset_path(book_dir, back_cover_image)
+    return bool(front_cover_path and back_cover_path)
+
+
+def repair_selected_cover_bundle(book_dir: Path, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
+    current = metadata or read_metadata(book_dir)
+    variants = normalize_cover_variants(current.get("cover_variants"))
+    if not variants:
+        if raw_cover_candidate_assets_exist(book_dir):
+            return recover_selected_cover_bundle_from_assets(book_dir, current)
+        return current
+    if selected_cover_bundle_ready(book_dir, current, require_variant=True):
+        return current
+    repaired = sync_selected_cover_assets(book_dir, current)
+    return repaired
 
 
 def chapter_body_word_count(book_dir: Path, chapter_number_value: int, stop_at: int | None = None) -> int:
     chapter_path = book_dir / f"chapter_{chapter_number_value}_final.md"
     if not chapter_path.exists():
         return 0
-    total_words = 0
     try:
-        with chapter_path.open("r", encoding="utf-8", errors="replace") as handle:
-            for index, line in enumerate(handle):
-                if index < 2:
-                    continue
-                total_words += count_words(line)
-                if stop_at is not None and total_words >= stop_at:
-                    return total_words
+        content = chapter_path.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return 0
+    normalized = unicodedata.normalize("NFKC", content.replace("\ufeff", ""))
+    normalized = normalized.replace("\r\n", "\n").replace("\r", "\n")
+    stripped, _ = strip_leading_generated_heading_block(normalized)
+    total_words = 0
+    for paragraph in stripped.split("\n\n"):
+        total_words += count_words(paragraph)
+        if stop_at is not None and total_words >= stop_at:
+            return total_words
     return total_words
+
+
+def early_export_ready_chapter_numbers(
+    book_dir: Path,
+    *,
+    min_words_per_chapter: int,
+) -> list[int]:
+    ready: list[int] = []
+    threshold = max(1, int(min_words_per_chapter or 0))
+    for chapter_path in sorted(book_dir.glob("chapter_*_final.md"), key=chapter_number):
+        chapter_no = chapter_number(chapter_path)
+        words = chapter_body_word_count(book_dir, chapter_no, stop_at=threshold)
+        if words >= threshold:
+            ready.append(chapter_no)
+    return ready
+
+
+def chapter_cleanup_disallowed_script_patterns(language: str) -> list[re.Pattern[str]]:
+    normalized = normalize_book_language(language).lower()
+    disallowed_ranges: list[str] = []
+
+    def add(pattern: str) -> None:
+        if pattern not in disallowed_ranges:
+            disallowed_ranges.append(pattern)
+
+    if normalized not in {"russian", "ukrainian", "bulgarian", "serbian"}:
+        add(r"\u0400-\u04FF")
+    if normalized not in {"greek"}:
+        add(r"\u0370-\u03FF")
+    if normalized not in {"arabic"}:
+        add(r"\u0600-\u06FF")
+    if normalized not in {"hebrew"}:
+        add(r"\u0590-\u05FF")
+    if normalized not in {"hindi"}:
+        add(r"\u0900-\u097F")
+    if normalized not in {"chinese", "japanese"}:
+        add(r"\u4E00-\u9FFF")
+    if normalized not in {"japanese"}:
+        add(r"\u3040-\u30FF")
+    if normalized not in {"korean"}:
+        add(r"\uAC00-\uD7AF")
+
+    return [re.compile(f"[{char_range}]+") for char_range in disallowed_ranges]
+
+
+def strip_leading_generated_heading_block(text: str) -> tuple[str, int]:
+    lines = text.splitlines()
+    index = 0
+    while index < len(lines) and not lines[index].strip():
+        index += 1
+    start = index
+    if index < len(lines) and re.match(r"^\s{0,3}#{1,6}\s+\S", lines[index]):
+        index += 1
+        while index < len(lines):
+            line = lines[index].strip()
+            if not line:
+                index += 1
+                continue
+            if re.match(r"^\s{0,3}#{1,6}\s+\S", lines[index]):
+                index += 1
+                continue
+            break
+        removed = index - start
+        return "\n".join(lines[index:]).lstrip("\n"), removed
+    return text, 0
+
+
+def collapse_duplicate_markdown_headings(text: str) -> tuple[str, int]:
+    lines = text.splitlines()
+    cleaned: list[str] = []
+    duplicate_count = 0
+    last_heading_key = ""
+    only_blank_since_heading = False
+
+    for line in lines:
+        stripped = line.strip()
+        heading_match = re.match(r"^\s{0,3}(#{1,6})\s+(.+?)\s*$", line)
+        if heading_match:
+            heading_level = len(heading_match.group(1))
+            heading_text = re.sub(r"\s+", " ", heading_match.group(2)).strip().casefold()
+            heading_key = f"{heading_level}:{heading_text}"
+            if heading_key == last_heading_key and only_blank_since_heading:
+                duplicate_count += 1
+                continue
+            cleaned.append(line)
+            last_heading_key = heading_key
+            only_blank_since_heading = True
+            continue
+        cleaned.append(line)
+        if stripped:
+            last_heading_key = ""
+            only_blank_since_heading = False
+        elif cleaned and last_heading_key:
+            only_blank_since_heading = True
+
+    return "\n".join(cleaned), duplicate_count
+
+
+def collapse_duplicate_paragraph_blocks(text: str) -> tuple[str, int]:
+    paragraphs = text.split("\n\n")
+    cleaned: list[str] = []
+    duplicate_count = 0
+    last_key = ""
+
+    for paragraph in paragraphs:
+        normalized = re.sub(r"\s+", " ", paragraph).strip().casefold()
+        if normalized and normalized == last_key:
+            duplicate_count += 1
+            continue
+        cleaned.append(paragraph)
+        last_key = normalized
+
+    return "\n\n".join(cleaned), duplicate_count
+
+
+def cleanup_chapter_markdown(text: str, language: str) -> tuple[str, dict[str, Any]]:
+    normalized = unicodedata.normalize("NFKC", text.replace("\ufeff", ""))
+    normalized = normalized.replace("\r\n", "\n").replace("\r", "\n")
+
+    cleaned_text, leading_removed = strip_leading_generated_heading_block(normalized)
+    cleaned_text, inline_heading_fragments_removed = re.subn(
+        r"([^\n])\s*#\s*(?:chapter|bölüm)\s+\d+\s*:[^\n]*",
+        r"\1",
+        cleaned_text,
+        flags=re.IGNORECASE,
+    )
+    cleaned_text, duplicate_headings_removed = collapse_duplicate_markdown_headings(cleaned_text)
+    cleaned_text, duplicate_paragraphs_removed = collapse_duplicate_paragraph_blocks(cleaned_text)
+    paragraphs = cleaned_text.split("\n\n")
+    disallowed_patterns = chapter_cleanup_disallowed_script_patterns(language)
+    disallowed_runs_removed = 0
+    affected_paragraphs = 0
+    cleaned_paragraphs: list[str] = []
+
+    for paragraph in paragraphs:
+        current = paragraph
+        current_runs = 0
+        for pattern in disallowed_patterns:
+            current, replacements = pattern.subn(" ", current)
+            current_runs += replacements
+        current = re.sub(r"[ \t]{2,}", " ", current)
+        current = re.sub(r" *\n *", "\n", current)
+        current = re.sub(r" +([,.;:!?])", r"\1", current)
+        if current_runs:
+            disallowed_runs_removed += current_runs
+            affected_paragraphs += 1
+        cleaned_paragraphs.append(current.strip("\n"))
+
+    cleaned = "\n\n".join(cleaned_paragraphs)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip() + "\n"
+    report = {
+        "changed": cleaned != text,
+        "paragraphs_rewritten": affected_paragraphs,
+        "disallowed_runs_removed": disallowed_runs_removed,
+        "duplicate_headings_removed": duplicate_headings_removed,
+        "duplicate_paragraphs_removed": duplicate_paragraphs_removed,
+        "leading_headings_removed": leading_removed,
+        "inline_heading_fragments_removed": inline_heading_fragments_removed,
+    }
+    return cleaned, report
+
+
+def cleanup_generated_chapter_file(
+    book_dir: Path,
+    chapter_number_value: int,
+    metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    chapter_path = book_dir / f"chapter_{chapter_number_value}_final.md"
+    if not chapter_path.is_file():
+        return {
+            "chapter_number": chapter_number_value,
+            "changed": False,
+            "paragraphs_rewritten": 0,
+            "disallowed_runs_removed": 0,
+            "duplicate_headings_removed": 0,
+            "duplicate_paragraphs_removed": 0,
+            "leading_headings_removed": 0,
+            "inline_heading_fragments_removed": 0,
+            "path": relative_to_root(chapter_path),
+        }
+
+    current_metadata = metadata or read_metadata(book_dir)
+    language = infer_book_language(book_dir, current_metadata)
+    original = chapter_path.read_text(encoding="utf-8", errors="replace")
+    cleaned, report = cleanup_chapter_markdown(original, language)
+    if cleaned != original:
+        chapter_path.write_text(cleaned, encoding="utf-8")
+    return {
+        "chapter_number": chapter_number_value,
+        "path": relative_to_root(chapter_path),
+        **report,
+    }
+
+
+def cleanup_all_generated_chapters(
+    book_dir: Path,
+    metadata: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    reports: list[dict[str, Any]] = []
+    for chapter_path in sorted(book_dir.glob("chapter_*_final.md")):
+        match = re.match(r"chapter_(\d+)_final\.md$", chapter_path.name)
+        if not match:
+            continue
+        reports.append(cleanup_generated_chapter_file(book_dir, int(match.group(1)), metadata))
+    return reports
 
 
 def cover_asset_ready(book_dir: Path, metadata: dict[str, Any] | None = None) -> bool:
     metadata = metadata or read_metadata(book_dir)
-    cover_image, _ = resolve_cover_image_references(book_dir, metadata)
-    return bool(cover_image)
+    require_variant = image_provider_policy_vertex_only() or bool(normalize_cover_variants(metadata.get("cover_variants")))
+    if require_variant:
+        return selected_cover_bundle_ready(book_dir, metadata, require_variant=True)
+    cover_image, back_cover_image = resolve_cover_image_references(book_dir, metadata)
+    return bool(cover_image and back_cover_image)
 
 
 def first_preview_chapter_ready(book_dir: Path) -> bool:
@@ -1320,14 +2513,14 @@ def preview_status_message(
     stage: str,
     explicit: str = "",
 ) -> str:
-    if explicit.strip():
-        return explicit.strip()
     if cover_ready and first_chapter_ready:
         return "Kapak ve ilk okunabilir bölüm hazır."
     if first_chapter_ready:
         return "İlk bölüm hazır. Kapak görseli hazırlanıyor."
     if cover_ready:
         return "Kapak hazır. İlk gerçek bölüm yazılıyor."
+    if explicit.strip():
+        return explicit.strip()
     if stage in {"queued", "running", "cover"}:
         return "Kapak görseli hazırlanıyor."
     if stage == "chapter":
@@ -1347,10 +2540,15 @@ def build_generation_status(
     slug = book_dir.name
     cover_state = str(metadata.get("cover_state") or "").strip()
     first_chapter_state = str(metadata.get("first_chapter_state") or "").strip()
+    full_generation = build_full_generation_status(book_dir, metadata, lightweight=True)
     if lightweight:
         stage_hint = str(metadata.get("preview_stage") or "").strip()
-        cover_image, _ = resolve_cover_image_references(book_dir, metadata)
-        cover_ready = bool(cover_image)
+        require_variant = image_provider_policy_vertex_only() or bool(normalize_cover_variants(metadata.get("cover_variants")))
+        cover_ready = (
+            selected_cover_bundle_ready(book_dir, metadata, require_variant=True)
+            if require_variant
+            else bool(all(resolve_cover_image_references(book_dir, metadata)))
+        )
 
         first_chapter_ready = (
             first_chapter_state == "ready"
@@ -1398,6 +2596,25 @@ def build_generation_status(
         stage,
         str(metadata.get("preview_message") or ""),
     )
+    if not cover_ready:
+        current_step_code = "cover"
+        current_step_label = "Creating your real book cover"
+    elif not first_chapter_ready:
+        current_step_code = "first_chapter"
+        current_step_label = "Writing the first readable chapter"
+    elif bool(full_generation.get("complete")):
+        current_step_code = "export"
+        current_step_label = "Preview ready"
+    else:
+        current_step_code = "full_book"
+        current_step_label = str(full_generation.get("message") or "Writing the remaining chapters")
+    cover_gate_state = "cover_ready" if cover_ready else "waiting_for_cover"
+    activity_timeline = build_generation_activity_timeline(metadata, {
+        "cover_ready": cover_ready,
+        "first_chapter_ready": first_chapter_ready,
+        "cover_state": cover_state,
+        "first_chapter_state": first_chapter_state,
+    }, full_generation)
     return {
         "active": active,
         "stage": stage or "idle",
@@ -1413,6 +2630,19 @@ def build_generation_status(
         "started_at": str(metadata.get("preview_started_at") or ""),
         "updated_at": str(metadata.get("preview_updated_at") or ""),
         "completed_at": str(metadata.get("preview_completed_at") or ""),
+        "current_step_code": current_step_code,
+        "current_step_label": current_step_label,
+        "cover_eta_seconds": preview_cover_eta_seconds(metadata, {
+            "cover_ready": cover_ready,
+            "cover_state": cover_state,
+        }),
+        "first_chapter_eta_seconds": preview_first_chapter_eta_seconds(metadata, {
+            "first_chapter_ready": first_chapter_ready,
+            "first_chapter_state": first_chapter_state,
+        }),
+        "cover_gate_state": cover_gate_state,
+        "activity_timeline": activity_timeline,
+        "activity_log": normalize_activity_log(metadata.get("activity_log")),
     }
 
 
@@ -1516,6 +2746,42 @@ def normalize_chapter_plan(raw: Any) -> list[dict[str, Any]]:
     return normalized
 
 
+def derive_chapter_plan_from_chapters(
+    chapters: list[dict[str, Any]],
+    language: str,
+    *,
+    book_length_mode: str,
+) -> list[dict[str, Any]]:
+    if len(chapters) <= 1:
+        return []
+    targets = metadata_word_targets({"book_length_mode": book_length_mode})
+    normalized: list[dict[str, Any]] = []
+    for index, chapter in enumerate(chapters, start=1):
+        normalized.append(
+            {
+                "number": index,
+                "title": normalize_structural_heading(str(chapter.get("title") or ""), language, index),
+                "summary": str(chapter.get("summary") or chapter.get("content") or "").strip(),
+                "role": "",
+                "length": "chapter",
+                "target_min_words": int(targets["chapter_min_words"]),
+                "target_max_words": int(targets["chapter_max_words"]),
+            }
+        )
+    return normalized
+
+
+def total_book_word_count(book_dir: Path) -> int:
+    total = 0
+    for chapter_path in sorted(book_dir.glob("chapter_*_final.md")):
+        try:
+            content = chapter_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        total += count_words(content)
+    return total
+
+
 def chapter_plan_for_number(metadata: dict[str, Any], chapter_number: int) -> dict[str, Any] | None:
     for item in normalize_chapter_plan(metadata.get("chapter_plan")):
         if int(item.get("number") or 0) == chapter_number:
@@ -1526,6 +2792,7 @@ def chapter_plan_for_number(metadata: dict[str, Any], chapter_number: int) -> di
 def chapter_generation_blueprint(book_dir: Path, metadata: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     metadata = metadata or read_metadata(book_dir)
     language = infer_book_language(book_dir, metadata)
+    targets = metadata_word_targets(metadata)
     plan_items = sorted(
         normalize_chapter_plan(metadata.get("chapter_plan")),
         key=lambda item: int(item.get("number") or 0),
@@ -1538,9 +2805,9 @@ def chapter_generation_blueprint(book_dir: Path, metadata: dict[str, Any] | None
             min_words = int(item.get("target_min_words") or 0)
             max_words = int(item.get("target_max_words") or 0)
             if min_words <= 0:
-                min_words = 1600
+                min_words = int(targets["chapter_min_words"])
             if max_words <= 0:
-                max_words = max(min_words + 400, 2200)
+                max_words = max(int(targets["chapter_max_words"]), min_words + 200)
             title = normalize_structural_heading(str(item.get("title") or "").strip(), language, number)
             blueprint.append(
                 {
@@ -1560,8 +2827,8 @@ def chapter_generation_blueprint(book_dir: Path, metadata: dict[str, Any] | None
                     {
                         "number": number,
                         "title": title,
-                        "min_words": 1600,
-                        "max_words": 2200,
+                        "min_words": int(targets["chapter_min_words"]),
+                        "max_words": int(targets["chapter_max_words"]),
                     }
                 )
         else:
@@ -1569,8 +2836,8 @@ def chapter_generation_blueprint(book_dir: Path, metadata: dict[str, Any] | None
                 {
                     "number": 1,
                     "title": normalize_structural_heading("", language, 1),
-                    "min_words": 1600,
-                    "max_words": 2200,
+                    "min_words": int(targets["chapter_min_words"]),
+                    "max_words": int(targets["chapter_max_words"]),
                 }
             )
 
@@ -1587,7 +2854,8 @@ def chapter_generation_blueprint(book_dir: Path, metadata: dict[str, Any] | None
 
 def chapter_ready_threshold(target_min_words: int, *, strict: bool = True) -> int:
     if strict:
-        return max(1, int(target_min_words or PREVIEW_PIPELINE_MIN_WORDS))
+        tolerance = min(80, max(0, int((target_min_words or 0) * 0.03)))
+        return max(1, int(target_min_words or PREVIEW_PIPELINE_MIN_WORDS) - tolerance)
     baseline = int(target_min_words * 0.65) if target_min_words > 0 else PREVIEW_PIPELINE_MIN_WORDS
     return max(220, min(PREVIEW_PIPELINE_MIN_WORDS, baseline))
 
@@ -1617,6 +2885,125 @@ def chapter_generation_progress(book_dir: Path, metadata: dict[str, Any] | None 
     }
 
 
+def chapter_segment_path(book_dir: Path, chapter_number_value: int, segment_index: int) -> Path:
+    return book_dir / "segments" / f"chapter_{chapter_number_value}_segment_{segment_index}.md"
+
+
+def chapter_segment_word_count(book_dir: Path, chapter_number_value: int, segment_index: int) -> int:
+    segment_path = chapter_segment_path(book_dir, chapter_number_value, segment_index)
+    if not segment_path.is_file():
+        return 0
+    try:
+        content = segment_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return 0
+    return count_words(content)
+
+
+def workflow_error_text(result: dict[str, Any] | None) -> str:
+    if not isinstance(result, dict):
+        return ""
+    warnings = result.get("warnings")
+    warning_text = "\n".join(str(item) for item in warnings) if isinstance(warnings, list) else ""
+    return "\n".join(
+        part.strip()
+        for part in [str(result.get("output") or ""), warning_text, str(result.get("error") or "")]
+        if str(part or "").strip()
+    ).strip()
+
+
+def is_transient_workflow_failure(result: dict[str, Any] | None) -> bool:
+    if not isinstance(result, dict):
+        return False
+    if bool(result.get("ok")):
+        return False
+    text = workflow_error_text(result).lower()
+    if not text:
+        return True
+    transient_markers = (
+        "http 403",
+        "http 429",
+        "http 500",
+        "http 502",
+        "http 503",
+        "http 504",
+        "rate/limit",
+        "rate limit",
+        "temporarily unavailable",
+        "timed out",
+        "timeout",
+        "transport",
+        "connection reset",
+        "empty response",
+        "upstream",
+        "try again",
+        "1010",
+    )
+    return any(marker in text for marker in transient_markers)
+
+
+def fail_full_generation_as_waiting(
+    book_dir: Path,
+    *,
+    message: str,
+    pause_reason: str,
+    current_chapter: int,
+    current_segment: int,
+    segment_count: int,
+) -> None:
+    metadata = read_metadata(book_dir)
+    retry_count = max(0, int(metadata.get("full_generation_retry_count") or 0)) + 1
+    retry_at = next_retry_timestamp(retry_count)
+    progress = chapter_generation_progress(book_dir, metadata)
+    save_metadata(
+        book_dir,
+        {
+            "full_generation_stage": "waiting",
+            "full_generation_message": message,
+            "full_generation_error": "",
+            "full_generation_retry_count": retry_count,
+            "full_generation_progress": int(metadata.get("full_generation_progress") or 0),
+            "full_generation_target_count": int(progress["target_count"]),
+            "full_generation_ready_count": int(progress["ready_count"]),
+            "full_generation_failed_count": 0,
+            "full_generation_eta_seconds": retry_wait_seconds_remaining(retry_at),
+            "full_generation_eta_updated_at": now_utc_iso(),
+            "full_generation_updated_at": now_utc_iso(),
+            "current_chapter": current_chapter,
+            "current_segment": current_segment,
+            "segment_count": segment_count,
+            "segment_index": current_segment,
+            "pause_reason": pause_reason,
+            "next_retry_at": retry_at,
+            "book_generation_complete": False,
+        },
+    )
+    append_book_activity(book_dir, "full_book_waiting", "Full book waiting", "waiting", pause_reason)
+
+
+def assemble_chapter_from_segments(
+    book_dir: Path,
+    chapter_number_value: int,
+    chapter_title: str,
+    language: str,
+    segment_count_value: int,
+) -> Path:
+    ensure_book_layout(book_dir)
+    parts: list[str] = []
+    for segment_index in range(1, segment_count_value + 1):
+        segment_path = chapter_segment_path(book_dir, chapter_number_value, segment_index)
+        if not segment_path.is_file():
+            raise FileNotFoundError(f"Missing chapter segment: {segment_path.name}")
+        segment_body = segment_path.read_text(encoding="utf-8", errors="replace").strip()
+        if segment_body:
+            parts.append(segment_body)
+    chapter_path = book_dir / f"chapter_{chapter_number_value}_final.md"
+    body = "\n\n".join(parts).strip()
+    chapter_heading = f"# {chapter_heading_prefix(language, chapter_number_value)}: {chapter_title}"
+    chapter_path.write_text(f"{chapter_heading}\n\n{body}\n", encoding="utf-8")
+    return chapter_path
+
+
 def build_full_generation_status(
     book_dir: Path,
     metadata: dict[str, Any] | None = None,
@@ -1626,6 +3013,17 @@ def build_full_generation_status(
     metadata = metadata or read_metadata(book_dir)
     slug = book_dir.name
     stage = str(metadata.get("full_generation_stage") or "idle").strip() or "idle"
+    generation_mode = metadata_chapter_generation_mode(metadata)
+    targets = metadata_word_targets(metadata)
+    target_word_count = int(targets["book_target_words"])
+    if lightweight:
+        try:
+            current_word_count = int(metadata.get("book_word_count") or metadata.get("full_generation_word_count") or 0)
+        except (TypeError, ValueError):
+            current_word_count = 0
+    else:
+        current_word_count = total_book_word_count(book_dir)
+    target_count_floor = int(targets["min_chapters"])
 
     if lightweight:
         def parse_int(value: Any, fallback: int = 0) -> int:
@@ -1636,10 +3034,13 @@ def build_full_generation_status(
 
         target_count = max(0, parse_int(metadata.get("full_generation_target_count"), 0))
         ready_count = max(0, parse_int(metadata.get("full_generation_ready_count"), 0))
+        actual_chapter_count = summary_chapter_count(book_dir)
         if target_count <= 0:
             target_count = len(normalize_chapter_plan(metadata.get("chapter_plan")))
         if target_count <= 0:
-            target_count = summary_chapter_count(book_dir)
+            target_count = actual_chapter_count
+        if ready_count <= 0 and actual_chapter_count > 0:
+            ready_count = actual_chapter_count
         if target_count > 0:
             ready_count = min(ready_count, target_count)
         complete = (
@@ -1653,12 +3054,30 @@ def build_full_generation_status(
         ready_count = int(progress["ready_count"])
         complete = bool(progress["complete"])
 
+    completed_marker = bool(str(metadata.get("full_generation_completed_at") or "").strip())
+    if lightweight and current_word_count <= 0 and target_word_count > 0 and (stage == "ready" or completed_marker):
+        # Keep list/preview responses fast: avoid chapter file scans in lightweight mode.
+        current_word_count = target_word_count
+
+    chapter_count_ok = target_count >= target_count_floor
+    length_complete = current_word_count >= target_word_count if target_word_count > 0 else True
+    if lightweight and not length_complete and (stage == "ready" or completed_marker):
+        length_complete = True
+    complete = bool(complete and chapter_count_ok and length_complete)
+
     message = str(metadata.get("full_generation_message") or "").strip()
     error = str(metadata.get("full_generation_error") or "").strip()
     failed_count = int(metadata.get("full_generation_failed_count") or 0)
     eta_seconds = int(metadata.get("full_generation_eta_seconds") or 0)
     avg_chapter_seconds = int(metadata.get("full_generation_avg_chapter_seconds") or 0)
+    retry_count = int(metadata.get("full_generation_retry_count") or 0)
     progress_raw = metadata.get("full_generation_progress")
+    current_chapter = int(metadata.get("current_chapter") or 0)
+    current_segment = int(metadata.get("current_segment") or 0)
+    segment_count_value = int(metadata.get("segment_count") or chapter_segment_count(metadata))
+    pause_reason = str(metadata.get("pause_reason") or "").strip()
+    next_retry_at = str(metadata.get("next_retry_at") or "").strip()
+    retry_wait_seconds = retry_wait_seconds_remaining(next_retry_at)
 
     active = False
     with ACTIVE_FULL_CHAPTER_PIPELINES_LOCK:
@@ -1673,6 +3092,8 @@ def build_full_generation_status(
             stage = "needs_attention"
         else:
             stage = "idle"
+    if stage == "waiting" and active:
+        stage = "running"
 
     if isinstance(progress_raw, (int, float)):
         progress_value = int(progress_raw)
@@ -1684,9 +3105,18 @@ def build_full_generation_status(
 
     if stage == "idle" and not active and not complete:
         message = "Tam metin üretimi beklemede."
+    elif stage == "waiting":
+        if retry_wait_seconds > 0:
+            message = message or f"Üretim geçici olarak bekliyor. Sonraki deneme yaklaşık {retry_wait_seconds} saniye içinde."
+        else:
+            message = message or "Üretim yeniden denenmeye hazır."
     elif not message:
         if complete:
             message = "Tüm bölümler hazır."
+        elif not chapter_count_ok:
+            message = "Uzun kitap planı henüz hedef bölüm sayısına ulaşmadı."
+        elif not length_complete:
+            message = "Bölümler hazır olsa da kitap hedef uzunluğa henüz ulaşmadı."
         elif active:
             message = "Bölümler arka planda yazılıyor."
         elif stage in {"needs_attention", "error"}:
@@ -1696,6 +3126,8 @@ def build_full_generation_status(
 
     if complete:
         eta_seconds = 0
+    elif stage == "waiting" and retry_wait_seconds > 0:
+        eta_seconds = retry_wait_seconds
     eta_seconds = max(0, eta_seconds)
     avg_chapter_seconds = max(0, avg_chapter_seconds)
 
@@ -1711,6 +3143,19 @@ def build_full_generation_status(
         "eta_seconds": eta_seconds,
         "avg_chapter_seconds": avg_chapter_seconds,
         "complete": complete,
+        "word_count": current_word_count,
+        "target_word_count": target_word_count,
+        "chapter_count_floor": target_count_floor,
+        "chapter_count_ok": chapter_count_ok,
+        "length_complete": length_complete,
+        "chapter_generation_mode": generation_mode,
+        "segment_count": segment_count_value,
+        "segment_index": current_segment,
+        "current_segment": current_segment,
+        "current_chapter": current_chapter,
+        "pause_reason": pause_reason,
+        "next_retry_at": next_retry_at,
+        "retry_count": retry_count,
         "eta_updated_at": str(metadata.get("full_generation_eta_updated_at") or ""),
         "started_at": str(metadata.get("full_generation_started_at") or ""),
         "updated_at": str(metadata.get("full_generation_updated_at") or ""),
@@ -1729,6 +3174,9 @@ def sync_full_generation_metadata(book_dir: Path) -> None:
         "full_generation_eta_updated_at": now_utc_iso(),
         "full_generation_progress": int(status["progress"]),
         "full_generation_updated_at": now_utc_iso(),
+        "book_word_count": int(status.get("word_count") or 0),
+        "book_target_words": int(status.get("target_word_count") or 0),
+        "book_generation_complete": bool(status.get("complete")),
     }
     if bool(status["complete"]) and not bool(status["active"]):
         updates["full_generation_stage"] = "ready"
@@ -1748,6 +3196,8 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
 
     try:
         metadata = read_metadata(book_dir)
+        language = infer_book_language(book_dir, metadata)
+        generation_mode = metadata_chapter_generation_mode(metadata)
         blueprint = chapter_generation_blueprint(book_dir, metadata)
         target_count = len(blueprint)
         if target_count == 0:
@@ -1763,19 +3213,28 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
                     "full_generation_failed_count": 0,
                     "full_generation_eta_seconds": 0,
                     "full_generation_avg_chapter_seconds": 0,
+                    "full_generation_retry_count": 0,
                     "full_generation_eta_updated_at": now_utc_iso(),
                     "full_generation_updated_at": now_utc_iso(),
                     "full_generation_completed_at": now_utc_iso(),
+                    "current_chapter": 0,
+                    "current_segment": 0,
+                    "segment_count": 0,
+                    "segment_index": 0,
+                    "pause_reason": "",
+                    "next_retry_at": "",
+                    "chapter_generation_mode": generation_mode,
                 },
             )
             return
 
         initial_progress = chapter_generation_progress(book_dir, metadata)
+        default_segment_count = chapter_segment_count(metadata)
         save_metadata(
             book_dir,
             {
                 "full_generation_stage": "running",
-                "full_generation_message": "Tüm bölümler arka planda hazırlanıyor.",
+                "full_generation_message": "Bölümler küçük segmentler halinde hazırlanıyor.",
                 "full_generation_error": "",
                 "full_generation_progress": max(
                     int((initial_progress["ready_count"] / max(1, target_count)) * 100),
@@ -1787,12 +3246,21 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
                 "full_generation_eta_seconds": 0,
                 "full_generation_avg_chapter_seconds": 0,
                 "full_generation_initial_ready_count": int(initial_progress["ready_count"]),
+                "full_generation_retry_count": int(metadata.get("full_generation_retry_count") or 0),
+                "current_chapter": 0,
+                "current_segment": 0,
+                "segment_count": default_segment_count,
+                "segment_index": 0,
+                "pause_reason": "",
+                "next_retry_at": "",
+                "chapter_generation_mode": generation_mode,
                 "full_generation_eta_updated_at": now_utc_iso(),
                 "full_generation_started_at": now_utc_iso(),
                 "full_generation_updated_at": now_utc_iso(),
                 "full_generation_completed_at": "",
             },
         )
+        append_book_activity(book_dir, "full_book_started", "Full book started", "active", "Remaining chapters are being written in compact segments.")
 
         initial_ready_count = int(initial_progress["ready_count"])
         preview_first_ready = first_preview_chapter_ready(book_dir)
@@ -1825,22 +3293,31 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
             )
 
         if not pending:
-            final_progress = chapter_generation_progress(book_dir, read_metadata(book_dir))
+            final_status = build_full_generation_status(book_dir, read_metadata(book_dir))
             save_metadata(
                 book_dir,
                 {
-                    "full_generation_stage": "ready",
-                    "full_generation_message": "Tüm bölümler hazır.",
-                    "full_generation_error": "",
-                    "full_generation_progress": 100,
-                    "full_generation_target_count": int(final_progress["target_count"]),
-                    "full_generation_ready_count": int(final_progress["ready_count"]),
+                    "full_generation_stage": "ready" if final_status["complete"] else "needs_attention",
+                    "full_generation_message": str(final_status["message"]),
+                    "full_generation_error": "" if final_status["complete"] else str(final_status["message"]),
+                    "full_generation_progress": int(final_status["progress"]),
+                    "full_generation_target_count": int(final_status["target_count"]),
+                    "full_generation_ready_count": int(final_status["ready_count"]),
                     "full_generation_failed_count": 0,
+                    "full_generation_retry_count": 0,
                     "full_generation_eta_seconds": 0,
                     "full_generation_avg_chapter_seconds": 0,
                     "full_generation_eta_updated_at": now_utc_iso(),
                     "full_generation_updated_at": now_utc_iso(),
-                    "full_generation_completed_at": now_utc_iso(),
+                    "full_generation_completed_at": now_utc_iso() if final_status["complete"] else "",
+                    "current_chapter": 0,
+                    "current_segment": 0,
+                    "segment_count": default_segment_count,
+                    "segment_index": 0,
+                    "pause_reason": "",
+                    "next_retry_at": "",
+                    "chapter_generation_mode": generation_mode,
+                    "book_generation_complete": bool(final_status["complete"]),
                 },
             )
             sync_preview_generation_metadata(book_dir)
@@ -1849,7 +3326,7 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
         save_metadata(
             book_dir,
             {
-                "full_generation_message": f"Bölümler paralel üretiliyor ({len(pending)} görev).",
+                "full_generation_message": f"Bölümler sıra ile segmentleniyor ({len(pending)} bölüm).",
                 "full_generation_initial_ready_count": initial_ready_count,
                 "full_generation_eta_seconds": 0,
                 "full_generation_avg_chapter_seconds": 0,
@@ -1859,63 +3336,178 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
         )
 
         failures: list[dict[str, Any]] = []
-        failures_lock = threading.Lock()
-        progress_lock = threading.Lock()
         pipeline_started_monotonic = time.monotonic()
-        completed_jobs = 0
+        completed_chapters = initial_ready_count
+        segments_root = book_dir / "segments"
+        segments_root.mkdir(parents=True, exist_ok=True)
 
-        def run_single_chapter(item: dict[str, Any]) -> dict[str, Any]:
-            chapter_number_value = int(item.get("number") or 0)
-            title = str(item.get("title") or "").strip() or normalize_structural_heading(
+        for pending_index, item in enumerate(pending, start=1):
+            chapter_number_value = int(item.get("number") or pending_index)
+            chapter_title = str(item.get("title") or "").strip() or normalize_structural_heading(
                 "",
-                infer_book_language(book_dir),
+                language,
                 chapter_number_value,
             )
             min_words = int(item.get("min_words") or 1600)
             max_words = int(item.get("max_words") or max(min_words + 400, 2200))
-            retry_min_words = max(900, int(min_words * 0.75))
-            chapter_attempts = [
+            segment_targets = chapter_segment_targets(metadata, min_words, max_words)
+            segment_count_value = int(segment_targets["segment_count"])
+            segment_min_words = int(segment_targets["segment_min_words"])
+            segment_max_words = int(segment_targets["segment_max_words"])
+            segment_ready_threshold = max(280, int(segment_min_words * 0.6))
+
+            save_metadata(
+                book_dir,
                 {
-                    "style": "clear",
-                    "tone": "professional",
-                    "min_words": min_words,
-                    "max_words": max_words,
+                    "full_generation_stage": "running",
+                    "full_generation_message": f"Bölüm {chapter_number_value} için brief hazırlanıyor.",
+                    "full_generation_target_count": target_count,
+                    "full_generation_ready_count": completed_chapters,
+                    "full_generation_failed_count": len(failures),
+                    "full_generation_eta_updated_at": now_utc_iso(),
+                    "full_generation_updated_at": now_utc_iso(),
+                    "current_chapter": chapter_number_value,
+                    "current_segment": 0,
+                    "segment_count": segment_count_value,
+                    "segment_index": 0,
+                    "pause_reason": "",
+                    "next_retry_at": "",
+                    "chapter_generation_mode": generation_mode,
                 },
-                {
-                    "style": "detailed",
-                    "tone": "professional",
-                    "min_words": retry_min_words,
-                    "max_words": max_words,
-                },
-            ]
-            chapter_result: dict[str, Any] | None = None
-            for attempt_index, attempt in enumerate(chapter_attempts, start=1):
-                chapter_result = run_workflow(
+            )
+            append_book_activity(book_dir, "chapter_brief_started", "Chapter brief started", "active", f"Preparing chapter {chapter_number_value}: {chapter_title}")
+
+            if force:
+                for segment_index in range(1, segment_count_value + 1):
+                    chapter_segment_path(book_dir, chapter_number_value, segment_index).unlink(missing_ok=True)
+
+            chapter_failed = False
+            for segment_index in range(1, segment_count_value + 1):
+                existing_segment_words = chapter_segment_word_count(book_dir, chapter_number_value, segment_index)
+                if not force and existing_segment_words >= segment_ready_threshold:
+                    continue
+
+                partial_progress = int(
+                    (
+                        (
+                            completed_chapters
+                            + ((segment_index - 1) / max(1, segment_count_value))
+                        )
+                        / max(1, target_count)
+                    )
+                    * 100
+                )
+                save_metadata(
+                    book_dir,
                     {
-                        "action": "chapter_generate",
+                        "full_generation_stage": "running",
+                        "full_generation_message": (
+                            f"Bölüm {chapter_number_value} yazılıyor: segment {segment_index}/{segment_count_value}."
+                        ),
+                        "full_generation_progress": max(partial_progress, 8),
+                        "full_generation_target_count": target_count,
+                        "full_generation_ready_count": completed_chapters,
+                        "full_generation_failed_count": len(failures),
+                        "full_generation_eta_updated_at": now_utc_iso(),
+                        "full_generation_updated_at": now_utc_iso(),
+                        "current_chapter": chapter_number_value,
+                        "current_segment": segment_index,
+                        "segment_count": segment_count_value,
+                        "segment_index": segment_index,
+                        "pause_reason": "",
+                        "next_retry_at": "",
+                    },
+                )
+                append_book_activity(
+                    book_dir,
+                    "chapter_segment_started",
+                    "Chapter segment started",
+                    "active",
+                    f"Chapter {chapter_number_value}, segment {segment_index}/{segment_count_value}",
+                )
+
+                segment_result = run_workflow(
+                    {
+                        "action": "chapter_generate_segment",
                         "slug": slug,
                         "chapter_number": chapter_number_value,
-                        "chapter_title": title,
-                        "min_words": int(attempt["min_words"]),
-                        "max_words": int(attempt["max_words"]),
-                        "style": str(attempt["style"]),
-                        "tone": str(attempt["tone"]),
+                        "chapter_title": chapter_title,
+                        "segment_index": segment_index,
+                        "segment_count": segment_count_value,
+                        "min_words": segment_min_words,
+                        "max_words": segment_max_words,
+                        "chapter_min_words": min_words,
+                        "chapter_max_words": max_words,
+                        "style": "clear",
+                        "tone": "professional",
                     }
                 )
-                if chapter_result.get("ok") and chapter_meets_generation_target(book_dir, chapter_number_value, min_words):
-                    return {
-                        "ok": True,
-                        "chapter_number": chapter_number_value,
-                        "title": title,
-                    }
-                if attempt_index < len(chapter_attempts):
-                    append_log(
-                        f"Chapter {chapter_number_value} generate attempt {attempt_index} failed for '{slug}'; retrying."
+                append_workflow_provider_activity(
+                    book_dir,
+                    "chapter_generate_segment",
+                    segment_result,
+                    code="chapter_segment_provider",
+                    label="Chapter segment provider",
+                )
+                if not bool(segment_result.get("ok")) or chapter_segment_word_count(
+                    book_dir,
+                    chapter_number_value,
+                    segment_index,
+                ) < segment_ready_threshold:
+                    if is_transient_workflow_failure(segment_result):
+                        fail_full_generation_as_waiting(
+                            book_dir,
+                            message=(
+                                f"Bölüm {chapter_number_value} segment {segment_index}/{segment_count_value} "
+                                "geçici olarak beklemeye alındı."
+                            ),
+                            pause_reason=summarize_workflow_problem(
+                                segment_result,
+                                f"Bölüm {chapter_number_value} segment {segment_index} geçici olarak üretilemedi.",
+                            ),
+                            current_chapter=chapter_number_value,
+                            current_segment=segment_index,
+                            segment_count=segment_count_value,
+                        )
+                        sync_preview_generation_metadata(book_dir)
+                        return
+                    failures.append(
+                        {
+                            "chapter_number": chapter_number_value,
+                            "title": chapter_title,
+                            "error": summarize_workflow_problem(
+                                segment_result,
+                                f"Bölüm {chapter_number_value} segment {segment_index} üretilemedi.",
+                            ),
+                        }
                     )
+                    chapter_failed = True
+                    break
 
-            chapter_path = book_dir / f"chapter_{chapter_number_value}_final.md"
-            extend_result: dict[str, Any] | None = None
-            if chapter_path.exists():
+            if chapter_failed:
+                break
+
+            try:
+                assemble_chapter_from_segments(
+                    book_dir,
+                    chapter_number_value,
+                    chapter_title,
+                    language,
+                    segment_count_value,
+                )
+            except Exception as exc:  # noqa: BLE001
+                failures.append(
+                    {
+                        "chapter_number": chapter_number_value,
+                        "title": chapter_title,
+                        "error": str(exc),
+                    }
+                )
+                break
+
+            cleanup_generated_chapter_file(book_dir, chapter_number_value, metadata)
+
+            if not chapter_meets_generation_target(book_dir, chapter_number_value, min_words):
                 extend_result = run_workflow(
                     {
                         "action": "chapter_extend",
@@ -1925,100 +3517,101 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
                         "max_words": max_words,
                     }
                 )
-            if chapter_meets_generation_target(book_dir, chapter_number_value, min_words):
-                append_log(f"Chapter {chapter_number_value} recovered via extend fallback for '{slug}'.")
-                return {
-                    "ok": True,
-                    "chapter_number": chapter_number_value,
-                    "title": title,
-                }
-            failing_result = (
-                extend_result
-                if isinstance(extend_result, dict) and not extend_result.get("ok")
-                else chapter_result
-            )
-            failure_message = summarize_workflow_problem(
-                failing_result,
-                f"Bölüm {chapter_number_value} üretilemedi.",
-            )
-            return {
-                "ok": False,
-                "chapter_number": chapter_number_value,
-                "title": title,
-                "error": failure_message,
-            }
-
-        worker_count = max(1, min(FULL_CHAPTER_PIPELINE_CONCURRENCY, len(pending)))
-        with ThreadPoolExecutor(max_workers=worker_count) as executor:
-            future_map = {executor.submit(run_single_chapter, item): item for item in pending}
-            for future in as_completed(future_map):
-                result: dict[str, Any]
-                try:
-                    result = future.result()
-                except Exception as exc:  # noqa: BLE001
-                    item = future_map[future]
-                    result = {
-                        "ok": False,
-                        "chapter_number": int(item.get("number") or 0),
-                        "title": str(item.get("title") or ""),
-                        "error": str(exc),
-                    }
-
-                with progress_lock:
-                    completed_jobs += 1
-                    if not bool(result.get("ok")):
-                        with failures_lock:
-                            failures.append(
-                                {
-                                    "chapter_number": int(result.get("chapter_number") or 0),
-                                    "title": str(result.get("title") or ""),
-                                    "error": str(result.get("error") or "Bölüm üretimi başarısız."),
-                                }
-                            )
-                    progress = chapter_generation_progress(book_dir, read_metadata(book_dir))
-                    ready_now = int(progress["ready_count"])
-                    completed_in_run = max(0, ready_now - initial_ready_count)
-                    elapsed_seconds = max(1, int(time.monotonic() - pipeline_started_monotonic))
-                    avg_seconds = int(elapsed_seconds / completed_in_run) if completed_in_run > 0 else 0
-                    remaining = max(0, target_count - ready_now)
-                    eta_seconds = int(avg_seconds * remaining) if avg_seconds > 0 and remaining > 0 else 0
-
-                    chapter_number_value = int(result.get("chapter_number") or 0)
-                    chapter_title = str(result.get("title") or "").strip()
-                    if bool(result.get("ok")):
-                        step_message = (
-                            f"Bölüm {chapter_number_value} tamamlandı ({completed_jobs}/{len(pending)}): {chapter_title}"
-                            if chapter_title
-                            else f"Bölüm {chapter_number_value} tamamlandı ({completed_jobs}/{len(pending)})."
-                        )
-                    else:
-                        step_message = (
-                            f"Bölüm {chapter_number_value} hata verdi ({completed_jobs}/{len(pending)}): {chapter_title}"
-                            if chapter_title
-                            else f"Bölüm {chapter_number_value} hata verdi ({completed_jobs}/{len(pending)})."
-                        )
-
-                    save_metadata(
-                        book_dir,
-                        {
-                            "full_generation_stage": "running",
-                            "full_generation_message": step_message,
-                            "full_generation_progress": max(
-                                int((ready_now / max(1, target_count)) * 100),
-                                12,
+                append_workflow_provider_activity(
+                    book_dir,
+                    "chapter_extend",
+                    extend_result,
+                    code="chapter_extend_provider",
+                    label="Chapter extension provider",
+                )
+                cleanup_generated_chapter_file(book_dir, chapter_number_value, metadata)
+                if not bool(extend_result.get("ok")) and not chapter_meets_generation_target(
+                    book_dir,
+                    chapter_number_value,
+                    min_words,
+                ):
+                    if is_transient_workflow_failure(extend_result):
+                        fail_full_generation_as_waiting(
+                            book_dir,
+                            message=f"Bölüm {chapter_number_value} uzatma turu beklemeye alındı.",
+                            pause_reason=summarize_workflow_problem(
+                                extend_result,
+                                f"Bölüm {chapter_number_value} hedef uzunluğa çıkarılamadı.",
                             ),
-                            "full_generation_ready_count": ready_now,
-                            "full_generation_target_count": target_count,
-                            "full_generation_failed_count": len(failures),
-                            "full_generation_eta_seconds": eta_seconds,
-                            "full_generation_avg_chapter_seconds": avg_seconds,
-                            "full_generation_eta_updated_at": now_utc_iso(),
-                            "full_generation_updated_at": now_utc_iso(),
-                        },
+                            current_chapter=chapter_number_value,
+                            current_segment=segment_count_value,
+                            segment_count=segment_count_value,
+                        )
+                        sync_preview_generation_metadata(book_dir)
+                        return
+                    failures.append(
+                        {
+                            "chapter_number": chapter_number_value,
+                            "title": chapter_title,
+                            "error": summarize_workflow_problem(
+                                extend_result,
+                                f"Bölüm {chapter_number_value} hedef uzunluğa ulaşmadı.",
+                            ),
+                        }
                     )
+                    break
 
-        final_progress = chapter_generation_progress(book_dir, read_metadata(book_dir))
-        complete = bool(final_progress["complete"])
+            if not chapter_meets_generation_target(book_dir, chapter_number_value, min_words):
+                fail_full_generation_as_waiting(
+                    book_dir,
+                    message=f"Bölüm {chapter_number_value} hedef uzunluğa ulaşamadı; otomatik yeniden denenecek.",
+                    pause_reason=(
+                        f"Bölüm {chapter_number_value} minimum kelime hedefini karşılamadı. "
+                        "Sistem aynı bölümü yeniden segmentleyip uzatacak."
+                    ),
+                    current_chapter=chapter_number_value,
+                    current_segment=segment_count_value,
+                    segment_count=segment_count_value,
+                )
+                sync_preview_generation_metadata(book_dir)
+                return
+
+            progress = chapter_generation_progress(book_dir, read_metadata(book_dir))
+            ready_now = int(progress["ready_count"])
+            completed_chapters = ready_now
+            completed_in_run = max(0, ready_now - initial_ready_count)
+            elapsed_seconds = max(1, int(time.monotonic() - pipeline_started_monotonic))
+            avg_seconds = int(elapsed_seconds / completed_in_run) if completed_in_run > 0 else 0
+            remaining = max(0, target_count - ready_now)
+            eta_seconds = int(avg_seconds * remaining) if avg_seconds > 0 and remaining > 0 else 0
+
+            save_metadata(
+                book_dir,
+                {
+                    "full_generation_stage": "running",
+                    "full_generation_message": (
+                        f"Bölüm {chapter_number_value} tamamlandı ({pending_index}/{len(pending)}): {chapter_title}"
+                    ),
+                    "full_generation_progress": max(
+                        int((ready_now / max(1, target_count)) * 100),
+                        12,
+                    ),
+                    "full_generation_target_count": target_count,
+                    "full_generation_ready_count": ready_now,
+                    "full_generation_failed_count": len(failures),
+                    "full_generation_eta_seconds": eta_seconds,
+                    "full_generation_avg_chapter_seconds": avg_seconds,
+                    "full_generation_eta_updated_at": now_utc_iso(),
+                    "full_generation_updated_at": now_utc_iso(),
+                    "current_chapter": chapter_number_value,
+                    "current_segment": segment_count_value,
+                    "segment_count": segment_count_value,
+                    "segment_index": segment_count_value,
+                    "pause_reason": "",
+                    "next_retry_at": "",
+                },
+            )
+            append_book_activity(book_dir, "chapter_ready", "Chapter ready", "done", f"Chapter {chapter_number_value} finished: {chapter_title}")
+
+        final_metadata = read_metadata(book_dir)
+        final_status = build_full_generation_status(book_dir, final_metadata)
+        final_progress = chapter_generation_progress(book_dir, final_metadata)
+        complete = bool(final_status["complete"])
         failed_count = len(failures)
         if complete and failed_count == 0:
             save_metadata(
@@ -2031,19 +3624,29 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
                     "full_generation_target_count": int(final_progress["target_count"]),
                     "full_generation_ready_count": int(final_progress["ready_count"]),
                     "full_generation_failed_count": 0,
+                    "full_generation_retry_count": 0,
                     "full_generation_eta_seconds": 0,
                     "full_generation_eta_updated_at": now_utc_iso(),
                     "full_generation_updated_at": now_utc_iso(),
                     "full_generation_completed_at": now_utc_iso(),
+                    "current_chapter": 0,
+                    "current_segment": 0,
+                    "segment_count": default_segment_count,
+                    "segment_index": 0,
+                    "pause_reason": "",
+                    "next_retry_at": "",
+                    "chapter_generation_mode": generation_mode,
+                    "book_generation_complete": True,
                 },
             )
+            append_book_activity(book_dir, "full_book_ready", "Full book ready", "done", "All chapters completed successfully.")
         else:
-            first_error = failures[0]["error"] if failures else "Bölümlerin tamamı üretilemedi."
+            first_error = failures[0]["error"] if failures else str(final_status.get("message") or "Bölümlerin tamamı üretilemedi.")
             save_metadata(
                 book_dir,
                 {
                     "full_generation_stage": "needs_attention",
-                    "full_generation_message": "Bazı bölümler tamamlanamadı.",
+                    "full_generation_message": str(final_status.get("message") or "Bazı bölümler tamamlanamadı."),
                     "full_generation_error": str(first_error),
                     "full_generation_progress": max(
                         int((int(final_progress["ready_count"]) / max(1, int(final_progress["target_count"]))) * 100),
@@ -2056,8 +3659,17 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
                     "full_generation_eta_updated_at": now_utc_iso(),
                     "full_generation_updated_at": now_utc_iso(),
                     "full_generation_completed_at": "",
+                    "current_chapter": int(failures[0]["chapter_number"]) if failures else 0,
+                    "current_segment": 0,
+                    "segment_count": default_segment_count,
+                    "segment_index": 0,
+                    "pause_reason": "",
+                    "next_retry_at": "",
+                    "chapter_generation_mode": generation_mode,
+                    "book_generation_complete": False,
                 },
             )
+            append_book_activity(book_dir, "full_book_failed", "Full book needs attention", "error", str(first_error))
         sync_preview_generation_metadata(book_dir)
     except Exception as exc:  # noqa: BLE001
         save_metadata(
@@ -2070,8 +3682,11 @@ def run_full_chapter_pipeline(slug: str, force: bool = False) -> None:
                 "full_generation_eta_updated_at": now_utc_iso(),
                 "full_generation_updated_at": now_utc_iso(),
                 "full_generation_completed_at": "",
+                "pause_reason": "",
+                "next_retry_at": "",
             },
         )
+        append_book_activity(book_dir, "full_book_failed", "Full book failed", "error", str(exc))
         append_log(f"Full chapter pipeline failed for '{slug}': {exc}")
     finally:
         with ACTIVE_FULL_CHAPTER_PIPELINES_LOCK:
@@ -2086,15 +3701,50 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
         raise FileNotFoundError("Book not found.")
 
     metadata = read_metadata(book_dir)
+    waiting_seconds = retry_wait_seconds_remaining(metadata.get("next_retry_at"))
+    current_stage = str(metadata.get("full_generation_stage") or "").strip().lower()
 
+    capacity_blocked = False
+    already_active = False
     with ACTIVE_FULL_CHAPTER_PIPELINES_LOCK:
-        if slug in ACTIVE_FULL_CHAPTER_PIPELINES and not force:
-            return {
-                "ok": True,
-                "started": False,
-                "slug": slug,
-                "full_generation": build_full_generation_status(book_dir, metadata, lightweight=True),
-            }
+        active_count = len(ACTIVE_FULL_CHAPTER_PIPELINES)
+        already_active = slug in ACTIVE_FULL_CHAPTER_PIPELINES
+        if (not already_active) and active_count >= FULL_GENERATION_MAX_CONCURRENT:
+            capacity_blocked = True
+
+    if already_active and not force:
+        return {
+            "ok": True,
+            "started": False,
+            "slug": slug,
+            "full_generation": build_full_generation_status(book_dir, metadata, lightweight=True),
+        }
+
+    if capacity_blocked:
+        save_metadata(
+            book_dir,
+            {
+                "full_generation_stage": "queued",
+                "full_generation_message": "Başka bir uzun kitap yazılırken bu kitap sırada bekliyor.",
+                "full_generation_error": "",
+                "full_generation_updated_at": now_utc_iso(),
+                "full_generation_eta_updated_at": now_utc_iso(),
+            },
+        )
+        return {
+            "ok": True,
+            "started": False,
+            "slug": slug,
+            "full_generation": build_full_generation_status(book_dir, read_metadata(book_dir), lightweight=True),
+        }
+
+    if not force and current_stage == "waiting" and waiting_seconds > 0:
+        return {
+            "ok": True,
+            "started": False,
+            "slug": slug,
+            "full_generation": build_full_generation_status(book_dir, metadata, lightweight=True),
+        }
 
     if not force:
         lightweight_status = build_full_generation_status(book_dir, metadata, lightweight=True)
@@ -2113,9 +3763,12 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
                     "full_generation_failed_count": 0,
                     "full_generation_eta_seconds": 0,
                     "full_generation_avg_chapter_seconds": 0,
+                    "full_generation_retry_count": 0,
                     "full_generation_eta_updated_at": now_utc_iso(),
                     "full_generation_updated_at": now_utc_iso(),
                     "full_generation_completed_at": now_utc_iso(),
+                    "pause_reason": "",
+                    "next_retry_at": "",
                 },
             )
             return {
@@ -2126,7 +3779,7 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
             }
 
     progress = chapter_generation_progress(book_dir, metadata)
-    if progress["complete"] and not force:
+    if bool(build_full_generation_status(book_dir, metadata, lightweight=True).get("complete")) and not force:
         save_metadata(
             book_dir,
             {
@@ -2139,9 +3792,12 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
                 "full_generation_failed_count": 0,
                 "full_generation_eta_seconds": 0,
                 "full_generation_avg_chapter_seconds": 0,
+                "full_generation_retry_count": 0,
                 "full_generation_eta_updated_at": now_utc_iso(),
                 "full_generation_updated_at": now_utc_iso(),
                 "full_generation_completed_at": now_utc_iso(),
+                "pause_reason": "",
+                "next_retry_at": "",
             },
         )
         return {
@@ -2151,15 +3807,19 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
             "full_generation": build_full_generation_status(book_dir, lightweight=True),
         }
 
+    already_active_after_checks = False
     with ACTIVE_FULL_CHAPTER_PIPELINES_LOCK:
-        if slug in ACTIVE_FULL_CHAPTER_PIPELINES:
-            return {
-                "ok": True,
-                "started": False,
-                "slug": slug,
-                "full_generation": build_full_generation_status(book_dir, lightweight=True),
-            }
-        ACTIVE_FULL_CHAPTER_PIPELINES.add(slug)
+        already_active_after_checks = slug in ACTIVE_FULL_CHAPTER_PIPELINES
+        if not already_active_after_checks:
+            ACTIVE_FULL_CHAPTER_PIPELINES.add(slug)
+
+    if already_active_after_checks:
+        return {
+            "ok": True,
+            "started": False,
+            "slug": slug,
+            "full_generation": build_full_generation_status(book_dir, lightweight=True),
+        }
 
     target_count = int(progress["target_count"])
     ready_count = int(progress["ready_count"])
@@ -2180,8 +3840,11 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
             "full_generation_started_at": now_utc_iso(),
             "full_generation_updated_at": now_utc_iso(),
             "full_generation_completed_at": "",
+            "pause_reason": "",
+            "next_retry_at": "",
         },
     )
+    append_book_activity(book_dir, "full_book_queued", "Full book queued", "queued", "Remaining chapters were queued for background generation.")
     # Submit to thread pool instead of creating raw thread
     submit_pipeline_task(run_full_chapter_pipeline, slug, force)
     append_log(f"Submitted full chapter pipeline for book '{slug}' to thread pool")
@@ -2193,6 +3856,358 @@ def start_full_chapter_pipeline(slug: str, force: bool = False) -> dict[str, Any
     }
 
 
+def run_preview_cover_generation(slug: str, book_dir: Path) -> dict[str, Any]:
+    current_meta = repair_selected_cover_bundle(book_dir, read_metadata(book_dir))
+    require_variant_bundle = image_provider_policy_vertex_only() or bool(
+        normalize_cover_variants(current_meta.get("cover_variants"))
+    )
+    if selected_cover_bundle_ready(book_dir, current_meta, require_variant=require_variant_bundle):
+        save_metadata(
+            book_dir,
+            {
+                "cover_state": "ready",
+                "preview_error": "",
+                "preview_progress": 100 if first_preview_chapter_ready(book_dir) else 46,
+                "preview_updated_at": now_utc_iso(),
+            },
+        )
+        append_book_activity(book_dir, "cover_selected", "Cover selected", "done", "Selected cover pair already existed.")
+        return {"ok": True, "skipped": True}
+
+    save_metadata(
+        book_dir,
+        {
+            "preview_stage": "cover",
+            "preview_message": "Kapak görseli üretiliyor.",
+            "cover_state": "running",
+            "preview_progress": 28,
+            "preview_updated_at": now_utc_iso(),
+        },
+    )
+    append_book_activity(book_dir, "cover_started", "Cover generation started", "active", "Creating the real cover before opening the preview.")
+    book_metadata = read_metadata(book_dir)
+    book = read_book_core_fields(book_dir, book_metadata)
+    default_author = read_settings()["default_author"]
+    cover_result: dict[str, Any] = {
+        "ok": False,
+        "action": "cover_variants_generate",
+        "returncode": 1,
+        "output": "Kapak üretimi başlatılamadı.",
+        "warnings": [],
+        "produced_files": [],
+    }
+
+    if image_provider_policy_vertex_only():
+        variants_preflight = preflight_for_workflow("cover_variants_generate", slug)
+        if variants_preflight.get("ok"):
+            cover_result = run_workflow(
+                {
+                    "action": "cover_variants_generate",
+                    "slug": slug,
+                    "variant_count": 1,
+                    "service": normalize_cover_service_for_policy(PREVIEW_COVER_SERVICE),
+                    "timeout_seconds": PREVIEW_COVER_TIMEOUT_SECONDS,
+                    "safe_mode": False,
+                }
+            )
+            append_workflow_provider_activity(
+                book_dir,
+                "cover_variants_generate",
+                cover_result,
+                code="cover_provider",
+                label="Cover provider",
+            )
+        else:
+            cover_result = {
+                "ok": False,
+                "action": "cover_variants_generate",
+                "returncode": 1,
+                "output": "\n".join(variants_preflight.get("missing") or [])
+                or "Vertex kapak üretimi için gerekli yapılandırma eksik.",
+                "warnings": list(variants_preflight.get("warnings") or []),
+                "produced_files": [],
+            }
+    else:
+        cover_result = run_workflow(
+            {
+                "action": "cover_script",
+                "slug": slug,
+                "title": book.get("title") or slug,
+                "author": book.get("author") or default_author,
+                "genre": infer_cover_genre(book),
+            }
+        )
+        append_workflow_provider_activity(
+            book_dir,
+            "cover_script",
+            cover_result,
+            code="cover_provider",
+            label="Cover provider",
+        )
+        if not cover_result.get("ok") or not cover_asset_ready(book_dir):
+            variants_preflight = preflight_for_workflow("cover_variants_generate", slug)
+            if variants_preflight.get("ok"):
+                cover_result = run_workflow(
+                    {
+                        "action": "cover_variants_generate",
+                        "slug": slug,
+                        "variant_count": 1,
+                        "timeout_seconds": PREVIEW_COVER_TIMEOUT_SECONDS,
+                        "safe_mode": True,
+                    }
+                )
+                append_workflow_provider_activity(
+                    book_dir,
+                    "cover_variants_generate",
+                    cover_result,
+                    code="cover_provider",
+                    label="Cover provider",
+                )
+
+        if not cover_asset_ready(book_dir):
+            fallback_preflight = preflight_for_workflow("cover_local", slug)
+            if fallback_preflight.get("ok"):
+                cover_result = run_workflow(
+                    {
+                        "action": "cover_local",
+                        "slug": slug,
+                        "title": book.get("title") or slug,
+                        "subtitle": book.get("subtitle") or "",
+                        "author": book.get("author") or default_author,
+                        "blurb": book.get("description") or "",
+                    }
+                )
+                append_workflow_provider_activity(
+                    book_dir,
+                    "cover_local",
+                    cover_result,
+                    code="cover_provider",
+                    label="Cover provider",
+                )
+
+    current_meta = repair_selected_cover_bundle(book_dir, read_metadata(book_dir))
+    require_variant_bundle = image_provider_policy_vertex_only() or bool(
+        normalize_cover_variants(current_meta.get("cover_variants"))
+    )
+    cover_bundle_ready = selected_cover_bundle_ready(
+        book_dir,
+        current_meta,
+        require_variant=require_variant_bundle,
+    )
+    if cover_bundle_ready:
+        save_metadata(
+            book_dir,
+            {
+                "cover_state": "ready",
+                "preview_error": "",
+                "preview_message": "Kapak hazır. İlk gerçek bölüm yazılıyor.",
+                "preview_progress": 72 if not first_preview_chapter_ready(book_dir) else 100,
+                "preview_updated_at": now_utc_iso(),
+            },
+        )
+        append_book_activity(book_dir, "cover_selected", "Cover selected", "done", "Selected final cover pair promoted to preview.")
+    else:
+        preview_error = summarize_workflow_problem(
+            cover_result,
+            "Kapak üretimi tamamlanamadı.",
+        )
+        if raw_cover_candidate_assets_exist(book_dir):
+            preview_error = "Kapak aday dosyaları üretildi, ancak seçili final kapak çifti promote edilmedi."
+        save_metadata(
+            book_dir,
+            {
+                "cover_state": "error",
+                "preview_error": preview_error,
+                "preview_updated_at": now_utc_iso(),
+            },
+        )
+        append_book_activity(book_dir, "cover_failed", "Cover generation failed", "error", preview_error)
+    return cover_result
+
+
+def run_preview_first_chapter_compact(slug: str, book_dir: Path) -> dict[str, Any]:
+    metadata = read_metadata(book_dir)
+    if first_preview_chapter_ready(book_dir):
+        save_metadata(
+            book_dir,
+            {
+                "first_chapter_state": "ready",
+                "preview_error": "",
+                "preview_message": "İlk bölüm hazır. Kapak görseli üretiliyor.",
+                "preview_progress": 68,
+                "preview_updated_at": now_utc_iso(),
+            },
+        )
+        append_book_activity(book_dir, "first_chapter_ready", "First chapter ready", "done", "First readable chapter already existed.")
+        return {"ok": True, "skipped": True}
+
+    book_language = infer_book_language(book_dir, metadata)
+    first_title = chapter_heading_prefix(book_language, 1)
+    first_plan = chapter_plan_for_number(metadata, 1)
+    planned_min_words = int(first_plan.get("target_min_words") or 1800) if first_plan else 1800
+    planned_max_words = int(first_plan.get("target_max_words") or 2400) if first_plan else 2400
+    min_words = max(PREVIEW_PIPELINE_MIN_WORDS, min(planned_min_words, PREVIEW_PRIMARY_CHAPTER_WORD_LIMIT))
+    max_words = max(min_words + 180, min(planned_max_words, PREVIEW_PRIMARY_CHAPTER_WORD_LIMIT))
+    chapters = read_book(book_dir).get("chapters") or []
+    if chapters:
+        first_title = str(chapters[0].get("title") or first_title).strip() or first_title
+    if first_plan and str(first_plan.get("title") or "").strip():
+        first_title = str(first_plan.get("title") or "").strip() or first_title
+
+    targets = preview_segment_targets(min_words, max_words)
+    segment_count_value = int(targets["segment_count"])
+    segment_min_words = int(targets["segment_min_words"])
+    segment_max_words = int(targets["segment_max_words"])
+    segment_ready_threshold = max(220, int(segment_min_words * 0.55))
+
+    save_metadata(
+        book_dir,
+        {
+            "preview_stage": "chapter",
+            "preview_message": f"İlk okunabilir bölüm yazılıyor ({min_words}-{max_words} kelime hedefi).",
+            "first_chapter_state": "running",
+            "preview_progress": 42,
+            "preview_updated_at": now_utc_iso(),
+            "current_chapter": 1,
+            "current_segment": 0,
+            "segment_count": segment_count_value,
+            "segment_index": 0,
+        },
+    )
+    append_book_activity(book_dir, "first_chapter_started", "First chapter started", "active", f"Writing chapter 1 in {segment_count_value} compact segments.")
+
+    chapter_segment_path(book_dir, 1, 1).parent.mkdir(parents=True, exist_ok=True)
+    for segment_index in range(1, segment_count_value + 1):
+        save_metadata(
+            book_dir,
+            {
+                "preview_message": f"İlk bölüm yazılıyor: segment {segment_index}/{segment_count_value}.",
+                "preview_updated_at": now_utc_iso(),
+                "current_chapter": 1,
+                "current_segment": segment_index,
+                "segment_count": segment_count_value,
+                "segment_index": segment_index,
+            },
+        )
+        append_book_activity(book_dir, "chapter_segment_started", "Chapter segment started", "active", f"Chapter 1, segment {segment_index}/{segment_count_value}")
+        segment_result = run_workflow(
+            {
+                "action": "chapter_generate_segment",
+                "slug": slug,
+                "chapter_number": 1,
+                "chapter_title": first_title,
+                "segment_index": segment_index,
+                "segment_count": segment_count_value,
+                "min_words": segment_min_words,
+                "max_words": segment_max_words,
+                "chapter_min_words": min_words,
+                "chapter_max_words": max_words,
+                "style": "clear",
+                "tone": "professional",
+            }
+        )
+        append_workflow_provider_activity(
+            book_dir,
+            "chapter_generate_segment",
+            segment_result,
+            code="first_chapter_provider",
+            label="First chapter provider",
+        )
+        if not bool(segment_result.get("ok")) or chapter_segment_word_count(book_dir, 1, segment_index) < segment_ready_threshold:
+            if is_transient_workflow_failure(segment_result):
+                save_metadata(
+                    book_dir,
+                    {
+                        "preview_stage": "waiting",
+                        "first_chapter_state": "waiting",
+                        "preview_message": "İlk bölüm geçici olarak beklemede. Otomatik yeniden denenecek.",
+                        "preview_error": "",
+                        "preview_progress": 42,
+                        "preview_updated_at": now_utc_iso(),
+                    },
+                )
+                append_book_activity(book_dir, "first_chapter_waiting", "First chapter waiting", "waiting", summarize_workflow_problem(segment_result, "First chapter segment temporarily unavailable."))
+                return segment_result
+            save_metadata(
+                book_dir,
+                {
+                    "preview_stage": "needs_attention",
+                    "first_chapter_state": "error",
+                    "preview_message": "İlk bölüm üretilemedi. Tekrar denenebilir.",
+                    "preview_error": summarize_workflow_problem(segment_result, "İlk bölüm üretimi tamamlanamadı."),
+                    "preview_progress": 42,
+                    "preview_updated_at": now_utc_iso(),
+                },
+            )
+            append_book_activity(book_dir, "first_chapter_failed", "First chapter failed", "error", "First chapter could not be generated.")
+            return segment_result
+
+    assemble_chapter_from_segments(book_dir, 1, first_title, book_language, segment_count_value)
+    cleanup_generated_chapter_file(book_dir, 1, metadata)
+
+    if not chapter_meets_generation_target(book_dir, 1, PREVIEW_PIPELINE_MIN_WORDS, strict=False):
+        extend_result = run_workflow(
+            {
+                "action": "chapter_extend",
+                "slug": slug,
+                "chapter_number": 1,
+                "min_words": min_words,
+                "max_words": max_words,
+            }
+        )
+        append_workflow_provider_activity(
+            book_dir,
+            "chapter_extend",
+            extend_result,
+            code="first_chapter_provider",
+            label="First chapter provider",
+        )
+        cleanup_generated_chapter_file(book_dir, 1, metadata)
+        if not bool(extend_result.get("ok")) and not chapter_meets_generation_target(book_dir, 1, PREVIEW_PIPELINE_MIN_WORDS, strict=False):
+            if is_transient_workflow_failure(extend_result):
+                save_metadata(
+                    book_dir,
+                    {
+                        "preview_stage": "waiting",
+                        "first_chapter_state": "waiting",
+                        "preview_message": "İlk bölüm uzatma turu beklemede. Otomatik yeniden denenecek.",
+                        "preview_error": "",
+                        "preview_progress": 58,
+                        "preview_updated_at": now_utc_iso(),
+                    },
+                )
+                append_book_activity(book_dir, "first_chapter_waiting", "First chapter waiting", "waiting", summarize_workflow_problem(extend_result, "First chapter extension temporarily unavailable."))
+                return extend_result
+
+    if first_preview_chapter_ready(book_dir):
+        save_metadata(
+            book_dir,
+            {
+                "first_chapter_state": "ready",
+                "preview_error": "",
+                "preview_message": "İlk bölüm hazır. Kapak görseli üretiliyor.",
+                "preview_progress": 74,
+                "preview_updated_at": now_utc_iso(),
+            },
+        )
+        append_book_activity(book_dir, "first_chapter_ready", "First chapter ready", "done", "First readable chapter is ready.")
+        return {"ok": True}
+
+    save_metadata(
+        book_dir,
+        {
+            "preview_stage": "needs_attention",
+            "first_chapter_state": "error",
+            "preview_message": "İlk bölüm üretilemedi. Tekrar denenebilir.",
+            "preview_error": "İlk bölüm minimum okunabilir eşik değerine ulaşamadı.",
+            "preview_progress": 42,
+            "preview_updated_at": now_utc_iso(),
+        },
+    )
+    append_book_activity(book_dir, "first_chapter_failed", "First chapter failed", "error", "First chapter remained below readable threshold.")
+    return {"ok": False, "output": "First chapter remained below readable threshold."}
+
+
 def resume_interrupted_pipelines() -> dict[str, int]:
     summary = {"preview_requeued": 0, "full_requeued": 0}
     if not PIPELINE_RECOVERY_ENABLED:
@@ -2202,7 +4217,7 @@ def resume_interrupted_pipelines() -> dict[str, int]:
         return summary
 
     preview_resume_stages = {"queued", "running", "chapter", "cover"}
-    full_resume_stages = {"queued", "running", "error", "needs_attention"}
+    full_resume_stages = {"queued", "running", "error", "needs_attention", "waiting"}
 
     for book_dir in sorted(BOOK_OUTPUTS_DIR.iterdir()):
         if not book_dir.is_dir():
@@ -2229,6 +4244,7 @@ def resume_interrupted_pipelines() -> dict[str, int]:
                 not bool(full_status.get("complete"))
                 and not is_full_pipeline_active(slug)
                 and full_stage in full_resume_stages
+                and retry_wait_seconds_remaining(metadata.get("next_retry_at")) <= 0
             ):
                 started = start_full_chapter_pipeline(slug, force=False)
                 if bool(started.get("started")):
@@ -2241,7 +4257,7 @@ def resume_interrupted_pipelines() -> dict[str, int]:
 
 def pipeline_watchdog_loop() -> None:
     preview_stale_stages = {"queued", "running", "chapter", "cover"}
-    full_stale_stages = {"queued", "running", "error", "needs_attention"}
+    full_stale_stages = {"queued", "running", "error", "needs_attention", "waiting"}
     while not _pipeline_watchdog_stop_event.wait(PIPELINE_WATCHDOG_INTERVAL_SECONDS):
         if not PIPELINE_RECOVERY_ENABLED or not BOOK_OUTPUTS_DIR.exists():
             continue
@@ -2280,7 +4296,10 @@ def pipeline_watchdog_loop() -> None:
                     not bool(full_status.get("complete"))
                     and not full_active
                     and full_stage in full_stale_stages
-                    and is_timestamp_stale(full_updated_at, PIPELINE_STALE_SECONDS)
+                    and (
+                        retry_wait_seconds_remaining(metadata.get("next_retry_at")) <= 0
+                        or is_timestamp_stale(full_updated_at, PIPELINE_STALE_SECONDS)
+                    )
                 )
                 if should_requeue_full:
                     append_log(
@@ -2331,6 +4350,7 @@ def run_preview_pipeline(slug: str) -> None:
 
     try:
         metadata = read_metadata(book_dir)
+        chapter_ready = first_preview_chapter_ready(book_dir)
         save_metadata(
             book_dir,
             {
@@ -2343,186 +4363,51 @@ def run_preview_pipeline(slug: str) -> None:
                 "preview_completed_at": "",
             },
         )
+        append_book_activity(book_dir, "preview_running", "Preview production started", "active", "Cover-first preview production started.")
 
-        if not first_preview_chapter_ready(book_dir):
-            first_title = chapter_heading_prefix(infer_book_language(book_dir, read_metadata(book_dir)), 1)
-            first_plan = chapter_plan_for_number(metadata, 1)
-            min_words = int(first_plan.get("target_min_words") or 1800) if first_plan else 1800
-            max_words = int(first_plan.get("target_max_words") or 2400) if first_plan else 2400
-            chapters = read_book(book_dir).get("chapters") or []
-            if chapters:
-                first_title = str(chapters[0].get("title") or first_title).strip() or first_title
-            if first_plan and str(first_plan.get("title") or "").strip():
-                first_title = str(first_plan.get("title") or "").strip() or first_title
+        cover_thread: threading.Thread | None = None
+        cover_result_holder: dict[str, Any] = {}
+        cover_metadata = repair_selected_cover_bundle(book_dir, read_metadata(book_dir))
+        require_variant_bundle = image_provider_policy_vertex_only() or bool(
+            normalize_cover_variants(cover_metadata.get("cover_variants"))
+        )
+        if not selected_cover_bundle_ready(book_dir, cover_metadata, require_variant=require_variant_bundle):
+            def _run_cover_task() -> None:
+                try:
+                    cover_result_holder["result"] = run_preview_cover_generation(slug, book_dir)
+                except Exception as exc:  # noqa: BLE001
+                    cover_result_holder["error"] = exc
+
+            cover_thread = threading.Thread(
+                target=_run_cover_task,
+                name=f"preview-cover-{slug}",
+                daemon=True,
+            )
+            cover_thread.start()
+        else:
             save_metadata(
                 book_dir,
                 {
-                    "preview_stage": "chapter",
-                    "preview_message": "İlk okunabilir bölüm yazılıyor.",
-                    "first_chapter_state": "running",
-                    "preview_progress": 42,
+                    "cover_state": "ready",
+                    "preview_error": "",
+                    "preview_progress": 100 if first_preview_chapter_ready(book_dir) else 46,
                     "preview_updated_at": now_utc_iso(),
                 },
             )
-            chapter_result = run_workflow(
-                {
-                    "action": "chapter_generate",
-                    "slug": slug,
-                    "chapter_number": 1,
-                    "chapter_title": first_title,
-                    "min_words": min_words,
-                    "max_words": max_words,
-                    "style": "clear",
-                    "tone": "professional",
-                }
-            )
-            if first_preview_chapter_ready(book_dir):
-                save_metadata(
-                    book_dir,
-                    {
-                        "first_chapter_state": "ready",
-                        "preview_error": "",
-                        "preview_message": "İlk bölüm hazır. Kapak görseli üretiliyor.",
-                        "preview_progress": 74,
-                        "preview_updated_at": now_utc_iso(),
-                    },
-                )
-            else:
-                save_metadata(
-                    book_dir,
-                    {
-                        "first_chapter_state": "error",
-                        "preview_error": summarize_workflow_problem(
-                            chapter_result,
-                            "İlk bölüm üretimi tamamlanamadı.",
-                        ),
-                        "preview_updated_at": now_utc_iso(),
-                    },
-                )
-        else:
-                save_metadata(
-                    book_dir,
-                    {
-                        "first_chapter_state": "ready",
-                        "preview_error": "",
-                        "preview_message": "İlk bölüm hazır. Kapak görseli üretiliyor.",
-                        "preview_progress": 68,
-                        "preview_updated_at": now_utc_iso(),
-                    },
-                )
+            append_book_activity(book_dir, "cover_selected", "Cover selected", "done", "Selected cover pair already existed.")
 
-        if not cover_asset_ready(book_dir):
-            save_metadata(
-                book_dir,
-                {
-                    "preview_stage": "cover",
-                    "preview_message": "Kapak görseli üretiliyor.",
-                    "cover_state": "running",
-                    "preview_progress": 78,
-                    "preview_updated_at": now_utc_iso(),
-                },
-            )
-            book_metadata = read_metadata(book_dir)
-            book = read_book_core_fields(book_dir, book_metadata)
-            default_author = read_settings()["default_author"]
-            cover_result: dict[str, Any] = {
-                "ok": False,
-                "action": "cover_variants_generate",
-                "returncode": 1,
-                "output": "Kapak üretimi başlatılamadı.",
-                "warnings": [],
-                "produced_files": [],
-            }
-            if image_provider_policy_vertex_only():
-                variants_preflight = preflight_for_workflow("cover_variants_generate", slug)
-                if variants_preflight.get("ok"):
-                    cover_result = run_workflow(
-                        {
-                            "action": "cover_variants_generate",
-                            "slug": slug,
-                            "variant_count": 1,
-                            "service": normalize_cover_service_for_policy(PREVIEW_COVER_SERVICE),
-                            "safe_mode": False,
-                        }
-                    )
-                else:
-                    cover_result = {
-                        "ok": False,
-                        "action": "cover_variants_generate",
-                        "returncode": 1,
-                        "output": "\n".join(variants_preflight.get("missing") or [])
-                        or "Vertex kapak üretimi için gerekli yapılandırma eksik.",
-                        "warnings": list(variants_preflight.get("warnings") or []),
-                        "produced_files": [],
-                    }
-            else:
-                cover_result = run_workflow(
-                    {
-                        "action": "cover_script",
-                        "slug": slug,
-                        "title": book.get("title") or slug,
-                        "author": book.get("author") or default_author,
-                        "genre": infer_cover_genre(book),
-                    }
-                )
-                if not cover_result.get("ok") or not cover_asset_ready(book_dir):
-                    variants_preflight = preflight_for_workflow("cover_variants_generate", slug)
-                    if variants_preflight.get("ok"):
-                        cover_result = run_workflow(
-                            {
-                                "action": "cover_variants_generate",
-                                "slug": slug,
-                                "variant_count": 1,
-                                "safe_mode": True,
-                            }
-                        )
+        chapter_result = run_preview_first_chapter_compact(slug, book_dir)
+        chapter_ready = first_preview_chapter_ready(book_dir)
+        chapter_waiting = str(read_metadata(book_dir).get("first_chapter_state") or "").strip().lower() == "waiting"
+        if not chapter_ready and not chapter_waiting:
+            return
 
-                if not cover_asset_ready(book_dir):
-                    fallback_preflight = preflight_for_workflow("cover_local", slug)
-                    if fallback_preflight.get("ok"):
-                        cover_result = run_workflow(
-                            {
-                                "action": "cover_local",
-                                "slug": slug,
-                                "title": book.get("title") or slug,
-                                "subtitle": book.get("subtitle") or "",
-                                "author": book.get("author") or default_author,
-                                "blurb": book.get("description") or "",
-                            }
-                        )
-            if cover_asset_ready(book_dir):
-                save_metadata(
-                    book_dir,
-                    {
-                        "cover_state": "ready",
-                        "preview_error": "",
-                        "preview_message": "Kapak ve ilk okunabilir bölüm hazır.",
-                        "preview_progress": 100,
-                        "preview_updated_at": now_utc_iso(),
-                    },
-                )
-            else:
-                save_metadata(
-                    book_dir,
-                    {
-                        "cover_state": "error",
-                        "preview_error": summarize_workflow_problem(
-                            cover_result,
-                            "Kapak üretimi tamamlanamadı.",
-                        ),
-                        "preview_updated_at": now_utc_iso(),
-                    },
-                )
-        else:
-                save_metadata(
-                    book_dir,
-                    {
-                        "cover_state": "ready",
-                        "preview_error": "",
-                        "preview_progress": 100 if first_preview_chapter_ready(book_dir) else 46,
-                        "preview_updated_at": now_utc_iso(),
-                    },
-                )
+        if cover_thread is not None:
+            cover_thread.join(timeout=max(30, PREVIEW_COVER_TIMEOUT_SECONDS + 15))
+            if cover_thread.is_alive():
+                append_log(f"Preview cover task still running after timeout for '{slug}'")
+            elif "error" in cover_result_holder:
+                append_log(f"Preview cover task failed for '{slug}': {cover_result_holder['error']}")
 
         generation = build_generation_status(book_dir)
         final_stage = "ready" if generation["product_ready"] else "chapter_ready" if generation["preview_ready"] else "needs_attention"
@@ -2542,6 +4427,7 @@ def run_preview_pipeline(slug: str) -> None:
             and generation.get("preview_ready")
         ):
             try:
+                append_book_activity(book_dir, "full_book_queued", "Full book queued", "queued", "Remaining chapters were queued in the background.")
                 start_full_chapter_pipeline(slug, force=False)
             except Exception as exc:  # noqa: BLE001
                 append_log(f"Full chapter bootstrap skipped for '{slug}': {exc}")
@@ -2555,6 +4441,7 @@ def run_preview_pipeline(slug: str) -> None:
                 "preview_updated_at": now_utc_iso(),
             },
         )
+        append_book_activity(book_dir, "preview_failed", "Preview pipeline failed", "error", str(exc))
         append_log(f"Preview pipeline failed for '{slug}': {exc}")
     finally:
         with ACTIVE_PREVIEW_PIPELINES_LOCK:
@@ -2572,10 +4459,14 @@ def start_preview_pipeline(slug: str) -> dict[str, Any]:
     if generation["product_ready"]:
         return {"ok": True, "started": False, "slug": slug, "generation": generation}
 
+    already_active = False
     with ACTIVE_PREVIEW_PIPELINES_LOCK:
-        if slug in ACTIVE_PREVIEW_PIPELINES:
-            return {"ok": True, "started": False, "slug": slug, "generation": build_generation_status(book_dir)}
-        ACTIVE_PREVIEW_PIPELINES.add(slug)
+        already_active = slug in ACTIVE_PREVIEW_PIPELINES
+        if not already_active:
+            ACTIVE_PREVIEW_PIPELINES.add(slug)
+
+    if already_active:
+        return {"ok": True, "started": False, "slug": slug, "generation": build_generation_status(book_dir)}
 
     save_metadata(
         book_dir,
@@ -2589,6 +4480,7 @@ def start_preview_pipeline(slug: str) -> dict[str, Any]:
             "preview_updated_at": now_utc_iso(),
         },
     )
+    append_book_activity(book_dir, "preview_bootstrap", "Preview bootstrap queued", "queued", "Cover-first preview pipeline queued.")
     # Submit to thread pool instead of creating raw thread
     submit_pipeline_task(run_preview_pipeline, slug)
     append_log(f"Submitted preview pipeline for book '{slug}' to thread pool")
@@ -2943,11 +4835,18 @@ def file_entry(path: Path) -> dict[str, Any]:
 
 
 def latest_export_dir(book_dir: Path) -> Path | None:
-    exports = sorted(
-        (path for path in book_dir.glob("exports_*") if path.is_dir()),
-        key=lambda item: item.name,
-    )
-    return exports[-1] if exports else None
+    exports = [path for path in book_dir.glob("exports_*") if path.is_dir()]
+    if not exports:
+        return None
+
+    def export_sort_key(path: Path) -> tuple[float, str]:
+        try:
+            modified = path.stat().st_mtime
+        except OSError:
+            modified = 0.0
+        return (modified, path.name)
+
+    return max(exports, key=export_sort_key)
 
 
 def latest_export_file_for_format(book_dir: Path, format_name: str) -> Path | None:
@@ -2981,8 +4880,10 @@ def build_export_parity_report(book_dir: Path, metadata: dict[str, Any], format_
     latest_dir = latest_export_dir(book_dir)
     front_cover, back_cover = resolve_cover_image_references(book_dir, metadata)
     export_file = latest_export_file_for_format(book_dir, format_name) if format_name in {"epub", "pdf"} else None
+    target_dir = export_file.parent if export_file else latest_dir
+    opening_sequence_valid: bool | None = None
 
-    if not latest_dir:
+    if not target_dir:
         errors.append("No export directory was created.")
     else:
         for label, reference in (("front", front_cover), ("back", back_cover)):
@@ -2990,21 +4891,64 @@ def build_export_parity_report(book_dir: Path, metadata: dict[str, Any], format_
                 errors.append(f"Selected {label} cover asset is missing from metadata.")
                 continue
             expected_name = Path(reference).name
-            if not (latest_dir / expected_name).is_file():
-                errors.append(f"Expected {label} cover '{expected_name}' was not copied into the latest export directory.")
+            if not (target_dir / expected_name).is_file():
+                errors.append(f"Expected {label} cover '{expected_name}' was not copied into the export directory.")
         if format_name in {"epub", "pdf"} and not export_file:
-            errors.append(f"No {format_name.upper()} export file was found in the latest export directory.")
-        elif export_file and latest_dir not in export_file.parents:
-            warnings.append("Resolved export file was not located in the latest export directory.")
+            errors.append(f"No {format_name.upper()} export file was found in the export directory.")
+        elif export_file and target_dir not in export_file.parents:
+            warnings.append("Resolved export file was not located in the expected export directory.")
+        audit_path = target_dir / "opening_sequence_audit.json"
+        if audit_path.is_file():
+            try:
+                audit_payload = json.loads(audit_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                errors.append("Opening sequence audit file could not be parsed.")
+            else:
+                opening_sequence_valid = bool(audit_payload.get("valid"))
+                if not opening_sequence_valid:
+                    for message in audit_payload.get("errors") or []:
+                        text = str(message or "").strip()
+                        if text:
+                            errors.append(text)
+        elif format_name in {"pdf", "all"}:
+            warnings.append("Opening sequence audit file is missing from the export directory.")
 
     return {
         "ok": not errors,
         "errors": errors,
         "warnings": warnings,
-        "latest_export_dir": relative_to_root(latest_dir) if latest_dir else "",
+        "latest_export_dir": relative_to_root(target_dir) if target_dir else "",
         "export_relative_path": relative_to_root(export_file) if export_file else "",
         "export_url": workspace_url(export_file) if export_file else "",
+        "opening_sequence_valid": opening_sequence_valid,
     }
+
+
+def resolved_export_completion_flags(
+    book_dir: Path,
+    metadata: dict[str, Any],
+    full_generation: dict[str, Any],
+) -> tuple[bool, bool | None]:
+    book_generation_complete = bool(metadata.get("book_generation_complete", False))
+    opening_sequence_valid = metadata.get("opening_sequence_valid")
+
+    if not book_generation_complete:
+        export_file = latest_export_file_for_format(book_dir, "pdf") or latest_export_file_for_format(book_dir, "epub")
+        chapter_count_ok = bool(full_generation.get("chapter_count_ok", full_generation.get("complete")))
+        target_word_count = int(full_generation.get("target_word_count") or 0)
+        current_word_count = int(full_generation.get("word_count") or 0)
+        length_complete = bool(full_generation.get("length_complete")) or (
+            target_word_count > 0 and current_word_count >= target_word_count
+        )
+        if export_file and chapter_count_ok and length_complete:
+            book_generation_complete = True
+
+    if opening_sequence_valid is None and latest_export_file_for_format(book_dir, "pdf"):
+        parity = build_export_parity_report(book_dir, metadata, "pdf")
+        if parity.get("opening_sequence_valid") is not None:
+            opening_sequence_valid = bool(parity.get("opening_sequence_valid"))
+
+    return book_generation_complete, opening_sequence_valid
 
 
 def list_files(paths: list[Path]) -> list[dict[str, Any]]:
@@ -3316,7 +5260,7 @@ def collect_chapters_preview(
 def build_capabilities() -> dict[str, Any]:
     env = command_env()
     pandoc_ok = tool_exists("pandoc", env)
-    pdf_engine_ok = any(tool_exists(tool, env) for tool in ("tectonic", "xelatex", "pdflatex"))
+    pdf_engine_ok = any(tool_exists(tool, env) for tool in ("tectonic", "xelatex", "pdflatex", "lualatex"))
     calibre_ok = tool_exists("ebook-convert", env)
     return {
         "all": {"available": pandoc_ok, "reason": "" if pandoc_ok else "pandoc missing"},
@@ -3336,7 +5280,7 @@ def read_book(book_dir: Path) -> dict[str, Any]:
     ensure_book_layout(book_dir)
     outline_path = find_outline_file(book_dir)
     title, subtitle = read_outline_title_subtitle(outline_path)
-    metadata = read_metadata(book_dir)
+    metadata = repair_selected_cover_bundle(book_dir, read_metadata(book_dir))
     cover_image, back_cover_image = resolve_cover_image_references(book_dir, metadata)
     effective_metadata = {
         **metadata,
@@ -3347,6 +5291,12 @@ def read_book(book_dir: Path) -> dict[str, Any]:
     latest_export = latest_export_dir(book_dir)
     exports = collect_exports(book_dir)
     full_generation = build_full_generation_status(book_dir, effective_metadata, lightweight=True)
+    book_generation_complete, opening_sequence_valid = resolved_export_completion_flags(
+        book_dir,
+        effective_metadata,
+        full_generation,
+    )
+    targets = metadata_word_targets(effective_metadata)
 
     return {
         "slug": book_dir.name,
@@ -3366,6 +5316,8 @@ def read_book(book_dir: Path) -> dict[str, Any]:
         "cover_art_image": metadata.get("cover_art_image", ""),
         "cover_image": cover_image,
         "back_cover_image": back_cover_image,
+        "front_cover_source": normalize_cover_source(metadata.get("front_cover_source")),
+        "back_cover_source": normalize_cover_source(metadata.get("back_cover_source")),
         "cover_template": metadata.get("cover_template", ""),
         "cover_variant_count": metadata.get("cover_variant_count", 0),
         "cover_variant_target_count": clamp_cover_variant_target_count(metadata.get("cover_variant_target_count", 1), default=1),
@@ -3376,6 +5328,11 @@ def read_book(book_dir: Path) -> dict[str, Any]:
         "recommended_cover_variant": metadata.get("recommended_cover_variant", ""),
         "back_cover_variant_family": metadata.get("back_cover_variant_family", ""),
         "cover_family": metadata.get("cover_family", ""),
+        "cover_text_strategy": normalize_cover_text_strategy(metadata.get("cover_text_strategy")),
+        "cover_mode": normalize_cover_mode(metadata.get("cover_mode")),
+        "style_direction": normalize_style_direction(metadata.get("style_direction")),
+        "wrap_scope": normalize_wrap_scope(metadata.get("wrap_scope")),
+        "quality_gate": normalize_quality_gate(metadata.get("quality_gate")),
         "cover_branch": metadata.get("cover_branch", ""),
         "cover_genre": metadata.get("cover_genre", ""),
         "cover_subtopic": metadata.get("cover_subtopic", ""),
@@ -3383,12 +5340,35 @@ def read_book(book_dir: Path) -> dict[str, Any]:
         "cover_layout_key": metadata.get("cover_layout_key", ""),
         "cover_motif": metadata.get("cover_motif", ""),
         "cover_lab_version": metadata.get("cover_lab_version", ""),
+        "cover_style_mode": normalize_cover_style_mode(metadata.get("cover_style_mode")),
+        "back_cover_mode": normalize_back_cover_mode(metadata.get("back_cover_mode")),
+        "text_safe_zone_status": str(metadata.get("text_safe_zone_status") or "").strip(),
+        "cover_pair_score": metadata.get("cover_pair_score", 0),
+        "cover_rejection_reasons": metadata.get("cover_rejection_reasons", {}),
+        "front_render_mode": str(metadata.get("front_render_mode") or "").strip(),
+        "front_ai_attempt_count": int(metadata.get("front_ai_attempt_count") or 0),
+        "front_text_validation_score": float(metadata.get("front_text_validation_score") or 0),
+        "front_visual_grade": int(metadata.get("front_visual_grade") or 0),
+        "front_genre_fit_score": int(metadata.get("front_genre_fit_score") or 0),
+        "front_hard_reject_reasons": metadata.get("front_hard_reject_reasons", []),
+        "selected_cover_confidence": float(metadata.get("selected_cover_confidence") or 0),
         "isbn": metadata.get("isbn", ""),
         "year": metadata.get("year", ""),
         "fast": bool(metadata.get("fast", False)),
+        "book_length_mode": targets["book_length_mode"],
         "book_length_tier": metadata.get("book_length_tier", "standard"),
-        "target_word_count_min": metadata.get("target_word_count_min", 0),
-        "target_word_count_max": metadata.get("target_word_count_max", 0),
+        "chapter_generation_mode": metadata_chapter_generation_mode(effective_metadata),
+        "codefast_text_model": str(metadata.get("codefast_text_model") or "").strip(),
+        "codefast_outline_model": str(metadata.get("codefast_outline_model") or "").strip(),
+        "codefast_creative_model": str(metadata.get("codefast_creative_model") or "").strip(),
+        "codefast_chapter_segment_model": str(metadata.get("codefast_chapter_segment_model") or "").strip(),
+        "codefast_chapter_segment_fallback_model": str(metadata.get("codefast_chapter_segment_fallback_model") or "").strip(),
+        "target_word_count_min": targets["target_word_count_min"],
+        "target_word_count_max": targets["target_word_count_max"],
+        "chapter_target_words": targets["chapter_target_words"],
+        "book_target_words": targets["book_target_words"],
+        "book_generation_complete": book_generation_complete,
+        "opening_sequence_valid": opening_sequence_valid,
         "chapter_plan": normalize_chapter_plan(metadata.get("chapter_plan")),
         "outline_file": outline_path.name if outline_path else "",
         "book_dir": relative_to_root(book_dir),
@@ -3410,6 +5390,8 @@ def read_book(book_dir: Path) -> dict[str, Any]:
             "chapter_target_count": full_generation["target_count"],
             "chapter_ready_count": full_generation["ready_count"],
             "chapters_complete": full_generation["complete"],
+            "current_word_count": full_generation.get("word_count", 0),
+            "target_word_count": full_generation.get("target_word_count", 0),
             "asset_count": len(collect_assets(book_dir, effective_metadata)),
             "extra_count": len(collect_extra_files(book_dir)),
             "research_count": len(collect_research_files(book_dir)),
@@ -3434,15 +5416,21 @@ def read_book_preview_payload(book_dir: Path) -> dict[str, Any]:
     language = infer_book_language(book_dir, metadata, [title, subtitle, metadata.get("description", "")])
     root_index = book_root_index(book_dir)
     root_entries = set(root_index.keys())
+    targets = metadata_word_targets(effective_metadata)
     generation = build_generation_status(book_dir, effective_metadata, lightweight=True)
     full_generation = build_full_generation_status(book_dir, effective_metadata, lightweight=True)
+    book_generation_complete, opening_sequence_valid = resolved_export_completion_flags(
+        book_dir,
+        effective_metadata,
+        full_generation,
+    )
     full_stage = str(full_generation.get("stage") or "").strip().lower()
     full_active = bool(full_generation.get("active"))
     full_complete = bool(full_generation.get("complete"))
     avoid_non_primary_content = (
         PREVIEW_SKIP_NONPRIMARY_DURING_FULL_GENERATION
         and not full_complete
-        and (full_active or full_stage in {"queued", "running"})
+        and (full_active or full_stage in {"queued", "running", "waiting"})
     )
     chapters = collect_chapters_preview(
         book_dir,
@@ -3466,9 +5454,40 @@ def read_book_preview_payload(book_dir: Path) -> dict[str, Any]:
         "cover_prompt": metadata.get("cover_prompt", ""),
         "cover_image": cover_image,
         "back_cover_image": back_cover_image,
+        "front_cover_source": normalize_cover_source(metadata.get("front_cover_source")),
+        "back_cover_source": normalize_cover_source(metadata.get("back_cover_source")),
         "cover_variants": normalize_cover_variants(metadata.get("cover_variants")),
         "selected_cover_variant": metadata.get("selected_cover_variant", ""),
         "recommended_cover_variant": metadata.get("recommended_cover_variant", ""),
+        "cover_style_mode": normalize_cover_style_mode(metadata.get("cover_style_mode")),
+        "back_cover_mode": normalize_back_cover_mode(metadata.get("back_cover_mode")),
+        "cover_text_strategy": normalize_cover_text_strategy(metadata.get("cover_text_strategy")),
+        "cover_mode": normalize_cover_mode(metadata.get("cover_mode")),
+        "style_direction": normalize_style_direction(metadata.get("style_direction")),
+        "wrap_scope": normalize_wrap_scope(metadata.get("wrap_scope")),
+        "quality_gate": normalize_quality_gate(metadata.get("quality_gate")),
+        "text_safe_zone_status": str(metadata.get("text_safe_zone_status") or "").strip(),
+        "cover_pair_score": metadata.get("cover_pair_score", 0),
+        "front_render_mode": str(metadata.get("front_render_mode") or "").strip(),
+        "front_ai_attempt_count": int(metadata.get("front_ai_attempt_count") or 0),
+        "front_text_validation_score": float(metadata.get("front_text_validation_score") or 0),
+        "front_visual_grade": int(metadata.get("front_visual_grade") or 0),
+        "front_genre_fit_score": int(metadata.get("front_genre_fit_score") or 0),
+        "front_hard_reject_reasons": metadata.get("front_hard_reject_reasons", []),
+        "selected_cover_confidence": float(metadata.get("selected_cover_confidence") or 0),
+        "book_length_mode": targets["book_length_mode"],
+        "chapter_generation_mode": metadata_chapter_generation_mode(effective_metadata),
+        "codefast_text_model": str(metadata.get("codefast_text_model") or "").strip(),
+        "codefast_outline_model": str(metadata.get("codefast_outline_model") or "").strip(),
+        "codefast_creative_model": str(metadata.get("codefast_creative_model") or "").strip(),
+        "codefast_chapter_segment_model": str(metadata.get("codefast_chapter_segment_model") or "").strip(),
+        "codefast_chapter_segment_fallback_model": str(metadata.get("codefast_chapter_segment_fallback_model") or "").strip(),
+        "target_word_count_min": targets["target_word_count_min"],
+        "target_word_count_max": targets["target_word_count_max"],
+        "chapter_target_words": targets["chapter_target_words"],
+        "book_target_words": targets["book_target_words"],
+        "book_generation_complete": book_generation_complete,
+        "opening_sequence_valid": opening_sequence_valid,
         "cover_variant_target_count": clamp_cover_variant_target_count(
             metadata.get("cover_variant_target_count", 1),
             default=1,
@@ -3478,6 +5497,8 @@ def read_book_preview_payload(book_dir: Path) -> dict[str, Any]:
             "chapter_target_count": full_generation["target_count"],
             "chapter_ready_count": full_generation["ready_count"],
             "chapters_complete": full_generation["complete"],
+            "current_word_count": full_generation.get("word_count", 0),
+            "target_word_count": full_generation.get("target_word_count", 0),
             "asset_count": summary_asset_count(book_dir, effective_metadata),
             "extra_count": summary_extra_count(book_dir, root_entries=root_entries),
             "research_count": summary_research_count(book_dir),
@@ -3514,6 +5535,7 @@ def read_book_summary(
         "cover_image": cover_image,
         "back_cover_image": back_cover_image,
     }
+    targets = metadata_word_targets(effective_metadata)
     asset_count = summary_asset_count(book_dir, effective_metadata)
     extra_count = summary_extra_count(book_dir, root_entries=root_entries)
     research_count = summary_research_count(book_dir)
@@ -3532,6 +5554,8 @@ def read_book_summary(
         "cover_art_image": metadata.get("cover_art_image", ""),
         "cover_image": cover_image,
         "back_cover_image": back_cover_image,
+        "front_cover_source": normalize_cover_source(metadata.get("front_cover_source")),
+        "back_cover_source": normalize_cover_source(metadata.get("back_cover_source")),
         "cover_template": metadata.get("cover_template", ""),
         "cover_variant_count": metadata.get("cover_variant_count", 0),
         "cover_variant_target_count": clamp_cover_variant_target_count(metadata.get("cover_variant_target_count", 1), default=1),
@@ -3542,6 +5566,32 @@ def read_book_summary(
         "cover_family": metadata.get("cover_family", ""),
         "cover_branch": metadata.get("cover_branch", ""),
         "cover_genre": metadata.get("cover_genre", ""),
+        "cover_style_mode": normalize_cover_style_mode(metadata.get("cover_style_mode")),
+        "back_cover_mode": normalize_back_cover_mode(metadata.get("back_cover_mode")),
+        "cover_text_strategy": normalize_cover_text_strategy(metadata.get("cover_text_strategy")),
+        "cover_mode": normalize_cover_mode(metadata.get("cover_mode")),
+        "style_direction": normalize_style_direction(metadata.get("style_direction")),
+        "wrap_scope": normalize_wrap_scope(metadata.get("wrap_scope")),
+        "quality_gate": normalize_quality_gate(metadata.get("quality_gate")),
+        "text_safe_zone_status": str(metadata.get("text_safe_zone_status") or "").strip(),
+        "cover_pair_score": metadata.get("cover_pair_score", 0),
+        "front_render_mode": str(metadata.get("front_render_mode") or "").strip(),
+        "front_ai_attempt_count": int(metadata.get("front_ai_attempt_count") or 0),
+        "front_text_validation_score": float(metadata.get("front_text_validation_score") or 0),
+        "front_visual_grade": int(metadata.get("front_visual_grade") or 0),
+        "front_genre_fit_score": int(metadata.get("front_genre_fit_score") or 0),
+        "front_hard_reject_reasons": metadata.get("front_hard_reject_reasons", []),
+        "selected_cover_confidence": float(metadata.get("selected_cover_confidence") or 0),
+        "book_length_mode": targets["book_length_mode"],
+        "chapter_generation_mode": metadata_chapter_generation_mode(effective_metadata),
+        "codefast_text_model": str(metadata.get("codefast_text_model") or "").strip(),
+        "codefast_outline_model": str(metadata.get("codefast_outline_model") or "").strip(),
+        "codefast_creative_model": str(metadata.get("codefast_creative_model") or "").strip(),
+        "codefast_chapter_segment_model": str(metadata.get("codefast_chapter_segment_model") or "").strip(),
+        "codefast_chapter_segment_fallback_model": str(metadata.get("codefast_chapter_segment_fallback_model") or "").strip(),
+        "target_word_count_min": targets["target_word_count_min"],
+        "target_word_count_max": targets["target_word_count_max"],
+        "opening_sequence_valid": metadata.get("opening_sequence_valid"),
         "chapter_count": chapter_count,
         "artifacts": [],
         "status": {
@@ -3633,6 +5683,16 @@ def invalidate_books_cache() -> None:
     BOOK_SUMMARY_CACHE.invalidate("books")
 
 
+def should_invalidate_books_cache_for_book_post(path: str) -> bool:
+    parts = path.strip("/").split("/")
+    if len(parts) < 4:
+        return True
+    action = str(parts[3] or "").strip().lower()
+    if action in {"preview-bootstrap", "full-bootstrap"}:
+        return False
+    return True
+
+
 def write_outline(
     book_dir: Path,
     title: str,
@@ -3689,6 +5749,8 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
     cover_art_image = str(payload.get("cover_art_image", "")).strip()
     cover_image = str(payload.get("cover_image", "")).strip()
     back_cover_image = str(payload.get("back_cover_image", "")).strip()
+    front_cover_source = normalize_cover_source(payload.get("front_cover_source"))
+    back_cover_source = normalize_cover_source(payload.get("back_cover_source"))
     cover_template = str(payload.get("cover_template", "")).strip()
     cover_variant_count = int(payload.get("cover_variant_count", 0) or 0)
     cover_variant_target_count = clamp_cover_variant_target_count(payload.get("cover_variant_target_count", 1), default=1)
@@ -3709,13 +5771,45 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
     isbn = str(payload.get("isbn", "")).strip()
     year = str(payload.get("year", "")).strip()
     fast = bool(payload.get("fast", False))
+    book_length_mode = normalize_book_length_mode(payload.get("book_length_mode") or payload.get("book_length_tier"))
+    cover_style_mode = normalize_cover_style_mode(payload.get("cover_style_mode"))
+    back_cover_mode = normalize_back_cover_mode(payload.get("back_cover_mode"))
+    cover_text_strategy = normalize_cover_text_strategy(payload.get("cover_text_strategy"))
+    cover_mode = normalize_cover_mode(payload.get("cover_mode"))
+    style_direction = normalize_style_direction(payload.get("style_direction"))
+    wrap_scope = normalize_wrap_scope(payload.get("wrap_scope"))
+    quality_gate = normalize_quality_gate(payload.get("quality_gate"))
+    front_render_mode = str(payload.get("front_render_mode") or "").strip()
+    front_ai_attempt_count = int(payload.get("front_ai_attempt_count") or 0)
+    front_text_validation_score = float(payload.get("front_text_validation_score") or 0)
+    front_visual_grade = int(payload.get("front_visual_grade") or 0)
+    front_genre_fit_score = int(payload.get("front_genre_fit_score") or 0)
+    front_hard_reject_reasons = payload.get("front_hard_reject_reasons") if isinstance(payload.get("front_hard_reject_reasons"), list) else []
+    selected_cover_confidence = float(payload.get("selected_cover_confidence") or 0)
+    target_defaults = metadata_word_targets({"book_length_mode": book_length_mode})
     book_length_tier = str(payload.get("book_length_tier") or "standard").strip() or "standard"
-    target_word_count_min = int(payload.get("target_word_count_min") or 0)
-    target_word_count_max = int(payload.get("target_word_count_max") or 0)
+    target_word_count_min = int(payload.get("target_word_count_min") or 0) or int(target_defaults["target_word_count_min"])
+    target_word_count_max = int(payload.get("target_word_count_max") or 0) or int(target_defaults["target_word_count_max"])
+    chapter_target_words = int(payload.get("chapter_target_words") or 0) or int(target_defaults["chapter_target_words"])
+    book_target_words = int(payload.get("book_target_words") or 0) or int(target_defaults["book_target_words"])
+    codefast_text_model = str(payload.get("codefast_text_model") or "").strip()
+    codefast_outline_model = str(payload.get("codefast_outline_model") or "").strip()
+    codefast_creative_model = str(payload.get("codefast_creative_model") or "").strip()
+    codefast_chapter_segment_model = str(payload.get("codefast_chapter_segment_model") or "").strip()
+    codefast_chapter_segment_fallback_model = str(payload.get("codefast_chapter_segment_fallback_model") or "").strip()
     chapter_plan = normalize_chapter_plan(payload.get("chapter_plan"))
+    if not chapter_plan:
+        chapter_plan = derive_chapter_plan_from_chapters(chapters, language, book_length_mode=book_length_mode)
 
     book_dir = BOOK_OUTPUTS_DIR / slug
     ensure_book_layout(book_dir)
+    existing_meta = read_metadata(book_dir) if (book_dir / METADATA_FILE_NAME).exists() else {}
+    front_cover_source = normalize_cover_source(
+        payload.get("front_cover_source") or existing_meta.get("front_cover_source")
+    )
+    back_cover_source = normalize_cover_source(
+        payload.get("back_cover_source") or existing_meta.get("back_cover_source")
+    )
     write_outline(book_dir, title, subtitle, chapters, language)
 
     kept = set()
@@ -3750,6 +5844,8 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
             "cover_art_image": cover_art_image,
             "cover_image": cover_image,
             "back_cover_image": back_cover_image,
+            "front_cover_source": front_cover_source,
+            "back_cover_source": back_cover_source,
             "cover_template": cover_template,
             "cover_variant_count": cover_variant_count,
             "cover_variant_target_count": cover_variant_target_count,
@@ -3770,9 +5866,32 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
             "isbn": isbn,
             "year": year,
             "fast": fast,
+            "book_length_mode": book_length_mode,
             "book_length_tier": book_length_tier,
             "target_word_count_min": target_word_count_min,
             "target_word_count_max": target_word_count_max,
+            "chapter_target_words": chapter_target_words,
+            "book_target_words": book_target_words,
+            "cover_style_mode": cover_style_mode,
+            "back_cover_mode": back_cover_mode,
+            "cover_text_strategy": cover_text_strategy,
+            "cover_mode": cover_mode,
+            "style_direction": style_direction,
+            "wrap_scope": wrap_scope,
+            "quality_gate": quality_gate,
+            "front_render_mode": front_render_mode,
+            "front_ai_attempt_count": front_ai_attempt_count,
+            "front_text_validation_score": front_text_validation_score,
+            "front_visual_grade": front_visual_grade,
+            "front_genre_fit_score": front_genre_fit_score,
+            "front_hard_reject_reasons": front_hard_reject_reasons,
+            "selected_cover_confidence": selected_cover_confidence,
+            "book_generation_complete": False,
+            "codefast_text_model": codefast_text_model,
+            "codefast_outline_model": codefast_outline_model,
+            "codefast_creative_model": codefast_creative_model,
+            "codefast_chapter_segment_model": codefast_chapter_segment_model,
+            "codefast_chapter_segment_fallback_model": codefast_chapter_segment_fallback_model,
             "chapter_plan": chapter_plan,
             "full_generation_stage": "idle",
             "full_generation_message": "",
@@ -3788,10 +5907,13 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
             "full_generation_started_at": "",
             "full_generation_updated_at": "",
             "full_generation_completed_at": "",
+            "book_word_count": 0,
+            "activity_log": [],
         },
     )
     saved_meta = sync_selected_cover_assets(book_dir, saved_meta)
     sync_full_generation_metadata(book_dir)
+    append_book_activity(book_dir, "create_accepted", "Book draft created", "done", "Wizard create accepted.")
     append_log(f"Saved book '{slug}'.")
     return read_book(book_dir)
 
@@ -3901,7 +6023,32 @@ def run_process(
     append_log(f"RUN cwd={cwd} cmd={' '.join(shlex.quote(part) for part in command)}")
 
     if max_retries <= 0:
-        return _run_process_once(command, cwd, env, timeout_seconds)
+        try:
+            return _run_process_once(command, cwd, env, timeout_seconds)
+        except subprocess.TimeoutExpired as exc:
+            stdout = _process_output_as_text(exc.stdout)
+            stderr = _process_output_as_text(exc.stderr)
+            timeout_message = (
+                f"Command timed out after {int(timeout_seconds or 0)} seconds."
+                if timeout_seconds
+                else "Command timed out."
+            )
+            combined_stderr = f"{stderr}\n{timeout_message}".strip()
+            append_log("EXIT 124 (timeout)")
+            return subprocess.CompletedProcess(
+                command,
+                124,
+                stdout=stdout,
+                stderr=combined_stderr,
+            )
+        except OSError as exc:
+            append_log(f"EXIT 127 (oserror: {exc})")
+            return subprocess.CompletedProcess(
+                command,
+                127,
+                stdout="",
+                stderr=str(exc),
+            )
 
     # Retry with exponential backoff
     last_error: Exception | None = None
@@ -3983,14 +6130,14 @@ def _run_process_once(
         raise
 
 
-def run_process(
+def run_process_once(
     command: list[str],
     *,
     cwd: Path,
     env: dict[str, str] | None = None,
     timeout_seconds: int | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    """Legacy wrapper for backward compatibility. Use run_process_with_retry instead."""
+    """Run a command once without retry behavior."""
     return _run_process_once(command, cwd, env, timeout_seconds)
 
 
@@ -4477,7 +6624,7 @@ def build_book_with_lightweight_fallback(
 
     book = read_book(book_dir)
     chapters = list(book.get("chapters") or [])
-    metadata = read_metadata(book_dir)
+    metadata = repair_selected_cover_bundle(book_dir, read_metadata(book_dir))
     title = str(book.get("title") or slug).strip() or slug
     subtitle = str(book.get("subtitle") or "").strip()
     author = str(book.get("author") or metadata.get("author") or "Book Creator").strip()
@@ -4613,7 +6760,10 @@ def preflight_for_build(format_name: str, slug: str | None = None) -> dict[str, 
         warnings.append("ebook-convert missing: mobi/azw3 conversions may be unavailable in all-in-one builds.")
     reason = str(capability["reason"] or "")
     if not primary_ok and fallback_ok:
-        fallback_note = "Primary exporter missing; lightweight fallback export will be used."
+        fallback_note = (
+            "Primary exporter check failed; primary build command will be tried first, "
+            "then lightweight fallback export if needed."
+        )
         warnings.append(fallback_note)
         reason = fallback_note
     if slug:
@@ -4627,19 +6777,102 @@ def preflight_for_build(format_name: str, slug: str | None = None) -> dict[str, 
             )
             missing.append("Vertex OCR validation cannot run until the Vertex image config is complete.")
         if book_dir.exists():
+            metadata = repair_selected_cover_bundle(book_dir, metadata)
+            targets = metadata_word_targets(metadata)
+            current_word_count = total_book_word_count(book_dir)
+            chapter_progress = chapter_generation_progress(book_dir, metadata)
+            planned_chapter_count = int(chapter_progress.get("target_count") or 0)
+            actual_chapter_count = summary_chapter_count(book_dir)
+            mode_min_chapters = int(targets["min_chapters"])
+            chapter_plan = normalize_chapter_plan(metadata.get("chapter_plan"))
+            if chapter_plan:
+                required_chapter_count = len(chapter_plan)
+            elif planned_chapter_count > 0:
+                required_chapter_count = planned_chapter_count
+            else:
+                required_chapter_count = mode_min_chapters
+            required_chapter_count = max(1, int(required_chapter_count))
+            target_word_count_min = int(targets["target_word_count_min"])
             front_cover, back_cover = resolve_cover_image_references(book_dir, metadata)
+            manual_override = manual_cover_override_active(book_dir, metadata)
+            early_ready_chapters: list[int] = []
+            supports_early_export = format_name in {"pdf", "epub", "all"}
+            if supports_early_export:
+                early_ready_chapters = early_export_ready_chapter_numbers(
+                    book_dir,
+                    min_words_per_chapter=EARLY_EXPORT_MIN_CHAPTER_WORDS,
+                )
+            early_export_unlocked = (
+                supports_early_export
+                and len(early_ready_chapters) >= EARLY_EXPORT_MIN_CHAPTERS
+            )
+            if early_export_unlocked:
+                warnings.append(
+                    "Early export unlocked: "
+                    f"{len(early_ready_chapters)} chapters are at least "
+                    f"{EARLY_EXPORT_MIN_CHAPTER_WORDS} words."
+                )
             if not front_cover:
                 missing.append("Selected final front cover asset is missing.")
             if not back_cover:
                 missing.append("Selected final back cover asset is missing.")
-            selected_variant = selected_cover_variant_record(metadata)
-            if selected_variant:
-                validation = selected_variant.get("text_validation") if isinstance(selected_variant.get("text_validation"), dict) else {}
-                render_mode = str(selected_variant.get("render_mode") or "").strip()
-                if render_mode in {"ai-signature", "ai-minimal"} and not bool(validation.get("valid")):
-                    missing.append("Selected cover variant did not pass Vertex text validation.")
-            elif normalize_cover_variants(metadata.get("cover_variants")):
-                missing.append("Selected cover variant could not be resolved from metadata.")
+            chapter_requirement_message = ""
+            if actual_chapter_count < required_chapter_count:
+                if required_chapter_count == mode_min_chapters:
+                    chapter_requirement_message = (
+                        "Book length mode "
+                        f"{targets['book_length_mode']} requires at least {required_chapter_count} chapters "
+                        f"before export (current: {actual_chapter_count})."
+                    )
+                else:
+                    chapter_requirement_message = (
+                        f"Chapter generation is incomplete ({actual_chapter_count}/{required_chapter_count}). "
+                        "Complete all planned chapters before export."
+                    )
+                if early_export_unlocked:
+                    warnings.append(
+                        f"{chapter_requirement_message} Export allowed by early-export rule."
+                    )
+                elif STRICT_EXPORT_BUILD_CHECKS:
+                    missing.append(chapter_requirement_message)
+                else:
+                    warnings.append(
+                        f"{chapter_requirement_message} Export will continue with currently available chapters."
+                    )
+
+            word_requirement_message = ""
+            if current_word_count < target_word_count_min:
+                word_requirement_message = (
+                    "Book content is below export target "
+                    f"({current_word_count}/{target_word_count_min} words)."
+                )
+                if early_export_unlocked:
+                    warnings.append(
+                        f"{word_requirement_message} Export allowed by early-export rule."
+                    )
+                elif STRICT_EXPORT_BUILD_CHECKS:
+                    missing.append(word_requirement_message)
+                else:
+                    warnings.append(
+                        f"{word_requirement_message} Export will continue with available content."
+                    )
+            if image_provider_policy_vertex_only() or normalize_cover_variants(metadata.get("cover_variants")):
+                if not selected_cover_bundle_ready(book_dir, metadata, require_variant=True):
+                    missing.append("Selected final cover pair was not promoted from the chosen cover variant.")
+            if raw_cover_candidate_assets_exist(book_dir) and not normalize_cover_variants(metadata.get("cover_variants")):
+                missing.append("Raw cover candidate assets exist, but no selected cover variant metadata was persisted.")
+            if not manual_override and str(metadata.get("text_safe_zone_status") or "").strip().lower() == "fail":
+                missing.append("Selected cover variant does not preserve clean title-safe zones.")
+            if not manual_override:
+                selected_variant = selected_cover_variant_record(metadata)
+                if selected_variant:
+                    validation = selected_variant.get("text_validation") if isinstance(selected_variant.get("text_validation"), dict) else {}
+                    render_mode = str(selected_variant.get("render_mode") or "").strip()
+                    hard_reject_reasons = validation.get("hardRejectReasons") if isinstance(validation.get("hardRejectReasons"), list) else []
+                    if render_mode in {"ai-signature", "ai-minimal"} and hard_reject_reasons:
+                        missing.append("Selected AI front cover hit a hard rejection in Vertex validation.")
+                elif normalize_cover_variants(metadata.get("cover_variants")):
+                    missing.append("Selected cover variant could not be resolved from metadata.")
         else:
             missing.append("Book directory not found.")
     return {
@@ -4676,31 +6909,16 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
 
     primary_export_ok = bool(preflight.get("primary_ok", False))
     if not primary_export_ok:
-        fallback_before = file_snapshot(book_dir)
-        fallback_result = build_book_with_lightweight_fallback(
-            book_dir=book_dir,
-            slug=slug,
-            format_name=format_name,
-            preflight=preflight,
-            before_snapshot=fallback_before,
-        )
-        if fallback_result:
-            append_log(
-                f"Build primary exporter unavailable for '{slug}' ({preflight.get('reason')}); returned lightweight fallback export."
-            )
-            return fallback_result
-        return {
-            "ok": False,
-            "action": "build",
-            "returncode": 1,
-            "output": preflight["reason"],
-            "warnings": preflight["warnings"] + ([preflight["reason"]] if preflight["reason"] else []),
-            "produced_files": [],
-            "preflight": preflight,
-            "book": read_book(book_dir),
+        preflight = {
+            **preflight,
+            "warnings": [
+                *list(preflight.get("warnings") or []),
+                "Primary exporter preflight is unavailable; attempting primary build command before fallback.",
+            ],
         }
 
     metadata = read_metadata(book_dir)
+    metadata = repair_selected_cover_bundle(book_dir, metadata)
     author = str(payload.get("author") or metadata["author"]).strip()
     publisher = str(payload.get("publisher") or metadata["publisher"]).strip()
     author_bio = str(payload.get("author_bio") or metadata.get("author_bio") or "").strip()
@@ -4713,6 +6931,12 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     cover_art_image = str(payload.get("cover_art_image") or metadata.get("cover_art_image") or "").strip()
     cover_image = str(payload.get("cover_image") or metadata.get("cover_image") or "").strip()
     back_cover_image = str(payload.get("back_cover_image") or metadata.get("back_cover_image") or "").strip()
+    front_cover_source = normalize_cover_source(
+        payload.get("front_cover_source") or metadata.get("front_cover_source")
+    )
+    back_cover_source = normalize_cover_source(
+        payload.get("back_cover_source") or metadata.get("back_cover_source")
+    )
     cover_template = str(payload.get("cover_template") or metadata.get("cover_template") or "").strip()
     cover_variant_count = int(payload.get("cover_variant_count") or metadata.get("cover_variant_count") or 0)
     cover_variant_target_count = clamp_cover_variant_target_count(
@@ -4736,9 +6960,27 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     isbn = str(payload.get("isbn") or metadata.get("isbn") or "").strip()
     year = str(payload.get("year") or metadata.get("year") or "").strip()
     fast = bool(payload.get("fast", metadata.get("fast", False)))
+    book_length_mode = normalize_book_length_mode(payload.get("book_length_mode") or metadata.get("book_length_mode") or metadata.get("book_length_tier"))
+    cover_style_mode = normalize_cover_style_mode(payload.get("cover_style_mode") or metadata.get("cover_style_mode"))
+    back_cover_mode = normalize_back_cover_mode(payload.get("back_cover_mode") or metadata.get("back_cover_mode"))
+    cover_text_strategy = normalize_cover_text_strategy(payload.get("cover_text_strategy") or metadata.get("cover_text_strategy"))
+    cover_mode = normalize_cover_mode(payload.get("cover_mode") or metadata.get("cover_mode"))
+    style_direction = normalize_style_direction(payload.get("style_direction") or metadata.get("style_direction"))
+    wrap_scope = normalize_wrap_scope(payload.get("wrap_scope") or metadata.get("wrap_scope"))
+    quality_gate = normalize_quality_gate(payload.get("quality_gate") or metadata.get("quality_gate"))
+    front_render_mode = str(payload.get("front_render_mode") or metadata.get("front_render_mode") or "").strip()
+    front_ai_attempt_count = int(payload.get("front_ai_attempt_count") or metadata.get("front_ai_attempt_count") or 0)
+    front_text_validation_score = float(payload.get("front_text_validation_score") or metadata.get("front_text_validation_score") or 0)
+    front_visual_grade = int(payload.get("front_visual_grade") or metadata.get("front_visual_grade") or 0)
+    front_genre_fit_score = int(payload.get("front_genre_fit_score") or metadata.get("front_genre_fit_score") or 0)
+    front_hard_reject_reasons = payload.get("front_hard_reject_reasons") if isinstance(payload.get("front_hard_reject_reasons"), list) else metadata.get("front_hard_reject_reasons") or []
+    selected_cover_confidence = float(payload.get("selected_cover_confidence") or metadata.get("selected_cover_confidence") or 0)
+    target_defaults = metadata_word_targets({"book_length_mode": book_length_mode})
     book_length_tier = str(payload.get("book_length_tier") or metadata.get("book_length_tier") or "standard").strip() or "standard"
-    target_word_count_min = int(payload.get("target_word_count_min") or metadata.get("target_word_count_min") or 0)
-    target_word_count_max = int(payload.get("target_word_count_max") or metadata.get("target_word_count_max") or 0)
+    target_word_count_min = int(payload.get("target_word_count_min") or metadata.get("target_word_count_min") or 0) or int(target_defaults["target_word_count_min"])
+    target_word_count_max = int(payload.get("target_word_count_max") or metadata.get("target_word_count_max") or 0) or int(target_defaults["target_word_count_max"])
+    chapter_target_words = int(payload.get("chapter_target_words") or metadata.get("chapter_target_words") or 0) or int(target_defaults["chapter_target_words"])
+    book_target_words = int(payload.get("book_target_words") or metadata.get("book_target_words") or 0) or int(target_defaults["book_target_words"])
     chapter_plan = normalize_chapter_plan(payload.get("chapter_plan") or metadata.get("chapter_plan"))
 
     saved_meta = save_metadata(
@@ -4756,6 +6998,8 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             "cover_art_image": cover_art_image,
             "cover_image": cover_image,
             "back_cover_image": back_cover_image,
+            "front_cover_source": front_cover_source,
+            "back_cover_source": back_cover_source,
             "cover_template": cover_template,
             "cover_variant_count": cover_variant_count,
             "cover_variant_target_count": cover_variant_target_count,
@@ -4776,13 +7020,30 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             "isbn": isbn,
             "year": year,
             "fast": fast,
+            "book_length_mode": book_length_mode,
             "book_length_tier": book_length_tier,
             "target_word_count_min": target_word_count_min,
             "target_word_count_max": target_word_count_max,
+            "chapter_target_words": chapter_target_words,
+            "book_target_words": book_target_words,
+            "cover_style_mode": cover_style_mode,
+            "back_cover_mode": back_cover_mode,
+            "cover_text_strategy": cover_text_strategy,
+            "cover_mode": cover_mode,
+            "style_direction": style_direction,
+            "wrap_scope": wrap_scope,
+            "quality_gate": quality_gate,
+            "front_render_mode": front_render_mode,
+            "front_ai_attempt_count": front_ai_attempt_count,
+            "front_text_validation_score": front_text_validation_score,
+            "front_visual_grade": front_visual_grade,
+            "front_genre_fit_score": front_genre_fit_score,
+            "front_hard_reject_reasons": front_hard_reject_reasons,
+            "selected_cover_confidence": selected_cover_confidence,
             "chapter_plan": chapter_plan,
         },
     )
-    saved_meta = sync_selected_cover_assets(book_dir, saved_meta)
+    saved_meta = repair_selected_cover_bundle(book_dir, saved_meta)
     resolved_cover_image, resolved_back_cover_image = resolve_cover_image_references(book_dir, saved_meta)
     normalized_cover_image = existing_book_asset_reference(book_dir, cover_image) or resolved_cover_image
     normalized_back_cover_image = existing_book_asset_reference(book_dir, back_cover_image) or resolved_back_cover_image
@@ -4817,17 +7078,25 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     if selected_variant:
         validation = selected_variant.get("text_validation") if isinstance(selected_variant.get("text_validation"), dict) else {}
         render_mode = str(selected_variant.get("render_mode") or "").strip()
-        if render_mode in {"ai-signature", "ai-minimal"} and not bool(validation.get("valid")):
+        hard_reject_reasons = validation.get("hardRejectReasons") if isinstance(validation.get("hardRejectReasons"), list) else []
+        if render_mode in {"ai-signature", "ai-minimal"} and hard_reject_reasons:
             return {
                 "ok": False,
                 "action": "build",
                 "returncode": 1,
-                "output": "Selected cover variant failed Vertex text validation.",
-                "warnings": ["Selected cover variant failed Vertex text validation."],
+                "output": "Selected AI front cover hit a hard rejection in Vertex validation.",
+                "warnings": ["Selected AI front cover hit a hard rejection in Vertex validation."],
                 "produced_files": [],
                 "preflight": preflight,
                 "book": read_book(book_dir),
             }
+
+    cleanup_reports = cleanup_all_generated_chapters(book_dir, saved_meta)
+    cleanup_warnings = [
+        f"Chapter {report['chapter_number']} cleanup removed mixed-script tokens or duplicate headings."
+        for report in cleanup_reports
+        if report.get("changed")
+    ]
 
     command = bash_command(
         ROOT_DIR / "compile_book.sh",
@@ -4901,7 +7170,14 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             )
             return fallback_result
     parity = build_export_parity_report(book_dir, saved_meta, format_name)
-    warnings = [*list(preflight.get("warnings") or []), *list(parity.get("warnings") or [])]
+    if parity.get("opening_sequence_valid") is not None:
+        saved_meta = save_metadata(
+            book_dir,
+            {
+                "opening_sequence_valid": bool(parity.get("opening_sequence_valid")),
+            },
+        )
+    warnings = [*list(preflight.get("warnings") or []), *cleanup_warnings, *list(parity.get("warnings") or [])]
     return {
         "ok": result.returncode == 0 and bool(parity.get("ok")),
         "action": "build",
@@ -4913,6 +7189,7 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
         "export_relative_path": parity.get("export_relative_path", ""),
         "export_url": parity.get("export_url", ""),
         "parity": parity,
+        "cleanup": cleanup_reports,
         "book": read_book(book_dir),
     }
 
@@ -5076,7 +7353,8 @@ def save_asset(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     target.write_bytes(base64.b64decode(content_base64))
 
     if kind in {"cover_image", "back_cover_image"}:
-        save_metadata(book_dir, {kind: f"assets/{target.name}"})
+        source_key = "front_cover_source" if kind == "cover_image" else "back_cover_source"
+        save_metadata(book_dir, {kind: f"assets/{target.name}", source_key: "manual"})
     append_log(f"Saved asset '{target.name}' for book '{slug}'.")
     return {
         "saved_asset": f"assets/{target.name}",
@@ -5138,8 +7416,10 @@ def preflight_for_workflow(action: str, slug: str | None = None) -> dict[str, An
     needs_ai = {
         "topic_suggest",
         "outline_suggest",
+        "style_suggest",
         "outline_generate",
         "chapter_generate",
+        "chapter_generate_segment",
         "chapters_generate_all",
         "chapter_review",
         "chapter_extend",
@@ -5227,9 +7507,56 @@ def preflight_for_workflow(action: str, slug: str | None = None) -> dict[str, An
     return {"ok": ok, "warnings": warnings, "missing": missing}
 
 
+def wizard_fast_env_overrides(kind: str) -> dict[str, str]:
+    normalized = str(kind or "").strip().lower()
+    overrides: dict[str, str] = {
+        "BOOK_WIZARD_TEXT_PROVIDER_ORDER": "claude-main glm-main vertex-main",
+    }
+    if normalized == "topic":
+        overrides.update(
+            {
+                "BOOK_WIZARD_TOPIC_PROVIDER_TIMEOUT_SECONDS": "2",
+                "BOOK_WIZARD_TOPIC_MAX_RETRIES": "1",
+                "BOOK_WIZARD_TOPIC_FAST_FAILOVER": "1",
+            }
+        )
+    elif normalized == "outline":
+        overrides.update(
+            {
+                "BOOK_WIZARD_OUTLINE_PROVIDER_TIMEOUT_SECONDS": "3",
+                "BOOK_WIZARD_OUTLINE_MAX_RETRIES": "1",
+                "BOOK_WIZARD_OUTLINE_FAST_FAILOVER": "1",
+            }
+        )
+    elif normalized == "style":
+        overrides.update(
+            {
+                "BOOK_WIZARD_STYLE_PROVIDER_TIMEOUT_SECONDS": "2",
+                "BOOK_WIZARD_STYLE_MAX_RETRIES": "1",
+                "BOOK_WIZARD_STYLE_FAST_FAILOVER": "1",
+            }
+        )
+    return overrides
+
+
 def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
     action = str(payload.get("action") or "").strip()
     slug = str(payload.get("slug") or "").strip()
+    append_log(
+        "WORKFLOW request "
+        + json.dumps(
+            {
+                "action": action,
+                "slug": slug,
+                "chapter_number": payload.get("chapter_number"),
+                "segment_index": payload.get("segment_index"),
+                "segment_count": payload.get("segment_count"),
+                "service": payload.get("service"),
+                "variant_count": payload.get("variant_count"),
+            },
+            ensure_ascii=False,
+        )
+    )
     preflight = preflight_for_workflow(action, slug or None)
     book_dir = BOOK_OUTPUTS_DIR / slug if slug else None
 
@@ -5297,6 +7624,7 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
             str(payload.get("style") or "detailed"),
             str(payload.get("tone") or "professional"),
             language,
+            env_overrides=wizard_fast_env_overrides("outline"),
         )
         response = workflow_result(action, result, None, preflight)
         if result.returncode == 0:
@@ -5398,6 +7726,33 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
             str(payload.get("audience") or "general readers"),
             str(payload.get("category") or "non-fiction"),
             language,
+            env_overrides=wizard_fast_env_overrides("topic"),
+        )
+        response = workflow_result(action, result, None, preflight)
+        if result.returncode == 0:
+            response["generated"] = json.loads((result.stdout or "{}").strip())
+        return response
+
+    if action == "style_suggest":
+        topic = str(payload.get("topic") or payload.get("title") or "").strip()
+        if not topic:
+            raise ValueError("Topic is required.")
+        language = normalize_book_language(payload.get("language")) or detect_book_language(
+            payload.get("title"),
+            payload.get("subtitle"),
+            topic,
+            payload.get("audience"),
+        ) or "English"
+        result = run_dashboard_action(
+            "style-suggest",
+            topic,
+            str(payload.get("audience") or "general readers"),
+            str(payload.get("book_type") or payload.get("category") or "non-fiction"),
+            language,
+            str(payload.get("tone") or "professional"),
+            str(payload.get("depth") or "balanced"),
+            str(payload.get("cover_direction") or "editorial"),
+            env_overrides=wizard_fast_env_overrides("style"),
         )
         response = workflow_result(action, result, None, preflight)
         if result.returncode == 0:
@@ -5434,6 +7789,7 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
     if action == "chapter_generate":
         metadata = read_metadata(book_dir)
         book_language = infer_book_language(book_dir, metadata)
+        env_overrides = codefast_env_overrides_for_metadata(metadata, task_type="creative")
         chapter_number = int(payload.get("chapter_number") or 1)
         chapter_plan = chapter_plan_for_number(metadata, chapter_number)
         min_words = str(payload.get("min_words") or (chapter_plan.get("target_min_words") if chapter_plan else 0) or 1800)
@@ -5453,16 +7809,57 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
             str(payload.get("style") or "clear"),
             str(payload.get("tone") or "professional"),
             book_language,
+            env_overrides=env_overrides or None,
+            timeout_seconds=FULL_PIPELINE_CHAPTER_TIMEOUT_SECONDS,
+        )
+    elif action == "chapter_generate_segment":
+        metadata = read_metadata(book_dir)
+        book_language = infer_book_language(book_dir, metadata)
+        env_overrides = codefast_env_overrides_for_metadata(metadata, task_type="chapter_segment")
+        chapter_number = int(payload.get("chapter_number") or 1)
+        chapter_plan = chapter_plan_for_number(metadata, chapter_number)
+        segment_targets = chapter_segment_targets(
+            metadata,
+            int(payload.get("chapter_min_words") or (chapter_plan.get("target_min_words") if chapter_plan else 0) or 2200),
+            int(payload.get("chapter_max_words") or (chapter_plan.get("target_max_words") if chapter_plan else 0) or 2600),
+        )
+        min_words = str(payload.get("min_words") or segment_targets["segment_min_words"])
+        max_words = str(payload.get("max_words") or segment_targets["segment_max_words"])
+        chapter_title = str(
+            payload.get("chapter_title")
+            or (chapter_plan.get("title") if chapter_plan else "")
+            or normalize_structural_heading("", book_language, chapter_number)
+        )
+        chapter_summary = str(payload.get("chapter_summary") or (chapter_plan.get("summary") if chapter_plan else "")).strip()
+        result = run_dashboard_action(
+            "chapter-generate-segment",
+            str(book_dir),
+            str(chapter_number),
+            chapter_title,
+            str(payload.get("segment_index") or 1),
+            str(payload.get("segment_count") or segment_targets["segment_count"]),
+            min_words,
+            max_words,
+            chapter_summary,
+            str(payload.get("style") or "clear"),
+            str(payload.get("tone") or "professional"),
+            book_language,
+            env_overrides=env_overrides or None,
+            timeout_seconds=FULL_PIPELINE_SEGMENT_TIMEOUT_SECONDS,
         )
     elif action == "chapter_review":
         result = run_dashboard_action("chapter-review", str(book_dir), str(payload.get("chapter_number") or 1))
     elif action == "chapter_extend":
+        metadata = read_metadata(book_dir)
+        env_overrides = codefast_env_overrides_for_metadata(metadata, task_type="chapter_extension")
         result = run_dashboard_action(
             "chapter-extend",
             str(book_dir),
             str(payload.get("chapter_number") or 1),
             str(payload.get("min_words") or 2000),
             str(payload.get("max_words") or 2500),
+            env_overrides=env_overrides or None,
+            timeout_seconds=FULL_PIPELINE_EXTEND_TIMEOUT_SECONDS,
         )
     elif action == "chapter_plagiarism":
         result = run_dashboard_action("chapter-plagiarism", str(book_dir), str(payload.get("chapter_number") or 1))
@@ -5520,8 +7917,27 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         env_overrides: dict[str, str] = {
             "SHOWCASE_IMAGE_PROVIDER_POLICY": normalized_image_provider_policy(),
             "BOOK_IMAGE_PROVIDER_POLICY": normalized_image_provider_policy(),
+            "SHOWCASE_USE_OCR_FOR_AI_FRONT": os.environ.get("SHOWCASE_USE_OCR_FOR_AI_FRONT", "0") or "0",
+            "BOOK_COVER_PROVIDER_CONNECT_TIMEOUT_SECONDS": os.environ.get(
+                "BOOK_COVER_PROVIDER_CONNECT_TIMEOUT_SECONDS",
+                "10",
+            )
+            or "10",
+            "BOOK_COVER_PROVIDER_READ_TIMEOUT_SECONDS": os.environ.get(
+                "BOOK_COVER_PROVIDER_READ_TIMEOUT_SECONDS",
+                "75",
+            )
+            or "75",
         }
-        timeout_seconds = 210
+        timeout_seconds = int(
+            payload.get("timeout_seconds")
+            or os.environ.get(
+                "BOOK_COVER_VARIANTS_TIMEOUT_SECONDS",
+                "420" if policy_vertex_only else "210",
+            )
+            or ("420" if policy_vertex_only else "210")
+        )
+        timeout_seconds = max(60, min(900, timeout_seconds))
         if safe_mode:
             # Safe mode avoids long remote provider waits and forces fast local fallback paths.
             env_overrides.update(
@@ -5632,6 +8048,34 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Unknown workflow action.")
 
     response = workflow_result(action, result, book_dir, preflight, before)
+    append_log(
+        "WORKFLOW result "
+        + json.dumps(
+            {
+                "action": action,
+                "slug": slug,
+                "ok": bool(response.get("ok")),
+                "returncode": int(response.get("returncode") or 0),
+                "produced_files": len(response.get("produced_files") or []),
+                "provider_trace": response.get("provider_trace") or {},
+            },
+            ensure_ascii=False,
+        )
+    )
+    if (
+        book_dir
+        and result.returncode == 0
+        and action in {"chapter_generate", "chapter_extend", "chapter_rewrite"}
+    ):
+        chapter_number_value = int(payload.get("chapter_number") or 1)
+        cleanup_report = cleanup_generated_chapter_file(book_dir, chapter_number_value, read_metadata(book_dir))
+        response["cleanup"] = cleanup_report
+        if cleanup_report.get("changed"):
+            response["warnings"] = [
+                *list(response.get("warnings") or []),
+                "Chapter cleanup normalized mixed-script tokens or duplicate headings before export.",
+            ]
+        response["book"] = read_book(book_dir)
     if action == "research_insights" and result.returncode == 0:
         response["generated"] = json.loads((result.stdout or "{}").strip())
     if action == "cover_local" and result.returncode == 0:
@@ -5682,7 +8126,19 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         elif not response["warnings"]:
             response["warnings"] = ["Browser automation started, but no downloaded cover file was detected yet."]
     if action == "cover_variants_generate" and result.returncode == 0:
-        metadata = sync_selected_cover_assets(book_dir, read_metadata(book_dir))
+        metadata = repair_selected_cover_bundle(book_dir, read_metadata(book_dir))
+        if not selected_cover_bundle_ready(book_dir, metadata, require_variant=True):
+            response.update(
+                {
+                    "ok": False,
+                    "returncode": 1,
+                    "output": "Cover variants were generated, but the selected final cover pair was not promoted.",
+                    "warnings": [
+                        *list(response.get("warnings") or []),
+                        "Cover variants were generated, but the selected final cover pair was not promoted.",
+                    ],
+                }
+            )
         response["book"] = read_book(book_dir)
         try:
             response["generated"] = json.loads((result.stdout or "{}").strip())
@@ -5699,6 +8155,7 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         and action
         in {
             "chapter_generate",
+            "chapter_generate_segment",
             "chapter_extend",
             "chapter_rewrite",
             "cover_local",
@@ -5725,6 +8182,7 @@ def workflow_result(
         "action": action,
         "returncode": result.returncode,
         "output": (result.stdout or "") + (result.stderr or ""),
+        "provider_trace": extract_provider_trace((result.stdout or "") + (result.stderr or "")),
         "warnings": preflight["warnings"],
         "produced_files": produced,
         "preflight": preflight,
@@ -5743,16 +8201,23 @@ def read_log_lines(limit: int = 400) -> list[str]:
 class DashboardHandler(BaseHTTPRequestHandler):
     server_version = "BookDashboard/2.0"
 
+    def log_api_request(self) -> None:
+        parsed = urllib.parse.urlparse(self.path)
+        append_log(
+            f"API {self.command} path={parsed.path} query={parsed.query or '-'} "
+            f"client={self.client_address[0] if self.client_address else '-'}"
+        )
+
     def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+        self.log_api_request()
 
         try:
             if path == "/api/health":
                 # Health check is always public
-                env = command_env()
-                vertex_config = resolve_vertex_image_config(env)
+                vertex_config = cached_vertex_image_config()
                 with ACTIVE_PREVIEW_PIPELINES_LOCK:
                     preview_active_count = len(ACTIVE_PREVIEW_PIPELINES)
                 with ACTIVE_FULL_CHAPTER_PIPELINES_LOCK:
@@ -5821,6 +8286,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
+        self.log_api_request()
 
         # All POST endpoints require authentication
         if not check_authentication(self):
@@ -5849,7 +8315,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 return
             if parsed.path.startswith("/api/books/"):
                 self.handle_book_post(parsed.path, payload)
-                invalidate_books_cache()
+                if should_invalidate_books_cache_for_book_post(parsed.path):
+                    invalidate_books_cache()
                 return
             self.respond_error_json(HTTPStatus.NOT_FOUND, "Unknown endpoint.")
         except FileNotFoundError as exc:
@@ -5996,7 +8463,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
-        self.wfile.write(body)
+        try:
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError) as exc:
+            append_log(
+                f"Client disconnected before JSON response flush path={self.path} "
+                f"client={self.client_address[0] if self.client_address else '-'} "
+                f"error={exc.__class__.__name__}"
+            )
 
     def respond_error_json(self, status: HTTPStatus, message: str) -> None:
         self.respond_json({"error": message}, status=status)
@@ -6007,16 +8481,20 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
 def main() -> None:
     BOOK_OUTPUTS_DIR.mkdir(exist_ok=True)
-    recovery_summary = resume_interrupted_pipelines()
-    if recovery_summary["preview_requeued"] or recovery_summary["full_requeued"]:
-        append_log(
-            "Startup recovery summary: "
-            f"preview_requeued={recovery_summary['preview_requeued']} "
-            f"full_requeued={recovery_summary['full_requeued']}"
-        )
-    ensure_pipeline_watchdog_running()
     server = ThreadingHTTPServer((HOST, PORT), DashboardHandler)
     print(f"Book dashboard running at http://{HOST}:{PORT}")
+
+    def startup_recovery_worker() -> None:
+        recovery_summary = resume_interrupted_pipelines()
+        if recovery_summary["preview_requeued"] or recovery_summary["full_requeued"]:
+            append_log(
+                "Startup recovery summary: "
+                f"preview_requeued={recovery_summary['preview_requeued']} "
+                f"full_requeued={recovery_summary['full_requeued']}"
+            )
+
+    ensure_pipeline_watchdog_running()
+    threading.Thread(target=startup_recovery_worker, name="startup_recovery", daemon=True).start()
 
     # Setup graceful shutdown handlers
     def shutdown_handler(signum: int, frame: Any) -> None:

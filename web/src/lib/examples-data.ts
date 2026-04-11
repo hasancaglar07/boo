@@ -56,6 +56,10 @@ type ResolvedExample = {
   htmlSupportDirs: string[];
 };
 
+type BuildResolvedExampleOptions = {
+  includeChaptersContent?: boolean;
+};
+
 const PRIMARY_COVER_CANDIDATES = [
   "assets/front_cover_final.png",
   "assets/front_cover_final.webp",
@@ -393,7 +397,11 @@ async function readIntroduction(bookDir: string) {
   return "";
 }
 
-async function buildResolvedExample(curated: ShowcasePortfolioEntry, repoRoot: string): Promise<ResolvedExample | null> {
+async function buildResolvedExample(
+  curated: ShowcasePortfolioEntry,
+  repoRoot: string,
+  options: BuildResolvedExampleOptions = {},
+): Promise<ResolvedExample | null> {
   const bookDir = path.join(repoRoot, "book_outputs", curated.slug);
   if (!(await exists(bookDir))) return null;
 
@@ -425,18 +433,21 @@ async function buildResolvedExample(curated: ShowcasePortfolioEntry, repoRoot: s
         .filter(Boolean)
         .join("\n\n");
 
+  const includeChaptersContent = options.includeChaptersContent === true;
   const outlineByNumber = new Map(parsedOutline.outline.map((item) => [item.num, item]));
   const chaptersContent: ExampleChapterContent[] = [];
-  for (const fileName of chapterFiles) {
-    const number = chapterNumberFromFile(fileName);
-    const raw = await readMaybeText(path.join(bookDir, fileName));
-    const fallbackTitle = outlineByNumber.get(number)?.title || title;
-    const parsedChapter = parseChapterContent(raw, languageCode, fallbackTitle, number);
-    chaptersContent.push({
-      ...parsedChapter,
-      pages: outlineByNumber.get(parsedChapter.num)?.pages,
-      anchorId: `chapter-${parsedChapter.num}`,
-    });
+  if (includeChaptersContent) {
+    for (const fileName of chapterFiles) {
+      const number = chapterNumberFromFile(fileName);
+      const raw = await readMaybeText(path.join(bookDir, fileName));
+      const fallbackTitle = outlineByNumber.get(number)?.title || title;
+      const parsedChapter = parseChapterContent(raw, languageCode, fallbackTitle, number);
+      chaptersContent.push({
+        ...parsedChapter,
+        pages: outlineByNumber.get(parsedChapter.num)?.pages,
+        anchorId: `chapter-${parsedChapter.num}`,
+      });
+    }
   }
 
   const assetAllowlist = [
@@ -525,17 +536,25 @@ async function buildResolvedExample(curated: ShowcasePortfolioEntry, repoRoot: s
   };
 }
 
-async function loadResolvedExamples() {
+async function loadResolvedExamples(options: BuildResolvedExampleOptions = {}) {
   const repoRoot = await resolveRepoRoot();
   const manifest = await loadShowcasePortfolioManifest(repoRoot);
-  const items = await Promise.all(manifest.map((entry) => buildResolvedExample(entry, repoRoot)));
+  const items = await Promise.all(manifest.map((entry) => buildResolvedExample(entry, repoRoot, options)));
   return items
     .filter((item): item is ResolvedExample => Boolean(item))
     .sort((left, right) => left.card.order - right.card.order);
 }
 
+async function loadResolvedExampleBySlug(slug: string, options: BuildResolvedExampleOptions = {}) {
+  const repoRoot = await resolveRepoRoot();
+  const manifest = await loadShowcasePortfolioManifest(repoRoot);
+  const match = manifest.find((entry) => entry.slug === slug);
+  if (!match) return null;
+  return await buildResolvedExample(match, repoRoot, options);
+}
+
 export async function loadExamplesShowcaseData() {
-  const items = await loadResolvedExamples();
+  const items = await loadResolvedExamples({ includeChaptersContent: false });
   const categories = Array.from(new Set(items.map((item) => item.card.category)));
   const languages = Array.from(new Set(items.map((item) => item.card.language)));
 
@@ -547,8 +566,8 @@ export async function loadExamplesShowcaseData() {
 }
 
 export async function loadExampleReaderData(slug: string) {
-  const items = await loadResolvedExamples();
-  return items.find((item) => item.reader.slug === slug)?.reader || null;
+  const item = await loadResolvedExampleBySlug(slug, { includeChaptersContent: true });
+  return item?.reader || null;
 }
 
 function hasAllowedExtension(relativePath: string) {
@@ -557,8 +576,7 @@ function hasAllowedExtension(relativePath: string) {
 }
 
 export async function resolvePublicExampleAsset(slug: string, assetPath: string[]) {
-  const examples = await loadResolvedExamples();
-  const example = examples.find((item) => item.card.slug === slug);
+  const example = await loadResolvedExampleBySlug(slug, { includeChaptersContent: false });
   if (!example || !assetPath.length) return null;
 
   if (assetPath.some((segment) => !segment || segment === "." || segment === "..")) {

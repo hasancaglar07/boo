@@ -1,0 +1,179 @@
+{
+  "Common": {
+    "skipToMain": "メインコンテンツへスキップ",
+    "loading": "読み込み中..."
+  },
+  "Metadata": {
+    "defaultTitle": "Book Generator - AIで本を書く",
+    "defaultDescription": "AI搭載の書籍生成プラットフォーム。あなたのアイデアを、出版可能な本、表紙、そしてEPUB/PDF出力に、たった5つの質問で変えます。"
+  },
+  "LocaleSwitcher": {
+    "label": "言語",
+    "title": "言語を変更"
+  },
+  "localeNames": {
+    "en": "英語",
+    "tr": "トルコ語",
+    "de": "ドイツ語",
+    "fr": "フランス語",
+    "es": "スペイン語",
+    "ar": "アラビア語",
+    "ru": "ロシア語",
+    "zh": "中国語",
+    "ja": "日本語",
+    "ko": "韓国語",
+    "it": "イタリア語",
+    "pt": "ポルトガル語"
+  },
+  "nav": {
+    "howItWorks": "使い方",
+    "examples": "例",
+    "pricing": "料金",
+    "tools": "ツール",
+    "faq": "よくある質問",
+    "login": "ログイン",
+    "myBooks": "マイブックス",
+    "newBook": "新しい本",
+    "freePreview": "無料プレビュー",
+    "goHome": "ホームページへ",
+    "mainMenu": "メインメニュー",
+    "openMenu": "メニューを開く",
+    "closeMenu": "メニューを閉じる",
+    "mobileMenu": "モバイルメニュー",
+    "mobileSecondaryMenu": "モバイルサブメニュー",
+    "more": "もっと見る",
+    "brandName": "Book Generator",
+    "howItWorksDesc": "5つの質問で完成した本",
+    "examplesDesc": "AIで作成された実際の本",
+    "useCasesDesc": "教育者、コンサルタント、クリエイター向け",
+    "pricingDesc": "1冊あたり$4からのプラン",
+    "compareDesc": "当社の比較を確認",
+    "toolsDesc": "無料の執筆・出版ツール",
+    "resourcesDesc": "ガイド、テンプレート、ヒント",
+    "blogDesc": "執筆アドバイスと製品アップデート"
+  },
+  "footer": {
+    "freePreview": "無料プレビュー",
+    "compare": "比較",
+    "freeTools": "無料ツール",
+    "blog": "ブログ",
+    "resources": "リソース",
+    "useCases": "活用例",
+    "about": "会社概要",
+    "contact": "お問い合わせ",
+    "affiliate": "アフィリエイトプログラム",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約",
+    "refund": "返金ポリシー",
+    "product": "製品",
+    "company": "会社",
+    "legal": "法的事項",
+    "writingTips": "執筆のヒント＆キャンペーン",
+    "newsletterDesc": "週刊ニュースレターに登録して、最初の本をより早く書きましょう。",
+    "emailPlaceholder": "メールアドレス",
+    "emailLabel": "メールアドレス",
+    "subscribe": "購読する",
+    "subscribed": "購読完了！",
+    "ctaTitle": "<em>今日</em>、本を書き始めましょう",
+    "ctaSub": "無料プレビューで数分で最初の本を作成しましょう。",
+    "ctaBtn": "無料プレビューを開始",
+    "brandDesc": "AI搭載のシンプルで高品質な書籍執筆インターフェース。プロフェッショナルな基準に合わせて最初の本を作成しましょう。",
+    "copyright": "Book Generator. All rights reserved.",
+    "tagline": "AI搭載の書籍執筆ツール。",
+    "theme": "テーマ",
+    "goHome": "ホームページへ",
+    "trust": {
+      "kdp": "KDP準拠を簡素化する配信アプローチ",
+      "refund": "30日以内の返金リクエスト",
+      "noApiCost": "モデルの利用料金はプラン価格に含まれています"
+    }
+  },
+  "HomePage": {
+    "metadata": {
+      "title": "Write a Book with AI | Create KDP-Ready EPUB in 15 Minutes",
+      "description": "Turn your expertise into a publish-ready book with AI. Generate drafts, covers, and EPUB/PDF output in 5 questions. Preview for free — no credit card required.",
+      "ogTitle": "Write a Book with AI",
+      "ogDescription": "Turn your expertise into a publish-ready book in 15 minutes. Preview for free."
+    },
+    "middleBlock": {
+      "title": "Write a Book with AI: Turn Your Idea into EPUB and PDF",
+      "description": "Turn your expertise into a publish-ready book with Book Creator. AI-powered draft generation, cover design, and KDP-compatible EPUB/PDF output in a single workflow.",
+      "subDescription": "Preview your book for free, unlock full access when you like it. Start immediately — no credit card required.",
+      "cards": {
+        "a": {
+          "title": "For Educators, Consultants, and Content Creators",
+          "description": "An AI-powered book writing platform for anyone who wants to turn their expertise into a KDP book. E-book creation is now a single workflow.",
+          "cta": "See all use cases →"
+        },
+        "b": {
+          "title": "No More Blank Page or Scattered Tools",
+          "description": "Write your book with AI — draft, content, and output all on one platform. Complete your book without needing different tools.",
+          "cta": "See how we compare →"
+        },
+        "c": {
+          "title": "KDP-Compatible EPUB and PDF Files",
+          "description": "Editable chapters, professional cover, and publish-ready EPUB + PDF outputs. Compatible with Kindle and KDP."
+        }
+      }
+    },
+    "pricing": {
+      "tag": "Book Pricing",
+      "title": "Prepare Your First Book for $4 — KDP-Ready EPUB and PDF Included",
+      "description": "Access a complete book for $4: AI-powered draft, professional cover, EPUB and PDF outputs. Preview for free, then unlock full access."
+    },
+    "faq": {
+      "heading": {
+        "badge": "Book Writing FAQ",
+        "title": "Frequently Asked Questions About Writing a Book with AI",
+        "description": "How does the AI book creator work, what's the output quality, and is it KDP-compatible? The most critical questions about the book writing process.",
+        "actionLabel": "All questions"
+      },
+      "quality": {
+        "question": "Can an AI-written book really be high quality?",
+        "answer": "AI creates the draft — you control the quality. Edit every chapter, regenerate what you don't like. {kdpLiveBooksClaim} of our books are live with a {kdpGuaranteeClaim} guarantee."
+      },
+      "duration": {
+        "question": "How long does it take to write a book with AI?",
+        "answer": "Enter your topic and get a publish-ready EPUB and PDF in 30–90 minutes. Most books are completed in a single session. According to user surveys, 92% of authors publish within 7 days compared to 3-6 months with traditional writing methods."
+      },
+      "kdp": {
+        "question": "Can I upload the EPUB and PDF outputs directly to KDP?",
+        "answer": "Yes. You get KDP-compatible EPUB and PDF outputs. We recommend a final review with your own checklist before uploading."
+      },
+      "creditCard": {
+        "question": "開始するにはクレジットカードが必要ですか？",
+        "answer": "いいえ。無料プレビューで開始してください。支払い情報を入力することなく、本のドラフト、カバー、アウトラインを確認できます。結果に満足したときのみアップグレードしてください。"
+      },
+      "formats": {
+        "question": "利用可能な出力形式は何ですか？",
+        "answer": "EPUB（Kindleおよびすべての電子書籍リーダー向け）、PDF（オンデマンド印刷向け）、および共有可能なHTMLプレビューを受け取ります。すべての出力は編集可能でKDP対応です。"
+      },
+      "claims": {
+        "kdpAccept": "KDP対応",
+        "guarantee": "保証"
+      },
+      "ctaLabel": "無料プレビューを開始"
+    },
+    "cta": {
+      "title": "Start Writing Your Book with AI Today",
+      "description": "Enter your topic and create your free preview in 15 minutes. {noApiCostClaim}, no credit card required.",
+      "items": {
+        "0": "AI-powered draft, cover, and content ready",
+        "1": "Free preview — unlock full access when you like it",
+        "2": "KDP-compatible EPUB + PDF output"
+      }
+    },
+    "testimonials": {
+      "badge": "カスタマーレビュー",
+      "title": "著者の声",
+      "description": "実際の著者からの実際の結果。",
+      "aggregateLabel": "{count}+件の実際の著者からの検証済みレビュー"
+    },
+    "showcase": {
+      "badge": "実際の本、実際のカバー",
+      "title": "AI生成の実際の本の例",
+      "description": "各本はトピックサマリーからドラフトへ、ドラフトからEPUBおよびPDFワークフローへと進みました。同じプロセスで今週中に独自の本を開始できます。",
+      "ctaLabel": "無料の本プレビューを開始"
+    }
+  }
+}

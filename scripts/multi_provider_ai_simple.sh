@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# GLM-5.1 API system for book generation.
+# Claude + GLM + Vertex API system for book generation.
 
 # ============================================================================
 # CONFIGURATION
@@ -53,20 +53,72 @@ sanitize_max_tokens() {
     echo "$value"
 }
 
+sanitize_request_timeout() {
+    local value="${1:-$CODEFAST_CURL_MAX_TIME}"
+    if ! [[ "$value" =~ ^[0-9]+$ ]] || [ "$value" -le 0 ]; then
+        echo "$CODEFAST_CURL_MAX_TIME"
+        return 0
+    fi
+    echo "$value"
+}
+
+sanitize_min_words_floor() {
+    local value="${1:-0}"
+    if ! [[ "$value" =~ ^[0-9]+$ ]] || [ "$value" -lt 0 ]; then
+        echo "0"
+        return 0
+    fi
+    echo "$value"
+}
+
+count_generated_words() {
+    printf '%s' "$1" | wc -w | tr -d ' '
+}
+
 has_any_smart_provider() {
-    codefast_has_api_key
+    local provider_id=""
+    while IFS= read -r provider_id; do
+        [ -n "$provider_id" ] || continue
+        if provider_has_credentials "$provider_id"; then
+            return 0
+        fi
+    done < <(build_provider_sequence)
+    return 1
+}
+
+provider_has_credentials() {
+    local provider_id="$1"
+    case "$provider_id" in
+        claude-main)
+            codefast_has_api_key
+            ;;
+        glm-main)
+            codefast_has_api_key
+            ;;
+        vertex-main)
+            codefast_has_vertex_api_key
+            ;;
+        *)
+            return 1
+            ;;
+    esac
 }
 
 setup_multi_provider_system() {
     mkdir -p "$CODEFAST_LOG_DIR"
 
-    echo "🔧 Initializing GLM-5.1 API system..."
+    echo "🔧 Initializing Claude + GLM + Vertex API system..."
+    echo "   Text order: $(codefast_text_provider_order general)"
+    echo "   Cover order: $(codefast_cover_provider_order)"
     if codefast_has_api_key; then
-        echo "✅ Shared Codefast API key detected"
-        echo "   Text order: $(codefast_text_provider_order general)"
-        echo "   Cover order: $(codefast_cover_provider_order)"
+        echo "✅ Codefast key detected (Claude/GLM)"
     else
-        echo "⚠️  Shared Codefast API key not found"
+        echo "⚠️  Codefast key not found"
+    fi
+    if codefast_has_vertex_api_key; then
+        echo "✅ Vertex API key detected"
+    else
+        echo "⚠️  Vertex API key not found"
     fi
 
     return 0
@@ -77,6 +129,7 @@ extract_response_text() {
         [
             .output_text,
             ([.output[]?.content[]? | select((.type // "") == "output_text" or (.type // "") == "text") | (.text // "")] | join("")),
+            ([.candidates[0].content.parts[]? | (.text // "")] | join("")),
             (try (
                 if (.choices[0].message.content | type) == "string"
                 then .choices[0].message.content
@@ -107,6 +160,13 @@ extract_error_message() {
         .message //
         ""
     ' 2>/dev/null
+}
+
+compact_error_preview() {
+    python3 -c 'import sys
+text = sys.stdin.read().replace("\r", " ").replace("\n", " ")
+text = " ".join(text.split())
+sys.stdout.write(text[:240])'
 }
 
 mark_limit_if_needed() {
@@ -197,9 +257,120 @@ call_codefast_anthropic_provider() {
     fi
 
     if mark_limit_if_needed "$provider_id" "$http_code" "$response"; then
-        echo "⚠️ $(codefast_provider_label "$provider_id") upstream rate/limit response detected" >&2
+        local error_preview
+        error_preview="$(printf '%s' "$response" | compact_error_preview)"
+        if [ -n "$error_preview" ]; then
+            echo "⚠️ $(codefast_provider_label "$provider_id") upstream rate/limit response detected (HTTP $http_code): $error_preview" >&2
+        else
+            echo "⚠️ $(codefast_provider_label "$provider_id") upstream rate/limit response detected (HTTP $http_code)" >&2
+        fi
     else
-        echo "❌ $(codefast_provider_label "$provider_id") error: $(extract_error_message "$response")" >&2
+        local error_message
+        error_message="$(extract_error_message "$response")"
+        if [ -z "$error_message" ]; then
+            error_message="$(printf '%s' "$response" | compact_error_preview)"
+        fi
+        echo "❌ $(codefast_provider_label "$provider_id") error (HTTP $http_code): $error_message" >&2
+    fi
+    return 1
+}
+
+build_vertex_generate_content_url() {
+    local model="$1"
+    local api_key
+    local project_id
+    local location
+
+    api_key="$(resolve_vertex_api_key 2>/dev/null || true)"
+    project_id="$(resolve_vertex_project_id 2>/dev/null || true)"
+    location="$(resolve_vertex_location 2>/dev/null || true)"
+    [ -n "$location" ] || location="us-central1"
+
+    if [ -n "$project_id" ]; then
+        printf 'https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:generateContent?key=%s\n' \
+            "$location" "$project_id" "$location" "$model" "$api_key"
+    else
+        printf 'https://aiplatform.googleapis.com/v1/publishers/google/models/%s:generateContent?key=%s\n' \
+            "$model" "$api_key"
+    fi
+}
+
+call_vertex_gemini_provider() {
+    local provider_id="$1"
+    local model="$2"
+    local prompt="$3"
+    local system_prompt="$4"
+    local temperature="$5"
+    local max_tokens="$6"
+    local api_key
+    local payload
+    local url
+    local result
+    local curl_status
+    local http_code
+    local response
+    local text
+
+    api_key="$(resolve_vertex_api_key 2>/dev/null || true)"
+    [ -n "$api_key" ] || return 1
+
+    url="$(build_vertex_generate_content_url "$model")"
+    payload="$(jq -nc \
+        --arg system "$system_prompt" \
+        --arg prompt "$prompt" \
+        --argjson temperature "$temperature" \
+        --argjson max_tokens "$max_tokens" \
+        '{
+            systemInstruction: {
+                role: "system",
+                parts: [{ text: $system }]
+            },
+            contents: [
+                {
+                    role: "user",
+                    parts: [{ text: $prompt }]
+                }
+            ],
+            generationConfig: {
+                temperature: $temperature,
+                maxOutputTokens: $max_tokens
+            }
+        }')"
+
+    result="$(run_json_request "POST" "$url" "$payload" \
+        -H "Content-Type: application/json")"
+    curl_status="$(printf '%s\n' "$result" | sed -n '1p')"
+    http_code="$(printf '%s\n' "$result" | sed -n '2p')"
+    response="$(printf '%s\n' "$result" | sed -n '3,$p')"
+
+    if [ "$curl_status" -ne 0 ]; then
+        echo "❌ $(codefast_provider_label "$provider_id") request failed at transport level" >&2
+        return 1
+    fi
+
+    codefast_increment_provider_usage "$provider_id"
+    text="$(extract_response_text "$response" | sanitize_provider_text)"
+
+    if [[ "$http_code" =~ ^2 ]] && [ -n "$text" ]; then
+        printf '%s\n' "$text"
+        return 0
+    fi
+
+    if mark_limit_if_needed "$provider_id" "$http_code" "$response"; then
+        local error_preview
+        error_preview="$(printf '%s' "$response" | compact_error_preview)"
+        if [ -n "$error_preview" ]; then
+            echo "⚠️ $(codefast_provider_label "$provider_id") upstream rate/limit response detected (HTTP $http_code): $error_preview" >&2
+        else
+            echo "⚠️ $(codefast_provider_label "$provider_id") upstream rate/limit response detected (HTTP $http_code)" >&2
+        fi
+    else
+        local error_message
+        error_message="$(extract_error_message "$response")"
+        if [ -z "$error_message" ]; then
+            error_message="$(printf '%s' "$response" | compact_error_preview)"
+        fi
+        echo "❌ $(codefast_provider_label "$provider_id") error (HTTP $http_code): $error_message" >&2
     fi
     return 1
 }
@@ -217,6 +388,9 @@ call_text_provider() {
         anthropic)
             call_codefast_anthropic_provider "$provider_id" "$model" "$prompt" "$system_prompt" "$temperature" "$max_tokens"
             ;;
+        vertex_gemini)
+            call_vertex_gemini_provider "$provider_id" "$model" "$prompt" "$system_prompt" "$temperature" "$max_tokens"
+            ;;
         *)
             return 1
             ;;
@@ -226,7 +400,27 @@ call_text_provider() {
 
 # ============================================================================
 build_provider_sequence() {
-    printf '%s\n' "glm-main"
+    local configured_order=""
+    local provider_id=""
+    local seen=" "
+
+    configured_order="$(codefast_text_provider_order)"
+    if [ -z "${configured_order// /}" ]; then
+        configured_order="$(codefast_text_provider_ids | tr '\n' ' ')"
+    fi
+
+    for provider_id in $configured_order; do
+        case "$provider_id" in
+            claude-main|glm-main|vertex-main)
+                if [[ "$seen" != *" ${provider_id} "* ]]; then
+                    printf '%s\n' "$provider_id"
+                    seen="${seen}${provider_id} "
+                fi
+                ;;
+            *)
+                ;;
+        esac
+    done
 }
 
 # ============================================================================
@@ -240,38 +434,113 @@ smart_api_call() {
     local temperature
     local max_tokens
     local max_retries
+    local min_words_floor
+    local request_timeout_seconds
+    local fast_failover
+    local provider_id
+    local provider_label
     local model_name
+    local fallback_model_name
+    local candidate_model
+    local candidate_models=()
+    local generated_word_count
     local result
     local attempt
     local retry_delay
+    local attempted_provider=0
 
     temperature="$(sanitize_temperature "${4:-0.7}")"
     max_tokens="$(sanitize_max_tokens "${5:-4096}")"
     max_retries="${6:-2}"
+    min_words_floor="$(sanitize_min_words_floor "${7:-0}")"
+    request_timeout_seconds="$(sanitize_request_timeout "${8:-$CODEFAST_CURL_MAX_TIME}")"
+    fast_failover="${9:-0}"
+    case "$fast_failover" in
+        1|true|TRUE|yes|YES|on|ON)
+            fast_failover=1
+            ;;
+        *)
+            fast_failover=0
+            ;;
+    esac
     if ! [[ "$max_retries" =~ ^[0-9]+$ ]] || [ "$max_retries" -lt 1 ]; then
         max_retries=1
     fi
-    retry_delay=1
+    if [ "$fast_failover" -eq 1 ] && [ "$max_retries" -gt 1 ]; then
+        max_retries=1
+    fi
+    local CODEFAST_CURL_MAX_TIME="$request_timeout_seconds"
+    retry_delay="${SMART_API_RETRY_BASE_DELAY_SECONDS:-6}"
+    if ! [[ "$retry_delay" =~ ^[0-9]+$ ]] || [ "$retry_delay" -lt 1 ]; then
+        retry_delay=6
+    fi
+    if [ "$fast_failover" -eq 1 ]; then
+        retry_delay=1
+    fi
 
-    if ! codefast_has_api_key; then
-        echo "No CODEFAST_API_KEY configured" >&2
+    if ! has_any_smart_provider; then
+        echo "No configured text provider credentials found (Claude, GLM or Vertex)." >&2
         return 1
     fi
 
-    model_name="$(codefast_text_provider_model "glm-main" "$task_type")"
-    for ((attempt = 1; attempt <= max_retries; attempt += 1)); do
-        echo "Using GLM-5.1 (model: ${model_name}) [attempt ${attempt}/${max_retries}]" >&2
-        if result="$(call_text_provider "glm-main" "$model_name" "$prompt" "$system_prompt" "$temperature" "$max_tokens" "$max_retries" 2> >(cat >&2))"; then
-            printf '%s\n' "$result"
-            return 0
-        fi
-        if [ "$attempt" -lt "$max_retries" ]; then
-            sleep "$retry_delay"
-            retry_delay=$((retry_delay * 2))
-        fi
-    done
+    while IFS= read -r provider_id; do
+        [ -n "$provider_id" ] || continue
+        attempted_provider=1
+        provider_label="$(codefast_provider_label "$provider_id")"
 
-    echo "GLM-5.1 request failed after ${max_retries} attempts" >&2
+        if codefast_provider_is_exhausted "$provider_id"; then
+            echo "⏭️ Skipping ${provider_label}: locally marked unavailable" >&2
+            continue
+        fi
+        if ! provider_has_credentials "$provider_id"; then
+            echo "⏭️ Skipping ${provider_label}: missing credentials" >&2
+            continue
+        fi
+
+        candidate_models=()
+        model_name="$(codefast_text_provider_model "$provider_id" "$task_type")"
+        fallback_model_name="$(codefast_text_provider_fallback_model "$provider_id" "$task_type")"
+        [ -n "$model_name" ] && candidate_models+=("$model_name")
+        if [ "$fast_failover" -ne 1 ] && [ -n "$fallback_model_name" ] && [ "$fallback_model_name" != "$model_name" ]; then
+            candidate_models+=("$fallback_model_name")
+        fi
+        if [ "${#candidate_models[@]}" -eq 0 ]; then
+            echo "⏭️ Skipping ${provider_label}: no model configured for task '${task_type}'" >&2
+            continue
+        fi
+
+        for candidate_model in "${candidate_models[@]}"; do
+            retry_delay="${SMART_API_RETRY_BASE_DELAY_SECONDS:-6}"
+            if ! [[ "$retry_delay" =~ ^[0-9]+$ ]] || [ "$retry_delay" -lt 1 ]; then
+                retry_delay=6
+            fi
+            if [ "$fast_failover" -eq 1 ]; then
+                retry_delay=1
+            fi
+            for ((attempt = 1; attempt <= max_retries; attempt += 1)); do
+                echo "Using ${provider_label} (model: ${candidate_model}, task: ${task_type}) [attempt ${attempt}/${max_retries}]" >&2
+                if result="$(call_text_provider "$provider_id" "$candidate_model" "$prompt" "$system_prompt" "$temperature" "$max_tokens" "$max_retries" 2> >(cat >&2))"; then
+                    generated_word_count="$(count_generated_words "$result")"
+                    if [ "$min_words_floor" -gt 0 ] && [ "$generated_word_count" -lt "$min_words_floor" ]; then
+                        echo "⚠️ ${provider_label} response too short for task '${task_type}' (${generated_word_count} words, expected at least ${min_words_floor}); retrying/falling back." >&2
+                    else
+                        printf '%s\n' "$result"
+                        return 0
+                    fi
+                fi
+                if [ "$attempt" -lt "$max_retries" ]; then
+                    sleep "$retry_delay"
+                    retry_delay=$((retry_delay * 2))
+                fi
+            done
+        done
+    done < <(build_provider_sequence)
+
+    if [ "$attempted_provider" -eq 0 ]; then
+        echo "No valid text providers configured in CODEFAST_TEXT_PROVIDER_ORDER." >&2
+        return 1
+    fi
+    echo "All configured text providers failed for task '${task_type}' after ${max_retries} attempts per model candidate" >&2
     return 1
 }
 
@@ -300,7 +569,8 @@ generate_outline_with_smart_api() {
 
     local system_prompt="You are an expert book author and publishing professional tasked with creating high-quality, commercially viable books for publication on KDP and other platforms. Your goal is to produce engaging, well-structured, and professionally written content that readers will find valuable and enjoyable.
 
-Create detailed book outlines that will guide the generation of 20,000-25,000 word books with 12-15 chapters of 2,500-3,000 words each.
+Create detailed book outlines that will guide the generation of roughly 22,000-26,000 word books.
+Prefer 10-12 chapters with practical momentum, usually targeting about 2,200-2,600 words per chapter.
 
 When creating outlines, always format chapter titles clearly as:
 ${chapter_label} 1: [Title]
@@ -319,7 +589,7 @@ ${chapter_label} 2: [Chapter Title]
 
 Include:
 - Compelling book title and subtitle
-- 12-15 chapters with descriptive titles
+- 10-12 chapters with descriptive titles
 - 2-3 sentence summary for each chapter explaining what will be covered
 - Character profiles (fiction) or key concept definitions (non-fiction)
 - 3-5 core themes to weave throughout the book
@@ -342,6 +612,8 @@ generate_chapter_with_smart_api() {
     local tone="$8"
     local language="${9:-English}"
     local chapter_label="Chapter"
+    local chapter_max_tokens="${BOOK_CHAPTER_MAX_TOKENS:-5200}"
+    local chapter_max_retries="${BOOK_CHAPTER_MAX_RETRIES:-5}"
 
     case "$(printf '%s' "$language" | tr '[:upper:]' '[:lower:]')" in
         tr*|turkish|türkçe|turkce|turk)
@@ -355,6 +627,10 @@ generate_chapter_with_smart_api() {
     esac
 
     local system_prompt="You are a professional author writing a high-quality book. Write in ${style} style with ${tone} tone. Ensure content is original, engaging, and valuable to readers. The output language must be ${language}. Return only the chapter body in ${language}; do not add a heading line like '${chapter_label} ${chapter_num}: ${chapter_title}'."
+    local chapter_word_floor=$(( min_words * 60 / 100 ))
+    if [ "$chapter_word_floor" -lt 900 ]; then
+        chapter_word_floor=900
+    fi
 
     local user_prompt="Write ${chapter_label} ${chapter_num} for this book.
 Target language: ${language}
@@ -368,17 +644,109 @@ ${existing_chapters}
 
 Requirements:
 - Write ${min_words}-${max_words} words
+- Use the continuity packet to carry forward promises, transitions, and unresolved points without repeating earlier sections
 - Make it engaging and informative
 - Ensure smooth transitions and flow
 - Include practical examples where appropriate
 - Maintain consistency with previous chapters
 - Write in ${style} style with ${tone} tone
 - Write fully in ${language}
+- Default to chapter length that can realistically land near the upper half of the requested range
 - Do not add a chapter heading, title line, or English label before the body
 
 Begin writing the chapter body now:"
 
-    smart_api_call "$user_prompt" "$system_prompt" "creative" 0.8 8192 3 ""
+    smart_api_call "$user_prompt" "$system_prompt" "creative" 0.8 "$chapter_max_tokens" "$chapter_max_retries" "$chapter_word_floor"
+}
+
+chapter_segment_role_description() {
+    local segment_index="$1"
+    local segment_count="$2"
+    case "${segment_count}:${segment_index}" in
+        3:1) printf '%s\n' "Open the chapter strongly, frame the promise, and set up the central problem or idea." ;;
+        3:2) printf '%s\n' "Develop the method, framework, or argument with practical depth and clear transitions." ;;
+        3:3) printf '%s\n' "Turn the ideas into application, examples, and a satisfying bridge to the next chapter." ;;
+        4:1) printf '%s\n' "Open the chapter strongly, frame the promise, and set up the main tension." ;;
+        4:2) printf '%s\n' "Build the first half of the framework with explanation and examples." ;;
+        4:3) printf '%s\n' "Deepen the framework with cases, contrasts, or practical use." ;;
+        4:4) printf '%s\n' "Land the chapter with application, synthesis, and a forward transition." ;;
+        *) printf '%s\n' "Continue the chapter with coherent progression, fresh material, and practical depth." ;;
+    esac
+}
+
+generate_chapter_segment_with_smart_api() {
+    local chapter_num="$1"
+    local chapter_title="$2"
+    local segment_index="$3"
+    local segment_count="$4"
+    local segment_context="$5"
+    local continuity_packet="$6"
+    local outline_context="$7"
+    local chapter_summary="$8"
+    local min_words="$9"
+    local max_words="${10}"
+    local style="${11}"
+    local tone="${12}"
+    local language="${13:-English}"
+    local chapter_label="Chapter"
+    local segment_role=""
+    local segment_max_tokens="${BOOK_CHAPTER_SEGMENT_MAX_TOKENS:-2400}"
+    local segment_max_retries="${BOOK_CHAPTER_SEGMENT_MAX_RETRIES:-4}"
+
+    case "$(printf '%s' "$language" | tr '[:upper:]' '[:lower:]')" in
+        tr*|turkish|türkçe|turkce|turk)
+            language="Turkish"
+            chapter_label="Bölüm"
+            ;;
+        *)
+            language="English"
+            chapter_label="Chapter"
+            ;;
+    esac
+
+    segment_role="$(chapter_segment_role_description "$segment_index" "$segment_count")"
+    local segment_word_floor=$(( min_words * 60 / 100 ))
+    if [ "$segment_word_floor" -lt 240 ]; then
+        segment_word_floor=240
+    fi
+
+    local system_prompt="You are a professional author assembling a long-form book in compact passes. Write only the requested segment body in ${language}. Keep the voice consistent, original, and practical. Do not add a heading like '${chapter_label} ${chapter_num}: ${chapter_title}'."
+
+    local user_prompt="Write segment ${segment_index}/${segment_count} for ${chapter_label} ${chapter_num}.
+Target language: ${language}
+Section title: ${chapter_title}
+
+Segment mission:
+${segment_role}
+
+Chapter brief:
+${chapter_summary}
+
+Relevant outline context:
+${outline_context}
+
+Carry-forward continuity from previous chapters:
+${continuity_packet}
+
+Already written earlier in this same chapter:
+${segment_context}
+
+Requirements:
+- Write ${min_words}-${max_words} words
+- Continue naturally from the existing chapter material without repeating prior paragraphs
+- Treat the existing chapter material as canonical; do not restart the chapter opening, reintroduce the same characters from scratch, or reset the scene/time if earlier segments already established them
+- Add substantive material, not filler
+- Use examples, explanation, and transitions where useful
+- Keep terminology and promises consistent with earlier context
+- If this is not the last segment, end with momentum rather than a full conclusion
+- If this is the last segment, close the chapter cleanly and set up the next chapter subtly
+- Write in ${style} style with ${tone} tone
+- Return only the segment body in ${language}
+- Do not add markdown headings, labels, or bullet metadata
+
+Begin the segment body now:"
+
+    smart_api_call "$user_prompt" "$system_prompt" "chapter_segment" 0.75 "$segment_max_tokens" "$segment_max_retries" "$segment_word_floor"
 }
 
 review_chapter_quality() {
@@ -465,71 +833,95 @@ Rewrite the chapter now:"
 # ============================================================================
 
 show_provider_status() {
+    local provider_id
     local label
     local used
     local limit
     local remaining
     local reason
+    local found_provider=0
 
     echo -e "\n${CYAN}📊 Provider Status${RESET}"
     echo "────────────────────────────────────────"
 
-    # glm-main
-    label="$(codefast_provider_label "glm-main")"
-    used="$(codefast_provider_usage_count "glm-main")"
-    limit="$(codefast_provider_daily_limit "glm-main")"
-    remaining="$(codefast_provider_remaining "glm-main")"
-    reason="$(codefast_provider_exhausted_reason "glm-main")"
+    while IFS= read -r provider_id; do
+        [ -n "$provider_id" ] || continue
+        found_provider=1
+        label="$(codefast_provider_label "$provider_id")"
+        used="$(codefast_provider_usage_count "$provider_id")"
+        limit="$(codefast_provider_daily_limit "$provider_id")"
+        remaining="$(codefast_provider_remaining "$provider_id")"
+        reason="$(codefast_provider_exhausted_reason "$provider_id")"
 
-    if ! codefast_has_api_key; then
-        echo -e "${RED}❌${RESET} ${label} - missing API key"
-    elif codefast_provider_is_exhausted "glm-main"; then
-        echo -e "${YELLOW}⏳${RESET} ${label} - exhausted (${used}/${limit}) ${reason}"
-    elif [ "$limit" -le 0 ]; then
-        echo -e "${GREEN}✅${RESET} ${label} - used ${used}, local quota gate disabled"
-    else
-        echo -e "${GREEN}✅${RESET} ${label} - used ${used}/${limit}, remaining ${remaining}"
+        if ! provider_has_credentials "$provider_id"; then
+            echo -e "${RED}❌${RESET} ${label} - missing credentials"
+        elif codefast_provider_is_exhausted "$provider_id"; then
+            echo -e "${YELLOW}⏳${RESET} ${label} - exhausted (${used}/${limit}) ${reason}"
+        elif [ "$limit" -le 0 ]; then
+            echo -e "${GREEN}✅${RESET} ${label} - used ${used}, local quota gate disabled"
+        else
+            echo -e "${GREEN}✅${RESET} ${label} - used ${used}/${limit}, remaining ${remaining}"
+        fi
+    done < <(build_provider_sequence)
+
+    if [ "$found_provider" -eq 0 ]; then
+        echo -e "${YELLOW}⚠️${RESET} No text providers configured."
     fi
-
-
     echo "────────────────────────────────────────"
 }
 
 test_all_providers() {
     local test_prompt="Write a brief hello message."
     local test_system="You are a helpful assistant."
+    local provider_id
+    local label
     local model_name
 
     echo "🧪 Testing configured providers..."
 
-    # glm-main
-    if ! codefast_has_api_key; then
-        echo "Skipping glm-main: no API key"
-    elif codefast_provider_is_exhausted "glm-main"; then
-        echo "Skipping glm-main: locally marked unavailable (quota gate enabled)"
-    else
-        model_name="$(codefast_text_provider_model "glm-main" "general")"
-        printf 'Testing glm-main (%s): ' "$model_name"
-        if call_text_provider "glm-main" "$model_name" "$test_prompt" "$test_system" "0.2" "64" "1" >/dev/null 2>&1; then
+    while IFS= read -r provider_id; do
+        [ -n "$provider_id" ] || continue
+        label="$(codefast_provider_label "$provider_id")"
+        if ! provider_has_credentials "$provider_id"; then
+            echo "Skipping ${provider_id}: missing credentials"
+            continue
+        fi
+        if codefast_provider_is_exhausted "$provider_id"; then
+            echo "Skipping ${provider_id}: locally marked unavailable (quota gate enabled)"
+            continue
+        fi
+        model_name="$(codefast_text_provider_model "$provider_id" "general")"
+        if [ -z "$model_name" ]; then
+            echo "Skipping ${provider_id}: no model configured"
+            continue
+        fi
+        printf 'Testing %s (%s): ' "$label" "$model_name"
+        if call_text_provider "$provider_id" "$model_name" "$test_prompt" "$test_system" "0.2" "64" "1" >/dev/null 2>&1; then
             echo -e "${GREEN}OK${RESET}"
         else
             echo -e "${RED}FAILED${RESET}"
         fi
-    fi
+    done < <(build_provider_sequence)
 
 }
 
 estimate_book_cost() {
     local num_chapters="${1:-12}"
     local words_per_chapter="${2:-2200}"
+    local active_order
 
-    echo "📘 GLM-5.1 Book Generation Estimate"
+    active_order="$(build_provider_sequence | tr '\n' ' ' | sed 's/  */ /g; s/^ //; s/ $//')"
+
+    echo "📘 Book Generation Estimate"
     echo "   Chapters: $num_chapters"
     echo "   Words per chapter: $words_per_chapter"
     echo "   Total words: $((num_chapters * words_per_chapter))"
     echo ""
-    echo "   Requests go directly to GLM-5.1 (no local daily quota gate by default)."
-    echo "   Active: GLM-5.1"
+    echo "   Provider order: ${active_order:-none}"
+    echo "   Notes:"
+    echo "   - Primary should be Claude Sonnet 4.6."
+    echo "   - First fallback should be GLM."
+    echo "   - Last fallback should be Vertex Gemini 2.5 Flash-Lite."
 }
 
 # ============================================================================
@@ -551,7 +943,7 @@ main() {
             estimate_book_cost "${2:-12}" "${3:-2200}"
             ;;
         *)
-            echo "GLM-5.1 AI System"
+            echo "Claude + GLM + Vertex AI System"
             echo ""
             echo "Usage:"
             echo "  $0 test"

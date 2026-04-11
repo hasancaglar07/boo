@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { defaultLocale, locales } from "@/i18n/routing";
+
 type PageMetadataInput = {
   title: string;
   description: string;
@@ -8,7 +10,6 @@ type PageMetadataInput = {
   noIndex?: boolean;
   type?: "website" | "article";
   ogImage?: string;
-  hreflang?: Record<string, string>; // NEW: International language support
 };
 
 const productionSiteUrl = "https://bookgenerator.net";
@@ -92,6 +93,25 @@ export function absoluteUrl(path = "/") {
   return new URL(normalizedPath, siteConfig.siteUrl).toString();
 }
 
+export function localizePath(path: string, locale: string): string {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  if (normalizedPath === "/") return `/${locale}`;
+  return `/${locale}${normalizedPath}`;
+}
+
+function buildLanguageAlternates(path: string): Record<string, string> {
+  const alternates: Record<string, string> = {
+    "x-default": absoluteUrl(localizePath(path, defaultLocale)),
+  };
+
+  for (const locale of locales) {
+    alternates[locale] = absoluteUrl(localizePath(path, locale));
+  }
+
+  alternates["en-US"] = absoluteUrl(localizePath(path, "en"));
+  return alternates;
+}
+
 export function buildPageMetadata({
   title,
   description,
@@ -101,7 +121,7 @@ export function buildPageMetadata({
   type = "website",
   ogImage: ogImageOverride,
 }: PageMetadataInput): Metadata {
-  const canonical = absoluteUrl(path);
+  const canonical = absoluteUrl(localizePath(path, defaultLocale));
   const ogImage = ogImageOverride ?? absoluteUrl(siteConfig.defaultOgImage);
 
   return {
@@ -110,10 +130,7 @@ export function buildPageMetadata({
     keywords,
     alternates: {
       canonical,
-      languages: {
-        "en": canonical,
-        "en-US": canonical,
-      },
+      languages: buildLanguageAlternates(path),
     },
     robots: {
       index: !noIndex,

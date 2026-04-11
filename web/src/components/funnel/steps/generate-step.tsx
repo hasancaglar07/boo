@@ -6,17 +6,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { GenerateAuthGateDialog } from "@/components/funnel/generate-auth-gate-dialog";
 import { GenerateLoadingScreen } from "@/components/funnel/generate-loading-screen";
-import { trackEvent } from "@/lib/analytics";
 import {
   clearFunnelDraft,
-  clearPendingGenerateIntent,
   languageLabel,
-  loadPendingGenerateIntent,
-  savePendingGenerateIntent,
   type FunnelDraft,
   type FunnelStep,
 } from "@/lib/funnel-draft";
-import { getAccount } from "@/lib/preview-auth";
+import { getSession } from "@/lib/preview-auth";
 
 export function GenerateStep({
   draft,
@@ -31,6 +27,7 @@ export function GenerateStep({
   onAuthGateOpenChange,
   onAuthGateMethodSelected,
   onAuthenticated,
+  onOpenSavePrompt,
   onStartGenerate,
   generationStages,
 }: {
@@ -46,11 +43,13 @@ export function GenerateStep({
   onAuthGateOpenChange: (open: boolean) => void;
   onAuthGateMethodSelected: (input: { method: "google" | "magic" | "credentials"; mode: "login" | "register" }) => void;
   onAuthenticated: () => void;
+  onOpenSavePrompt: () => void;
   onStartGenerate: () => void;
   generationStages: readonly string[];
   generationStageIndex: number;
 }) {
   const router = useRouter();
+  const hasSession = Boolean(getSession());
 
   if (aiLoading === "generate") {
     return <GenerateLoadingScreen redirectPath={pendingRedirect || undefined} />;
@@ -99,9 +98,31 @@ export function GenerateStep({
       <div className="flex items-start gap-2.5 rounded-xl border border-primary/10 bg-primary/[0.03] px-3.5 py-3">
         <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
         <p className="text-[13px] leading-5 text-muted-foreground/70">
-          Preview starts immediately · Book is saved to your account · Full book (PDF/EPUB) unlocks later · No payment required
+          Real cover comes first · First readable pages unlock automatically · Full PDF/EPUB comes later · No payment required to start
         </p>
       </div>
+
+      {!hasSession ? (
+        <div className="rounded-2xl border border-[#d8bfac]/60 bg-[linear-gradient(180deg,#fffaf4_0%,#fff7ef_100%)] p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7f5a46]">
+                Optional free account
+              </div>
+              <p className="mt-2 text-sm leading-6 text-[#6f5547]">
+                Start as guest now. If you want to keep this preview in your library, save it to a free account before or after generation.
+              </p>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={onOpenSavePrompt}>
+              Save to account
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-border/60 bg-card/70 px-4 py-3 text-sm text-muted-foreground">
+          This preview will also stay in your library while the remaining chapters continue in the background.
+        </div>
+      )}
 
       {error ? (
         <div role="alert" className="rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
@@ -116,7 +137,7 @@ export function GenerateStep({
           onClick={onStartGenerate}
           className="w-full text-base font-semibold h-12 rounded-xl"
         >
-          {appShell ? "Preview Generate" : "Create Your Account and Start Preview"}
+          {appShell ? "Create Live Preview" : "Start Guest Preview"}
         </Button>
         <div className="flex justify-center">
           <button
@@ -134,8 +155,8 @@ export function GenerateStep({
 
       <p className="text-xs text-muted-foreground/50 text-center">
         {appShell
-          ? "See the preview first · Unlock the full book later"
-          : "No payment required · Book is saved to your account · Appears in your library when ready"}
+          ? "See the cover and first pages first · Upgrade only after you like the result"
+          : "Guest preview opens first · Save to account anytime · Upgrade later if you want the full book"}
       </p>
     </div>
   );

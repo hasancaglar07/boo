@@ -335,6 +335,9 @@ export async function getEffectivePlanId(userId?: string | null): Promise<BookPl
       },
       OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
     },
+    select: {
+      planId: true,
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -417,7 +420,10 @@ export async function recordBookUsage(input: {
   });
 }
 
-export async function getBookStartAllowance(userId: string | null): Promise<BookStartAllowance> {
+export async function getBookStartAllowance(
+  userId: string | null,
+  options: { planId?: BookPlanId } = {},
+): Promise<BookStartAllowance> {
   if (!userId) {
     return {
       canStartBook: true,
@@ -429,40 +435,31 @@ export async function getBookStartAllowance(userId: string | null): Promise<Book
     };
   }
 
-  const planId = await getEffectivePlanId(userId);
+  const planId = options.planId || await getEffectivePlanId(userId);
+  const usesMonthlyWindow = SUBSCRIPTION_PLANS.has(planId);
   const { monthStart, nextResetAt } = currentUtcMonthWindow();
 
-  const [totalLedgerCount, monthLedgerCount, totalBookCount, monthBookCount] = await Promise.all([
+  const usageWindow = usesMonthlyWindow
+    ? { createdAt: { gte: monthStart } }
+    : {};
+  const [ledgerCount, bookCount] = await Promise.all([
     prisma.bookUsageLedger.count({
       where: {
         userId,
         kind: "preview_created",
-      },
-    }),
-    prisma.bookUsageLedger.count({
-      where: {
-        userId,
-        kind: "preview_created",
-        createdAt: { gte: monthStart },
+        ...usageWindow,
       },
     }),
     prisma.bookRecord.count({
       where: {
         ownerUserId: userId,
-      },
-    }),
-    prisma.bookRecord.count({
-      where: {
-        ownerUserId: userId,
-        createdAt: { gte: monthStart },
+        ...usageWindow,
       },
     }),
   ]);
 
   const limit = BOOK_CREATION_LIMITS[planId] ?? null;
-  const usedBooks = SUBSCRIPTION_PLANS.has(planId)
-    ? Math.max(monthLedgerCount, monthBookCount)
-    : Math.max(totalLedgerCount, totalBookCount);
+  const usedBooks = Math.max(ledgerCount, bookCount);
 
   const remainingBooks = limit === null ? 9999 : Math.max(0, limit - usedBooks);
   const canStartBook = limit === null ? true : remainingBooks > 0;
@@ -482,7 +479,7 @@ export async function getBookStartAllowance(userId: string | null): Promise<Book
     canStartBook,
     reason,
     remainingBooks,
-    resetAt: SUBSCRIPTION_PLANS.has(planId) ? nextResetAt : null,
+    resetAt: usesMonthlyWindow ? nextResetAt : null,
     limit,
     usedBooks,
   };
@@ -787,11 +784,11 @@ export async function getAuthStateForUser(userId: string | null, email?: string 
     };
   }
 
-  const [planId, usage, effectiveEmailVerified] = await Promise.all([
+  const [planId, effectiveEmailVerified] = await Promise.all([
     getEffectivePlanId(user.id),
-    getBookStartAllowance(user.id),
     resolveEffectiveEmailVerified(user.id, user.emailVerified),
   ]);
+  const usage = await getBookStartAllowance(user.id, { planId });
 
   return {
     authenticated: true,

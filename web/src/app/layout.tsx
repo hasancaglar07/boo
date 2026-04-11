@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import { Libre_Bodoni, Public_Sans } from "next/font/google";
 import Script from "next/script";
+import { NextIntlClientProvider } from "next-intl";
 
 import { AuthStateHydrator } from "@/components/auth/auth-state-hydrator";
 import { ChunkLoadRecovery } from "@/components/app/chunk-load-recovery";
 import { CookieConsent } from "@/components/app/cookie-consent";
 import { RefCodeDetector } from "@/components/app/ref-code-detector";
-import { LangProvider } from "@/components/lang-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { PageTransition } from "@/components/app/page-transition";
+import { defaultLocale, locales } from "@/i18n/routing";
 import { PUBLIC_BILLING_EMAIL, PUBLIC_SUPPORT_EMAIL } from "@/lib/contact-shared";
 import { absoluteUrl, metadataBaseUrl, siteConfig } from "@/lib/seo";
+import enMessages from "../../messages/en.json";
 
 import "./globals.css";
 
@@ -27,15 +28,22 @@ const libreBodoni = Libre_Bodoni({
   display: "swap",
 });
 
+const rootLanguageAlternates: Record<string, string> = {
+  "x-default": absoluteUrl(`/${defaultLocale}`),
+  "en-US": absoluteUrl("/en"),
+};
+
+for (const locale of locales) {
+  rootLanguageAlternates[locale] = absoluteUrl(`/${locale}`);
+}
+
 export const metadata: Metadata = {
   metadataBase: metadataBaseUrl(),
   title: siteConfig.defaultTitle,
   description: siteConfig.description,
   alternates: {
-    canonical: absoluteUrl("/"),
-    languages: {
-      "en-US": absoluteUrl("/"),
-    },
+    canonical: absoluteUrl(`/${defaultLocale}`),
+    languages: rootLanguageAlternates,
   },
   applicationName: siteConfig.name,
   robots: {
@@ -207,18 +215,16 @@ export default function RootLayout(props: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }}
         />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <LangProvider>
-          <ChunkLoadRecovery />
-          <AuthStateHydrator />
-          <RefCodeDetector />
-          <div id="main-content" className="flex min-h-full flex-col">
-            <PageTransition>
+          <NextIntlClientProvider locale={defaultLocale} messages={enMessages}>
+            <ChunkLoadRecovery />
+            <AuthStateHydrator />
+            <RefCodeDetector />
+            <div id="main-content" className="flex min-h-full flex-col">
               {children}
-            </PageTransition>
-          </div>
-          <CookieConsent />
-          <Toaster richColors position="top-right" />
-          </LangProvider>
+            </div>
+            <CookieConsent />
+            <Toaster richColors position="top-right" />
+          </NextIntlClientProvider>
         </ThemeProvider>
         <Script id="asset-load-recovery" strategy="afterInteractive" dangerouslySetInnerHTML={{
           __html: `

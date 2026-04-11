@@ -30,9 +30,42 @@ export type CoverVariant = {
   template?: string;
   preferred_zone?: string;
   render_mode?: string;
+  front_render_mode?: string;
   text_strategy?: string;
+  cover_mode?: string;
+  style_direction?: string;
+  wrap_scope?: string;
+  quality_gate?: string;
+  cover_style_mode?: string;
+  back_cover_mode?: string;
+  pair_score?: number;
+  text_safe_zone_status?: string;
+  front_ai_attempt_count?: number;
+  front_text_validation_score?: number;
+  front_visual_grade?: number;
+  front_genre_fit_score?: number;
+  front_hard_reject_reasons?: string[];
+  selected_cover_confidence?: number;
+  visual_flags?: {
+    hasPeople?: boolean;
+    focalConceptCount?: number;
+    looksLikeDashboard?: boolean;
+    hasCleanTypographyBands?: boolean;
+    noisyFullPage?: boolean;
+    hasWatermarkOrBadge?: boolean;
+    hasExtraneousText?: boolean;
+    categoryFit?: number;
+    thumbnailReadability?: number;
+    titleReadability?: number;
+    typographyQuality?: number;
+    bookstoreRealism?: number;
+    notes?: string[];
+  };
+  rejection_reasons?: string[];
   text_validation?: {
     valid?: boolean;
+    eligible?: boolean;
+    validationMode?: string;
     ocrText?: string;
     ocrFields?: {
       title?: string;
@@ -46,9 +79,17 @@ export type CoverVariant = {
       author?: string;
     };
     prefixGuardFailed?: boolean;
+    promptLeakageFailed?: boolean;
+    titleDuplicationFailed?: boolean;
+    watermarkOrBadgeFailed?: boolean;
     titleScore?: number;
     subtitleScore?: number;
     authorScore?: number;
+    combinedScore?: number;
+    extraWordCount?: number;
+    textSimilarityScore?: number;
+    hardRejectReasons?: string[];
+    minorIssues?: string[];
   };
 };
 
@@ -98,6 +139,27 @@ export type BookStatus = {
   started_at?: string;
   updated_at?: string;
   completed_at?: string;
+  current_word_count?: number;
+  target_word_count?: number;
+  current_step_code?: "cover" | "first_chapter" | "full_book" | "export";
+  current_step_label?: string;
+  cover_eta_seconds?: number;
+  first_chapter_eta_seconds?: number;
+  cover_gate_state?: "waiting_for_cover" | "cover_ready" | "timed_out";
+  activity_timeline?: Array<{
+    code: string;
+    label: string;
+    status: "done" | "active" | "queued" | "waiting" | "error";
+    timestamp?: string;
+    detail?: string;
+  }>;
+  activity_log?: Array<{
+    code: string;
+    label: string;
+    status: "done" | "active" | "queued" | "waiting" | "error";
+    timestamp?: string;
+    detail?: string;
+  }>;
   full_generation?: {
     active?: boolean;
     stage?: string;
@@ -114,6 +176,18 @@ export type BookStatus = {
     started_at?: string;
     updated_at?: string;
     completed_at?: string;
+    word_count?: number;
+    target_word_count?: number;
+    chapter_count_floor?: number;
+    chapter_count_ok?: boolean;
+    length_complete?: boolean;
+    chapter_generation_mode?: string;
+    segment_count?: number;
+    segment_index?: number;
+    current_segment?: number;
+    current_chapter?: number;
+    pause_reason?: string;
+    next_retry_at?: string;
   };
 };
 
@@ -134,6 +208,8 @@ export type Book = {
   cover_art_image?: string;
   cover_image?: string;
   back_cover_image?: string;
+  front_cover_source?: "manual" | "variant" | "";
+  back_cover_source?: "manual" | "variant" | "";
   cover_template?: string;
   cover_variant_count?: number;
   cover_generation_provider?: string;
@@ -144,6 +220,13 @@ export type Book = {
   back_cover_variant_family?: string;
   cover_family?: string;
   cover_text_strategy?: string;
+  cover_mode?: string;
+  style_direction?: string;
+  wrap_scope?: string;
+  quality_gate?: string;
+  cover_style_mode?: string;
+  back_cover_mode?: string;
+  text_safe_zone_status?: string;
   cover_branch?: string;
   cover_genre?: string;
   cover_subtopic?: string;
@@ -151,12 +234,27 @@ export type Book = {
   cover_layout_key?: string;
   cover_motif?: string;
   cover_lab_version?: string;
+  cover_pair_score?: number;
+  cover_rejection_reasons?: Record<string, string[]>;
+  front_render_mode?: string;
+  front_ai_attempt_count?: number;
+  front_text_validation_score?: number;
+  front_visual_grade?: number;
+  front_genre_fit_score?: number;
+  front_hard_reject_reasons?: string[];
+  selected_cover_confidence?: number;
   isbn?: string;
   year?: string;
   fast?: boolean;
+  book_length_mode?: string;
   book_length_tier?: string;
+  chapter_generation_mode?: string;
   target_word_count_min?: number;
   target_word_count_max?: number;
+  chapter_target_words?: number;
+  book_target_words?: number;
+  book_generation_complete?: boolean;
+  opening_sequence_valid?: boolean | null;
   chapter_plan?: BookChapterPlan[];
   outline_file?: string;
   book_dir?: string;
@@ -235,6 +333,8 @@ export type BookPreview = {
     | "cover_brief"
     | "cover_image"
     | "back_cover_image"
+    | "front_cover_source"
+    | "back_cover_source"
     | "status"
   >;
   preview: {
@@ -270,6 +370,7 @@ export type Settings = {
 
 type ApiOptions = RequestInit & {
   json?: unknown;
+  timeoutMs?: number;
 };
 
 export const BACKEND_PUBLIC_ORIGIN =
@@ -280,7 +381,10 @@ const API_BOOK_PREVIEW_TIMEOUT_MS = 45_000;
 const API_WORKFLOW_TIMEOUT_MS = 240_000;
 const API_BOOKS_BACKOFF_MS = 5_000;
 const API_SETTINGS_BACKOFF_MS = 5_000;
+const API_BOOK_CREATE_RETRY_DELAYS_MS = [1_200, 2_500, 5_000];
+const API_WORKFLOW_RETRY_DELAYS_MS = [700, 1_600, 3_200];
 const API_BOOKS_CACHE_TTL_MS = 2_000;
+const API_BOOKS_STALE_CACHE_TTL_MS = 60_000;
 const API_SETTINGS_CACHE_TTL_MS = 5_000;
 
 let booksUnavailableUntil = 0;
@@ -288,6 +392,7 @@ let settingsUnavailableUntil = 0;
 let booksInFlight: Promise<Book[]> | null = null;
 let settingsInFlight: Promise<Settings> | null = null;
 let booksCache: { value: Book[]; expiresAt: number } | null = null;
+let booksStaleCache: { value: Book[]; expiresAt: number } | null = null;
 let settingsCache: { value: Settings; expiresAt: number } | null = null;
 
 export class BackendUnavailableError extends Error {
@@ -322,6 +427,10 @@ export function isApiRequestError(error: unknown): error is ApiRequestError {
   return error instanceof ApiRequestError;
 }
 
+function isRetryableBackendError(error: unknown) {
+  return isBackendUnavailableError(error) || (isApiRequestError(error) && error.status >= 500);
+}
+
 function readBooksCache() {
   if (!booksCache) return null;
   if (Date.now() >= booksCache.expiresAt) {
@@ -333,10 +442,20 @@ function readBooksCache() {
 
 function writeBooksCache(value: Book[]) {
   booksCache = { value, expiresAt: Date.now() + API_BOOKS_CACHE_TTL_MS };
+  booksStaleCache = { value, expiresAt: Date.now() + API_BOOKS_STALE_CACHE_TTL_MS };
 }
 
 function clearBooksCache() {
   booksCache = null;
+}
+
+function readBooksStaleCache() {
+  if (!booksStaleCache) return null;
+  if (Date.now() >= booksStaleCache.expiresAt) {
+    booksStaleCache = null;
+    return null;
+  }
+  return booksStaleCache.value;
 }
 
 function readSettingsCache() {
@@ -382,6 +501,35 @@ function wait(ms: number) {
   });
 }
 
+async function retryTransientRequest<T>(
+  operation: () => Promise<T>,
+  retryDelays: readonly number[],
+  fallbackMessage: string,
+) {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= retryDelays.length; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      const canRetry = isRetryableBackendError(error) && attempt < retryDelays.length;
+      if (!canRetry) {
+        if (isRetryableBackendError(error)) {
+          throw new BackendUnavailableError(fallbackMessage);
+        }
+        throw error;
+      }
+      await wait(retryDelays[attempt]);
+    }
+  }
+
+  if (isRetryableBackendError(lastError)) {
+    throw new BackendUnavailableError(fallbackMessage);
+  }
+  throw lastError instanceof Error ? lastError : new BackendUnavailableError(fallbackMessage);
+}
+
 async function api<T>(path: string, options: ApiOptions = {}) {
   const headers = new Headers(options.headers || {});
   let body = options.body;
@@ -392,7 +540,7 @@ async function api<T>(path: string, options: ApiOptions = {}) {
 
   let response: Response;
   try {
-    const timeoutMs = timeoutForPath(path);
+    const timeoutMs = options.timeoutMs ?? timeoutForPath(path);
     response = await fetchWithTimeout(`/api/backend${path}`, {
       ...options,
       headers,
@@ -439,6 +587,10 @@ export async function loadBooks() {
   }
 
   if (Date.now() < booksUnavailableUntil) {
+    const staleBooks = readBooksStaleCache();
+    if (staleBooks) {
+      return staleBooks;
+    }
     throw new BackendUnavailableError();
   }
 
@@ -456,12 +608,20 @@ export async function loadBooks() {
     } catch (error) {
       if (isApiRequestError(error)) {
         if (error.status >= 500) {
+          const staleBooks = readBooksStaleCache();
+          if (staleBooks) {
+            return staleBooks;
+          }
           booksUnavailableUntil = Date.now() + API_BOOKS_BACKOFF_MS;
           throw new BackendUnavailableError(error.message);
         }
         return [];
       }
       if (isBackendUnavailableError(error)) {
+        const staleBooks = readBooksStaleCache();
+        if (staleBooks) {
+          return staleBooks;
+        }
         booksUnavailableUntil = Date.now() + API_BOOKS_BACKOFF_MS;
       }
       throw error;
@@ -482,7 +642,11 @@ export async function loadBookPreview(slug: string) {
 }
 
 export async function saveBook(payload: Partial<Book>) {
-  const nextBook = await api<Book>("/api/books", { method: "POST", json: payload });
+  const nextBook = await retryTransientRequest(
+    () => api<Book>("/api/books", { method: "POST", json: payload }),
+    API_BOOK_CREATE_RETRY_DELAYS_MS,
+    "Preview service is waking up. Please wait a few seconds and try Generate again.",
+  );
   clearBooksCache();
   return nextBook;
 }
@@ -585,8 +749,20 @@ export async function saveSettings(payload: Partial<Settings>) {
   return nextSettings;
 }
 
-export async function runWorkflow(payload: Record<string, unknown>) {
-  const result = await api<Record<string, unknown>>("/api/workflows", { method: "POST", json: payload });
+export async function runWorkflow(
+  payload: Record<string, unknown>,
+  options?: { timeoutMs?: number; retryDelaysMs?: readonly number[] },
+) {
+  const result = await retryTransientRequest(
+    () =>
+      api<Record<string, unknown>>("/api/workflows", {
+        method: "POST",
+        json: payload,
+        timeoutMs: options?.timeoutMs,
+      }),
+    options?.retryDelaysMs || API_WORKFLOW_RETRY_DELAYS_MS,
+    "AI suggestions are temporarily warming up. Please try again in a few seconds.",
+  );
   clearBooksCache();
   return result;
 }

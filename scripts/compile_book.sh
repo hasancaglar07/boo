@@ -999,11 +999,13 @@ esac
 
 echo "🔎 Looking for $VERSION_NAME chapters..."
 
+CHAPTER_HEADING_PATTERN='Chapter|Bölüm|Chapitre|Capítulo|Capitulo|Capitolo|Kapitel|Hoofdstuk|الفصل|章'
+
 # -----------------------------
 # Extract chapter numbers from outline
 # -----------------------------
 echo "🔍 Extracting chapter numbers from outline..."
-CHAPTER_NUMS_LIST=$(grep -oEi '(Chapter|Bölüm)[[:space:]]+[0-9]+' "$OUTLINE_FILE" \
+CHAPTER_NUMS_LIST=$(grep -oEi "(${CHAPTER_HEADING_PATTERN})[[:space:]]+[0-9]+" "$OUTLINE_FILE" \
     | awk '{print $2}' \
     | sort -n -u | paste -sd, -)
 
@@ -1063,7 +1065,7 @@ else
     # Autodetect
     echo "🔄 Trying to autodetect chapter files..."
     for file in "$BOOK_DIR"/chapter_*.md; do
-        if [[ -f "$file" && "$file" != *"_review.md" && "$file" != *"_proofed.md" && "$file" != *"_edited.md" && "$file" != *"_final.md" ]]; then
+        if [[ -f "$file" && "$file" != *"_review.md" && "$file" != *"_proofed.md" ]]; then
             CHAPTER_FILES+=("$file")
         fi
     done
@@ -1117,13 +1119,6 @@ if [ -f "$AUTHOR_PHOTO_SRC" ]; then
     cp -f "$AUTHOR_PHOTO_SRC" "$EXPORTS_DIR/$(basename "$AUTHOR_PHOTO_SRC")" 2>/dev/null || true
 fi
 AUTHOR_PHOTO_BASENAME="$(basename "$AUTHOR_PHOTO_SRC")"
-
-# Copy icon photo into exports dir for inclusion in manuscript
-ICON_PHOTO_SRC="$SCRIPT_DIR/icon.png"
-if [ -f "$ICON_PHOTO_SRC" ]; then
-    cp -f "$ICON_PHOTO_SRC" "$EXPORTS_DIR/$(basename "$ICON_PHOTO_SRC")" 2>/dev/null || true
-fi
-ICON_BASENAME="$(basename "$ICON_PHOTO_SRC")"
 
 # Copy the QR code image into exports dir for inclusion in manuscript
 QR_CODE_SRC="$SCRIPT_DIR/qr-code.png"
@@ -1285,23 +1280,86 @@ build_back_cover_manuscript_block() {
     }
 }
 
+build_front_cover_manuscript_block() {
+    local image=""
+
+    if [ -n "$COVER_IMAGE" ] && [ -f "$COVER_IMAGE" ]; then
+        image="$(basename "$COVER_IMAGE")"
+    fi
+
+    [ -z "$image" ] && return 0
+
+    {
+        echo "<!-- PDF_FRONT_COVER_BEGIN -->"
+        echo "\\pagenumbering{gobble}"
+        echo "\\newgeometry{margin=0mm,top=0mm,bottom=0mm,left=0mm,right=0mm}"
+        echo "\\thispagestyle{empty}"
+        echo "\\begin{center}"
+        echo "\\includegraphics[width=\\paperwidth,height=\\paperheight,keepaspectratio=false]{$image}"
+        echo "\\end{center}"
+        echo "\\restoregeometry"
+        echo "\\clearpage"
+        echo "<!-- PDF_FRONT_COVER_END -->"
+        echo
+    }
+}
+
+audit_opening_sequence() {
+    local manuscript_path="$1"
+    local export_dir="$2"
+    local audit_path="$export_dir/opening_sequence_audit.json"
+
+    python3 - "$manuscript_path" "$audit_path" <<'PY'
+import json
+import re
+import sys
+from pathlib import Path
+
+manuscript_path = Path(sys.argv[1])
+audit_path = Path(sys.argv[2])
+text = manuscript_path.read_text(encoding="utf-8", errors="replace")
+chapter_anchor = text.find('<a id="chapter-1"')
+opening = text[:chapter_anchor] if chapter_anchor != -1 else text
+
+errors = []
+if "::: {.pagebreak}" in opening:
+    errors.append("Opening sequence still contains pagebreak blocks before chapter 1.")
+if "::: {.fillspace}" in opening:
+    errors.append("Opening sequence still contains fillspace blocks before chapter 1.")
+if "\\pagebreak" in opening:
+    errors.append("Opening sequence still contains raw \\pagebreak markers before chapter 1.")
+if opening.count("\\newpage") > 1:
+    errors.append("Opening sequence contains too many \\newpage markers before chapter 1.")
+if opening.count("\\clearpage") > 4:
+    errors.append("Opening sequence contains too many \\clearpage markers before chapter 1.")
+if "<!-- PDF_FRONT_COVER_BEGIN -->" in opening and "\\tableofcontents" not in opening:
+    errors.append("Front cover exists but table of contents was not found in the opening sequence.")
+
+payload = {
+    "valid": not errors,
+    "errors": errors,
+}
+audit_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+if errors:
+    for item in errors:
+        print(item, file=sys.stderr)
+    raise SystemExit(1)
+PY
+}
+
+FRONT_COVER_MANUSCRIPT_BLOCK="$(build_front_cover_manuscript_block)"
 BACK_COVER_MANUSCRIPT_BLOCK="$(build_back_cover_manuscript_block)"
 
 cat << EOF > "$MANUSCRIPT_FILE"
+$FRONT_COVER_MANUSCRIPT_BLOCK
 <!-- EPUB_ONLY_BEGIN -->
 # $BOOK_TITLE {.unnumbered .unlisted}
 <!-- EPUB_ONLY_END -->
 \renewcommand{\contentsname}{\Huge $TOC_TITLE}
 \thispagestyle{empty}
-\newpage
-\thispagestyle{empty}
-\clearpage\vspace*{\fill}
 
 ::: {.centered}
 \centering
-
-$(if [ -f "$EXPORTS_DIR/$ICON_BASENAME" ]; then echo "![]($ICON_BASENAME){ width=40% } "; fi)
-
 \raggedright
 \flushleft
 :::
@@ -1328,24 +1386,9 @@ $(if [ -f "$EXPORTS_DIR/$ICON_BASENAME" ]; then echo "![]($ICON_BASENAME){ width
 #### Copyright © $PUBLICATION_YEAR {.unnumbered .unlisted}
 <!-- EPUB_ONLY_END -->
 
-\centering
-\centering
-::: {.logo}
-$(if [ -f "$EXPORTS_DIR/playfulpath.png" ]; then echo "![](playfulpath.png){ width=40% } "; fi)
-:::
-\raggedright
-\flushleft
-\vspace*{\fill}\clearpage
+\clearpage
 
-\newpage
-
-::: {.pagebreak}
-:::
-::: {.fillspace}
-:::
 ::: {.copyright}
-
-\clearpage\vspace*{\fill}
 \centering
 $(if [ -f "$EXPORTS_DIR/$LOGO_BASENAME" ]; then echo "![]($LOGO_BASENAME){ width=25% } "; fi)
 
@@ -1363,28 +1406,12 @@ All rights reserved. No part of this publication may be reproduced, distributed,
 \flushleft
 :::
 
-\newpage
 \clearpage
 
 \setcounter{tocdepth}{2}
 \tableofcontents
 
-\newpage
 \clearpage
-\pagebreak
-\newpage
-\clearpage\vspace*{\fill}
-\pagestyle{empty}
-\clearpage
-
-::: {.pagebreak}
-:::
-
-::: {.newpage}
-:::
-
-::: {.fillspace}
-:::
 
 EOF
 
@@ -1421,11 +1448,11 @@ for CHAPTER_FILE in "${CHAPTER_FILES[@]}"; do
 
     # Look up chapter display title from the outline to avoid duplicated titles
     # First try markdown format (### Chapter/Bölüm N: Title)
-    outline_line=$(grep -i -m1 -E "^###[[:space:]]+(Chapter|Bölüm)[[:space:]]+${CHAPTER_NUM}[:\. ]" "$OUTLINE_FILE" || true)
+    outline_line=$(grep -i -m1 -E "^###[[:space:]]+(${CHAPTER_HEADING_PATTERN})[[:space:]]+${CHAPTER_NUM}[:\. ]" "$OUTLINE_FILE" || true)
     
     # If not found, try older formats
     if [ -z "$outline_line" ]; then
-        outline_line=$(grep -i -m1 -E "(Chapter|Bölüm)[[:space:]]+${CHAPTER_NUM}[:\. -]*.*" "$OUTLINE_FILE" || true)
+        outline_line=$(grep -i -m1 -E "(${CHAPTER_HEADING_PATTERN})[[:space:]]+${CHAPTER_NUM}[:\. -]*.*" "$OUTLINE_FILE" || true)
     fi
     
     if [ -n "$outline_line" ]; then
@@ -1433,14 +1460,14 @@ for CHAPTER_FILE in "${CHAPTER_FILES[@]}"; do
         DISPLAY_TITLE=$(echo "$outline_line" | sed 's/^###[[:space:]]*//')
         
         # Then clean up the title
-        DISPLAY_TITLE=$(echo "$DISPLAY_TITLE" | sed -E 's/^[[:space:]]*(Chapter|Bölüm)[[:space:]]+'${CHAPTER_NUM}'[:\. -]*//I; s/^[[:space:]]*'${CHAPTER_NUM}'[\.)[:space:]-]*//')
-        DISPLAY_TITLE=$(echo "$DISPLAY_TITLE" | sed -E 's/^[[:space:]]*(Chapter|Bölüm)[[:space:]]*[0-9]+[:\. -]*//I; s/^[[:space:]]*[0-9]+[\.)[:space:]-]*//')
+        DISPLAY_TITLE=$(echo "$DISPLAY_TITLE" | sed -E 's/^[[:space:]]*('"${CHAPTER_HEADING_PATTERN}"')[[:space:]]+'${CHAPTER_NUM}'[:\. -]*//I; s/^[[:space:]]*'${CHAPTER_NUM}'[\.)[:space:]-]*//')
+        DISPLAY_TITLE=$(echo "$DISPLAY_TITLE" | sed -E 's/^[[:space:]]*('"${CHAPTER_HEADING_PATTERN}"')[[:space:]]*[0-9]+[:\. -]*//I; s/^[[:space:]]*[0-9]+[\.)[:space:]-]*//')
         DISPLAY_TITLE=$(echo "$DISPLAY_TITLE" | sed 's/^ *//; s/ *$//')
         [ -z "$DISPLAY_TITLE" ] && DISPLAY_TITLE="${CHAPTER_LABEL} ${CHAPTER_NUM}"
     else
         DISPLAY_TITLE="${CHAPTER_LABEL} ${CHAPTER_NUM}"
     fi
-    CLEAN_CHAPTER_TITLE=$(echo "$DISPLAY_TITLE" | sed -E "s/^(Chapter|Bölüm) ${CHAPTER_NUM}: //; s/^(Chapter|Bölüm) ${CHAPTER_NUM} //")
+    CLEAN_CHAPTER_TITLE=$(echo "$DISPLAY_TITLE" | sed -E "s/^(${CHAPTER_HEADING_PATTERN}) ${CHAPTER_NUM}: //I; s/^(${CHAPTER_HEADING_PATTERN}) ${CHAPTER_NUM} //I")
 
     # Split chapter title at first colon to create H1/H2/H3 structure
     if [[ "$CLEAN_CHAPTER_TITLE" == *":"* ]]; then
@@ -2096,6 +2123,7 @@ generate_ebook_format() {
                 /<!-- EPUB_ONLY_BEGIN -->/d  
                 /<!-- EPUB_ONLY_END -->/d
             ' "$epub_tmp_input" 2>/dev/null || true
+            sed -i.bak '/<!-- PDF_FRONT_COVER_BEGIN -->/,/<!-- PDF_FRONT_COVER_END -->/d' "$epub_tmp_input" 2>/dev/null || true
 
             # Update input_basename to use the EPUB-specific version
             if [ -f "$epub_tmp_input" ]; then
@@ -2350,12 +2378,16 @@ EOF
             
             # CSS file should already be in the output directory
             local css_basename=$(basename "$css")
+            local html_tmp_input="${output_dir}/$(basename "$input_file" .md)_html.md"
+            cp "$input_file" "$html_tmp_input"
+            sed -i.bak '/<!-- EPUB_ONLY_BEGIN -->/,/<!-- EPUB_ONLY_END -->/d' "$html_tmp_input" 2>/dev/null || true
+            sed -i.bak '/<!-- PDF_FRONT_COVER_BEGIN -->/,/<!-- PDF_FRONT_COVER_END -->/d' "$html_tmp_input" 2>/dev/null || true
             
             (cd "$output_dir" && pandoc -f markdown -t html5 \
                 --standalone \
                 --metadata-file="$(basename "$metadata")" \
                 --css="$css_basename" \
-                -o "$(basename "$output_file")" "$(basename "$input_file")")
+                -o "$(basename "$output_file")" "$(basename "$html_tmp_input")")
             
             echo "✅ HTML created: $(basename "$output_file")"
             return 0
@@ -2489,6 +2521,10 @@ if grep -q "\\n\\newpage\\n" "$MANUSCRIPT_FILE" 2>/dev/null; then
     perl -0777 -pe 's/\\n\\newpage\\n/\\\\newpage\n/g' -i "$MANUSCRIPT_FILE"
     echo "   ✅ Fixed escaped page-break sequences"
 fi
+
+echo "🔎 Auditing opening sequence..."
+audit_opening_sequence "$MANUSCRIPT_FILE" "$EXPORTS_DIR"
+echo "   ✅ Opening sequence audit passed"
 
 # Export in requested format(s)
 case $OUTPUT_FORMAT in

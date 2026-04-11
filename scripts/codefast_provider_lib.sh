@@ -42,6 +42,54 @@ codefast_has_api_key() {
     [ -n "$(resolve_codefast_api_key 2>/dev/null || true)" ]
 }
 
+resolve_vertex_api_key() {
+    local value=""
+    for value in \
+        "${GOOGLE_API_KEY:-}" \
+        "${VERTEX_API_KEY:-}" \
+        "${GOOGLE_GENAI_API_KEY:-}"
+    do
+        if [ -n "$value" ]; then
+            printf '%s\n' "$value"
+            return 0
+        fi
+    done
+    return 1
+}
+
+codefast_has_vertex_api_key() {
+    [ -n "$(resolve_vertex_api_key 2>/dev/null || true)" ]
+}
+
+resolve_vertex_project_id() {
+    local value=""
+    for value in \
+        "${GOOGLE_CLOUD_PROJECT:-}" \
+        "${GOOGLE_PROJECT_ID:-}" \
+        "${VERTEX_PROJECT_ID:-}"
+    do
+        if [ -n "$value" ]; then
+            printf '%s\n' "$value"
+            return 0
+        fi
+    done
+    return 1
+}
+
+resolve_vertex_location() {
+    local value=""
+    for value in \
+        "${GOOGLE_CLOUD_LOCATION:-}" \
+        "${VERTEX_LOCATION:-}"
+    do
+        if [ -n "$value" ]; then
+            printf '%s\n' "$value"
+            return 0
+        fi
+    done
+    printf '%s\n' "us-central1"
+}
+
 normalize_base_url() {
     local url="$1"
     url="${url%/}"
@@ -50,7 +98,9 @@ normalize_base_url() {
 
 codefast_provider_label() {
     case "$1" in
+        claude-main) echo "Claude Sonnet Codefast" ;;
         glm-main) echo "GLM Codefast" ;;
+        vertex-main) echo "Vertex Gemini" ;;
         *) echo "$1" ;;
     esac
 }
@@ -58,6 +108,7 @@ codefast_provider_label() {
 codefast_provider_daily_limit() {
     case "$1" in
         # GLM text provider must stay unlimited in this project.
+        claude-main) echo "0" ;;
         glm-main) echo "0" ;;
         *) echo 0 ;;
     esac
@@ -155,7 +206,9 @@ codefast_provider_remaining() {
 }
 
 codefast_text_provider_ids() {
+    printf '%s\n' "claude-main"
     printf '%s\n' "glm-main"
+    printf '%s\n' "vertex-main"
 }
 
 codefast_text_provider_order() {
@@ -164,20 +217,40 @@ codefast_text_provider_order() {
         return 0
     fi
 
-    printf '%s\n' "glm-main"
+    printf '%s\n' "claude-main glm-main vertex-main"
 }
 
 codefast_text_provider_base_url() {
     case "$1" in
-        glm-main) echo "https://claudecode2.codefast.app" ;;
+        claude-main) echo "${CODEFAST_CLAUDE_BASE_URL:-https://claudecode.codefast.app}" ;;
+        glm-main) echo "${CODEFAST_GLM_BASE_URL:-https://claudecode2.codefast.app}" ;;
+        vertex-main) echo "https://aiplatform.googleapis.com/v1" ;;
         *) echo "" ;;
     esac
 }
 
 codefast_text_provider_protocol() {
     case "$1" in
+        claude-main) echo "anthropic" ;;
         glm-main) echo "anthropic" ;;
+        vertex-main) echo "vertex_gemini" ;;
         *) echo "" ;;
+    esac
+}
+
+codefast_paired_fallback_model() {
+    case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
+        glm-5.1) echo "GLM-5-Turbo" ;;
+        glm-5-turbo) echo "GLM-5.1" ;;
+        *) echo "GLM-5-Turbo" ;;
+    esac
+}
+
+codefast_vertex_paired_fallback_model() {
+    case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
+        gemini-2.5-flash-lite) echo "gemini-2.5-flash" ;;
+        gemini-2.5-flash) echo "gemini-2.5-flash-lite" ;;
+        *) echo "gemini-2.5-flash" ;;
     esac
 }
 
@@ -186,11 +259,180 @@ codefast_text_provider_model() {
     local task_type="${2:-general}"
 
     case "$provider_id" in
+        claude-main)
+            case "$task_type" in
+                chapter_segment)
+                    echo "${CODEFAST_CLAUDE_CHAPTER_SEGMENT_MODEL:-claude-sonnet-4-6}"
+                    ;;
+                chapter_extension)
+                    echo "${CODEFAST_CLAUDE_CHAPTER_EXTENSION_MODEL:-${CODEFAST_CLAUDE_CHAPTER_SEGMENT_MODEL:-claude-sonnet-4-6}}"
+                    ;;
+                outline)
+                    echo "${CODEFAST_CLAUDE_OUTLINE_MODEL:-claude-sonnet-4-6}"
+                    ;;
+                creative)
+                    echo "${CODEFAST_CLAUDE_CREATIVE_MODEL:-claude-sonnet-4-6}"
+                    ;;
+                quality_check)
+                    echo "${CODEFAST_CLAUDE_QUALITY_MODEL:-claude-sonnet-4-6}"
+                    ;;
+                analytical)
+                    echo "${CODEFAST_CLAUDE_ANALYTICAL_MODEL:-claude-sonnet-4-6}"
+                    ;;
+                *)
+                    echo "${CODEFAST_CLAUDE_TEXT_MODEL:-claude-sonnet-4-6}"
+                    ;;
+            esac
+            ;;
         glm-main)
-            echo "GLM-5.1"
+            case "$task_type" in
+                chapter_segment)
+                    echo "${CODEFAST_CHAPTER_SEGMENT_MODEL:-GLM-5.1}"
+                    ;;
+                chapter_extension)
+                    echo "${CODEFAST_CHAPTER_EXTENSION_MODEL:-${CODEFAST_CHAPTER_SEGMENT_MODEL:-${CODEFAST_CREATIVE_MODEL:-GLM-5.1}}}"
+                    ;;
+                outline)
+                    echo "${CODEFAST_OUTLINE_MODEL:-GLM-5.1}"
+                    ;;
+                creative)
+                    echo "${CODEFAST_CREATIVE_MODEL:-GLM-5.1}"
+                    ;;
+                quality_check)
+                    echo "${CODEFAST_QUALITY_MODEL:-GLM-5.1}"
+                    ;;
+                analytical)
+                    echo "${CODEFAST_ANALYTICAL_MODEL:-GLM-5.1}"
+                    ;;
+                *)
+                    echo "${CODEFAST_TEXT_MODEL:-GLM-5.1}"
+                    ;;
+            esac
+            ;;
+        vertex-main)
+            case "$task_type" in
+                chapter_segment)
+                    echo "${CODEFAST_VERTEX_CHAPTER_SEGMENT_MODEL:-${CODEFAST_VERTEX_CREATIVE_MODEL:-gemini-2.5-flash-lite}}"
+                    ;;
+                chapter_extension)
+                    echo "${CODEFAST_VERTEX_CHAPTER_EXTENSION_MODEL:-${CODEFAST_VERTEX_CHAPTER_SEGMENT_MODEL:-${CODEFAST_VERTEX_CREATIVE_MODEL:-gemini-2.5-flash-lite}}}"
+                    ;;
+                outline)
+                    echo "${CODEFAST_VERTEX_OUTLINE_MODEL:-gemini-2.5-flash-lite}"
+                    ;;
+                creative)
+                    echo "${CODEFAST_VERTEX_CREATIVE_MODEL:-gemini-2.5-flash-lite}"
+                    ;;
+                quality_check)
+                    echo "${CODEFAST_VERTEX_QUALITY_MODEL:-gemini-2.5-flash-lite}"
+                    ;;
+                analytical)
+                    echo "${CODEFAST_VERTEX_ANALYTICAL_MODEL:-gemini-2.5-flash-lite}"
+                    ;;
+                *)
+                    echo "${CODEFAST_VERTEX_TEXT_MODEL:-gemini-2.5-flash-lite}"
+                    ;;
+            esac
             ;;
         *)
             echo ""
+            ;;
+    esac
+}
+
+codefast_text_provider_fallback_model() {
+    local provider_id="$1"
+    local task_type="${2:-general}"
+    local primary_model=""
+    local default_fallback=""
+
+    primary_model="$(codefast_text_provider_model "$provider_id" "$task_type")"
+    case "$provider_id" in
+        glm-main)
+            default_fallback="$(codefast_paired_fallback_model "$primary_model")"
+            ;;
+        vertex-main)
+            default_fallback="$(codefast_vertex_paired_fallback_model "$primary_model")"
+            ;;
+        *)
+            default_fallback=""
+            ;;
+    esac
+
+    case "$provider_id:$task_type" in
+        claude-main:chapter_segment)
+            echo "${CODEFAST_CLAUDE_CHAPTER_SEGMENT_FALLBACK_MODEL:-}"
+            ;;
+        claude-main:chapter_extension)
+            echo "${CODEFAST_CLAUDE_CHAPTER_EXTENSION_FALLBACK_MODEL:-${CODEFAST_CLAUDE_CHAPTER_SEGMENT_FALLBACK_MODEL:-}}"
+            ;;
+        claude-main:outline)
+            echo "${CODEFAST_CLAUDE_OUTLINE_FALLBACK_MODEL:-}"
+            ;;
+        claude-main:creative)
+            echo "${CODEFAST_CLAUDE_CREATIVE_FALLBACK_MODEL:-}"
+            ;;
+        claude-main:quality_check)
+            echo "${CODEFAST_CLAUDE_QUALITY_FALLBACK_MODEL:-}"
+            ;;
+        claude-main:analytical)
+            echo "${CODEFAST_CLAUDE_ANALYTICAL_FALLBACK_MODEL:-}"
+            ;;
+        claude-main:chapter_rewrite)
+            echo "${CODEFAST_CLAUDE_REWRITE_FALLBACK_MODEL:-}"
+            ;;
+        glm-main:chapter_segment)
+            echo "${CODEFAST_CHAPTER_SEGMENT_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        glm-main:chapter_extension)
+            echo "${CODEFAST_CHAPTER_EXTENSION_FALLBACK_MODEL:-${CODEFAST_CHAPTER_SEGMENT_FALLBACK_MODEL:-$default_fallback}}"
+            ;;
+        glm-main:outline)
+            echo "${CODEFAST_OUTLINE_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        glm-main:creative)
+            echo "${CODEFAST_CREATIVE_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        glm-main:quality_check)
+            echo "${CODEFAST_QUALITY_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        glm-main:analytical)
+            echo "${CODEFAST_ANALYTICAL_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        glm-main:chapter_rewrite)
+            echo "${CODEFAST_REWRITE_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        vertex-main:chapter_segment)
+            echo "${CODEFAST_VERTEX_CHAPTER_SEGMENT_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        vertex-main:chapter_extension)
+            echo "${CODEFAST_VERTEX_CHAPTER_EXTENSION_FALLBACK_MODEL:-${CODEFAST_VERTEX_CHAPTER_SEGMENT_FALLBACK_MODEL:-$default_fallback}}"
+            ;;
+        vertex-main:outline)
+            echo "${CODEFAST_VERTEX_OUTLINE_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        vertex-main:creative)
+            echo "${CODEFAST_VERTEX_CREATIVE_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        vertex-main:quality_check)
+            echo "${CODEFAST_VERTEX_QUALITY_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        vertex-main:analytical)
+            echo "${CODEFAST_VERTEX_ANALYTICAL_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        vertex-main:chapter_rewrite)
+            echo "${CODEFAST_VERTEX_REWRITE_FALLBACK_MODEL:-$default_fallback}"
+            ;;
+        *)
+            if [ "$provider_id" = "claude-main" ]; then
+                echo "${CODEFAST_CLAUDE_TEXT_FALLBACK_MODEL:-}"
+            elif [ "$provider_id" = "glm-main" ]; then
+                echo "${CODEFAST_TEXT_FALLBACK_MODEL:-$default_fallback}"
+            elif [ "$provider_id" = "vertex-main" ]; then
+                echo "${CODEFAST_VERTEX_TEXT_FALLBACK_MODEL:-$default_fallback}"
+            else
+                echo "$default_fallback"
+            fi
             ;;
     esac
 }
@@ -240,7 +482,11 @@ codefast_mark_limit_if_needed() {
 
 codefast_forced_provider_for_model() {
     case "$1" in
+        claude-*|Claude-*)
+            echo "claude-main"
+            ;;
         GLM-5.1) echo "glm-main" ;;
+        gemini-*) echo "vertex-main" ;;
         *)
             echo ""
             ;;

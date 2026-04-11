@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { FunnelDraft } from "@/lib/funnel-draft";
-import type { TitleOption } from "@/components/funnel/hooks/use-title-ai";
+import type { TitleOption, TitleSuggestionSource } from "@/components/funnel/hooks/use-title-ai";
 
 export function TitleStep({
   draft,
@@ -17,7 +17,11 @@ export function TitleStep({
   onAiSuggest,
   onSubtitleAi,
   aiLoading,
+  suggestionSource,
+  suggestionIsRefining,
   appShell,
+  onDraftTouched,
+  onSuggestionApplied,
 }: {
   draft: FunnelDraft;
   onUpdate: (changes: Partial<FunnelDraft>) => void;
@@ -28,8 +32,19 @@ export function TitleStep({
   onAiSuggest: () => Promise<void>;
   onSubtitleAi: () => Promise<void>;
   aiLoading: "" | "title";
+  suggestionSource: TitleSuggestionSource;
+  suggestionIsRefining: boolean;
   appShell: boolean;
+  onDraftTouched: () => void;
+  onSuggestionApplied: () => void;
 }) {
+  const suggestionStatusLabel =
+    suggestionSource === "glm_refined"
+      ? "AI refined"
+      : suggestionIsRefining
+        ? "AI is refining"
+        : "Fast suggestions ready";
+
   return (
     <form
       id="wizard-form"
@@ -62,7 +77,10 @@ export function TitleStep({
         <Input
           id="title"
           value={draft.title}
-          onChange={(event) => onUpdate({ title: event.target.value })}
+          onChange={(event) => {
+            onDraftTouched();
+            onUpdate({ title: event.target.value });
+          }}
           placeholder="Write your book title..."
           className="h-14 sm:h-16 text-lg sm:text-xl font-semibold rounded-2xl px-5"
           autoFocus
@@ -72,9 +90,14 @@ export function TitleStep({
       {/* ── AI-generated title option cards ── */}
       {titleOptions.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">
-            AI Suggestions
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-medium text-muted-foreground">
+              AI Suggestions
+            </p>
+            <span className="rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+              {suggestionStatusLabel}
+            </span>
+          </div>
           <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-none">
             {titleOptions.map((option) => {
               const isSelected =
@@ -85,6 +108,8 @@ export function TitleStep({
                 <button
                   key={`${option.title}-${option.subtitle}`}
                   type="button"
+                  aria-pressed={isSelected}
+                  title={isSelected ? "Selected suggestion" : "Apply this suggestion"}
                   className={`
                     group shrink-0 snap-start text-left
                     rounded-2xl border px-5 py-4 min-w-[200px]
@@ -95,9 +120,10 @@ export function TitleStep({
                         : "border-border/60 bg-card hover:border-primary/40"
                     }
                   `}
-                  onClick={() =>
+                  onClick={() => {
+                    onSuggestionApplied();
                     onUpdate({ title: option.title, subtitle: option.subtitle })
-                  }
+                  }}
                 >
                   <div className="text-base sm:text-lg font-medium text-foreground leading-snug whitespace-nowrap">
                     {option.title}
@@ -107,6 +133,9 @@ export function TitleStep({
                       {option.subtitle}
                     </div>
                   ) : null}
+                  <div className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground/55">
+                    {isSelected ? "Selected" : "Tap to apply"}
+                  </div>
                 </button>
               );
             })}
@@ -140,7 +169,10 @@ export function TitleStep({
         <Textarea
           id="subtitle"
           value={draft.subtitle}
-          onChange={(event) => onUpdate({ subtitle: event.target.value })}
+          onChange={(event) => {
+            onDraftTouched();
+            onUpdate({ subtitle: event.target.value });
+          }}
           placeholder="Add subtitle (optional)..."
           rows={3}
           className="min-h-[120px] text-base sm:text-lg font-medium rounded-2xl px-5 py-4 resize-none"

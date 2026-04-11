@@ -42,80 +42,94 @@ LANGUAGE_LABELS = {
 PALETTES = {
     "business-playbook": [
         {
-            "spineColor": "#0f172a",
-            "coverGradient": "linear-gradient(145deg,#f1c27a 0%,#6e4228 54%,#17110f 100%)",
-            "accentColor": "#f1c27a",
-            "textAccent": "#fff8ef",
+            "spineColor": "#d5652d",
+            "coverGradient": "linear-gradient(160deg,#fff3e6 0%,#ffb067 52%,#f46d32 100%)",
+            "accentColor": "#ef7d32",
+            "textAccent": "#1b1b1b",
         },
         {
-            "spineColor": "#10213a",
-            "coverGradient": "linear-gradient(145deg,#d8b36b 0%,#4a2d1f 48%,#101722 100%)",
-            "accentColor": "#d8b36b",
-            "textAccent": "#fff9f2",
+            "spineColor": "#d05b25",
+            "coverGradient": "linear-gradient(160deg,#fff7ef 0%,#ffc47e 52%,#ff7f3f 100%)",
+            "accentColor": "#d05b25",
+            "textAccent": "#161616",
         },
     ],
     "education-book": [
         {
-            "spineColor": "#143b4d",
-            "coverGradient": "linear-gradient(145deg,#f0cf7f 0%,#3e7b9a 52%,#12212d 100%)",
-            "accentColor": "#f0cf7f",
-            "textAccent": "#fffdf8",
+            "spineColor": "#2a86ab",
+            "coverGradient": "linear-gradient(160deg,#fff9e9 0%,#8ad0ef 55%,#3aa6d0 100%)",
+            "accentColor": "#ffbe55",
+            "textAccent": "#14212b",
         },
         {
-            "spineColor": "#28465c",
-            "coverGradient": "linear-gradient(145deg,#ffd38f 0%,#5f94aa 55%,#172534 100%)",
-            "accentColor": "#ffd38f",
-            "textAccent": "#fffdf7",
+            "spineColor": "#347ca5",
+            "coverGradient": "linear-gradient(160deg,#fffdf4 0%,#9dd8ef 52%,#5baed1 100%)",
+            "accentColor": "#f5b64d",
+            "textAccent": "#13202b",
         },
     ],
     "expertise-guide": [
         {
-            "spineColor": "#1d2030",
-            "coverGradient": "linear-gradient(145deg,#e4c487 0%,#53406d 52%,#17131f 100%)",
-            "accentColor": "#e4c487",
-            "textAccent": "#fff9f1",
+            "spineColor": "#244b72",
+            "coverGradient": "linear-gradient(160deg,#faf4eb 0%,#d7ba72 48%,#5e8ec2 100%)",
+            "accentColor": "#c99737",
+            "textAccent": "#1a1a1a",
         },
         {
-            "spineColor": "#2a2038",
-            "coverGradient": "linear-gradient(145deg,#ddb777 0%,#73537c 52%,#1c1724 100%)",
-            "accentColor": "#ddb777",
-            "textAccent": "#fff8f0",
+            "spineColor": "#31557a",
+            "coverGradient": "linear-gradient(160deg,#fff8ee 0%,#e1c07a 48%,#729dcb 100%)",
+            "accentColor": "#b8862c",
+            "textAccent": "#181818",
         },
     ],
     "ai-workflow-guide": [
         {
-            "spineColor": "#0f2536",
-            "coverGradient": "linear-gradient(145deg,#87d3f3 0%,#22465e 48%,#10141b 100%)",
-            "accentColor": "#87d3f3",
-            "textAccent": "#f4fbff",
+            "spineColor": "#227a99",
+            "coverGradient": "linear-gradient(160deg,#eefaff 0%,#86dbff 52%,#33a7d6 100%)",
+            "accentColor": "#1f89b3",
+            "textAccent": "#111827",
         },
         {
-            "spineColor": "#122b3d",
-            "coverGradient": "linear-gradient(145deg,#65c6f5 0%,#314f73 54%,#11151c 100%)",
-            "accentColor": "#65c6f5",
-            "textAccent": "#f4fbff",
+            "spineColor": "#1e7190",
+            "coverGradient": "linear-gradient(160deg,#f3fcff 0%,#a1e6ff 50%,#4fbce6 100%)",
+            "accentColor": "#15779d",
+            "textAccent": "#121a23",
         },
     ],
     "personal-development": [
         {
-            "spineColor": "#352440",
-            "coverGradient": "linear-gradient(145deg,#f3c89c 0%,#6d4d78 50%,#19151f 100%)",
-            "accentColor": "#f3c89c",
-            "textAccent": "#fff8f2",
+            "spineColor": "#8d6a7f",
+            "coverGradient": "linear-gradient(160deg,#fbf4ee 0%,#efc6a3 48%,#caa7be 100%)",
+            "accentColor": "#c07c52",
+            "textAccent": "#1d1a1e",
         },
         {
-            "spineColor": "#40304d",
-            "coverGradient": "linear-gradient(145deg,#f0d0aa 0%,#78648a 55%,#1b1820 100%)",
-            "accentColor": "#f0d0aa",
-            "textAccent": "#fff9f4",
+            "spineColor": "#947485",
+            "coverGradient": "linear-gradient(160deg,#fff7f1 0%,#f2d4b1 48%,#cfb4c7 100%)",
+            "accentColor": "#bb8359",
+            "textAccent": "#1c1a1e",
+        },
+    ],
+    "narrative-fiction": [
+        {
+            "spineColor": "#3d4568",
+            "coverGradient": "linear-gradient(160deg,#f9efe5 0%,#d8ab78 34%,#5f5d88 100%)",
+            "accentColor": "#d07a47",
+            "textAccent": "#17161b",
+        },
+        {
+            "spineColor": "#4f496b",
+            "coverGradient": "linear-gradient(160deg,#fff6ec 0%,#e5bf96 34%,#746792 100%)",
+            "accentColor": "#c86f43",
+            "textAccent": "#16151a",
         },
     ],
     "children-illustrated": [
         {
-            "spineColor": "#1d3d67",
-            "coverGradient": "linear-gradient(145deg,#ffd56f 0%,#5b90d2 50%,#163050 100%)",
-            "accentColor": "#ffd56f",
-            "textAccent": "#fffef8",
+            "spineColor": "#438dc4",
+            "coverGradient": "linear-gradient(160deg,#fff7bf 0%,#ffb96a 48%,#62b6e8 100%)",
+            "accentColor": "#ffb23f",
+            "textAccent": "#1f2430",
         }
     ],
 }
@@ -173,6 +187,8 @@ def detect_category(meta: dict[str, Any], title: str, subtitle: str, summary: st
         return "Children Illustrated"
     if any(keyword in source for keyword in ("storybook", "picture book", "illustrated tale", "fairy tale", "masal", "resimli hikaye")):
         return "Children Illustrated"
+    if any(keyword in source for keyword in ("fiction", "novel", "roman", "hikaye", "istasyon", "tren", "station", "railway drama", "literary fiction")):
+        return "Narrative Fiction"
     if any(keyword in source for keyword in ("stem", "teach", "education", "lesson", "course", "öğret", "eğitim")):
         return "Education Book"
     if any(keyword in source for keyword in ("ai", "prompt", "workflow", "system", "automation", "yapay zeka")):
@@ -191,6 +207,7 @@ def default_tone(category: str) -> str:
         "Expertise Guide": "Mentor Guide",
         "AI Workflow Guide": "Systems Manual",
         "Personal Development": "Calm Executive Brief",
+        "Narrative Fiction": "Narrative Story",
         "Children Illustrated": "Story-led Manifesto",
     }
     return mapping.get(category, "Operator Playbook")
@@ -203,6 +220,7 @@ def palette_key(category: str) -> str:
         "Expertise Guide": "expertise-guide",
         "AI Workflow Guide": "ai-workflow-guide",
         "Personal Development": "personal-development",
+        "Narrative Fiction": "narrative-fiction",
         "Children Illustrated": "children-illustrated",
     }.get(category, "business-playbook")
 
@@ -215,6 +233,21 @@ def pick_palette(category: str, slug: str) -> dict[str, str]:
 
 def language_label(language_code: str) -> str:
     return LANGUAGE_LABELS.get(language_code, language_code or "English")
+
+
+def sanitize_placeholder_name(value: str) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    lowered = text.casefold()
+    if lowered in {
+        "book creator",
+        "book generator",
+        "studio author",
+        "studio press",
+    }:
+        return ""
+    return text
 
 
 def load_entry(book_dir: Path) -> dict[str, Any]:
@@ -231,16 +264,21 @@ def load_entry(book_dir: Path) -> dict[str, Any]:
         normalized_brief = cover_brief.lower()
         if normalized_prompt not in normalized_brief:
             cover_brief = f"{cover_prompt}. {cover_brief}".strip()
+    author = sanitize_placeholder_name(str(meta.get("author") or ""))
+    publisher = sanitize_placeholder_name(str(meta.get("publisher") or ""))
+    branding_mark = str(meta.get("branding_mark") or "").strip()
+    if not branding_mark and publisher:
+        branding_mark = publisher[:3].upper()
     entry = {
         "slug": book_dir.name,
         "title": title,
         "subtitle": subtitle,
-        "author": str(meta.get("author") or "").strip() or "Studio Author",
-        "publisher": str(meta.get("publisher") or "").strip() or "Studio Press",
+        "author": author,
+        "publisher": publisher,
         "summary": summary,
         "authorBio": str(meta.get("author_bio") or "").strip(),
         "coverBrief": cover_brief,
-        "brandingMark": str(meta.get("branding_mark") or "").strip() or str(meta.get("publisher") or "SP")[:3].upper(),
+        "brandingMark": branding_mark,
         "languageCode": language,
         "languageLabel": language_label(language),
         "category": category,
@@ -255,6 +293,12 @@ def load_entry(book_dir: Path) -> dict[str, Any]:
         "coverTemplateHint": str(meta.get("cover_template") or "").strip(),
         "titleTone": str(meta.get("title_tone") or "").strip(),
         "coverHierarchy": str(meta.get("cover_hierarchy") or "").strip(),
+        "coverStyleMode": str(meta.get("cover_style_mode") or "").strip() or "bookstore_bold",
+        "backCoverMode": str(meta.get("back_cover_mode") or "").strip() or "minimal_blurb",
+        "coverMode": str(meta.get("cover_mode") or "").strip() or "full_ai_front",
+        "styleDirection": str(meta.get("style_direction") or "").strip() or "genre_split",
+        "wrapScope": str(meta.get("wrap_scope") or "").strip() or "ai_front_only",
+        "qualityGate": str(meta.get("quality_gate") or "").strip() or "best_available",
         "book_type": str(meta.get("book_type") or meta.get("bookType") or "").strip(),
         "coverBranch": str(meta.get("cover_branch") or "").strip(),
         "coverGenre": str(meta.get("cover_genre") or "").strip(),

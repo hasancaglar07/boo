@@ -1328,6 +1328,23 @@ export async function getAdminBookDetail(slug: string) {
     }),
   ]);
 
+  const pipelineActivity = Array.isArray(book?.status?.activity_log)
+    ? book.status.activity_log.map((item, index) => ({
+        id: `pipeline-${index}-${item.code || "event"}`,
+        action: item.label || item.code || "Pipeline event",
+        createdAt: String(item.timestamp || record?.createdAt.toISOString() || new Date().toISOString()),
+        actor: "Pipeline",
+        metadata: item.detail ? { detail: item.detail, status: item.status, code: item.code } : { status: item.status, code: item.code },
+      }))
+    : [];
+  const mergedActivity = [...pipelineActivity, ...auditLogs.map((item) => ({
+    id: item.id,
+    action: item.action,
+    createdAt: item.createdAt.toISOString(),
+    actor: item.actorUser?.email || item.actorUser?.name || "Sistem",
+    metadata: item.metadata,
+  }))].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+
   return {
     item: {
       slug,
@@ -1368,13 +1385,7 @@ export async function getAdminBookDetail(slug: string) {
         createdAt: note.createdAt.toISOString(),
         author: note.createdByUser.email || note.createdByUser.name || "Admin",
       })),
-      activity: auditLogs.map((item) => ({
-        id: item.id,
-        action: item.action,
-        createdAt: item.createdAt.toISOString(),
-        actor: item.actorUser?.email || item.actorUser?.name || "Sistem",
-        metadata: item.metadata,
-      })),
+      activity: mergedActivity,
     },
     permissions: {
       canUnlockPremium: Boolean(record?.ownerUserId),

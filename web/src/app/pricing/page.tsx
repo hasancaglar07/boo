@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
-import { ShieldCheck, Check, ArrowRight, Zap, BookOpen, Layers, Sparkles, X } from "lucide-react";
+import { Check, X, ArrowRight, Zap, BookOpen, Layers, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { PricingPageHero } from "@/components/site/page-heroes";
 import { DirectAnswerBlock } from "@/components/site/direct-answer";
@@ -17,88 +17,42 @@ import {
   REFUND_GUARANTEE_CLAIM,
 } from "@/lib/site-claims";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Book Generator Pricing | AI Book Writing Plans",
-  description:
-    "Compare Book Generator pricing plans. Try with a $4 one-time payment, grow with monthly plans. From your first book to full production workflows, there's a plan for every level.",
-  path: "/pricing",
-  keywords: ["book generator pricing", "ai book writing plans", "book production subscription", "kdp book pricing"],
-  ogImage: buildOgImageUrl(
-    "Book Generator Pricing",
-    "Compare Book Generator pricing plans. Try with a $4 one-time payment, grow with monthly plans."
-  ),
-});
+export async function generateMetadata() {
+  const t = await getTranslations("PricingPage.metadata");
+  return buildPageMetadata({
+    title: t("title"),
+    description: t("description"),
+    path: "/pricing",
+    keywords: ["book generator pricing", "ai book writing plans", "book production subscription", "kdp book pricing"],
+    ogImage: buildOgImageUrl(t("title"), t("description")),
+  });
+}
 
-const pricingFaq = [
-  [
-    "Which plan should I choose?",
-    "If you're testing your first book, start with the Single Book plan ($4) — zero risk, no subscription. If you plan to produce a few books per month, Starter ($19/mo, 10 books) is far more economical. If you want to publish regularly, Creator ($39/mo, 30 books) is the sweet spot — including the research hub and KDP analytics.",
-  ],
-  [
-    "Is the preview really free?",
-    "Yes. You can access the wizard without signing up. Viewing the outline, cover preview, and first chapters requires no payment. You only pay for the full book + export.",
-  ],
-  [
-    "Can I upload directly to KDP?",
-    `Yes. EPUB and PDF outputs are produced to meet Amazon KDP upload requirements. The production workflow is designed around ${KDP_LIVE_BOOKS_CLAIM} logic, and the delivery package is prepared with a ${KDP_GUARANTEE_CLAIM} focus.`,
-  ],
-  [
-    "Can I write in one language and produce a book in another?",
-    "Yes. The interface stays in your preferred language, while the book content is produced in English or any other language you choose. English is KDP's largest market — you can turn that to your advantage.",
-  ],
-  [
-    "Can I change my plan?",
-    "Yes. Upgrade, downgrade, or cancel anytime. Manage everything with one click from the billing area — no approval needed.",
-  ],
-  [
-    "Do unused book credits carry over?",
-    "No, monthly credits do not roll over to the next month. That's why you should choose the plan you need — there's no reason to get a bigger plan than necessary.",
-  ],
-];
+export default async function PricingPage() {
+  const t = await getTranslations("PricingPage");
 
-const whoForItems = [
-  {
-    icon: BookOpen,
-    plan: "Single Book — $4",
-    title: "First-time user",
-    description:
-      "Pay once, the book is yours. Experience the entire process for $4 — get a full refund within 30 days if you're not satisfied.",
-    bullets: ["No writing experience needed", "Draft ready in 5 minutes", "Zero risk"],
-  },
-  {
-    icon: Sparkles,
-    plan: "Starter — $19/mo",
-    title: "Regular content creator",
-    description:
-      "Build your series with 10 books per month, expand your niche on KDP. Just $1.90 per book.",
-    bullets: ["10 books/month, 20 covers", "EPUB + PDF for every book", "$1.90 per book"],
-  },
-  {
-    icon: Zap,
-    plan: "Creator — $39/mo",
-    title: "Growing on KDP",
-    description:
-      "Know which book will sell with the research hub, and produce fast with 30 books per month.",
-    bullets: ["KDP keyword + market analysis", "30 books/mo, 60 covers", "Additional export options"],
-  },
-  {
-    icon: Layers,
-    plan: "Studio — $79/mo",
-    title: "High-volume production / agency",
-    description:
-      "80 books/month, with API and automation workflows unlocked. No extra costs.",
-    bullets: ["80 books/mo, 200 covers", "API and automation access", NO_API_COST_CLAIM],
-  },
-];
+  const whoForIcons = [BookOpen, Sparkles, Zap, Layers];
 
-const competitorComparison = [
-  { label: "Ghostwriter / Agency", price: "$500–$5,000", perBook: "per book", highlight: false },
-  { label: "Scrivener + ChatGPT + Canva + Calibre", price: "Free but…", perBook: "10–30 hours / book", highlight: false },
-  { label: "Book Generator — Single Book", price: "$4", perBook: "one-time, no subscription", highlight: true },
-  { label: "Book Generator — Starter", price: "$1.90", perBook: "per book ($19/mo, 10 books)", highlight: true },
-];
+  const pricingFaq = [0, 1, 2, 3, 4, 5].map((i) => [
+    t(`faq.items.${i}.q`),
+    t(`faq.items.${i}.a`),
+  ] as [string, string]);
 
-export default function PricingPage() {
+  const whoForItems = [0, 1, 2, 3].map((i) => ({
+    icon: whoForIcons[i],
+    plan: t(`whoFor.items.${i}.plan`),
+    title: t(`whoFor.items.${i}.title`),
+    description: t(`whoFor.items.${i}.description`),
+    bullets: [0, 1, 2].map((j) => t(`whoFor.items.${i}.bullets.${j}`)),
+  }));
+
+  const competitorComparison = [0, 1, 2, 3].map((i) => ({
+    label: t(`comparison.items.${i}.label`),
+    price: t(`comparison.items.${i}.price`),
+    perBook: t(`comparison.items.${i}.perBook`),
+    highlight: i >= 2,
+  }));
+
   const pricingSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -148,40 +102,36 @@ export default function PricingPage() {
     <MarketingPage>
       <PricingPageHero />
 
-      {/* Direct Answer Block for AI Extraction */}
       <section className="border-b border-border/80 py-12">
         <div className="shell">
           <DirectAnswerBlock
             question="How much does Book Generator cost?"
-            answer="Book Generator offers flexible pricing starting at $4 for a single book with no subscription required. Monthly plans range from $19-$79, including 10-80 books per month with {NO_API_COST_CLAIM}. All plans include EPUB/PDF output, cover generation, and KDP-compliant formatting. {REFUND_GUARANTEE_CLAIM} within 30 days."
+            answer={`Book Generator offers flexible pricing starting at $4 for a single book with no subscription required. Monthly plans range from $19-$79, including 10-80 books per month with ${NO_API_COST_CLAIM}. All plans include EPUB/PDF output, cover generation, and KDP-compliant formatting. ${REFUND_GUARANTEE_CLAIM} within 30 days.`}
           />
           <LastUpdated date="2026-04-09" className="mt-4 text-sm" />
         </div>
       </section>
 
-      {/* One-line summary + Plans — right below hero */}
       <section className="shell pt-6 pb-0">
         <p className="text-center text-sm font-medium text-muted-foreground">
-          Your first book is $4, subsequent books start at $19/month — preview is free.
+          {t("summary")}
         </p>
       </section>
 
-      {/* Plans — just above */}
       <PricingCreativeSection
         className="py-12"
-        tag="Plans"
-        title="Pay once or produce with a monthly plan."
-        description="Open your first book for $4, build a rhythm with 10 books a month, or transform into a publishing system with 30 or 80 books."
+        tag={t("plans.tag")}
+        title={t("plans.title")}
+        description={t("plans.description")}
       />
 
-      {/* Competitor comparison */}
       <section className="border-y border-border/80 bg-muted/30 py-14">
         <div className="shell">
           <h2 className="mb-2 text-center font-serif text-2xl font-semibold tracking-tight text-foreground">
-            Same book, very different price.
+            {t("comparison.title")}
           </h2>
           <p className="mb-8 text-center text-sm text-muted-foreground">
-            The cost of producing a book with other methods.
+            {t("comparison.description")}
           </p>
           <div className="mx-auto max-w-2xl divide-y divide-border/80 overflow-hidden rounded-[24px] border border-border/80 bg-card shadow-sm">
             {competitorComparison.map((row) => (
@@ -214,20 +164,19 @@ export default function PricingPage() {
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">
             <Link href="/compare" className="text-primary/80 underline-offset-4 hover:underline">
-              See detailed feature comparison →
+              {t("comparison.link")}
             </Link>
           </p>
         </div>
       </section>
 
-      {/* Who is it for? */}
       <section className="border-b border-border/80 py-16">
         <div className="shell">
           <h2 className="mb-2 text-center font-serif text-2xl font-semibold tracking-tight text-foreground">
-            Which plan is right for you?
+            {t("whoFor.title")}
           </h2>
           <p className="mb-8 text-center text-sm text-muted-foreground">
-            Find the right starting point based on your goals.
+            {t("whoFor.description")}
           </p>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {whoForItems.map((item) => (
@@ -255,27 +204,26 @@ export default function PricingPage() {
         </div>
       </section>
 
-            {/* Comparison table */}
       <section className="border-b border-border/80 py-14">
         <div className="shell">
           <h2 className="mb-2 text-center font-serif text-2xl font-semibold tracking-tight text-foreground">
-            Feature comparison
+            {t("featureTable.title")}
           </h2>
           <p className="mb-8 text-center text-sm text-muted-foreground">
-            See what's included in each plan, side by side.
+            {t("featureTable.description")}
           </p>
           <PricingComparisonTable />
         </div>
       </section>
-{/* FAQ */}
+
       <section className="border-b border-border/80 bg-accent/20 py-16">
         <div className="shell">
           <div className="mx-auto max-w-3xl">
             <h2 className="mb-2 text-center font-serif text-3xl font-semibold tracking-tight text-foreground">
-              Questions on your mind
+              {t("faq.title")}
             </h2>
             <p className="mb-6 text-center text-sm text-muted-foreground">
-              Everything you need to know before choosing a plan.
+              {t("faq.description")}
             </p>
             <div className="grid gap-4 md:grid-cols-2">
               {pricingFaq.map(([question, answer]) => (
@@ -289,13 +237,13 @@ export default function PricingPage() {
               ))}
             </div>
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              Still have questions?{" "}
+              {t("faq.stillQuestions")}{" "}
               <Link href="/faq" className="font-medium text-foreground underline-offset-4 hover:underline">
-                Full FAQ
+                {t("faq.fullFaq")}
               </Link>{" "}
               or{" "}
               <Link href="/contact" className="font-medium text-foreground underline-offset-4 hover:underline">
-                contact us
+                {t("faq.contactUs")}
               </Link>
               .
             </p>
@@ -303,38 +251,32 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Final CTA */}
       <section className="py-14">
         <div className="shell text-center">
           <h2 className="font-serif text-3xl font-semibold tracking-tight text-foreground">
-            See your book first —{" "}
-            <span className="text-primary">then pay $4.</span>
+            {t("cta.title")}{" "}
+            <span className="text-primary">{t("cta.titleHighlight")}</span>
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-muted-foreground">
-            Outline and cover preview are free. Full book + EPUB/PDF for $4 — pay once, it's yours.
+            {t("cta.description")}
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/start/topic?plan=single-book"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90"
             >
-              Start Free Preview
+              {t("cta.btn1")}
               <ArrowRight className="size-4" />
             </Link>
             <Link
               href="/billing?plan=starter&autostart=1"
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-7 py-3.5 text-sm font-semibold text-foreground transition hover:bg-accent"
             >
-              Start with a Monthly Plan
+              {t("cta.btn2")}
             </Link>
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground/70">
-            {[
-              "Free preview",
-              "$4 one-time",
-              KDP_GUARANTEE_CLAIM,
-              REFUND_GUARANTEE_CLAIM,
-            ].map((item) => (
+            {[t("cta.items.0"), t("cta.items.1"), KDP_GUARANTEE_CLAIM, REFUND_GUARANTEE_CLAIM].map((item) => (
               <span key={item} className="flex items-center gap-1.5">
                 <Check className="size-3 text-primary" />
                 {item}
@@ -343,14 +285,8 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingFaqSchema) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingFaqSchema) }} />
     </MarketingPage>
   );
 }

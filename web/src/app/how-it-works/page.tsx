@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -15,6 +14,7 @@ import {
   Users,
   WandSparkles,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { DirectAnswerBlock } from "@/components/site/direct-answer";
 import { LastUpdated } from "@/components/site/last-updated";
@@ -24,156 +24,64 @@ import { buildHowToSchema } from "@/lib/schema";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { absoluteUrl, buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "How Book Creator Works | 3-Step Book Production",
-  description:
-    "See step-by-step how the book production process works — from a brief topic summary to chapter plans, previews, and EPUB/PDF output.",
-  path: "/how-it-works",
-  keywords: ["how book creator works", "ai book production", "epub pdf book creation"],
-});
+export async function generateMetadata() {
+  const t = await getTranslations("HowItWorksPage.metadata");
+  return buildPageMetadata({
+    title: t("title"),
+    description: t("description"),
+    path: "/how-it-works",
+    keywords: ["how book creator works", "ai book production", "epub pdf book creation"],
+  });
+}
 
-const steps = [
-  {
-    step: "1",
-    title: "Enter your topic and target reader",
-    text: "Share a brief summary, your target reader, and the outcome you want to convey. No long forms — you start with guided questions.",
-    output: "Clear book direction, title angle, and starting framework",
-    cta: "Enter your topic summary",
-    icon: Target,
-  },
-  {
-    step: "2",
-    title: "Review and approve the outline",
-    text: "The system suggests a title, chapter flow, and book structure. You can edit, refine, and approve before moving to production.",
-    output: "Visible chapter plan and a more controlled production workflow",
-    cta: "Build your chapter plan",
-    icon: Layers3,
-  },
-  {
-    step: "3",
-    title: "Preview your book and get your outputs",
-    text: "See the first result, and when you like it, convert your book to full output. EPUB and PDF files are prepared in a single workflow.",
-    output: "Preview, editable content, and EPUB/PDF outputs",
-    cta: "Start production",
-    icon: FileOutput,
-  },
-] as const;
+const stepIcons = [Target, Layers3, FileOutput];
+const reassuranceIcons = [Clock3, PencilRuler, ShieldCheck, Users];
+const behindScenesIcons = [Target, Layers3, Sparkles, FileOutput];
+const deliverableIcons = [WandSparkles, SearchCheck, BookOpenCheck, FileOutput];
 
-const reassuranceItems = [
-  {
-    icon: Clock3,
-    title: "Quick start",
-    text: "Start with a few short answers — no lengthy preparation needed.",
-  },
-  {
-    icon: PencilRuler,
-    title: "You're in control",
-    text: "You never go into blind production without seeing and approving the outline first.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Output-focused workflow",
-    text: "The process doesn't just generate text — it aims to deliver EPUB/PDF at the end.",
-  },
-  {
-    icon: Users,
-    title: "Built for experts",
-    text: "Designed for instructors, consultants, and creators who want to turn their knowledge into a book.",
-  },
-] as const;
+export default async function HowItWorksPage() {
+  const t = await getTranslations("HowItWorksPage");
 
-const behindTheScenes = [
-  {
-    eyebrow: "Direction",
-    title: "Clarify why you're writing, not just what",
-    description:
-      "Who you're writing for, what outcome you promise the reader, and what language to use are determined upfront. So your book stays focused from the very first step.",
-    icon: Target,
-  },
-  {
-    eyebrow: "Plan",
-    title: "The chapter structure becomes visible",
-    description:
-      "Title, subtitles, and chapter order take shape together. Instead of assembling text after the fact, you build a structured outline from the start.",
-    icon: Layers3,
-  },
-  {
-    eyebrow: "Production",
-    title: "Move forward with a preview",
-    description:
-      "The system doesn't just dump text. It produces a visible result first — so you see what you're turning into a finished product much earlier.",
-    icon: Sparkles,
-  },
-  {
-    eyebrow: "Delivery",
-    title: "Outputs are built into the process, not tacked on at the end",
-    description:
-      "EPUB, PDF, and basic publishing files stop being a separate chore added at the end — they become a natural part of production.",
-    icon: FileOutput,
-  },
-] as const;
+  const steps = [0, 1, 2].map((i) => ({
+    step: t(`steps.${i}.step`),
+    title: t(`steps.${i}.title`),
+    text: t(`steps.${i}.text`),
+    output: t(`steps.${i}.output`),
+    cta: t(`steps.${i}.cta`),
+    icon: stepIcons[i],
+  }));
 
-const audience = [
-  "Consultants and instructors who want to turn their expertise into a book",
-  "First-time authors who prefer a guided workflow over starting from a blank page",
-  "Content creators who want fast drafts, visible chapter plans, and output-driven progress",
-] as const;
+  const reassuranceItems = [0, 1, 2, 3].map((i) => ({
+    title: t(`reassurance.items.${i}.title`),
+    text: t(`reassurance.items.${i}.text`),
+    icon: reassuranceIcons[i],
+  }));
 
-const deliverables = [
-  {
-    icon: WandSparkles,
-    label: "Book direction",
-    text: "Title angle, positioning, and the book's core promise",
-  },
-  {
-    icon: SearchCheck,
-    label: "Plan",
-    text: "Chapter-by-chapter visible outline and book structure",
-  },
-  {
-    icon: BookOpenCheck,
-    label: "Content",
-    text: "Editable chapter content and preview output",
-  },
-  {
-    icon: FileOutput,
-    label: "Delivery",
-    text: "EPUB, PDF, and essential files that simplify publishing preparation",
-  },
-] as const;
+  const behindTheScenes = [0, 1, 2, 3].map((i) => ({
+    eyebrow: t(`behindScenes.items.${i}.eyebrow`),
+    title: t(`behindScenes.items.${i}.title`),
+    description: t(`behindScenes.items.${i}.description`),
+    icon: behindScenesIcons[i],
+  }));
 
-const faqs = [
-  {
-    question: "What do I need to get started?",
-    answer:
-      "Usually a brief topic summary, target reader information, and a few clear answers about what you want the book to achieve are enough.",
-  },
-  {
-    question: "Do I go into production without seeing the outline?",
-    answer:
-      "No. The process is designed so you can see and approve your direction and chapter plan first.",
-  },
-  {
-    question: "Do I only get text, or are there output files too?",
-    answer:
-      "The goal isn't just generating text — it's progressing all the way to preview and book outputs including EPUB/PDF delivery.",
-  },
-  {
-    question: "Who is this product best suited for?",
-    answer:
-      "It's especially suited for experts, instructors, consultants, and creators who want to turn their knowledge, experience, or methodology into a book.",
-  },
-] as const;
+  const audience = [0, 1, 2].map((i) => t(`whoFor.audience.${i}`));
 
-export default function HowItWorksPage() {
+  const deliverables = [0, 1, 2, 3].map((i) => ({
+    label: t(`deliverables.items.${i}.label`),
+    text: t(`deliverables.items.${i}.text`),
+    icon: deliverableIcons[i],
+  }));
+
+  const faqs = [0, 1, 2, 3].map((i) => ({
+    question: t(`faq.items.${i}.question`),
+    answer: t(`faq.items.${i}.answer`),
+  }));
+
   const howToSchema = buildHowToSchema({
     name: "How to Generate a Book with AI",
     description: "Complete guide to creating a publication-ready book using Book Generator's AI-powered platform in 3 simple steps",
     estimatedTime: "PT30M",
-    steps: steps.map((item) => ({
-      name: item.title,
-      text: item.text,
-    })),
+    steps: steps.map((item) => ({ name: item.title, text: item.text })),
   });
 
   const faqSchema = {
@@ -182,10 +90,7 @@ export default function HowItWorksPage() {
     mainEntity: faqs.map((item) => ({
       "@type": "Question",
       name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
     })),
   };
 
@@ -198,50 +103,36 @@ export default function HowItWorksPage() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              How it works
+              {t("hero.badge")}
             </div>
-
             <h1 className="mt-8 text-balance font-serif text-5xl font-semibold tracking-tight text-foreground md:text-6xl">
-              Enter your topic, approve your plan, <span className="text-primary">turn your book into output.</span>
+              {t("hero.title")} <span className="text-primary">{t("hero.titleHighlight")}</span>
             </h1>
-
             <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-8 text-muted-foreground md:text-lg">
-              Book Creator is a guided book production workflow that turns a brief topic summary into a visible chapter plan, preview, and EPUB/PDF output.
+              {t("hero.description")}
             </p>
-
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/start/topic"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-95"
               >
-                Start building your book
+                {t("hero.cta")}
                 <ArrowRight className="size-4" />
               </Link>
-              <span className="text-sm text-muted-foreground">
-                Start with short answers. See the outline, then proceed.
-              </span>
+              <span className="text-sm text-muted-foreground">{t("hero.ctaSubtext")}</span>
             </div>
-
-            {/* Direct Answer Block for AI Extraction */}
             <div className="mt-8 text-left">
-              <DirectAnswerBlock
-                question="How does AI book generation work?"
-                answer="Book Generator transforms your expertise into publication-ready books in 3 steps. First, answer 5 guided questions about your topic and audience. The AI generates a complete chapter outline for your approval. Once approved, it writes each chapter with consistent style and tone, then produces professional EPUB and PDF files ready for Amazon KDP publishing."
-              />
+              <DirectAnswerBlock question={t("directAnswer.question")} answer={t("directAnswer.answer")} />
               <LastUpdated date="2026-04-09" className="mt-4 text-sm" />
             </div>
-
             <div className="mt-12 grid gap-3 md:grid-cols-3">
               {steps.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <div
-                    key={item.step}
-                    className="rounded-[24px] border border-border/80 bg-card/80 p-5 text-left backdrop-blur-sm"
-                  >
+                  <div key={item.step} className="rounded-[24px] border border-border/80 bg-card/80 p-5 text-left backdrop-blur-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium uppercase tracking-[0.18em] text-primary/70">
-                        Step {item.step}
+                        {t("stepsSection.stepPrefix")} {item.step}
                       </span>
                       <Icon className="size-4 text-primary" />
                     </div>
@@ -257,12 +148,7 @@ export default function HowItWorksPage() {
 
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell">
-          <SectionHeading
-            badge="3-step process"
-            title="How exactly does the process work?"
-            description="As a new visitor, you should see not only what happens but also what you get at the end of each step. This page exists for that reason."
-          />
-
+          <SectionHeading badge={t("stepsSection.badge")} title={t("stepsSection.title")} description={t("stepsSection.description")} />
           <div className="grid gap-4 md:grid-cols-3">
             {steps.map((item) => {
               const Icon = item.icon;
@@ -270,9 +156,7 @@ export default function HowItWorksPage() {
                 <Card key={item.step} className="flex flex-col">
                   <CardContent className="flex flex-1 flex-col space-y-4 p-6">
                     <div className="flex items-center justify-between">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-sm font-medium text-primary">
-                        {item.step}
-                      </span>
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-sm font-medium text-primary">{item.step}</span>
                       <Icon className="size-5 text-primary" />
                     </div>
                     <div className="flex-1 space-y-3">
@@ -280,16 +164,11 @@ export default function HowItWorksPage() {
                       <p className="text-sm leading-8 text-muted-foreground">{item.text}</p>
                     </div>
                     <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/70">
-                        Result of this step
-                      </p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/70">{t("stepsSection.resultLabel")}</p>
                       <p className="mt-1 text-sm font-medium text-foreground">{item.output}</p>
                     </div>
                     <div className="border-t border-border/60 pt-4">
-                      <Link
-                        href="/start/topic"
-                        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-                      >
+                      <Link href="/start/topic" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
                         {item.cta}
                         <ArrowRight className="size-3.5" />
                       </Link>
@@ -304,12 +183,7 @@ export default function HowItWorksPage() {
 
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell">
-          <SectionHeading
-            badge="Trust and clarity"
-            title="Guides you with a visible workflow, not blank page anxiety"
-            description="This page isn't just about showcasing features — it clarifies how much effort you'll invest, how much control you'll have, and what you'll receive at the end."
-          />
-
+          <SectionHeading badge={t("reassurance.badge")} title={t("reassurance.title")} description={t("reassurance.description")} />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {reassuranceItems.map((item) => {
               const Icon = item.icon;
@@ -329,12 +203,7 @@ export default function HowItWorksPage() {
 
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell">
-          <SectionHeading
-            badge="Why is it clearer?"
-            title="Breaks the path from brief to publish into visible pieces"
-            description='The process is not just a single "generate" button. Direction is established first, then the plan solidifies, then output-driven production begins.'
-          />
-
+          <SectionHeading badge={t("behindScenes.badge")} title={t("behindScenes.title")} description={t("behindScenes.description")} />
           <div className="grid gap-4 md:grid-cols-2">
             {behindTheScenes.map((item) => {
               const Icon = item.icon;
@@ -360,32 +229,18 @@ export default function HowItWorksPage() {
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
           <div>
-            <SectionHeading
-              badge="Who is it for?"
-              title="Especially for those who want to turn their expertise into a book"
-              description="This workflow is not just for those who want to write — it is better suited for those who want to productize, systematize, and turn their knowledge into concrete output."
-            />
-
+            <SectionHeading badge={t("whoFor.badge")} title={t("whoFor.title")} description={t("whoFor.description")} />
             <div className="space-y-3">
               {audience.map((item) => (
-                <div
-                  key={item}
-                  className="flex items-start gap-3 rounded-2xl border border-border/80 bg-card px-4 py-4"
-                >
+                <div key={item} className="flex items-start gap-3 rounded-2xl border border-border/80 bg-card px-4 py-4">
                   <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
                   <p className="text-sm leading-7 text-foreground">{item}</p>
                 </div>
               ))}
             </div>
           </div>
-
           <div>
-            <SectionHeading
-              badge="At the end of the process"
-              title="What do you end up with?"
-              description="Not just ideas — you get visible intermediate outputs that enable progress and files ready for delivery."
-            />
-
+            <SectionHeading badge={t("deliverables.badge")} title={t("deliverables.title")} description={t("deliverables.description")} />
             <div className="grid gap-4">
               {deliverables.map((item) => {
                 const Icon = item.icon;
@@ -396,9 +251,7 @@ export default function HowItWorksPage() {
                         <Icon className="size-5 text-primary" />
                       </div>
                       <div>
-                        <div className="text-xs font-medium uppercase tracking-[0.16em] text-primary/80">
-                          {item.label}
-                        </div>
+                        <div className="text-xs font-medium uppercase tracking-[0.16em] text-primary/80">{item.label}</div>
                         <p className="mt-2 text-sm leading-7 text-foreground">{item.text}</p>
                       </div>
                     </CardContent>
@@ -412,12 +265,7 @@ export default function HowItWorksPage() {
 
       <section className="border-b border-border/80 py-16 md:py-20">
         <div className="shell">
-          <SectionHeading
-            badge="Frequently asked questions"
-            title="Most asked questions before deciding"
-            description="A how-it-works page should not leave uncertainty while trying to persuade. These short answers fill that gap."
-          />
-
+          <SectionHeading badge={t("faq.badge")} title={t("faq.title")} description={t("faq.description")} />
           <div className="grid gap-4 md:grid-cols-2">
             {faqs.map((item) => (
               <Card key={item.question}>
@@ -437,38 +285,31 @@ export default function HowItWorksPage() {
             <div className="mx-auto max-w-3xl text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/70 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                Ready to start
+                {t("cta.badge")}
               </div>
               <h2 className="mt-6 text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-                Don't stare at a blank screen — <span className="text-primary">start with a guided system.</span>
+                {t("cta.title")} <span className="text-primary">{t("cta.titleHighlight")}</span>
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-muted-foreground">
-                Clarify your topic, see your chapter plan, review the preview, and convert your book to output.
-                Instead of building the process piece by piece, move forward with visible steps.
+                {t("cta.description")}
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
                   href="/start/topic"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-95"
                 >
-                  Start your free preview
+                  {t("cta.button")}
                   <ArrowRight className="size-4" />
                 </Link>
-                <span className="text-sm text-muted-foreground">Start with a brief intro · See the plan · Then decide</span>
+                <span className="text-sm text-muted-foreground">{t("cta.buttonSubtext")}</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
     </MarketingPage>
   );
 }

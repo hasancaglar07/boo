@@ -1,0 +1,179 @@
+{
+  "Common": {
+    "skipToMain": "Passer au contenu principal",
+    "loading": "Chargement..."
+  },
+  "Metadata": {
+    "defaultTitle": "Générateur de livres - Écrivez des livres avec l'IA",
+    "defaultDescription": "Plateforme de génération de livres alimentée par l'IA. Transformez votre idée en un livre prêt à publier, avec couverture et sortie EPUB/PDF en 5 questions."
+  },
+  "LocaleSwitcher": {
+    "label": "Langue",
+    "title": "Changer de langue"
+  },
+  "localeNames": {
+    "en": "Anglais",
+    "tr": "Turc",
+    "de": "Allemand",
+    "fr": "Français",
+    "es": "Espagnol",
+    "ar": "Arabe",
+    "ru": "Russe",
+    "zh": "Chinois",
+    "ja": "Japonais",
+    "ko": "Coréen",
+    "it": "Italien",
+    "pt": "Portugais"
+  },
+  "nav": {
+    "howItWorks": "Comment ça marche",
+    "examples": "Exemples",
+    "pricing": "Tarifs",
+    "tools": "Outils",
+    "faq": "FAQ",
+    "login": "Se connecter",
+    "myBooks": "Mes livres",
+    "newBook": "Nouveau livre",
+    "freePreview": "Aperçu gratuit",
+    "goHome": "Aller à l'accueil",
+    "mainMenu": "Menu principal",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "mobileMenu": "Menu mobile",
+    "mobileSecondaryMenu": "Menu secondaire mobile",
+    "more": "Plus",
+    "brandName": "Générateur de livres",
+    "howItWorksDesc": "5 questions pour un livre complet",
+    "examplesDesc": "De vrais livres créés avec l'IA",
+    "useCasesDesc": "Pour les éducateurs, consultants et créateurs",
+    "pricingDesc": "Forfaits à partir de 4 $ par livre",
+    "compareDesc": "Voyez comment nous nous comparons",
+    "toolsDesc": "Outils gratuits d'écriture et de publication",
+    "resourcesDesc": "Guides, modèles et conseils",
+    "blogDesc": "Conseils d'écriture et mises à jour produit"
+  },
+  "footer": {
+    "freePreview": "Aperçu gratuit",
+    "compare": "Comparer",
+    "freeTools": "Outils gratuits",
+    "blog": "Blog",
+    "resources": "Ressources",
+    "useCases": "Cas d'utilisation",
+    "about": "À propos",
+    "contact": "Contact",
+    "affiliate": "Programme d'affiliation",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation",
+    "refund": "Politique de remboursement",
+    "product": "Produit",
+    "company": "Entreprise",
+    "legal": "Mentions légales",
+    "writingTips": "Conseils d'écriture et campagnes",
+    "newsletterDesc": "Rejoignez notre newsletter hebdomadaire et écrivez votre premier livre plus vite.",
+    "emailPlaceholder": "Votre adresse e-mail",
+    "emailLabel": "Adresse e-mail",
+    "subscribe": "S'abonner",
+    "subscribed": "Abonné !",
+    "ctaTitle": "Commencez à écrire votre livre <em>aujourd'hui</em>",
+    "ctaSub": "Créez votre premier livre en quelques minutes avec un aperçu gratuit.",
+    "ctaBtn": "Démarrer l'aperçu gratuit",
+    "brandDesc": "Interface d'écriture de livres alimentée par l'IA, simple et premium. Créez votre premier livre selon des standards professionnels.",
+    "copyright": "Générateur de livres. Tous droits réservés.",
+    "tagline": "Écriture de livres propulsée par l'IA.",
+    "theme": "Thème",
+    "goHome": "Aller à l'accueil",
+    "trust": {
+      "kdp": "Approche de livraison qui simplifie la conformité KDP",
+      "refund": "Demande de remboursement sous 30 jours",
+      "noApiCost": "Le coût du modèle est inclus dans le prix du forfait"
+    }
+  },
+  "HomePage": {
+    "metadata": {
+      "title": "Écrire un livre avec l'IA | Créez un EPUB prêt pour KDP en 15 minutes",
+      "description": "Transformez votre expertise en un livre prêt à publier avec l'IA. Générez des brouillons, des couvertures et une sortie EPUB/PDF en 5 questions. Aperçu gratuit — sans carte bancaire.",
+      "ogTitle": "Écrire un livre avec l'IA",
+      "ogDescription": "Transformez votre expertise en un livre prêt à publier en 15 minutes. Aperçu gratuit."
+    },
+    "middleBlock": {
+      "title": "Écrire un livre avec l'IA : transformez votre idée en EPUB et PDF",
+      "description": "Transformez votre expertise en livre prêt à publier avec Book Creator. Génération de brouillon par IA, conception de couverture et sortie EPUB/PDF compatible KDP en un seul flux de travail.",
+      "subDescription": "Prévisualisez votre livre gratuitement, débloquez l'accès complet quand il vous plaît. Commencez immédiatement — aucune carte de crédit requise.",
+      "cards": {
+        "a": {
+          "title": "Pour les éducateurs, consultants et créateurs de contenu",
+          "description": "Une plateforme d'écriture de livres propulsée par l'IA pour quiconque souhaite transformer son expertise en livre KDP. La création d'e-books est désormais un flux de travail unique.",
+          "cta": "Voir tous les cas d'usage →"
+        },
+        "b": {
+          "title": "Fini la page blanche ou les outils éparpillés",
+          "description": "Rédigez votre livre avec l'IA — brouillon, contenu et sortie sur une seule plateforme. Finalisez votre livre sans avoir besoin d'outils différents.",
+          "cta": "Voir comment nous nous comparons →"
+        },
+        "c": {
+          "title": "Fichiers EPUB et PDF compatibles KDP",
+          "description": "Chapitres modifiables, couverture professionnelle et sorties EPUB + PDF prêtes à publier. Compatible avec Kindle et KDP."
+        }
+      }
+    },
+    "pricing": {
+      "tag": "Tarification du livre",
+      "title": "Préparez votre premier livre pour 4 $ — EPUB et PDF prêts pour KDP inclus",
+      "description": "Accédez à un livre complet pour 4 $ : brouillon généré par IA, couverture professionnelle, sorties EPUB et PDF. Prévisualisez gratuitement, puis débloquez l'accès complet."
+    },
+    "faq": {
+      "heading": {
+        "badge": "Questions les plus posées",
+        "title": "Questions fréquemment posées sur l'écriture d'un livre avec l'IA",
+        "description": "Comment fonctionne le créateur de livres IA, quelle est la qualité des résultats et est-il compatible KDP ? Les questions les plus importantes sur le processus d'écriture de livre.",
+        "actionLabel": "Toutes les questions"
+      },
+      "quality": {
+        "question": "Un livre écrit par une IA peut-il vraiment être de haute qualité ?",
+        "answer": "L'IA crée le brouillon — vous contrôlez la qualité. Modifiez chaque chapitre, régénérez ce qui ne vous convient pas. {kdpLiveBooksClaim} de nos livres sont en ligne avec une garantie {kdpGuaranteeClaim}."
+      },
+      "duration": {
+        "question": "Combien de temps faut-il pour écrire un livre avec l'IA ?",
+        "answer": "Saisissez votre sujet et obtenez un EPUB et un PDF prêts à publier en 30 à 90 minutes. La plupart des livres sont finalisés en une seule session. Selon des enquêtes utilisateurs, 92 % des auteurs publient dans les 7 jours, contre 3 à 6 mois avec les méthodes d'écriture traditionnelles."
+      },
+      "kdp": {
+        "question": "Puis-je télécharger directement les sorties EPUB et PDF sur KDP ?",
+        "answer": "Oui. Vous obtenez des sorties EPUB et PDF compatibles KDP. Nous recommandons une révision finale avec votre propre liste de contrôle avant le téléchargement."
+      },
+      "creditCard": {
+        "question": "Ai-je besoin d'une carte de crédit pour commencer ?",
+        "answer": "Non. Commencez avec une prévisualisation gratuite — explorez le brouillon, la couverture et le plan de votre livre sans saisir aucune information de paiement. Passez à la version supérieure uniquement lorsque vous êtes satisfait du résultat."
+      },
+      "formats": {
+        "question": "Quels formats de sortie sont disponibles ?",
+        "answer": "Vous recevez un EPUB (pour Kindle et toutes les liseuses), un PDF (pour l'impression à la demande) et un aperçu HTML partageable. Toutes les sorties sont modifiables et prêtes pour KDP."
+      },
+      "claims": {
+        "kdpAccept": "accepté par KDP",
+        "guarantee": "garantie"
+      },
+      "ctaLabel": "Démarrer la prévisualisation gratuite"
+    },
+    "cta": {
+      "title": "Commencez à écrire votre livre avec l'IA dès aujourd'hui",
+      "description": "Saisissez votre sujet et créez votre prévisualisation gratuite en 15 minutes. {noApiCostClaim}, aucune carte de crédit requise.",
+      "items": {
+        "0": "Brouillon, couverture et contenu générés par IA prêts",
+        "1": "Prévisualisation gratuite — débloquez l'accès complet quand il vous plaît",
+        "2": "Sortie EPUB + PDF compatible KDP"
+      }
+    },
+    "testimonials": {
+      "badge": "Avis clients",
+      "title": "Ce que disent les auteurs",
+      "description": "Des résultats réels d'auteurs réels.",
+      "aggregateLabel": "{count}+ avis vérifiés d'auteurs réels"
+    },
+    "showcase": {
+      "badge": "Vrais livres, vraies couvertures",
+      "title": "Exemples de vrais livres générés par IA",
+      "description": "Chacun est passé du résumé du sujet au brouillon, puis du brouillon au flux de travail EPUB et PDF. Vous pouvez démarrer votre propre livre cette semaine avec le même processus.",
+      "ctaLabel": "Démarrer la prévisualisation gratuite du livre"
+    }
+  }
+}

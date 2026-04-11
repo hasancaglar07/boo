@@ -1,25 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import {
   BookOpen,
   Sparkles,
   ArrowRight,
   Mail,
   Heart,
-  ExternalLink,
 } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 
+import { Link } from "@/i18n/navigation";
 import { useTheme } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useLang } from "@/components/lang-provider";
-import {
-  KDP_GUARANTEE_CLAIM,
-  NO_API_COST_CLAIM,
-  REFUND_GUARANTEE_CLAIM,
-} from "@/lib/site-claims";
 
 /* ─── Data ───────────────────────────────────────────────── */
 
@@ -54,7 +48,7 @@ const legalLinkKeys = [
 /* ─── Newsletter Form ────────────────────────────────────── */
 
 function NewsletterForm() {
-  const { t } = useLang();
+  const t = useTranslations();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
@@ -114,7 +108,7 @@ function FooterLinkGroup({
   titleKey: string;
   links: { href: string; labelKey: string; highlight?: boolean }[];
 }) {
-  const { t } = useLang();
+  const t = useTranslations();
 
   return (
     <div>
@@ -144,14 +138,14 @@ function FooterLinkGroup({
 
 export function SiteFooter() {
   const { resolvedTheme } = useTheme();
-  const { t } = useLang();
+  const t = useTranslations();
   const logoSrc = resolvedTheme === "dark" ? "/dark-logo.png" : "/logo.png";
 
   const trustBadges = [
     { icon: Sparkles, text: t("footer.freePreview") },
-    { icon: BookOpen, text: KDP_GUARANTEE_CLAIM },
-    { icon: Heart, text: REFUND_GUARANTEE_CLAIM },
-    { icon: Mail, text: NO_API_COST_CLAIM },
+    { icon: BookOpen, text: t("footer.trust.kdp") },
+    { icon: Heart, text: t("footer.trust.refund") },
+    { icon: Mail, text: t("footer.trust.noApiCost") },
   ];
 
   return (
@@ -164,7 +158,11 @@ export function SiteFooter() {
         <div className="shell">
           <div className="footer-cta-inner">
             <div className="footer-cta-copy">
-              <h3 className="footer-cta-title" dangerouslySetInnerHTML={{ __html: t("footer.ctaTitle") }} />
+              <h3 className="footer-cta-title">
+                {t.rich("footer.ctaTitle", {
+                  em: (chunks) => <em>{chunks}</em>,
+                })}
+              </h3>
               <p className="footer-cta-sub">
                 {t("footer.ctaSub")}
               </p>
@@ -193,7 +191,7 @@ export function SiteFooter() {
                 <span className="relative block h-10 w-[200px] overflow-hidden md:h-11 md:w-[240px]">
                   <Image
                     src={logoSrc}
-                    alt="Book Generator"
+                    alt={t("nav.brandName")}
                     className="h-full w-full object-contain object-left"
                     fill
                     sizes="(min-width: 768px) 240px, 200px"

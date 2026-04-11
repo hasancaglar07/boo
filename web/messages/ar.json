@@ -1,0 +1,179 @@
+{
+  "Common": {
+    "skipToMain": "تخطي إلى المحتوى الرئيسي",
+    "loading": "جاري التحميل..."
+  },
+  "Metadata": {
+    "defaultTitle": "مولد الكتب - اكتب كتبك بالذكاء الاصطناعي",
+    "defaultDescription": "منصة توليد كتب مدعومة بالذكاء الاصطناعي. حوّل فكرتك إلى كتاب جاهز للنشر وغلاف ومخرجات EPUB/PDF في 5 أسئلة."
+  },
+  "LocaleSwitcher": {
+    "label": "اللغة",
+    "title": "تغيير اللغة"
+  },
+  "localeNames": {
+    "en": "الإنجليزية",
+    "tr": "التركية",
+    "de": "الألمانية",
+    "fr": "الفرنسية",
+    "es": "الإسبانية",
+    "ar": "العربية",
+    "ru": "الروسية",
+    "zh": "الصينية",
+    "ja": "اليابانية",
+    "ko": "الكورية",
+    "it": "الإيطالية",
+    "pt": "البرتغالية"
+  },
+  "nav": {
+    "howItWorks": "كيف يعمل",
+    "examples": "أمثلة",
+    "pricing": "الأسعار",
+    "tools": "الأدوات",
+    "faq": "الأسئلة الشائعة",
+    "login": "تسجيل الدخول",
+    "myBooks": "كتبي",
+    "newBook": "كتاب جديد",
+    "freePreview": "معاينة مجانية",
+    "goHome": "الذهاب إلى الصفحة الرئيسية",
+    "mainMenu": "القائمة الرئيسية",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "mobileMenu": "قائمة الجوال",
+    "mobileSecondaryMenu": "قائمة الجوال الثانوية",
+    "more": "المزيد",
+    "brandName": "مولد الكتب",
+    "howItWorksDesc": "5 أسئلة لكتاب كامل",
+    "examplesDesc": "كتب حقيقية تم إنشاؤها باستخدام الذكاء الاصطناعي",
+    "useCasesDesc": "للمعلمين والمستشارين والمبدعين",
+    "pricingDesc": "خطط تبدأ من 4 دولارات لكل كتاب",
+    "compareDesc": "انظر كيف نتفوق",
+    "toolsDesc": "أدوات كتابة ونشر مجانية",
+    "resourcesDesc": "أدلة وقوالب ونصائح",
+    "blogDesc": "نصائح الكتابة وتحديثات المنتج"
+  },
+  "footer": {
+    "freePreview": "معاينة مجانية",
+    "compare": "مقارنة",
+    "freeTools": "أدوات مجانية",
+    "blog": "المدونة",
+    "resources": "الموارد",
+    "useCases": "حالات الاستخدام",
+    "about": "حول",
+    "contact": "اتصل بنا",
+    "affiliate": "برنامج الشراكة",
+    "privacy": "سياسة الخصوصية",
+    "terms": "شروط الخدمة",
+    "refund": "سياسة الاسترداد",
+    "product": "المنتج",
+    "company": "الشركة",
+    "legal": "قانوني",
+    "writingTips": "نصائح كتابية وحملات",
+    "newsletterDesc": "انضم إلى نشرتنا الإخبارية الأسبوعية، واكتب كتابك الأول بشكل أسرع.",
+    "emailPlaceholder": "عنوان بريدك الإلكتروني",
+    "emailLabel": "عنوان البريد الإلكتروني",
+    "subscribe": "اشترك",
+    "subscribed": "تم الاشتراك!",
+    "ctaTitle": "ابدأ بكتابة كتابك <em>اليوم</em>",
+    "ctaSub": "أنشئ كتابك الأول في دقائق مع معاينة مجانية.",
+    "ctaBtn": "ابدأ المعاينة المجانية",
+    "brandDesc": "واجهة كتابة كتب مدعومة بالذكاء الاصطناعي، بسيطة ومتميزة. أنشئ كتابك الأول بمعايير احترافية.",
+    "copyright": "مولد الكتب. جميع الحقوق محفوظة.",
+    "tagline": "كتابة كتب بالذكاء الاصطناعي.",
+    "theme": "المظهر",
+    "goHome": "الذهاب إلى الصفحة الرئيسية",
+    "trust": {
+      "kdp": "نهج تسليم يبسط التوافق مع KDP",
+      "refund": "طلب استرداد خلال 30 يوماً",
+      "noApiCost": "تكلفة النموذج مشمولة في سعر الخطة"
+    }
+  },
+  "HomePage": {
+    "metadata": {
+      "title": "Write a Book with AI | Create KDP-Ready EPUB in 15 Minutes",
+      "description": "Turn your expertise into a publish-ready book with AI. Generate drafts, covers, and EPUB/PDF output in 5 questions. Preview for free — no credit card required.",
+      "ogTitle": "Write a Book with AI",
+      "ogDescription": "Turn your expertise into a publish-ready book in 15 minutes. Preview for free."
+    },
+    "middleBlock": {
+      "title": "Write a Book with AI: Turn Your Idea into EPUB and PDF",
+      "description": "Turn your expertise into a publish-ready book with Book Creator. AI-powered draft generation, cover design, and KDP-compatible EPUB/PDF output in a single workflow.",
+      "subDescription": "Preview your book for free, unlock full access when you like it. Start immediately — no credit card required.",
+      "cards": {
+        "a": {
+          "title": "For Educators, Consultants, and Content Creators",
+          "description": "An AI-powered book writing platform for anyone who wants to turn their expertise into a KDP book. E-book creation is now a single workflow.",
+          "cta": "See all use cases →"
+        },
+        "b": {
+          "title": "No More Blank Page or Scattered Tools",
+          "description": "Write your book with AI — draft, content, and output all on one platform. Complete your book without needing different tools.",
+          "cta": "See how we compare →"
+        },
+        "c": {
+          "title": "KDP-Compatible EPUB and PDF Files",
+          "description": "Editable chapters, professional cover, and publish-ready EPUB + PDF outputs. Compatible with Kindle and KDP."
+        }
+      }
+    },
+    "pricing": {
+      "tag": "Book Pricing",
+      "title": "Prepare Your First Book for $4 — KDP-Ready EPUB and PDF Included",
+      "description": "Access a complete book for $4: AI-powered draft, professional cover, EPUB and PDF outputs. Preview for free, then unlock full access."
+    },
+    "faq": {
+      "heading": {
+        "badge": "Book Writing FAQ",
+        "title": "Frequently Asked Questions About Writing a Book with AI",
+        "description": "How does the AI book creator work, what's the output quality, and is it KDP-compatible? The most critical questions about the book writing process.",
+        "actionLabel": "All questions"
+      },
+      "quality": {
+        "question": "Can an AI-written book really be high quality?",
+        "answer": "AI creates the draft — you control the quality. Edit every chapter, regenerate what you don't like. {kdpLiveBooksClaim} of our books are live with a {kdpGuaranteeClaim} guarantee."
+      },
+      "duration": {
+        "question": "How long does it take to write a book with AI?",
+        "answer": "Enter your topic and get a publish-ready EPUB and PDF in 30–90 minutes. Most books are completed in a single session. According to user surveys, 92% of authors publish within 7 days compared to 3-6 months with traditional writing methods."
+      },
+      "kdp": {
+        "question": "Can I upload the EPUB and PDF outputs directly to KDP?",
+        "answer": "Yes. You get KDP-compatible EPUB and PDF outputs. We recommend a final review with your own checklist before uploading."
+      },
+      "creditCard": {
+        "question": "هل أحتاج إلى بطاقة ائتمان للبدء؟",
+        "answer": "لا. ابدأ بمعاينة مجانية — استكشف مسودة كتابك وغلافه وملخصه دون إدخال أي معلومات دفع. قم بالترقية فقط عندما تكون راضياً عن النتيجة."
+      },
+      "formats": {
+        "question": "ما صيغ الإخراج المتاحة؟",
+        "answer": "تتلقى EPUB (لـ Kindle وجميع القارئات الإلكترونية) و PDF (للطباعة عند الطلب) ومعاينة HTML قابلة للمشاركة. جميع المخرجات قابلة للتحرير وجاهزة لـ KDP."
+      },
+      "claims": {
+        "kdpAccept": "تم قبوله من قبل KDP",
+        "guarantee": "ضمان"
+      },
+      "ctaLabel": "ابدأ معاينة مجانية"
+    },
+    "cta": {
+      "title": "Start Writing Your Book with AI Today",
+      "description": "Enter your topic and create your free preview in 15 minutes. {noApiCostClaim}, no credit card required.",
+      "items": {
+        "0": "AI-powered draft, cover, and content ready",
+        "1": "Free preview — unlock full access when you like it",
+        "2": "KDP-compatible EPUB + PDF output"
+      }
+    },
+    "testimonials": {
+      "badge": "تقييمات العملاء",
+      "title": "ما يقوله المؤلفون",
+      "description": "نتائج حقيقية من مؤلفين حقيقيين.",
+      "aggregateLabel": "{count}+ تقييمات موثقة من مؤلفين حقيقيين"
+    },
+    "showcase": {
+      "badge": "كتب حقيقية وأغلفة حقيقية",
+      "title": "أمثلة كتب تم إنشاؤها بالذكاء الاصطناعي",
+      "description": "كل واحد انتقل من ملخص الموضوع إلى المسودة، ومن المسودة إلى سير عمل EPUB و PDF. يمكنك بدء كتابك الخاص هذا الأسبوع باستخدام نفس العملية.",
+      "ctaLabel": "ابدأ معاينة كتاب مجانية"
+    }
+  }
+}
