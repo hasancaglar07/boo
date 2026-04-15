@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,61 +45,6 @@ interface CTAConfig {
   urgencyLevel?: "low" | "medium" | "high";
 }
 
-const CTA_CONFIGS: Record<EngagementLevel, CTAConfig> = {
-  low: {
-    headline: "Unlock this book",
-    subheadline: "Get full access, PDF, EPUB, and editing workspace",
-    primaryAction: {
-      text: "Publish for $4",
-      icon: Sparkles,
-      trigger: "full_unlock",
-    },
-    showFeatures: true,
-    showPricing: true,
-    urgencyLevel: "low",
-  },
-  medium: {
-    headline: "Continue reading",
-    subheadline: "You've started this book — unlock the full content",
-    primaryAction: {
-      text: "Unlock Full Book",
-      icon: Lock,
-      trigger: "full_unlock",
-    },
-    secondaryActions: [
-      { text: "Download PDF", trigger: "pdf" },
-      { text: "Download EPUB", trigger: "epub" },
-    ],
-    showFeatures: true,
-    showPricing: true,
-    urgencyLevel: "medium",
-  },
-  high: {
-    headline: "Don't lose your progress",
-    subheadline: "You're engaged with this content — unlock it all now",
-    primaryAction: {
-      text: "Get Full Access",
-      icon: Zap,
-      trigger: "full_unlock",
-    },
-    secondaryActions: [
-      { text: "Download PDF", trigger: "pdf" },
-      { text: "Download EPUB", trigger: "epub" },
-    ],
-    showFeatures: false,
-    showPricing: true,
-    urgencyLevel: "high",
-  },
-};
-
-const FEATURES = [
-  { icon: FileText, text: "All chapters unlocked" },
-  { icon: Download, text: "PDF + EPUB export" },
-  { icon: CheckCircle2, text: "Cover and back cover" },
-  { icon: Zap, text: "Workspace and editing" },
-  { icon: Lock, text: "30-day refund guarantee" },
-];
-
 export function ProgressiveCTA({
   premium,
   slug,
@@ -107,11 +53,67 @@ export function ProgressiveCTA({
   className,
   onUpgrade,
 }: ProgressiveCTAProps) {
+  const t = useTranslations("ProgressiveCta");
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate engagement level directly without state
   const engagementLevel = calculateEngagementLevel(readingProgress, scrollDepth);
+
+  const CTA_CONFIGS: Record<EngagementLevel, CTAConfig> = {
+    low: {
+      headline: "Unlock this book",
+      subheadline: "Get full access, PDF, EPUB, and editing workspace",
+      primaryAction: {
+        text: "Publish for $4",
+        icon: Sparkles,
+        trigger: "full_unlock",
+      },
+      showFeatures: true,
+      showPricing: true,
+      urgencyLevel: "low",
+    },
+    medium: {
+      headline: "Continue reading",
+      subheadline: "You've started this book — unlock the full content",
+      primaryAction: {
+        text: "Unlock Full Book",
+        icon: Lock,
+        trigger: "full_unlock",
+      },
+      secondaryActions: [
+        { text: "Download PDF", trigger: "pdf" },
+        { text: "Download EPUB", trigger: "epub" },
+      ],
+      showFeatures: true,
+      showPricing: true,
+      urgencyLevel: "medium",
+    },
+    high: {
+      headline: "Don't lose your progress",
+      subheadline: "You're engaged with this content — unlock it all now",
+      primaryAction: {
+        text: "Get Full Access",
+        icon: Zap,
+        trigger: "full_unlock",
+      },
+      secondaryActions: [
+        { text: "Download PDF", trigger: "pdf" },
+        { text: "Download EPUB", trigger: "epub" },
+      ],
+      showFeatures: false,
+      showPricing: true,
+      urgencyLevel: "high",
+    },
+  };
+
+  const FEATURES = [
+    { icon: FileText, text: t("featureChapters") },
+    { icon: Download, text: t("featureExport") },
+    { icon: CheckCircle2, text: t("featureCover") },
+    { icon: Zap, text: t("featureWorkspace") },
+    { icon: Lock, text: t("featureRefund") },
+  ];
 
   // Intersection Observer for visibility tracking
   useEffect(() => {
@@ -162,10 +164,10 @@ export function ProgressiveCTA({
         <CardContent className="p-5">
           <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
             <CheckCircle2 className="size-4" aria-hidden="true" />
-            Full Access Active
+            {t("fullAccessActive")}
           </div>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Full book, PDF, EPUB, and workspace are unlocked.
+            {t("fullAccessDesc")}
           </p>
           <Button
             asChild
@@ -175,7 +177,7 @@ export function ProgressiveCTA({
           >
             <Link href={`/app/book/${encodeURIComponent(slug)}/workspace?tab=publish`}>
               <Download className="mr-2 size-4" aria-hidden="true" />
-              Download PDF / EPUB
+              {t("downloadPdfEpub")}
             </Link>
           </Button>
         </CardContent>
@@ -207,16 +209,16 @@ export function ProgressiveCTA({
           <div className="bg-primary px-5 py-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground/80">
-                Launch price
+                {t("launchPrice")}
               </span>
               <span className="rounded-full bg-primary-foreground/15 px-2 py-0.5 text-xs font-bold text-primary-foreground">
-                86% off
+                {t("discountBadge")}
               </span>
             </div>
             <div className="mt-1 flex items-baseline gap-2">
               <span className="text-3xl font-bold text-primary-foreground">$4</span>
               <span className="text-sm text-primary-foreground/70 line-through">$29</span>
-              <span className="text-xs text-primary-foreground/70">one-time</span>
+              <span className="text-xs text-primary-foreground/70">{t("oneTime")}</span>
             </div>
           </div>
         )}
@@ -270,7 +272,7 @@ export function ProgressiveCTA({
 
           {/* Trust Signals */}
           <p className="mt-3 text-center text-xs text-muted-foreground">
-            Instant access · Secure credit card
+            {t("instantAccess")}
           </p>
         </CardContent>
       </Card>
@@ -279,10 +281,10 @@ export function ProgressiveCTA({
       <div className="mt-3 rounded-[18px] border border-border/60 bg-background/60 px-4 py-3">
         <div className="grid grid-cols-2 gap-2">
           {[
-            { icon: Lock, text: "30-day refund" },
-            { icon: Zap, text: "Instant delivery" },
-            { icon: FileText, text: "No subscription" },
-            { icon: CheckCircle2, text: "KDP compatible" },
+            { icon: Lock, text: t("trustRefund") },
+            { icon: Zap, text: t("trustInstant") },
+            { icon: FileText, text: t("trustNoSub") },
+            { icon: CheckCircle2, text: t("trustKdp") },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Icon className="size-3 shrink-0 text-primary" aria-hidden="true" />

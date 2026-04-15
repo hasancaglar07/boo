@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Target, Calendar, TrendingUp, CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ interface GoalTrackerProps {
 }
 
 export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
+  const t = useTranslations("GoalTracker");
   const [goal, setGoal] = useState<WritingGoal>(() =>
     loadFromLocalStorage<WritingGoal>(STORAGE_KEYS.goals(slug), DEFAULT_GOAL)
   );
@@ -66,13 +68,13 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
       <CardContent className="space-y-4 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-foreground">Writing Goals</h3>
+            <h3 className="text-base font-semibold text-foreground">{t("title")}</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Track your progress and hit your targets
+              {t("subtitle")}
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={() => setShowSettings(!showSettings)}>
-            {showSettings ? "Done" : "Settings"}
+            {showSettings ? t("doneButton") : t("settingsButton")}
           </Button>
         </div>
 
@@ -81,12 +83,12 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Target className={cn("size-4", isGoalComplete && "text-green-500")} />
-              <div className="text-sm font-medium text-foreground">Daily Target</div>
+              <div className="text-sm font-medium text-foreground">{t("dailyTarget")}</div>
             </div>
             {isGoalComplete && (
               <Badge className="bg-default text-default-foreground gap-1">
                 <CheckCircle2 className="size-3" />
-                Complete!
+                {t("goalComplete")}
               </Badge>
             )}
           </div>
@@ -98,8 +100,8 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
           <div className="space-y-2">
             <Progress value={Math.min(progress.dailyPercentage, 100)} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{progress.dailyPercentage}% complete</span>
-              <span>{goal.dailyTarget - progress.dailyAchieved} words to go</span>
+              <span>{t("percentComplete", { percent: progress.dailyPercentage })}</span>
+              <span>{t("wordsToGo", { words: goal.dailyTarget - progress.dailyAchieved })}</span>
             </div>
           </div>
 
@@ -107,7 +109,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
           {isGoalComplete && (
             <div className="mt-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-3">
               <div className="text-sm font-medium text-green-700 dark:text-green-300">
-                🎉 Congratulations! You've hit your daily goal!
+                {t("congratulations")}
               </div>
             </div>
           )}
@@ -115,7 +117,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
 
         {/* Chapter Progress */}
         <div>
-          <div className="text-sm font-medium text-foreground mb-3">Chapter Progress</div>
+          <div className="text-sm font-medium text-foreground mb-3">{t("chapterProgress")}</div>
           <div className="space-y-2">
             {chapters.map((chapter, index) => {
               const chapterProgress = progress.chapterProgress[index];
@@ -132,7 +134,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-foreground">
-                        Ch. {index + 1}
+                        {t("chapterAbbr", { number: index + 1 })}
                       </span>
                       {isComplete && (
                         <CheckCircle2 className="size-4 text-green-500" />
@@ -148,7 +150,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
                   <Progress value={Math.min(chapterProgress.percentage, 100)} className="h-1.5" />
                   {hasDeadline && (
                     <div className="mt-1 text-xs text-muted-foreground">
-                      Due: {new Date(goal.deadlines[index]).toLocaleDateString()}
+                      {t("dueDate", { date: new Date(goal.deadlines[index]).toLocaleDateString() })}
                     </div>
                   )}
                 </div>
@@ -160,7 +162,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
         {/* Upcoming Deadlines */}
         {progress.upcomingDeadlines.length > 0 && (
           <div>
-            <div className="text-sm font-medium text-foreground mb-3">Upcoming Deadlines</div>
+            <div className="text-sm font-medium text-foreground mb-3">{t("upcomingDeadlines")}</div>
             <div className="space-y-2">
               {progress.upcomingDeadlines.map((deadline) => (
                 <div
@@ -170,15 +172,15 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
                   <div className="flex items-center gap-2">
                     <Calendar className="size-3.5 text-muted-foreground" />
                     <span className="text-foreground">
-                      Ch. {deadline.chapterIndex + 1}
+                      {t("chapterAbbr", { number: deadline.chapterIndex + 1 })}
                     </span>
                   </div>
                   <Badge className={deadline.daysUntil <= 3 ? "bg-red-500 text-white" : "bg-secondary text-secondary-foreground"}>
                     {deadline.daysUntil === 0
-                      ? "Today"
+                      ? t("deadlineToday")
                       : deadline.daysUntil === 1
-                      ? "Tomorrow"
-                      : `${deadline.daysUntil} days`}
+                      ? t("deadlineTomorrow")
+                      : t("deadlineDays", { days: deadline.daysUntil })}
                   </Badge>
                 </div>
               ))}
@@ -189,7 +191,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
         {/* Goal History Trend */}
         {goal.history.length > 1 && (
           <div>
-            <div className="text-sm font-medium text-foreground mb-3">7-Day Trend</div>
+            <div className="text-sm font-medium text-foreground mb-3">{t("sevenDayTrend")}</div>
             <div className="flex items-end gap-1 h-16">
               {goal.history.slice(-7).map((entry, index) => (
                 <div
@@ -216,7 +218,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
         {showSettings && (
           <div className="space-y-4 rounded-lg border border-border/60 bg-background/50 p-4">
             <div>
-              <Label>Daily Word Count Target</Label>
+              <Label>{t("dailyWordCountTarget")}</Label>
               <div className="flex gap-2 mt-1">
                 <Input
                   type="number"
@@ -224,12 +226,12 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
                   onChange={(e) => setNewDailyTarget(e.target.value)}
                   placeholder="2000"
                 />
-                <Button onClick={updateDailyTarget}>Set</Button>
+                <Button onClick={updateDailyTarget}>{t("setButton")}</Button>
               </div>
             </div>
 
             <div>
-              <Label>Set Chapter Deadline</Label>
+              <Label>{t("setChapterDeadline")}</Label>
               <div className="flex gap-2 mt-1">
                 <select
                   value={newDeadlineChapter}
@@ -238,7 +240,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
                 >
                   {chapters.map((_, index) => (
                     <option key={index} value={index.toString()}>
-                      Chapter {index + 1}
+                      {t("chapterOption", { number: index + 1 })}
                     </option>
                   ))}
                 </select>
@@ -247,7 +249,7 @@ export function GoalTracker({ slug, chapters }: GoalTrackerProps) {
                   value={newDeadline}
                   onChange={(e) => setNewDeadline(e.target.value)}
                 />
-                <Button onClick={setChapterDeadline}>Set</Button>
+                <Button onClick={setChapterDeadline}>{t("setButton")}</Button>
               </div>
             </div>
           </div>

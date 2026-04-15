@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('dev','dev-fast','prod','reset','stop','logs','logs-live','repair')]
+  [ValidateSet('dev','dev-fast','prod','reset','restart','stop','logs','logs-live','repair')]
   [string]$Mode = 'dev'
 )
 
@@ -715,6 +715,7 @@ switch ($Mode) {
   'dev-fast' { StartDev -FastMode }
   'prod' { StartProd }
   'reset' { StopWeb; Start-Sleep -Seconds 1; StartDev }
+  'restart' { StopWeb; Start-Sleep -Seconds 1; StartDev }
   'repair' { StopWeb; RepairDependencies; Start-Sleep -Seconds 1; StartDev }
   'stop' { StopWeb }
   'logs' { ShowLogs }

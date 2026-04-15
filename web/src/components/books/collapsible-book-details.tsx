@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { ChevronDown, ChevronUp, FileText, PenTool, User } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -29,26 +30,27 @@ export function CollapsibleBookDetails({
   defaultExpanded = false,
 }: CollapsibleBookDetailsProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const t = useTranslations("CollapsibleBookDetails");
 
   const hasContent = Boolean(authorBio || logoUrl || coverBrief);
   const sections = [
     {
       id: "author" as const,
-      label: "Author",
+      label: t("sectionAuthor"),
       icon: User,
       content: authorName,
       alwaysVisible: true,
     },
     {
       id: "logo" as const,
-      label: "Imprint",
+      label: t("sectionImprint"),
       icon: PenTool,
       content: logoText || imprint,
       alwaysVisible: true,
     },
     {
       id: "cover" as const,
-      label: "Cover emphasis",
+      label: t("sectionCoverEmphasis"),
       icon: FileText,
       content: coverBrief,
       alwaysVisible: false,
@@ -67,7 +69,7 @@ export function CollapsibleBookDetails({
         >
           <div className="flex items-center gap-2">
             <FileText className="size-4 text-muted-foreground" aria-hidden="true" />
-            <span className="text-sm font-semibold text-foreground">Book Details</span>
+            <span className="text-sm font-semibold text-foreground">{t("title")}</span>
             {hasContent && !isExpanded && (
               <span className="text-xs text-muted-foreground">
                 ({authorBio ? 1 : 0} + {logoUrl ? 1 : 0} + {coverBrief ? 1 : 0} hidden)
@@ -76,7 +78,7 @@ export function CollapsibleBookDetails({
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
-              {isExpanded ? "Hide" : "Show"}
+              {isExpanded ? t("hide") : t("show")}
             </span>
             {isExpanded ? (
               <ChevronUp className="size-4 text-muted-foreground" aria-hidden="true" />
@@ -114,7 +116,7 @@ export function CollapsibleBookDetails({
               {logoUrl && (
                 <div className="rounded-[14px] border border-border/60 bg-background/60 px-3 py-3">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Logo
+                    {t("sectionLogo")}
                   </div>
                   <div className="relative mt-2 h-10 w-[120px] overflow-hidden rounded-md bg-muted/30">
                     <Image
@@ -151,7 +153,7 @@ export function CollapsibleBookDetails({
               {authorBio && (
                 <div className="rounded-[14px] border border-border/60 bg-background/60 px-3 py-3">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Author biography
+                    {t("sectionAuthorBio")}
                   </div>
                   <div className="mt-1 text-sm leading-6 text-muted-foreground">
                     {authorBio}

@@ -17,44 +17,12 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { ExampleAsset, ExampleCardEntry } from "@/lib/examples-shared";
 import { SectionHeading } from "@/components/site/section-heading";
 import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
-
-const pipeline = [
-  {
-    step: "01",
-    title: "Topic Summary",
-    description: "Topic, target reader, and language selection. 5-question wizard.",
-    icon: Sparkles,
-  },
-  {
-    step: "02",
-    title: "Chapter Plan",
-    description: "Chapter architecture and book promise. Continue after approval.",
-    icon: Layers,
-  },
-  {
-    step: "03",
-    title: "Chapters",
-    description: "First chapter generation, quality revisions, and continuation iterations.",
-    icon: FileText,
-  },
-  {
-    step: "04",
-    title: "Cover",
-    description: "AI-generated front cover and delivery surface.",
-    icon: BookOpen,
-  },
-  {
-    step: "05",
-    title: "Outputs",
-    description: "EPUB, PDF, and HTML delivery. Instantly openable.",
-    icon: Download,
-  },
-];
 
 function formatBytes(size?: number) {
   if (!size) return "Ready";
@@ -192,12 +160,14 @@ function ExportCard({
   description,
   asset,
   icon: Icon,
+  t,
 }: {
   item: ExampleCardEntry;
   format: "EPUB" | "PDF" | "HTML";
   description: string;
   asset?: ExampleAsset;
   icon: typeof BookOpen;
+  t: ReturnType<typeof useTranslations<"ExamplesShowcase">>;
 }) {
   const isHtml = format === "HTML";
 
@@ -225,7 +195,7 @@ function ExportCard({
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-muted-foreground">
-          {asset ? formatBytes(asset.size) : "Not yet"}
+          {asset ? formatBytes(asset.size) : t("fileNotYet")}
         </span>
         {asset ? (
           <a
@@ -243,7 +213,7 @@ function ExportCard({
             }
           >
             <Download className="size-3" />
-            {isHtml ? "Open" : "Download"}
+            {isHtml ? t("openBtn") : t("downloadBtn")}
           </a>
         ) : null}
       </div>
@@ -254,9 +224,11 @@ function ExportCard({
 function OutlineModal({
   item,
   onClose,
+  t,
 }: {
   item: ExampleCardEntry;
   onClose: () => void;
+  t: ReturnType<typeof useTranslations<"ExamplesShowcase">>;
 }) {
   const [activeTab, setActiveTab] = useState<"outline" | "chapter" | "export">("outline");
   const publicationLine = publicationMeta(item);
@@ -343,7 +315,11 @@ function OutlineModal({
 
         <div className="flex border-b border-border/60 bg-background/50">
           {(["outline", "chapter", "export"] as const).map((tab) => {
-            const labels = { outline: "Table of Contents", chapter: "First Chapter", export: "Outputs" };
+            const labels = {
+              outline: t("tabOutline"),
+              chapter: t("tabChapter"),
+              export: t("tabExport"),
+            };
             return (
               <button
                 key={tab}
@@ -386,7 +362,7 @@ function OutlineModal({
               <div className="mb-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Author
+                    {t("authorLabel")}
                   </div>
                   <div className="mt-2 text-sm font-semibold text-foreground">{item.author}</div>
                   {item.authorBio ? (
@@ -395,7 +371,7 @@ function OutlineModal({
                 </div>
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Brand
+                    {t("brandLabel")}
                   </div>
                   <div className="mt-2 flex items-center gap-3">
                     {item.brandingLogoUrl ? (
@@ -436,7 +412,7 @@ function OutlineModal({
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-border/70 bg-background/40 p-5 text-sm text-muted-foreground">
-                  Chapter plan found but structure could not be parsed as a readable list.
+                  {t("outlineParseFailed")}
                 </div>
               )}
             </div>
@@ -455,7 +431,7 @@ function OutlineModal({
                   {item.chapterPreview.title}
                 </h4>
                 <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                  Real preview text from the first chapter.
+                  {t("chapterPreviewNote")}
                 </p>
               </div>
               <div className="rounded-2xl border border-border/80 bg-background/60 p-5" dir={item.direction}>
@@ -476,7 +452,7 @@ function OutlineModal({
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full" style={{ width: "14%", backgroundColor: item.spineColor }} />
                   </div>
-                  <span className="text-xs text-muted-foreground">Real first chapter preview</span>
+                  <span className="text-xs text-muted-foreground">{t("realFirstChapterPreview")}</span>
                 </div>
               </div>
             </div>
@@ -485,32 +461,35 @@ function OutlineModal({
           {activeTab === "export" ? (
             <div className="p-6">
               <div className="mb-4">
-                <h4 className="font-serif text-lg font-semibold text-foreground">Delivery Formats</h4>
+                <h4 className="font-serif text-lg font-semibold text-foreground">{t("deliveryFormatsTitle")}</h4>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Only actually generated output files remain active.
+                  {t("deliveryFormatsDesc")}
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 <ExportCard
                   item={item}
                   format="EPUB"
-                  description="Real output for e-reader"
+                  description={t("epubDesc")}
                   asset={item.exports.epub}
                   icon={BookOpen}
+                  t={t}
                 />
                 <ExportCard
                   item={item}
                   format="PDF"
-                  description="Output for print or sharing"
+                  description={t("pdfDesc")}
                   asset={item.exports.pdf}
                   icon={FileText}
+                  t={t}
                 />
                 <ExportCard
                   item={item}
                   format="HTML"
-                  description="Output for web preview"
+                  description={t("htmlDesc")}
                   asset={item.exports.html}
                   icon={Globe}
+                  t={t}
                 />
               </div>
 
@@ -518,8 +497,8 @@ function OutlineModal({
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <CheckCircle2 className="size-4 flex-shrink-0 text-emerald-500" />
                   {availableFormats(item).length
-                    ? `${availableFormats(item).join(", ")} files are accessible via public read-only route.`
-                    : "Output files for this example are not yet at a level to be displayed on the showcase."}
+                    ? t("filesAccessible", { formats: availableFormats(item).join(", ") })
+                    : t("filesNotReady")}
                 </div>
               </div>
             </div>
@@ -536,7 +515,7 @@ function OutlineModal({
                 onClose();
               }}
             >
-              Read full book <ArrowRight className="size-4" />
+              {t("readFullBook")} <ArrowRight className="size-4" />
             </Link>
             <Link
               href="/start/topic"
@@ -547,7 +526,7 @@ function OutlineModal({
                 onClose();
               }}
             >
-              Start a Similar Book <ArrowRight className="size-4" />
+              {t("startSimilarBookModal")} <ArrowRight className="size-4" />
             </Link>
           </div>
         </div>
@@ -565,10 +544,19 @@ export function ExamplesShowcase({
   categories: string[];
   languages: string[];
 }) {
+  const t = useTranslations("ExamplesShowcase");
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeLang, setActiveLang] = useState("All");
   const [previewItem, setPreviewItem] = useState<ExampleCardEntry | null>(null);
   const [topic, setTopic] = useState("");
+
+  const pipeline = [
+    { step: "01", title: t("pipeline01Title"), description: t("pipeline01Desc"), icon: Sparkles },
+    { step: "02", title: t("pipeline02Title"), description: t("pipeline02Desc"), icon: Layers },
+    { step: "03", title: t("pipeline03Title"), description: t("pipeline03Desc"), icon: FileText },
+    { step: "04", title: t("pipeline04Title"), description: t("pipeline04Desc"), icon: BookOpen },
+    { step: "05", title: t("pipeline05Title"), description: t("pipeline05Desc"), icon: Download },
+  ];
 
   const filtered = items.filter((item) => {
     const categoryMatch = activeCategory === "All" || item.category === activeCategory;
@@ -583,7 +571,7 @@ export function ExamplesShowcase({
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Kategori
+                {t("categoryLabel")}
               </span>
               {categories.map((category) => (
                 <button
@@ -604,7 +592,7 @@ export function ExamplesShowcase({
             <div className="hidden h-px w-px sm:block" />
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Dil
+                {t("languageLabel")}
               </span>
               {languages.map((language) => (
                 <button
@@ -687,8 +675,8 @@ export function ExamplesShowcase({
 
                   <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                     {[
-                      { label: "Chapter", value: String(item.chapters) },
-                      { label: "Dil", value: item.language },
+                      { label: t("pipeline03Title"), value: String(item.chapters) },
+                      { label: t("languageLabel"), value: item.language },
                       { label: "Output", value: exportSummary(item) },
                     ].map(({ label, value }) => (
                       <div
@@ -729,7 +717,7 @@ export function ExamplesShowcase({
                       className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border/80 bg-background px-3 py-2.5 text-xs font-semibold text-foreground transition hover:bg-accent"
                     >
                       <Eye className="size-3.5" />
-                      Quick look
+                      {t("quickLook")}
                     </button>
                     <Link
                       href={`/examples/${item.slug}`}
@@ -737,7 +725,7 @@ export function ExamplesShowcase({
                       style={{ backgroundColor: item.spineColor }}
                       onClick={() => trackEvent("examples_book_clicked", { slug: item.slug, location: "grid_primary" })}
                     >
-                      Oku <ArrowRight className="size-3.5" />
+                      {t("readBook")} <ArrowRight className="size-3.5" />
                     </Link>
                   </div>
                   <Link
@@ -745,7 +733,7 @@ export function ExamplesShowcase({
                     className="mt-2 inline-flex w-full items-center justify-center gap-1 text-xs font-medium text-primary hover:underline"
                     onClick={() => trackEvent("examples_start_similar_clicked", { slug: item.slug, location: "grid_card" })}
                   >
-                    Start a Similar Book <ArrowRight className="size-3" />
+                    {t("startSimilarBook")} <ArrowRight className="size-3" />
                   </Link>
                 </div>
               </div>
@@ -755,8 +743,8 @@ export function ExamplesShowcase({
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="mb-4 text-5xl">📚</div>
-              <p className="text-base font-medium text-foreground">No examples for this filter</p>
-              <p className="mt-2 text-sm text-muted-foreground">Try a different category or language.</p>
+              <p className="text-base font-medium text-foreground">{t("noExamples")}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{t("noExamplesHint")}</p>
             </div>
           ) : null}
         </div>
@@ -765,15 +753,15 @@ export function ExamplesShowcase({
       <section className="border-b border-border/80 bg-accent/20 py-16">
         <div className="shell mx-auto max-w-2xl text-center">
           <SectionHeading
-            badge="Try your own topic"
-            title="Which book do you want to write?"
-            description="Enter your topic, create your own draft with the same workflow. No credit card required."
+            badge={t("tryTopicBadge")}
+            title={t("tryTopicTitle")}
+            description={t("tryTopicDescription")}
             align="center"
           />
           <div className="mt-6 flex gap-2">
             <input
               type="text"
-              placeholder="e.g.: Freelance pricing guide..."
+              placeholder={t("topicPlaceholder")}
               value={topic}
               onChange={(event) => setTopic(event.target.value)}
               onKeyDown={(event) => {
@@ -787,19 +775,19 @@ export function ExamplesShowcase({
               href={`/start/topic${topic ? `?topic=${encodeURIComponent(topic)}` : ""}`}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90"
             >
-              Start <ArrowRight className="size-4" />
+              {t("startBtn")} <ArrowRight className="size-4" />
             </Link>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">Free preview · No sign-up required</p>
+          <p className="mt-3 text-xs text-muted-foreground">{t("freePreviewNote")}</p>
         </div>
       </section>
 
       <section className="border-b border-border/80 py-16">
         <div className="shell">
           <SectionHeading
-            badge="Production chain"
-            title="Visible flow from chapter plan to output"
-            description="Each step is a separate screen. You always know where you are and what comes next."
+            badge={t("pipelineBadge")}
+            title={t("pipelineTitle")}
+            description={t("pipelineDescription")}
           />
 
           <div className="relative">
@@ -823,7 +811,7 @@ export function ExamplesShowcase({
                         href="/start/topic"
                         className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                       >
-                        Start <ChevronRight className="size-3" />
+                        {t("pipelineStartLink")} <ChevronRight className="size-3" />
                       </Link>
                     ) : null}
                   </div>
@@ -834,7 +822,7 @@ export function ExamplesShowcase({
         </div>
       </section>
 
-      {previewItem ? <OutlineModal item={previewItem} onClose={() => setPreviewItem(null)} /> : null}
+      {previewItem ? <OutlineModal item={previewItem} onClose={() => setPreviewItem(null)} t={t} /> : null}
     </>
   );
 }

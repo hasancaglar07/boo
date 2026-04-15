@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MessageSquare, Check, X, Search, Filter, Reply, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,7 @@ export function ChapterComments({
   author,
   onCommentsChange,
 }: ChapterCommentsProps) {
+  const t = useTranslations("ChapterComments");
   const [comments, setComments] = useState<Record<number, ChapterComment[]>>(() =>
     loadFromLocalStorage<Record<number, ChapterComment[]>>(STORAGE_KEYS.comments(slug), {})
   );
@@ -88,7 +90,7 @@ export function ChapterComments({
   }
 
   function handleDeleteComment(commentId: string) {
-    if (!confirm("Are you sure you want to delete this comment?")) return;
+    if (!confirm(t("confirmDeleteComment"))) return;
 
     const updated = { ...comments };
     updated[chapterIndex] = updated[chapterIndex].filter(c => c.id !== commentId);
@@ -96,7 +98,7 @@ export function ChapterComments({
   }
 
   function handleDeleteReply(commentId: string, replyId: string) {
-    if (!confirm("Are you sure you want to delete this reply?")) return;
+    if (!confirm(t("confirmDeleteReply"))) return;
 
     const updated = { ...comments };
     const chapterComments = updated[chapterIndex];
@@ -137,7 +139,7 @@ export function ChapterComments({
         onClick={() => setIsOpen(true)}
       >
         <MessageSquare className="size-3.5" />
-        Comments
+        {t("commentsButton")}
         {unresolvedCount > 0 && (
           <Badge
             className="absolute -top-1 -right-1 h-5 min-w-5 px-1 flex items-center justify-center p-0 text-xs bg-red-500 text-white border-red-500"
@@ -150,24 +152,24 @@ export function ChapterComments({
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>Comments - {chapterTitle}</span>
-            <Badge className="bg-secondary text-secondary-foreground">{chapterComments.length} total</Badge>
+            <span>{t("dialogTitle", { chapterTitle })}</span>
+            <Badge className="bg-secondary text-secondary-foreground">{t("totalBadge", { count: chapterComments.length })}</Badge>
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4">
           {/* Add Comment */}
           <div className="space-y-2">
-            <Label>Add Comment</Label>
+            <Label>{t("addCommentLabel")}</Label>
             <Textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Add a comment about this chapter..."
+              placeholder={t("addCommentPlaceholder")}
               rows={3}
               className="resize-none"
             />
             <Button onClick={handleAddComment} disabled={!newComment.trim()} size="sm">
-              Add Comment
+              {t("addCommentButton")}
             </Button>
           </div>
 
@@ -176,7 +178,7 @@ export function ChapterComments({
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 size-4 text-muted-foreground" />
               <Input
-                placeholder="Search comments..."
+                placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8"
@@ -187,9 +189,9 @@ export function ChapterComments({
               onChange={(e) => setFilterResolved(e.target.value as "all" | "unresolved" | "resolved")}
               className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm"
             >
-              <option value="all">All</option>
-              <option value="unresolved">Unresolved</option>
-              <option value="resolved">Resolved</option>
+              <option value="all">{t("filterAll")}</option>
+              <option value="unresolved">{t("filterUnresolved")}</option>
+              <option value="resolved">{t("filterResolved")}</option>
             </select>
           </div>
 
@@ -199,8 +201,8 @@ export function ChapterComments({
               <Card>
                 <CardContent className="p-6 text-center text-sm text-muted-foreground">
                   {searchQuery || filterResolved !== "all"
-                    ? "No comments match your search."
-                    : "No comments yet. Add your first comment above."}
+                    ? t("noCommentsFiltered")
+                    : t("noCommentsEmpty")}
                 </CardContent>
               </Card>
             ) : (
@@ -212,7 +214,7 @@ export function ChapterComments({
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium text-foreground">{comment.author}</span>
                           <Badge className={comment.resolved ? "bg-secondary text-secondary-foreground text-xs" : "bg-default text-default-foreground text-xs"}>
-                            {comment.resolved ? "Resolved" : "Open"}
+                            {comment.resolved ? t("resolved") : t("open")}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(comment.timestamp))}
@@ -243,14 +245,14 @@ export function ChapterComments({
                             <Textarea
                               value={replyText}
                               onChange={(e) => setReplyText(e.target.value)}
-                              placeholder="Write a reply..."
+                              placeholder={t("replyPlaceholder")}
                               rows={2}
                               className="resize-none"
                               autoFocus
                             />
                             <div className="flex gap-2">
                               <Button size="sm" onClick={() => handleAddReply(comment.id)}>
-                                Reply
+                                {t("replyButton")}
                               </Button>
                               <Button
                                 size="sm"
@@ -260,7 +262,7 @@ export function ChapterComments({
                                   setReplyText("");
                                 }}
                               >
-                                Cancel
+                                {t("cancelButton")}
                               </Button>
                             </div>
                           </div>
@@ -272,7 +274,7 @@ export function ChapterComments({
                             onClick={() => setReplyTo(comment.id)}
                           >
                             <Reply className="size-3" />
-                            Reply
+                            {t("replyButton")}
                           </Button>
                         )}
                       </div>
@@ -283,7 +285,7 @@ export function ChapterComments({
                           variant="ghost"
                           onClick={() => handleToggleResolved(comment.id)}
                           className="h-8 w-8 p-0"
-                          title={comment.resolved ? "Mark as unresolved" : "Mark as resolved"}
+                          title={comment.resolved ? t("markUnresolved") : t("markResolved")}
                         >
                           {comment.resolved ? (
                             <X className="size-3.5" />
@@ -296,7 +298,7 @@ export function ChapterComments({
                           variant="ghost"
                           onClick={() => handleDeleteComment(comment.id)}
                           className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                          title="Delete comment"
+                          title={t("deleteComment")}
                         >
                           <Trash2 className="size-3.5" />
                         </Button>

@@ -15,8 +15,11 @@ import {
   PLAN_PRICES_CENTS,
 } from "@/lib/auth/constants";
 import { prisma } from "@/lib/prisma";
+import type { AdminLiveActivityPayload } from "@/lib/admin/types";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
+const LIVE_API_USAGE_EVENT = "backend_api_request";
+const LIVE_API_USAGE_WINDOW_MS = 15 * 60 * 1000;
 const FUNNEL_STAGES = [
   "start_page_viewed",
   "wizard_started",
@@ -37,6 +40,7 @@ const CACHE_TTL = {
   cohortMs: 60_000,
   churnMs: 60_000,
   jobsMs: 5_000,
+  liveActivityMs: 5_000,
 } as const;
 
 type QueryCacheEntry<T> = {
@@ -1786,6 +1790,376 @@ export async function listAdminModerationQueue(input: {
       order: input.order,
     },
   };
+}
+
+type LiveLifecycle = AdminLiveActivityPayload["operations"][number]["lifecycle"];
+type LiveOperationInternal = AdminLiveActivityPayload["operations"][number] & { ownerKey: string };
+
+function clampPercent(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function firstValidIso(values: Array<string | Date | null | undefined>) {
+  for (const value of values) {
+    if (!value) continue;
+    const date = value instanceof Date ? value : new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+  }
+  return new Date().toISOString();
+}
+
+function formatLiveStageLabel(value: string) {
+  const cleaned = String(value || "")
+    .trim()
+    .replace(/[._-]+/g, " ");
+  if (!cleaned) return "Queued";
+  return cleaned
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function inferLiveApiLabel(input: {
+  stepCode: string;
+  stage: string;
+  lifecycle: LiveLifecycle;
+  fullGenerationActive: boolean;
+}) {
+  const merged = `${input.stepCode} ${input.stage}`.toLowerCase();
+  if (merged.includes("cover")) return "POST /api/workflows (cover)";
+  if (merged.includes("first_chapter") || merged.includes("preview")) return "GET /api/books/:slug/preview";
+  if (merged.includes("full") || merged.includes("chapter") || input.fullGenerationActive) {
+    return "POST /api/books/:slug/full-bootstrap";
+  }
+  if (merged.includes("export") || merged.includes("pdf") || merged.includes("epub")) {
+    return "POST /api/workflows (build)";
+  }
+  if (input.lifecycle === "failed") return "POST /api/workflows (retry)";
+  return "GET /api/books/:slug/preview";
+}
+
+function normalizeLiveProvider(provider: string | null | undefined, stepCode: string) {
+  const normalized = String(provider || "").trim();
+  if (normalized) return normalized;
+  if (stepCode.includes("cover")) return "cover-engine";
+  if (stepCode.includes("full")) return "book-engine";
+  return "system";
+}
+
+export async function getAdminLiveActivityData(): Promise<AdminLiveActivityPayload> {
+  return withTtlCache("admin-live-activity", CACHE_TTL.liveActivityMs, async () => {
+    const nowMs = Date.now();
+    const apiUsageSince = new Date(nowMs - LIVE_API_USAGE_WINDOW_MS);
+
+    const [backendBooks, backendHealth, bookRecords, apiUsageEvents] = await Promise.all([
+      fetchBackendBooks(),
+      fetchBackendJson<Record<string, unknown>>("/api/health"),
+      prisma.bookRecord.findMany({
+        select: {
+          slug: true,
+          ownerUserId: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.analyticsEvent.findMany({
+        where: {
+          eventName: LIVE_API_USAGE_EVENT,
+          createdAt: {
+            gte: apiUsageSince,
+          },
+        },
+        select: {
+          pathname: true,
+          createdAt: true,
+          properties: true,
+        },
+      }),
+    ]);
+
+    const ownerIds = Array.from(
+      new Set(bookRecords.map((record) => record.ownerUserId).filter((id): id is string => Boolean(id))),
+    );
+    const owners = ownerIds.length
+      ? await prisma.user.findMany({
+          where: { id: { in: ownerIds } },
+          select: { id: true, email: true, name: true },
+        })
+      : [];
+
+    const recordMap = new Map(bookRecords.map((record) => [record.slug, record]));
+    const ownerMap = new Map(owners.map((owner) => [owner.id, owner]));
+    const staleThresholdMs = 7 * 60 * 1000;
+    const pendingWindowMs = 30 * 60 * 1000;
+    const oneHourAgoMs = nowMs - 60 * 60 * 1000;
+
+    const trackedBooks = backendBooks.filter((book) => {
+      const status = book.status || {};
+      const fullGeneration = status.full_generation;
+      return Boolean(
+        status.active ||
+          fullGeneration?.active ||
+          status.error ||
+          fullGeneration?.error ||
+          status.stage ||
+          fullGeneration?.stage ||
+          status.started_at ||
+          status.updated_at,
+      );
+    });
+
+    const operationRows: LiveOperationInternal[] = trackedBooks.map((book) => {
+      const status = book.status || {};
+      const fullGeneration = status.full_generation;
+      const record = recordMap.get(book.slug) || null;
+      const owner = record?.ownerUserId ? ownerMap.get(record.ownerUserId) : null;
+
+      const startedAt = firstValidIso([
+        status.started_at,
+        fullGeneration?.started_at,
+        record?.createdAt,
+        record?.updatedAt,
+      ]);
+      const updatedAt = firstValidIso([
+        status.updated_at,
+        fullGeneration?.updated_at,
+        fullGeneration?.eta_updated_at,
+        record?.updatedAt,
+        startedAt,
+      ]);
+      const updatedAtMs = new Date(updatedAt).getTime();
+      const isRecentlyTouched = Number.isFinite(updatedAtMs) && nowMs - updatedAtMs <= pendingWindowMs;
+
+      const hasPendingSignal = Boolean(
+        status.started_at || status.updated_at || status.stage || status.message || fullGeneration?.stage,
+      );
+      let lifecycle: LiveLifecycle = "completed";
+      if (status.error || fullGeneration?.error) lifecycle = "failed";
+      else if (status.active || fullGeneration?.active) lifecycle = "processing";
+      else if (
+        !status.product_ready &&
+        !status.completed_at &&
+        !fullGeneration?.complete &&
+        hasPendingSignal &&
+        isRecentlyTouched
+      ) {
+        lifecycle = "pending";
+      }
+
+      const stageRaw = String(
+        status.current_step_label || fullGeneration?.stage || status.stage || status.current_step_code || "",
+      ).trim();
+      const stepCode = String(status.current_step_code || fullGeneration?.stage || status.stage || "")
+        .trim()
+        .toLowerCase();
+      const ratioProgress =
+        typeof fullGeneration?.ready_count === "number" &&
+        typeof fullGeneration?.target_count === "number" &&
+        fullGeneration.target_count > 0
+          ? (fullGeneration.ready_count / fullGeneration.target_count) * 100
+          : 0;
+      const progress = clampPercent(Number(status.progress ?? fullGeneration?.progress ?? ratioProgress));
+      const stale =
+        (lifecycle === "processing" || lifecycle === "pending") &&
+        Number.isFinite(updatedAtMs) &&
+        nowMs - updatedAtMs > staleThresholdMs;
+      const api = inferLiveApiLabel({
+        stepCode,
+        stage: stageRaw,
+        lifecycle,
+        fullGenerationActive: Boolean(fullGeneration?.active),
+      });
+
+      const ownerLabel =
+        owner?.email ||
+        owner?.name ||
+        (record?.ownerUserId ? `User ${record.ownerUserId.slice(0, 8)}` : "Guest");
+
+      return {
+        id: book.slug,
+        bookSlug: book.slug,
+        title: book.title || book.slug,
+        owner: ownerLabel,
+        ownerKey: record?.ownerUserId || `guest:${book.slug}`,
+        lifecycle,
+        stage:
+          stageRaw ||
+          (lifecycle === "failed"
+            ? "Error"
+            : lifecycle === "processing"
+              ? "Running"
+              : lifecycle === "pending"
+                ? "Queued"
+                : "Completed"),
+        stepCode: stepCode || lifecycle,
+        progress,
+        message: String(
+          status.message ||
+            fullGeneration?.message ||
+            status.error ||
+            fullGeneration?.error ||
+            (lifecycle === "pending" ? "Queued" : lifecycle === "processing" ? "Running" : "Ready"),
+        ),
+        provider: normalizeLiveProvider(book.cover_generation_provider, stepCode),
+        api,
+        startedAt,
+        updatedAt,
+        stale,
+      };
+    });
+
+    const queueRows = operationRows.filter(
+      (item) => item.lifecycle === "processing" || item.lifecycle === "pending",
+    );
+    const failedRows = operationRows.filter((item) => item.lifecycle === "failed");
+    const failedLastHour = failedRows.filter((item) => {
+      const updatedAt = new Date(item.updatedAt).getTime();
+      return Number.isFinite(updatedAt) && updatedAt >= oneHourAgoMs;
+    }).length;
+    const staleOperations = operationRows.filter((item) => item.stale).length;
+
+    const providerMap = new Map<string, { provider: string; active: number; total: number }>();
+    const inferredApiMap = new Map<string, { api: string; inFlight: number }>();
+
+    for (const row of operationRows) {
+      const providerEntry = providerMap.get(row.provider) || { provider: row.provider, active: 0, total: 0 };
+      providerEntry.total += 1;
+      if (row.lifecycle === "processing" || row.lifecycle === "pending") {
+        providerEntry.active += 1;
+      }
+      providerMap.set(row.provider, providerEntry);
+
+      const apiEntry = inferredApiMap.get(row.api) || { api: row.api, inFlight: 0 };
+      if (row.lifecycle === "processing" || row.lifecycle === "pending") {
+        apiEntry.inFlight += 1;
+      }
+      inferredApiMap.set(row.api, apiEntry);
+    }
+
+    const apiUsageMap = new Map<
+      string,
+      { api: string; inFlight: number; total: number; errors: number; lastRequestAt: string | null }
+    >();
+    for (const inferred of inferredApiMap.values()) {
+      apiUsageMap.set(inferred.api, {
+        api: inferred.api,
+        inFlight: inferred.inFlight,
+        total: 0,
+        errors: 0,
+        lastRequestAt: null,
+      });
+    }
+
+    for (const event of apiUsageEvents) {
+      const properties =
+        event.properties && typeof event.properties === "object"
+          ? (event.properties as Record<string, unknown>)
+          : {};
+      const api = String(properties.endpoint || event.pathname || "unknown").trim() || "unknown";
+      const status = Number(properties.status || 0);
+      const entry = apiUsageMap.get(api) || {
+        api,
+        inFlight: 0,
+        total: 0,
+        errors: 0,
+        lastRequestAt: null,
+      };
+      entry.total += 1;
+      if (Number.isFinite(status) && status >= 400) {
+        entry.errors += 1;
+      }
+      const currentTs = entry.lastRequestAt ? new Date(entry.lastRequestAt).getTime() : 0;
+      const incomingTs = event.createdAt.getTime();
+      if (!currentTs || incomingTs > currentTs) {
+        entry.lastRequestAt = event.createdAt.toISOString();
+      }
+      apiUsageMap.set(api, entry);
+    }
+
+    const queueDepth = queueRows.length;
+    const errorBase = queueDepth + failedLastHour;
+    const errorRatePct = errorBase > 0 ? Number(((failedLastHour / errorBase) * 100).toFixed(1)) : 0;
+    const backendReachable = Boolean(backendHealth);
+    const apiErrorsLast15m = Array.from(apiUsageMap.values()).reduce(
+      (total, entry) => total + entry.errors,
+      0,
+    );
+    const alerts: string[] = [];
+    if (!backendReachable) alerts.push("Backend /api/health unreachable");
+    if (staleOperations > 0) alerts.push(`${staleOperations} stale operations detected`);
+    if (failedLastHour > 0) alerts.push(`${failedLastHour} failures in the last hour`);
+    if (apiErrorsLast15m > 0) alerts.push(`${apiErrorsLast15m} API errors in the last 15 minutes`);
+    if (!alerts.length) alerts.push("No active incidents");
+
+    const lifecycleOrder: Record<LiveLifecycle, number> = {
+      processing: 0,
+      pending: 1,
+      failed: 2,
+      completed: 3,
+    };
+    const operations = operationRows
+      .sort((left, right) => {
+        const lifecycleDiff = lifecycleOrder[left.lifecycle] - lifecycleOrder[right.lifecycle];
+        if (lifecycleDiff !== 0) return lifecycleDiff;
+        return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
+      })
+      .slice(0, 30)
+      .map((item) => ({
+        id: item.id,
+        bookSlug: item.bookSlug,
+        title: item.title,
+        owner: item.owner,
+        lifecycle: item.lifecycle,
+        stage: formatLiveStageLabel(item.stage),
+        stepCode: item.stepCode,
+        progress: item.progress,
+        message: item.message,
+        provider: item.provider,
+        api: item.api,
+        startedAt: item.startedAt,
+        updatedAt: item.updatedAt,
+        stale: item.stale,
+      }));
+
+    return {
+      snapshotAt: new Date(nowMs).toISOString(),
+      summary: {
+        concurrentOperations: operationRows.filter((item) => item.lifecycle === "processing").length,
+        activeUsers: new Set(queueRows.map((item) => item.ownerKey)).size,
+        activeBooks: new Set(queueRows.map((item) => item.bookSlug)).size,
+        booksGeneratingNow: operationRows.filter((item) => item.lifecycle === "processing").length,
+        queueDepth,
+        failedLastHour,
+      },
+      health: {
+        status: !backendReachable
+          ? "down"
+          : staleOperations > 0 || failedLastHour > 0 || errorRatePct >= 30 || apiErrorsLast15m > 0
+            ? "degraded"
+            : "healthy",
+        backendReachable,
+        staleOperations,
+        errorRatePct,
+        alerts,
+      },
+      providers: Array.from(providerMap.values()).sort(
+        (left, right) => right.active - left.active || right.total - left.total || left.provider.localeCompare(right.provider),
+      ),
+      apiUsage: Array.from(apiUsageMap.values())
+        .sort(
+          (left, right) =>
+            right.inFlight - left.inFlight ||
+            right.total - left.total ||
+            right.errors - left.errors ||
+            left.api.localeCompare(right.api),
+        )
+        .slice(0, 8),
+      operations,
+    };
+  });
 }
 
 export async function listAdminJobs(options?: { summaryOnly?: boolean }) {

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { AuthAlert } from "@/components/auth/auth-alert";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ type FeedbackState =
   | null;
 
 export function ResetPasswordForm() {
+  const t = useTranslations("ResetPasswordForm");
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
 
@@ -50,8 +52,8 @@ export function ResetPasswordForm() {
       if (!response.ok) {
         const nextFeedback = {
           variant: "error" as const,
-          title: "Reset request could not be sent",
-          description: payload?.error || "The operation could not be completed right now. Please try again.",
+          title: t("errors.requestFailed.title"),
+          description: payload?.error || t("errors.requestFailed.description"),
         };
         setFeedback(nextFeedback);
         toast.error(nextFeedback.title, { description: nextFeedback.description });
@@ -60,8 +62,8 @@ export function ResetPasswordForm() {
 
       const nextFeedback = {
         variant: "success" as const,
-        title: "Reset link sent",
-        description: "Check your email and spam folder. You can set a new password using the link you receive.",
+        title: t("success.resetLinkSent.title"),
+        description: t("success.resetLinkSent.description"),
       };
       setFeedback(nextFeedback);
       toast.success(nextFeedback.title, { description: nextFeedback.description });
@@ -77,8 +79,8 @@ export function ResetPasswordForm() {
     if (password.trim().length < 8) {
       const nextFeedback = {
         variant: "error" as const,
-        title: "Password is too short",
-        description: "Your new password must be at least 8 characters.",
+        title: t("errors.passwordTooShort.title"),
+        description: t("errors.passwordTooShort.description"),
       };
       setFeedback(nextFeedback);
       toast.error(nextFeedback.title, { description: nextFeedback.description });
@@ -88,8 +90,8 @@ export function ResetPasswordForm() {
     if (password !== passwordConfirm) {
       const nextFeedback = {
         variant: "error" as const,
-        title: "Passwords do not match",
-        description: "Make sure you enter the same new password in both fields.",
+        title: t("errors.passwordMismatch.title"),
+        description: t("errors.passwordMismatch.description"),
       };
       setFeedback(nextFeedback);
       toast.error(nextFeedback.title, { description: nextFeedback.description });
@@ -114,10 +116,10 @@ export function ResetPasswordForm() {
       if (!response.ok) {
         const nextFeedback = {
           variant: "error" as const,
-          title: "Password could not be updated",
-          description: payload?.error || "The link may have expired. Request a new reset link.",
+          title: t("errors.confirmFailed.title"),
+          description: payload?.error || t("errors.confirmFailed.description"),
           actionHref: "/reset-password",
-          actionLabel: "Request new link",
+          actionLabel: t("actions.requestNewLink"),
         };
         setFeedback(nextFeedback);
         toast.error(nextFeedback.title, { description: nextFeedback.description });
@@ -126,10 +128,10 @@ export function ResetPasswordForm() {
 
       const nextFeedback = {
         variant: "success" as const,
-        title: "Your password has been updated",
-        description: "You can now log in with your new password.",
+        title: t("success.passwordUpdated.title"),
+        description: t("success.passwordUpdated.description"),
         actionHref: "/login",
-        actionLabel: "Go to login page",
+        actionLabel: t("actions.goToLogin"),
       };
       setFeedback(nextFeedback);
       toast.success(nextFeedback.title, { description: nextFeedback.description });

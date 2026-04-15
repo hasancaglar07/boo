@@ -30,6 +30,7 @@ import {
   type BookIdeaLanguage,
   type MaterialStatus,
 } from "@/lib/book-idea-validator";
+import { useTranslations } from "next-intl";
 
 type FormState = {
   topic: string;
@@ -51,27 +52,9 @@ const defaultForm: FormState = {
   email: "",
 };
 
-const intentOptions: Array<{ value: BookIdeaIntent; label: string; hint: string }> = [
-  { value: "authority_book", label: "Authority book", hint: "For trust, positioning, and premium perception." },
-  { value: "lead_magnet", label: "Lead magnet", hint: "To generate email and consulting inquiries." },
-  { value: "paid_guide", label: "Paid guide", hint: "To sell as a low-priced information product." },
-  { value: "kdp_publish", label: "KDP publish", hint: "For Amazon KDP or marketplace-focused publishing." },
-  { value: "not_sure", label: "Not sure yet", hint: "Let the validator suggest the right format." },
-];
-
-const languageOptions: Array<{ value: BookIdeaLanguage; label: string }> = [
-  { value: "english", label: "English" },
-  { value: "turkish", label: "Turkish" },
-  { value: "multilingual", label: "Multilingual" },
-  { value: "other", label: "Other" },
-];
-
-const materialOptions: Array<{ value: MaterialStatus; label: string }> = [
-  { value: "none", label: "No materials yet" },
-  { value: "notes", label: "I have scattered notes" },
-  { value: "content", label: "I have blog, course, or content material" },
-  { value: "framework", label: "I have my own method / framework" },
-];
+const INTENT_VALUES: BookIdeaIntent[] = ["authority_book", "lead_magnet", "paid_guide", "kdp_publish", "not_sure"];
+const LANGUAGE_VALUES: BookIdeaLanguage[] = ["english", "turkish", "multilingual", "other"];
+const MATERIAL_VALUES: MaterialStatus[] = ["none", "notes", "content", "framework"];
 
 const sampleInputs = [
   "Client acquisition system for freelance designers",
@@ -80,6 +63,30 @@ const sampleInputs = [
 ];
 
 export function BookIdeaValidatorTool() {
+  const t = useTranslations("BookIdeaValidatorTool");
+
+  const intentOptions: Array<{ value: BookIdeaIntent; label: string; hint: string }> = [
+    { value: "authority_book", label: t("intentAuthorityBook"), hint: t("intentAuthorityBookHint") },
+    { value: "lead_magnet", label: t("intentLeadMagnet"), hint: t("intentLeadMagnetHint") },
+    { value: "paid_guide", label: t("intentPaidGuide"), hint: t("intentPaidGuideHint") },
+    { value: "kdp_publish", label: t("intentKdpPublish"), hint: t("intentKdpPublishHint") },
+    { value: "not_sure", label: t("intentNotSure"), hint: t("intentNotSureHint") },
+  ];
+
+  const languageOptions: Array<{ value: BookIdeaLanguage; label: string }> = [
+    { value: "english", label: t("langEnglish") },
+    { value: "turkish", label: t("langTurkish") },
+    { value: "multilingual", label: t("langMultilingual") },
+    { value: "other", label: t("langOther") },
+  ];
+
+  const materialOptions: Array<{ value: MaterialStatus; label: string }> = [
+    { value: "none", label: t("materialNone") },
+    { value: "notes", label: t("materialNotes") },
+    { value: "content", label: t("materialContent") },
+    { value: "framework", label: t("materialFramework") },
+  ];
+
   const [form, setForm] = useState<FormState>(defaultForm);
   const [showValidation, setShowValidation] = useState(false);
   const [analysisState, setAnalysisState] = useState<"idle" | "analyzing" | "done">("idle");
@@ -217,13 +224,12 @@ export function BookIdeaValidatorTool() {
         <div className="shell">
           <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
             <div className="max-w-2xl">
-              <Badge className="mb-4">Free Tool</Badge>
+              <Badge className="mb-4">{t("freeTool")}</Badge>
               <h1 className="editorial-display max-w-[11ch] text-foreground">
-                Is your book idea strong, or just a good-sounding title?
+                {t("heroTitle")}
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground md:text-lg">
-                Enter your topic, target reader, and goal. Book Idea Validator scores your idea's strength,
-                suggests the best book angle, and guides you straight into the full outline workflow.
+                {t("heroDesc")}
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -243,22 +249,22 @@ export function BookIdeaValidatorTool() {
                 <Card className="border border-border/70 bg-background/75">
                   <CardContent className="p-5">
                     <Target className="size-5 text-primary" />
-                    <p className="mt-4 text-sm font-semibold text-foreground">Audience clarity</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">See at a glance how clear your target reader is.</p>
+                    <p className="mt-4 text-sm font-semibold text-foreground">{t("audienceClarityTitle")}</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("audienceClarityDesc")}</p>
                   </CardContent>
                 </Card>
                 <Card className="border border-border/70 bg-background/75">
                   <CardContent className="p-5">
                     <Compass className="size-5 text-primary" />
-                    <p className="mt-4 text-sm font-semibold text-foreground">Positioning angle</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Find a stronger book angle instead of a generic topic.</p>
+                    <p className="mt-4 text-sm font-semibold text-foreground">{t("positioningAngleTitle")}</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("positioningAngleDesc")}</p>
                   </CardContent>
                 </Card>
                 <Card className="border border-border/70 bg-background/75">
                   <CardContent className="p-5">
                     <TrendingUp className="size-5 text-primary" />
-                    <p className="mt-4 text-sm font-semibold text-foreground">Commercial fit</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Measure lead, authority, or sales contribution.</p>
+                    <p className="mt-4 text-sm font-semibold text-foreground">{t("commercialFitTitle")}</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("commercialFitDesc")}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -268,8 +274,8 @@ export function BookIdeaValidatorTool() {
               <CardContent className="p-6 md:p-8">
                 <div className="mb-6 flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium text-primary">Book Idea Validator</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Start with a 60-second quick analysis.</p>
+                    <p className="text-sm font-medium text-primary">{t("cardTitle")}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{t("cardSubtitle")}</p>
                   </div>
                   <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                     MVP
@@ -278,48 +284,48 @@ export function BookIdeaValidatorTool() {
 
                 <div className="space-y-5">
                   <div>
-                    <Label htmlFor="topic">What is your book about?</Label>
+                    <Label htmlFor="topic">{t("topicLabel")}</Label>
                     <Textarea
                       id="topic"
                       value={form.topic}
                       onChange={(event) => updateField("topic", event.target.value)}
-                      placeholder="E.g. how freelance designers acquire clients without waiting for referrals"
+                      placeholder={t("topicPlaceholder")}
                       className="min-h-[128px]"
                     />
                     {showValidation && form.topic.trim().length <= 8 ? (
-                      <p className="mt-2 text-sm text-primary">Make your topic more specific. Use problem + segment instead of a single word.</p>
+                      <p className="mt-2 text-sm text-primary">{t("topicValidation")}</p>
                     ) : null}
                   </div>
 
                   <div className="grid gap-5 md:grid-cols-2">
                     <div>
-                      <Label htmlFor="audience">Who will read this book?</Label>
+                      <Label htmlFor="audience">{t("audienceLabel")}</Label>
                       <Input
                         id="audience"
                         value={form.audience}
                         onChange={(event) => updateField("audience", event.target.value)}
-                        placeholder="E.g. consultants, coaches, course creators"
+                        placeholder={t("audiencePlaceholder")}
                       />
                       {showValidation && form.audience.trim().length <= 5 ? (
-                        <p className="mt-2 text-sm text-primary">Describe your target reader more clearly.</p>
+                        <p className="mt-2 text-sm text-primary">{t("audienceValidation")}</p>
                       ) : null}
                     </div>
                     <div>
-                      <Label htmlFor="goal">What is the main goal?</Label>
+                      <Label htmlFor="goal">{t("goalLabel")}</Label>
                       <Input
                         id="goal"
                         value={form.goal}
                         onChange={(event) => updateField("goal", event.target.value)}
-                        placeholder="E.g. build authority and generate consulting leads"
+                        placeholder={t("goalPlaceholder")}
                       />
                       {showValidation && form.goal.trim().length <= 8 ? (
-                        <p className="mt-2 text-sm text-primary">Write a clear outcome in the goal field.</p>
+                        <p className="mt-2 text-sm text-primary">{t("goalValidation")}</p>
                       ) : null}
                     </div>
                   </div>
 
                   <div>
-                    <Label>What will you use this book for?</Label>
+                    <Label>{t("intentLabel")}</Label>
                     <div className="grid gap-3 md:grid-cols-2">
                       {intentOptions.map((option) => (
                         <button
@@ -341,7 +347,7 @@ export function BookIdeaValidatorTool() {
 
                   <div className="grid gap-5 md:grid-cols-2">
                     <div>
-                      <Label htmlFor="language">Which language do you want to produce in?</Label>
+                      <Label htmlFor="language">{t("languageLabel")}</Label>
                       <select
                         id="language"
                         value={form.language}
@@ -356,7 +362,7 @@ export function BookIdeaValidatorTool() {
                       </select>
                     </div>
                     <div>
-                      <Label htmlFor="materials">What materials do you have?</Label>
+                      <Label htmlFor="materials">{t("materialsLabel")}</Label>
                       <select
                         id="materials"
                         value={form.materials}
@@ -374,11 +380,11 @@ export function BookIdeaValidatorTool() {
 
                   <Button size="lg" className="w-full gap-2" onClick={handleAnalyze} isLoading={analysisState === "analyzing"}>
                     <Sparkles className="size-4" />
-                    Analyze Idea
+                    {t("analyzeButton")}
                   </Button>
 
                   <p className="text-center text-xs leading-6 text-muted-foreground">
-                    Initial score is free. Full report requires email only.
+                    {t("analyzeDisclaimer")}
                   </p>
                 </div>
               </CardContent>
@@ -391,11 +397,10 @@ export function BookIdeaValidatorTool() {
         <div className="shell">
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
-              <p className="editorial-eyebrow">Instant Report</p>
-              <h2 className="editorial-title mt-4 text-foreground">Don't stop at the score. See why your idea is strong or weak.</h2>
+              <p className="editorial-eyebrow">{t("instantReportEyebrow")}</p>
+              <h2 className="editorial-title mt-4 text-foreground">{t("instantReportTitle")}</h2>
               <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground">
-                This tool doesn't just give you a feel-good number. It clearly shows who your idea is specific enough for,
-                how defensible your promise is, and which format would work best.
+                {t("instantReportDesc")}
               </p>
             </div>
 
@@ -404,22 +409,17 @@ export function BookIdeaValidatorTool() {
                 {analysisState === "idle" ? (
                   <div className="rounded-[24px] border border-dashed border-border/80 bg-muted/30 p-8 text-center">
                     <BookOpen className="mx-auto size-9 text-primary" />
-                    <h3 className="mt-4 text-xl font-semibold text-foreground">Your first report will appear here</h3>
+                    <h3 className="mt-4 text-xl font-semibold text-foreground">{t("reportPlaceholderTitle")}</h3>
                     <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-muted-foreground">
-                      Fill in your topic, start the analysis, and see the partial score instantly. The full report unlocks
-                      with a title set, mini outline, and format recommendation.
+                      {t("reportPlaceholderDesc")}
                     </p>
                   </div>
                 ) : analysisState === "analyzing" ? (
                   <div className="rounded-[24px] border border-primary/20 bg-primary/5 p-8">
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Analyzing</p>
-                    <h3 className="mt-4 font-serif text-3xl font-semibold text-foreground">Searching for editorial signals...</h3>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">{t("analyzingLabel")}</p>
+                    <h3 className="mt-4 font-serif text-3xl font-semibold text-foreground">{t("analyzingHeading")}</h3>
                     <div className="mt-6 space-y-3">
-                      {[
-                        "Measuring audience clarity",
-                        "Scoring promise strength",
-                        "Preparing format and angle recommendation",
-                      ].map((item, index) => (
+                      {[t("analyzingStep1"), t("analyzingStep2"), t("analyzingStep3")].map((item, index) => (
                         <div key={item} className="flex items-center gap-3 text-sm text-muted-foreground">
                           <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary" style={{ animationDelay: `${index * 120}ms` }} />
                           {item}
@@ -431,7 +431,7 @@ export function BookIdeaValidatorTool() {
                   <div className="space-y-6">
                     <div className="grid gap-4 md:grid-cols-[220px_1fr]">
                       <div className="rounded-[28px] border border-primary/20 bg-[linear-gradient(180deg,rgba(188,104,67,0.18),rgba(188,104,67,0.06))] p-6 text-center">
-                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Idea Score</p>
+                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">{t("ideaScoreLabel")}</p>
                         <p className="mt-4 font-serif text-6xl leading-none text-foreground">{result.overallScore}</p>
                         <p className="mt-3 text-sm text-muted-foreground">{result.verdict}</p>
                       </div>
@@ -440,13 +440,13 @@ export function BookIdeaValidatorTool() {
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge>{result.recommendedFormat}</Badge>
                           <Badge className="border-primary/20 bg-primary/10 text-primary">
-                            Primary recommendation
+                            {t("primaryRecommendation")}
                           </Badge>
                         </div>
-                        <h3 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Recommended book angle</h3>
+                        <h3 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">{t("recommendedAngleTitle")}</h3>
                         <p className="mt-3 text-sm leading-7 text-muted-foreground">{result.recommendedAngle}</p>
                         <div className="mt-5 rounded-[20px] border border-border/70 bg-background/70 p-4">
-                          <p className="text-sm font-semibold text-foreground">Clear next step</p>
+                          <p className="text-sm font-semibold text-foreground">{t("clearNextStep")}</p>
                           <p className="mt-2 text-sm leading-7 text-muted-foreground">{result.nextStep}</p>
                         </div>
                       </div>
@@ -455,7 +455,7 @@ export function BookIdeaValidatorTool() {
                     <div className="grid gap-4 md:grid-cols-2">
                       <Card className="border border-border/80 bg-background/70">
                         <CardContent className="p-6">
-                          <p className="text-sm font-semibold text-foreground">Why is it strong?</p>
+                          <p className="text-sm font-semibold text-foreground">{t("whyStrongTitle")}</p>
                           <ul className="mt-4 space-y-3">
                             {result.strongestPoints.map((point) => (
                               <li key={point} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">
@@ -469,7 +469,7 @@ export function BookIdeaValidatorTool() {
 
                       <Card className="border border-border/80 bg-background/70">
                         <CardContent className="p-6">
-                          <p className="text-sm font-semibold text-foreground">What needs tightening?</p>
+                          <p className="text-sm font-semibold text-foreground">{t("needsTighteningTitle")}</p>
                           <ul className="mt-4 space-y-3">
                             {result.risks.map((risk) => (
                               <li key={risk} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">
@@ -506,16 +506,16 @@ export function BookIdeaValidatorTool() {
                           <div>
                             <div className="flex items-center gap-2 text-primary">
                               <Mail className="size-4" />
-                              <p className="text-sm font-semibold">Unlock full report</p>
+                              <p className="text-sm font-semibold">{t("unlockFullReportLabel")}</p>
                             </div>
                             <h3 className="mt-3 font-serif text-3xl font-semibold text-foreground">
-                              Title suggestions and mini outline are ready.
+                              {t("titleSuggestionsReady")}
                             </h3>
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-                              The full report unlocks 5 title ideas, an 8-chapter outline, and a sharper format recommendation.
+                              {t("fullReportDesc")}
                             </p>
                           </div>
-                          <div className="text-sm text-muted-foreground">Email only</div>
+                          <div className="text-sm text-muted-foreground">{t("emailOnlyLabel")}</div>
                         </div>
                         <div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto]">
                           <Input
@@ -531,16 +531,16 @@ export function BookIdeaValidatorTool() {
                               }
                             }}
                             onChange={(event) => updateField("email", event.target.value)}
-                            placeholder="you@example.com"
+                            placeholder={t("emailPlaceholder")}
                             className="bg-background/90"
                           />
                             <Button onClick={handleUnlockReport} className="gap-2" isLoading={reportRequestPending}>
-                              Unlock Full Report
+                              {t("unlockFullReportButton")}
                               <ArrowRight className="size-4" />
                             </Button>
                           </div>
                         {showValidation && !emailValid ? (
-                          <p className="mt-2 text-sm text-primary">Enter a valid email to unlock the full report.</p>
+                          <p className="mt-2 text-sm text-primary">{t("emailValidation")}</p>
                         ) : null}
                         {reportRequestError ? (
                           <p className="mt-2 text-sm text-primary">{reportRequestError}</p>
@@ -551,9 +551,9 @@ export function BookIdeaValidatorTool() {
                         <Card className="border border-border/80 bg-background/70">
                           <CardContent className="p-6">
                             <div className="mb-4 rounded-[18px] border border-primary/20 bg-primary/8 px-4 py-3 text-sm text-foreground">
-                              Full report sent to <span className="font-semibold">{reportDeliveredTo}</span>.
+                              {t("fullReportSentTo", { email: reportDeliveredTo })}
                             </div>
-                            <p className="text-sm font-semibold text-foreground">Suggested titles</p>
+                            <p className="text-sm font-semibold text-foreground">{t("suggestedTitlesLabel")}</p>
                             <ul className="mt-4 space-y-3">
                               {result.titleIdeas.map((title) => (
                                 <li key={title} className="rounded-[18px] border border-border/70 bg-background px-4 py-3 text-sm text-foreground">
@@ -566,7 +566,7 @@ export function BookIdeaValidatorTool() {
 
                         <Card className="border border-border/80 bg-background/70">
                           <CardContent className="p-6">
-                            <p className="text-sm font-semibold text-foreground">Mini outline</p>
+                            <p className="text-sm font-semibold text-foreground">{t("miniOutlineLabel")}</p>
                             <ol className="mt-4 space-y-3">
                               {result.miniOutline.map((item, index) => (
                                 <li key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
@@ -595,18 +595,18 @@ export function BookIdeaValidatorTool() {
             {[
               {
                 href: "/blog/how-to-validate-a-nonfiction-book-idea",
-                title: "How to validate a nonfiction book idea",
-                text: "Explains which signals distinguish a weak idea from a strong one.",
+                title: t("blogCard1Title"),
+                text: t("blogCard1Text"),
               },
               {
                 href: "/blog/authority-book-mu-lead-magnet-book-mu",
-                title: "Authority book or lead magnet book?",
-                text: "Uses a decision tree to clarify which format works better for the same topic.",
+                title: t("blogCard2Title"),
+                text: t("blogCard2Text"),
               },
               {
                 href: "/blog/how-to-strengthen-a-weak-book-idea",
-                title: "How to strengthen a weak book idea?",
-                text: "Shows how to narrow down broad, generic, or outcome-less ideas.",
+                title: t("blogCard3Title"),
+                text: t("blogCard3Text"),
               },
             ].map((item) => (
               <Link key={item.href} href={item.href}>
@@ -624,25 +624,24 @@ export function BookIdeaValidatorTool() {
           <div className="rounded-[36px] border border-border/80 bg-[linear-gradient(135deg,#1f1510_0%,#2a1d16_50%,#191512_100%)] px-6 py-10 text-white shadow-[0_32px_80px_-20px_rgba(0,0,0,0.45)] md:px-10 md:py-12">
             <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">Next Step</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">{t("nextStepEyebrow")}</p>
                 <h2 className="mt-4 max-w-2xl font-serif text-3xl font-semibold tracking-tight md:text-4xl">
-                  Turn your strong idea into a preview, outline, and cover now.
+                  {t("nextStepTitle")}
                 </h2>
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-white/72">
-                  The validator gives you decision clarity. For actual production, move into the Book Generator wizard
-                  and turn the same idea into a full outline, custom cover, and preview workflow.
+                  {t("nextStepDesc")}
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="min-w-[220px] gap-2" onClick={() => trackEvent("tool_cta_clicked", { tool: "book_idea_validator", destination: "start_topic" })}>
                   <Link href={previewHref}>
-                    Start Free Preview
+                    {t("startFreePreviewBtn")}
                     <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="min-w-[220px] border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={() => trackEvent("tool_cta_clicked", { tool: "book_idea_validator", destination: "tools_hub" })}>
-                  <Link href="/tools">See Other Tools</Link>
+                  <Link href="/tools">{t("seeOtherToolsBtn")}</Link>
                 </Button>
               </div>
             </div>

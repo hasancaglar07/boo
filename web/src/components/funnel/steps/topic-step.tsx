@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -36,6 +37,7 @@ export function TopicStep({
   error: string;
   onError: (msg: string) => void;
 }) {
+  const t = useTranslations("FunnelTopicStep");
   const topicPlaceholder = isTurkishLanguage(draft.language)
     ? "Kitabınızın konusunu yazın... Örn: Yapay zekâ ile içerik üretimi, dijital pazarlama rehberi..."
     : "Write your book topic... e.g. AI-assisted content creation, practical digital marketing playbook...";
@@ -48,7 +50,7 @@ export function TopicStep({
       {/* ─── Language selector — FIRST REQUIRED STEP ─── */}
       <div className="space-y-2.5">
         <label htmlFor="language" className="text-base sm:text-lg font-bold text-foreground">
-          Book language
+          {t("bookLanguageLabel")}
         </label>
         <select
           id="language"
@@ -77,7 +79,7 @@ export function TopicStep({
           htmlFor="topic"
           className="text-base sm:text-lg font-bold text-foreground"
         >
-          What is your book about?
+          {t("bookTopicLabel")}
         </label>
         <Textarea
           id="topic"
@@ -90,14 +92,14 @@ export function TopicStep({
           className="resize-none text-lg sm:text-xl leading-8 placeholder:text-lg placeholder:text-muted-foreground/50 min-h-[200px] sm:min-h-[240px] px-5 py-4 rounded-2xl border-2 border-border/70 bg-background shadow-sm focus-visible:border-primary/40 focus-visible:shadow-md focus-visible:ring-primary/20 transition-all duration-200"
         />
         <p className="text-sm text-muted-foreground bg-muted/50 rounded-xl px-4 py-2.5">
-          💡 When you write a clear topic, title suggestions and chapter plan are generated automatically.
+          💡 {t("topicHintText")}
         </p>
       </div>
 
       {/* ─── Book type — visual cards ─── */}
       <div className="space-y-3">
         <div className="text-base font-bold text-foreground">
-          Book type
+          {t("bookTypeLabel")}
         </div>
         <ChoiceGrid
           values={BOOK_TYPES}
@@ -115,9 +117,9 @@ export function TopicStep({
           htmlFor="audience"
           className="text-base sm:text-lg font-bold text-foreground"
         >
-          Target reader{" "}
+          {t("targetReaderLabel")}{" "}
           <span className="font-normal text-muted-foreground/50">
-            (optional)
+            {t("targetReaderOptional")}
           </span>
         </label>
         <Input
@@ -146,7 +148,7 @@ export function TopicStep({
             })
           }
         >
-          Fill Example
+          {t("fillExampleButton")}
         </button>
       </div>
 

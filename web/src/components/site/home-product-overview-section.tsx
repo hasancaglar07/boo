@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
   ArrowRight,
   Bot,
@@ -12,26 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
-const overviewItems = [
-  {
-    title: "No more staring at a blank page",
-    description:
-      "Combine your topic, target reader, and promise into a single brief. The system suggests a title, chapter outline, and publishing direction in seconds.",
-    icon: SearchCheck,
-  },
-  {
-    title: "No scattered toolchain",
-    description:
-      "Topic brief → chapter plan → chapter writing → cover → output. Every step is connected; nothing gets lost in a separate tool.",
-    icon: MessageSquareText,
-  },
-  {
-    title: "Your ready-to-publish file is in hand",
-    description:
-      "The goal isn't endless drafts: it's getting your first EPUB and delivery folder with confidence. The system prioritizes this from the start.",
-    icon: FileOutput,
-  },
-] as const;
+const overviewIcons = [SearchCheck, MessageSquareText, FileOutput] as const;
 
 function SignalCard({
   title,
@@ -40,7 +22,7 @@ function SignalCard({
 }: {
   title: string;
   description: string;
-  icon: (typeof overviewItems)[number]["icon"];
+  icon: (typeof overviewIcons)[number];
 }) {
   return (
     <div className="rounded-[28px] border border-white/10 bg-white/4 p-5 text-left backdrop-blur-sm">
@@ -74,6 +56,14 @@ function BoardPill({
 }
 
 export function HomeProductOverviewSection() {
+  const t = useTranslations("HomeProductOverview");
+
+  const overviewItems = [0, 1, 2].map((i) => ({
+    title: t(`items.${i}.title`),
+    description: t(`items.${i}.description`),
+    icon: overviewIcons[i],
+  }));
+
   return (
     <section className="border-b border-border/80 bg-[#1e1b18] text-white">
       <div className="shell py-20 md:py-24">
@@ -93,13 +83,13 @@ export function HomeProductOverviewSection() {
           <div className="grid gap-4 lg:grid-cols-[260px_1fr_220px]">
             <div className="space-y-3 rounded-[28px] border border-white/8 bg-black/18 p-4">
               <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400">
-                Input
+                {t("inputLabel")}
               </div>
               {[
-                ["Book type", "Practical guide"],
-                ["Topic", "Getting clients via email"],
-                ["Reader", "Solo consultants"],
-                ["Language", "English"],
+                [t("bookType"), t("bookTypeValue")],
+                [t("topicLabel"), t("topicValue")],
+                [t("readerLabel"), t("readerValue")],
+                [t("languageLabel"), t("languageValue")],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3">
                   <div className="text-[11px] uppercase tracking-[0.15em] text-stone-500">{label}</div>
@@ -116,9 +106,9 @@ export function HomeProductOverviewSection() {
                   <span className="h-2.5 w-2.5 rounded-full bg-white/10" />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <BoardPill active>Topic</BoardPill>
-                  <BoardPill>Draft</BoardPill>
-                  <BoardPill>Publish</BoardPill>
+                  <BoardPill active>{t("boardPills.topic")}</BoardPill>
+                  <BoardPill>{t("boardPills.draft")}</BoardPill>
+                  <BoardPill>{t("boardPills.publish")}</BoardPill>
                 </div>
               </div>
 
@@ -126,59 +116,48 @@ export function HomeProductOverviewSection() {
                 <div className="rounded-[26px] border border-white/8 bg-white/4 p-5">
                   <div className="flex items-center gap-2 text-sm font-medium text-white">
                     <Sparkles className="size-4 text-[#f0a27f]" />
-                    AI book direction
+                    {t("aiBookDirection")}
                   </div>
                   <h3 className="mt-4 text-3xl font-semibold tracking-tight text-white">
-                    Inbox to Income
+                    {t("bookTitle")}
                   </h3>
                   <p className="mt-3 max-w-lg text-sm leading-7 text-stone-300">
-                    A straightforward guide on how freelance consultants build trust via email and sell their first low-priced info product.
+                    {t("bookDescription")}
                   </p>
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    {[
-                      "Title + subtitle",
-                      "Description",
-                      "Chapter outline",
-                      "Initial sales angle",
-                    ].map((item) => (
+                    {[0, 1, 2, 3].map((i) => (
                       <div
-                        key={item}
+                        key={i}
                         className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3 text-sm text-white/90"
                       >
-                        {item}
+                        {t(`outputItems.${i}`)}
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  {[
-                    "01. Problem and promise",
-                    "02. Positioning",
-                    "03. Offer structure",
-                    "04. Email flow",
-                    "05. Final call",
-                  ].map((line, index) => (
+                  {[0, 1, 2, 3, 4].map((i) => (
                     <div
-                      key={line}
+                      key={i}
                       className={`rounded-2xl border px-4 py-3 text-sm ${
-                        index === 1
+                        i === 1
                           ? "border-[#f0a27f]/35 bg-[#f0a27f]/10 text-[#ffe6da]"
                           : "border-white/8 bg-white/4 text-stone-300"
                       }`}
                     >
-                      {line}
+                      {t(`chapterItems.${i}`)}
                     </div>
                   ))}
 
                   <div className="rounded-[24px] border border-white/8 bg-[#161310] p-4">
                     <div className="flex items-center gap-2 text-sm font-medium text-white">
                       <Bot className="size-4 text-[#f0a27f]" />
-                      System note
+                      {t("systemNote")}
                     </div>
                     <p className="mt-3 text-sm leading-7 text-stone-300">
-                      The book description, chapter structure, and writing order are built together from the same topic brief.
+                      {t("systemNoteText")}
                     </p>
                   </div>
                 </div>
@@ -189,15 +168,15 @@ export function HomeProductOverviewSection() {
               <div className="rounded-[28px] border border-white/8 bg-white/4 p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-white">
                   <CheckCircle2 className="size-4 text-[#f0a27f]" />
-                  What you get
+                  {t("whatYouGet")}
                 </div>
                 <div className="mt-4 space-y-2">
-                  {["Draft", "Chapter content", "Cover flow", "EPUB output"].map((item) => (
+                  {[0, 1, 2, 3].map((i) => (
                     <div
-                      key={item}
+                      key={i}
                       className="rounded-2xl border border-white/8 bg-black/16 px-3 py-2 text-xs text-stone-300"
                     >
-                      {item}
+                      {t(`whatYouGetItems.${i}`)}
                     </div>
                   ))}
                 </div>
@@ -206,10 +185,10 @@ export function HomeProductOverviewSection() {
               <div className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(240,162,127,0.12),rgba(240,162,127,0.02))] p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-white">
                   <BookOpenText className="size-4 text-[#f0a27f]" />
-                  Core logic
+                  {t("coreLogic")}
                 </div>
                 <p className="mt-3 text-sm leading-7 text-stone-300">
-                  Direction first, then writing, then delivery. The homepage should show this directly.
+                  {t("coreLogicText")}
                 </p>
               </div>
             </div>
@@ -221,7 +200,7 @@ export function HomeProductOverviewSection() {
             href="/start/topic"
             className="inline-flex items-center gap-2 rounded-full border border-[#f0a27f]/40 bg-[#f0a27f]/10 px-6 py-3 text-sm font-medium text-[#ffd8c7] transition-colors hover:bg-[#f0a27f]/18"
           >
-            <span>Start your first book</span>
+            <span>{t("startFirstBook")}</span>
             <ArrowRight className="size-4" />
           </a>
         </div>

@@ -435,7 +435,21 @@ export async function getBookStartAllowance(
     };
   }
 
-  const planId = options.planId || await getEffectivePlanId(userId);
+  const [planId, userAccess] = await Promise.all([
+    options.planId ? Promise.resolve(options.planId) : getEffectivePlanId(userId),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        role: true,
+        emailVerified: true,
+      },
+    }),
+  ]);
+  const isVerifiedSuperAdmin = Boolean(
+    userAccess &&
+    userAccess.role === "SUPER_ADMIN" &&
+    userAccess.emailVerified,
+  );
   const usesMonthlyWindow = SUBSCRIPTION_PLANS.has(planId);
   const { monthStart, nextResetAt } = currentUtcMonthWindow();
 
@@ -460,6 +474,17 @@ export async function getBookStartAllowance(
 
   const limit = BOOK_CREATION_LIMITS[planId] ?? null;
   const usedBooks = Math.max(ledgerCount, bookCount);
+
+  if (isVerifiedSuperAdmin) {
+    return {
+      canStartBook: true,
+      reason: null,
+      remainingBooks: 9999,
+      resetAt: null,
+      limit: null,
+      usedBooks,
+    };
+  }
 
   const remainingBooks = limit === null ? 9999 : Math.max(0, limit - usedBooks);
   const canStartBook = limit === null ? true : remainingBooks > 0;

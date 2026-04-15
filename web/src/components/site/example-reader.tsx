@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   ArrowRight,
   BookOpen,
@@ -28,6 +29,7 @@ function ExportButton({
   slug: string;
   format: "html" | "pdf" | "epub";
 }) {
+  const t = useTranslations("ExampleReader");
   const icon =
     format === "html" ? Globe : format === "pdf" ? FileText : BookOpen;
   const Icon = icon;
@@ -39,7 +41,7 @@ function ExportButton({
           <Icon className="size-4" />
           {label}
         </div>
-        <div className="mt-2 text-xs text-muted-foreground">Not ready yet for this book.</div>
+        <div className="mt-2 text-xs text-muted-foreground">{t("notReadyYet")}</div>
       </div>
     );
   }
@@ -57,7 +59,7 @@ function ExportButton({
         {label}
       </div>
       <div className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
-        Open output <Download className="size-3.5 transition group-hover:translate-y-0.5" />
+        {t("openOutput")} <Download className="size-3.5 transition group-hover:translate-y-0.5" />
       </div>
     </a>
   );
@@ -72,6 +74,7 @@ function ReaderCta({
   location: string;
   compact?: boolean;
 }) {
+  const t = useTranslations("ExampleReader");
   return (
     <div
       className={cn(
@@ -85,18 +88,17 @@ function ReaderCta({
         </div>
         <div className="min-w-0">
           <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Write Your Own Version
+            {t("writeYourOwnVersion")}
           </div>
           <p className="mt-2 text-sm leading-7 text-foreground/82">
-            If this structure looks publish-ready to you, start with your own topic and produce the same workflow:
-            chapter plan, chapters, cover, and outputs.
+            {t("ctaDescription")}
           </p>
           <Link
             href="/start/topic"
             className="mt-4 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition hover:opacity-90"
             onClick={() => trackEvent("examples_sticky_cta_clicked", { slug, location })}
           >
-            Write Your Own Book <ArrowRight className="size-4" />
+            {t("writeYourBook")} <ArrowRight className="size-4" />
           </Link>
         </div>
       </div>
@@ -105,6 +107,7 @@ function ReaderCta({
 }
 
 export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
+  const t = useTranslations("ExampleReader");
   const [activeChapter, setActiveChapter] = useState(item.chaptersContent[0]?.anchorId || "");
   const midpoint = Math.max(1, Math.floor(item.chaptersContent.length / 2));
 
@@ -177,10 +180,10 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
 
               <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { label: "Author", value: item.author },
-                  { label: "Publisher", value: item.publisher || "Studio" },
-                  { label: "Chapters", value: String(item.chapters) },
-                  { label: "Formats", value: ["HTML", item.exports.pdf ? "PDF" : "", item.exports.epub ? "EPUB" : ""].filter(Boolean).join(" + ") },
+                  { label: t("metaAuthor"), value: item.author },
+                  { label: t("metaPublisher"), value: item.publisher || "Studio" },
+                  { label: t("metaChapters"), value: String(item.chapters) },
+                  { label: t("metaFormats"), value: ["HTML", item.exports.pdf ? "PDF" : "", item.exports.epub ? "EPUB" : ""].filter(Boolean).join(" + ") },
                 ].map((meta) => (
                   <div key={`${item.slug}-${meta.label}`} className="rounded-[22px] border border-white/12 bg-white/8 px-4 py-4 backdrop-blur">
                     <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">{meta.label}</div>
@@ -195,7 +198,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
                   className="inline-flex items-center gap-2 rounded-full bg-[#d2a95a] px-5 py-3 text-sm font-semibold text-[#140f09] transition hover:opacity-90"
                   onClick={() => trackEvent("examples_sticky_cta_clicked", { slug: item.slug, location: "reader_hero" })}
                 >
-                  Write Your Book <ArrowRight className="size-4" />
+                  {t("writeYourBook")} <ArrowRight className="size-4" />
                 </Link>
                 {item.exports.html ? (
                   <a
@@ -205,7 +208,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
                     className="inline-flex items-center gap-2 rounded-full border border-white/16 bg-white/8 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/12"
                     onClick={() => trackEvent("examples_export_clicked", { slug: item.slug, format: "html", location: "reader_hero" })}
                   >
-                    Read Exact HTML <Globe className="size-4" />
+                    {t("readExactHtml")} <Globe className="size-4" />
                   </a>
                 ) : null}
               </div>
@@ -220,7 +223,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
             <div className="min-w-0">
               <div className="rounded-[32px] border border-border/80 bg-background px-6 py-8 shadow-sm md:px-8">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Opening Note
+                  {t("openingNote")}
                 </div>
                 <p className="mt-4 max-w-3xl font-serif text-2xl leading-[1.28] text-foreground md:text-3xl">
                   {item.openingNote}
@@ -228,7 +231,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
                 <div className="mt-6 grid gap-5 lg:grid-cols-2">
                   <div className="rounded-[24px] border border-border/70 bg-[#fcfaf6] p-5">
                     <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      Author
+                      {t("authorLabel")}
                     </div>
                     <div className="mt-3 text-base font-semibold text-foreground">{item.author}</div>
                     {item.authorBio ? (
@@ -237,7 +240,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
                   </div>
                   <div className="rounded-[24px] border border-border/70 bg-[#fcfaf6] p-5">
                     <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      Cover Direction
+                      {t("coverDirection")}
                     </div>
                     <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.coverBrief}</p>
                     <p className="mt-3 text-sm leading-7 text-foreground/82">{item.readerHook}</p>
@@ -247,7 +250,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
                 <div className="mt-8 rounded-[26px] border border-border/70 bg-[#fcfaf6] px-5 py-6" dir={item.direction}>
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     <Layers className="size-3.5" />
-                    Introduction
+                    {t("introductionLabel")}
                   </div>
                   <div className="mt-4 space-y-4">
                     {item.introductionText.split("\n\n").map((paragraph, index) => (
@@ -319,7 +322,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
               <div className="sticky top-24 space-y-5">
                 <div className="rounded-[28px] border border-border/80 bg-background p-5 shadow-sm">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Table of Contents
+                    {t("tableOfContents")}
                   </div>
                   <div className="mt-4 space-y-2" dir={item.direction}>
                     {item.chaptersContent.map((chapter) => (
@@ -344,12 +347,12 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
 
                 <div className="rounded-[28px] border border-border/80 bg-background p-5 shadow-sm">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Exact Outputs
+                    {t("exactOutputs")}
                   </div>
                   <div className="mt-4 space-y-3">
-                    <ExportButton asset={item.exports.html} label="Open HTML" slug={item.slug} format="html" />
-                    <ExportButton asset={item.exports.pdf} label="View PDF" slug={item.slug} format="pdf" />
-                    <ExportButton asset={item.exports.epub} label="Download EPUB" slug={item.slug} format="epub" />
+                    <ExportButton asset={item.exports.html} label={t("openHtml")} slug={item.slug} format="html" />
+                    <ExportButton asset={item.exports.pdf} label={t("viewPdf")} slug={item.slug} format="pdf" />
+                    <ExportButton asset={item.exports.epub} label={t("downloadEpub")} slug={item.slug} format="epub" />
                   </div>
                 </div>
 
@@ -371,7 +374,7 @@ export function ExampleReader({ item }: { item: ExampleReaderEntry }) {
             className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition hover:opacity-90"
             onClick={() => trackEvent("examples_sticky_cta_clicked", { slug: item.slug, location: "reader_mobile_sticky" })}
           >
-            Start Your Own Book <ArrowRight className="size-4" />
+            {t("writeYourBookMobile")} <ArrowRight className="size-4" />
           </Link>
         </div>
       </div>

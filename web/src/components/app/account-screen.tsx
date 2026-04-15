@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight, BookOpen, Image as ImageIcon, Download, Target, User, Sparkles, ArrowRight } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
@@ -28,12 +29,15 @@ type ChecklistItem = {
   action?: { label: string; href: string };
 };
 
-function buildChecklistItems(
-  account: { name: string; email: string; goal: string },
-  books: Book[],
-  plan: string,
-): ChecklistItem[] {
-  const exports = books.reduce((t, b) => t + Number(b.status?.export_count || 0), 0);
+type ChecklistBuilderProps = {
+  account: { name: string; email: string; goal: string };
+  books: Book[];
+  plan: string;
+  t: ReturnType<typeof useTranslations<"AccountScreen">>;
+};
+
+function buildChecklistItems({ account, books, plan, t }: ChecklistBuilderProps): ChecklistItem[] {
+  const exports = books.reduce((total, b) => total + Number(b.status?.export_count || 0), 0);
   const hasBook = books.length > 0;
   const hasExport = exports > 0;
   const hasPremium = hasPremiumAccess(plan);
@@ -43,58 +47,58 @@ function buildChecklistItems(
   return [
     {
       id: "account_created",
-      label: "Create account",
-      description: "Signed up with email",
+      label: t("checklist.createAccount"),
+      description: t("checklist.createAccountDesc"),
       icon: <User className="size-4" />,
-      completed: true, // always true if viewing this page
+      completed: true,
     },
     {
       id: "profile_name",
-      label: "Add name",
-      description: hasName ? account.name : "Add your real name to your profile",
+      label: t("checklist.addName"),
+      description: hasName ? account.name : t("checklist.addNameDesc"),
       icon: <User className="size-4" />,
       completed: hasName,
-      action: hasName ? undefined : { label: "Edit", href: "/app/settings/profile" },
+      action: hasName ? undefined : { label: t("checklist.editAction"), href: "/app/settings/profile" },
     },
     {
       id: "set_goal",
-      label: "Set goal",
-      description: hasGoal ? account.goal.slice(0, 60) + (account.goal.length > 60 ? "…" : "") : "Describe what you want to write",
+      label: t("checklist.setGoal"),
+      description: hasGoal ? account.goal.slice(0, 60) + (account.goal.length > 60 ? "…" : "") : t("checklist.setGoalDesc"),
       icon: <Target className="size-4" />,
       completed: hasGoal,
-      action: hasGoal ? undefined : { label: "Add Goal", href: "/app/settings/profile" },
+      action: hasGoal ? undefined : { label: t("checklist.addGoalAction"), href: "/app/settings/profile" },
     },
     {
       id: "first_book",
-      label: "Create your first book",
-      description: hasBook ? `${books.length} books created` : "Write your first book with the wizard",
+      label: t("checklist.firstBook"),
+      description: hasBook ? t("checklist.firstBookCount", { count: books.length }) : t("checklist.firstBookDesc"),
       icon: <BookOpen className="size-4" />,
       completed: hasBook,
-      action: hasBook ? undefined : { label: "Start", href: "/app/new" },
+      action: hasBook ? undefined : { label: t("checklist.startAction"), href: "/app/new" },
     },
     {
       id: "cover_generated",
-      label: "Design cover",
-      description: "AI-powcover with AI",
+      label: t("checklist.designCover"),
+      description: t("checklist.designCoverDesc"),
       icon: <ImageIcon className="size-4" />,
-      completed: hasBook, // proxy: if they have a book they've seen cover step
-      action: hasBook ? undefined : { label: "Create Book", href: "/app/new" },
+      completed: hasBook,
+      action: hasBook ? undefined : { label: t("checklist.createBookAction"), href: "/app/new" },
     },
     {
       id: "first_export",
-      label: "PDF / EPUB Export",
-      description: hasExport ? `${exports} exports completed` : "Convert your book to a downloadable format",
+      label: t("checklist.exportBook"),
+      description: hasExport ? t("checklist.exportCount", { count: exports }) : t("checklist.exportBookDesc"),
       icon: <Download className="size-4" />,
       completed: hasExport,
-      action: hasExport ? undefined : { label: "Go to Library Git", href: "/app/library" },
+      action: hasExport ? undefined : { label: t("checklist.goToLibraryAction"), href: "/app/library" },
     },
     {
       id: "upgrade_plan",
-      label: "Upgrade to Premium",
-      description: hasPremium ? `${plan} plan` : "Upgrade your plan for full access",
+      label: t("checklist.upgradePremium"),
+      description: hasPremium ? t("checklist.upgradePremiumDone", { plan }) : t("checklist.upgradePremiumDesc"),
       icon: <Sparkles className="size-4" />,
       completed: hasPremium,
-      action: hasPremium ? undefined : { label: "View Plans", href: "/pricing" },
+      action: hasPremium ? undefined : { label: t("checklist.viewPlansAction"), href: "/pricing" },
     },
   ];
 }
@@ -120,11 +124,11 @@ function saveStoredCompletions(data: Record<string, boolean>) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ProfileProgressBar({ pct }: { pct: number }) {
+function ProfileProgressBar({ pct, label }: { pct: number; label: string }) {
   return (
     <div className="mb-2">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-muted-foreground">Profile completion</span>
+        <span className="text-xs font-medium text-muted-foreground">{label}</span>
         <span className="text-xs font-semibold text-foreground">{pct}%</span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -157,22 +161,28 @@ function EmptyStateMessage({ label, actionLabel, href }: { label: string; action
   );
 }
 
-function CelebrationBanner({ onDismiss }: { onDismiss: () => void }) {
+function CelebrationBanner({ onDismiss, title, description, writeBookLabel, closeLabel }: {
+  onDismiss: () => void;
+  title: string;
+  description: string;
+  writeBookLabel: string;
+  closeLabel: string;
+}) {
   return (
     <div className="rounded-[20px] border border-primary/30 bg-gradient-to-br from-primary/15 to-primary/5 px-5 py-5">
       <div className="flex items-start gap-4">
         <div className="text-3xl select-none">🎉</div>
         <div className="flex-1">
-          <p className="text-base font-bold text-foreground">Profilin %100 completed!</p>
+          <p className="text-base font-bold text-foreground">{title}</p>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Great job! All steps completed. You are now fully ready for your book writing journey.
+            {description}
           </p>
           <div className="mt-3 flex gap-2">
             <Button size="sm" onClick={() => void 0}>
-              Write Book
+              {writeBookLabel}
             </Button>
             <Button size="sm" variant="ghost" onClick={onDismiss}>
-              Close
+              {closeLabel}
             </Button>
           </div>
         </div>
@@ -181,7 +191,7 @@ function CelebrationBanner({ onDismiss }: { onDismiss: () => void }) {
   );
 }
 
-function NextStepSuggestions({ items }: { items: ChecklistItem[] }) {
+function NextStepSuggestions({ items, nextStepsLabel }: { items: ChecklistItem[]; nextStepsLabel: string }) {
   const router = useRouter();
   const incomplete = items.filter((i) => !i.completed && i.action);
   if (incomplete.length === 0) return null;
@@ -190,7 +200,7 @@ function NextStepSuggestions({ items }: { items: ChecklistItem[] }) {
 
   return (
     <div className="mt-6">
-      <h3 className="mb-3 text-sm font-semibold text-foreground">Next steps</h3>
+      <h3 className="mb-3 text-sm font-semibold text-foreground">{nextStepsLabel}</h3>
       <div className="flex flex-col gap-2">
         {next.map((item) => (
           <button
@@ -280,6 +290,7 @@ function ProfileChecklist({ items, onToggle }: { items: ChecklistItem[]; onToggl
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function AccountScreen() {
+  const t = useTranslations("AccountScreen");
   const ready = useSessionGuard();
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
@@ -313,7 +324,7 @@ export function AccountScreen() {
   const plan = getPlan();
   const exports = books.reduce((total, book) => total + Number(book.status?.export_count || 0), 0);
 
-  const baseItems = buildChecklistItems(account, books, plan);
+  const baseItems = buildChecklistItems({ account, books, plan, t });
   const items: ChecklistItem[] = baseItems.map((item) => ({
     ...item,
     completed: item.completed || !!manualCompletions[item.id],
@@ -337,7 +348,7 @@ export function AccountScreen() {
   if (!ready) return null;
   if (backendUnavailable) {
     return (
-      <AppFrame current="account" title="Account" subtitle="Connection issue occurred." books={[]}>
+      <AppFrame current="account" title={t("title")} subtitle={t("connectionIssue")} books={[]}>
         <BackendUnavailableState onRetry={() => void refreshBooks()} />
       </AppFrame>
     );
@@ -359,11 +370,11 @@ export function AccountScreen() {
   return (
     <AppFrame
       current="account"
-      title="Account"
-      subtitle="Profile and usage usage summary."
+      title={t("title")}
+      subtitle={t("subtitle")}
       books={books}
       primaryAction={{
-        label: "Sign out yap",
+        label: t("signOut"),
         onClick: async () => {
           await signOut({ redirect: false, callbackUrl: "/" });
           clearClientAuthState();
@@ -375,25 +386,25 @@ export function AccountScreen() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent>
-            <div className="text-sm text-muted-foreground">Name</div>
+            <div className="text-sm text-muted-foreground">{t("stats.name")}</div>
             {account.name && account.name !== "Book Creator" ? (
               <div className="mt-3 text-xl font-medium text-foreground">{account.name}</div>
             ) : (
               <div className="mt-3">
-                <EmptyStateMessage label="No name added.." actionLabel="Add" href="/app/settings/profile" />
+                <EmptyStateMessage label={t("stats.noNameAdded")} actionLabel={t("stats.addAction")} href="/app/settings/profile" />
               </div>
             )}
           </CardContent>
         </Card>
         <Card>
           <CardContent>
-            <div className="text-sm text-muted-foreground">Email</div>
+            <div className="text-sm text-muted-foreground">{t("stats.email")}</div>
             <div className="mt-3 text-xl font-medium text-foreground">{account.email}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent>
-            <div className="text-sm text-muted-foreground">Plan</div>
+            <div className="text-sm text-muted-foreground">{t("stats.plan")}</div>
             <div className="mt-3 text-xl font-medium text-foreground capitalize">{plan}</div>
           </CardContent>
         </Card>
@@ -405,9 +416,9 @@ export function AccountScreen() {
             <div className="text-4xl font-semibold text-foreground">{books.length}</div>
             <div className="mt-2 text-sm text-muted-foreground">
               {books.length === 0 ? (
-                <EmptyStateMessage label="No books yet." actionLabel="Create your first book →" href="/app/new" />
+                <EmptyStateMessage label={t("stats.noBooksYet")} actionLabel={t("stats.createFirstBook")} href="/app/new" />
               ) : (
-                "Total books"
+                t("stats.totalBooks")
               )}
             </div>
           </CardContent>
@@ -417,21 +428,21 @@ export function AccountScreen() {
             <div className="text-4xl font-semibold text-foreground">{compactNumber(exports)}</div>
             <div className="mt-2 text-sm text-muted-foreground">
               {exports === 0 ? (
-                <EmptyStateMessage label="Not yet Exports yet." actionLabel="Create PDF →" href="/app/library" />
+                <EmptyStateMessage label={t("stats.noExportsYet")} actionLabel={t("stats.createPdf")} href="/app/library" />
               ) : (
-                "Total output"
+                t("stats.totalOutput")
               )}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent>
-            <div className="text-sm text-muted-foreground">Goal</div>
+            <div className="text-sm text-muted-foreground">{t("stats.goal")}</div>
             {account.goal ? (
               <div className="mt-3 text-base leading-7 text-foreground">{account.goal}</div>
             ) : (
               <div className="mt-3">
-                <EmptyStateMessage label="No goal set.." actionLabel="Hedef ekle →" href="/app/settings/profile" />
+                <EmptyStateMessage label={t("stats.noGoalSet")} actionLabel={t("stats.addGoalAction")} href="/app/settings/profile" />
               </div>
             )}
           </CardContent>
@@ -441,27 +452,33 @@ export function AccountScreen() {
       {/* ── Profile Completion Section ── */}
       <div className="mt-8">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground">Profile Completion</h2>
+          <h2 className="text-base font-bold text-foreground">{t("profileCompletion.heading")}</h2>
           <span className="rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
-            {completedCount}/{items.length} completed
+            {t("profileCompletion.completed", { done: completedCount, total: items.length })}
           </span>
         </div>
 
-        <ProfileProgressBar pct={pct} />
+        <ProfileProgressBar pct={pct} label={t("profileCompletion.progressLabel")} />
 
         {/* Celebration */}
         {isComplete && !celebrationDismissed ? (
           <div className="mt-4 mb-4">
-            <CelebrationBanner onDismiss={() => setCelebrationDismissed(true)} />
+            <CelebrationBanner
+              onDismiss={() => setCelebrationDismissed(true)}
+              title={t("celebration.title")}
+              description={t("celebration.description")}
+              writeBookLabel={t("celebration.writeBook")}
+              closeLabel={t("celebration.close")}
+            />
           </div>
         ) : (
           <div className="mb-4 mt-2 rounded-[12px] border border-border/50 bg-background/40 px-3 py-2">
             <p className="text-xs text-muted-foreground">
               {completedCount === 0
-                ? "PROFIL_completed complete your profile below."
+                ? t("profileCompletion.hintStart")
                 : completedCount < 4
-                ? `Great progress!! ${items.length - completedCount} steps left.`
-                : `Neredeyse bitti! Son ${items.length - completedCount} steps to complete.`}
+                ? t("profileCompletion.hintGoodProgress", { remaining: items.length - completedCount })
+                : t("profileCompletion.hintAlmostDone", { remaining: items.length - completedCount })}
             </p>
           </div>
         )}
@@ -469,7 +486,7 @@ export function AccountScreen() {
         <ProfileChecklist items={items} onToggle={handleToggle} />
 
         {/* Next Steps */}
-        {!isComplete && <NextStepSuggestions items={items} />}
+        {!isComplete && <NextStepSuggestions items={items} nextStepsLabel={t("profileCompletion.nextSteps")} />}
       </div>
     </AppFrame>
   );

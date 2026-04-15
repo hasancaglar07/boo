@@ -16,6 +16,10 @@ function defaultAudience(language: FunnelLanguage) {
   return isTurkishLanguage(language) ? "genel okur" : "general readers";
 }
 
+function defaultTopic(language: FunnelLanguage) {
+  return isTurkishLanguage(language) ? "kitap fikri" : "book idea";
+}
+
 export type TitleOption = { title: string; subtitle: string };
 export type TitleSuggestionSource = "local_fast" | "glm_refined";
 
@@ -61,10 +65,10 @@ export function useTitleAi(
   }, [selectionLocked]);
 
   async function handleTitleAi(forceReplace = false) {
-    if (!draft.topic.trim()) {
-      setError("Please clarify the topic first.");
-      return;
-    }
+    const effectiveTopic =
+      draftRef.current.topic.trim()
+      || draftRef.current.title.trim()
+      || defaultTopic(draftRef.current.language);
 
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
@@ -76,23 +80,23 @@ export function useTitleAi(
     setAiLoading("title");
     setIsRefining(true);
     try {
-      let suggestions = normalizeTitleOptions(localTitleSuggestions(draft));
+      let suggestions = normalizeTitleOptions(localTitleSuggestions(draftRef.current));
       setTitleOptions(suggestions);
       setSource("local_fast");
-      trackEvent("title_suggestions_fallback_shown", { language: draft.language, count: suggestions.length });
+      trackEvent("title_suggestions_fallback_shown", { language: draftRef.current.language, count: suggestions.length });
       if (suggestions[0] && (forceReplace || !requestSnapshot.title)) {
         updateDraft({ title: suggestions[0].title, subtitle: suggestions[0].subtitle });
       }
 
       const response = await runWorkflow({
         action: "topic_suggest",
-        topic: draft.topic,
-        audience: draft.audience || defaultAudience(draft.language),
-        category: bookTypeLabel(draft.bookType),
-        language: draft.language,
+        topic: effectiveTopic,
+        audience: draftRef.current.audience || defaultAudience(draftRef.current.language),
+        category: bookTypeLabel(draftRef.current.bookType),
+        language: draftRef.current.language,
       }, {
-        timeoutMs: 8_000,
-        retryDelaysMs: [200],
+        timeoutMs: 70_000,
+        retryDelaysMs: [],
       });
       if (response.ok === false) {
         const message =
@@ -101,8 +105,23 @@ export function useTitleAi(
         throw new Error(message.split("\n").find(Boolean) || message);
       }
 
-      const generatedPayload = response.generated as { titles?: Array<Record<string, unknown>> } | undefined;
-      const generated = Array.isArray(generatedPayload?.titles) ? generatedPayload.titles : [];
+      const generatedPayload = response.generated as
+        | {
+            titles?: Array<Record<string, unknown>>;
+            suggestions?: Array<Record<string, unknown>>;
+            title_suggestions?: Array<Record<string, unknown>>;
+            fallback?: boolean;
+            source?: string;
+          }
+        | undefined;
+      const usedTemplateFallback =
+        Boolean(generatedPayload?.fallback) ||
+        String(generatedPayload?.source || "").trim() === "local_template";
+      const generatedRaw = generatedPayload?.titles
+        || generatedPayload?.suggestions
+        || generatedPayload?.title_suggestions
+        || [];
+      const generated = Array.isArray(generatedRaw) ? generatedRaw : [];
       if (generated.length) {
         suggestions = normalizeTitleOptions(generated.map((item) => ({
           title: String(item.title || "").trim(),
@@ -114,7 +133,7 @@ export function useTitleAi(
         return;
       }
       setTitleOptions(suggestions);
-      setSource("glm_refined");
+      setSource(usedTemplateFallback ? "local_fast" : "glm_refined");
       const currentDraft = draftRef.current;
       const selectionChanged =
         selectionLockedRef.current ||
@@ -130,10 +149,12 @@ export function useTitleAi(
         updateDraft({ title: suggestions[0].title, subtitle: suggestions[0].subtitle });
       }
       setError("");
-      trackEvent("title_suggestions_refined", { language: draft.language, count: suggestions.length });
-      trackEvent("title_ai_used", { language: draft.language });
-    } catch (error) {
-      const suggestions = normalizeTitleOptions(localTitleSuggestions(draft));
+      if (!usedTemplateFallback) {
+        trackEvent("title_suggestions_refined", { language: draftRef.current.language, count: suggestions.length });
+      }
+      trackEvent("title_ai_used", { language: draftRef.current.language });
+    } catch {
+      const suggestions = normalizeTitleOptions(localTitleSuggestions(draftRef.current));
       if (requestId !== requestIdRef.current) {
         return;
       }
@@ -144,7 +165,7 @@ export function useTitleAi(
       }
       setError("");
       trackEvent("workflow_timeout", { action: "topic_suggest" });
-      trackEvent("title_ai_used", { fallback: true });
+      trackEvent("title_ai_used", { fallback: true, language: draftRef.current.language });
     } finally {
       if (requestId === requestIdRef.current) {
         setAiLoading("");

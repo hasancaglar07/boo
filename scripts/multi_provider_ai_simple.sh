@@ -626,7 +626,44 @@ generate_chapter_with_smart_api() {
             ;;
     esac
 
-    local system_prompt="You are a professional author writing a high-quality book. Write in ${style} style with ${tone} tone. Ensure content is original, engaging, and valuable to readers. The output language must be ${language}. Return only the chapter body in ${language}; do not add a heading line like '${chapter_label} ${chapter_num}: ${chapter_title}'."
+    local variation_mode="${BOOK_VARIATION_MODE:-${VARIATION_MODE:-controlled}}"
+    local book_profile="${BOOK_PROFILE:-nonfiction_premium}"
+    local chapter_num_int=$((10#$chapter_num))
+    local template_selector=$(( (chapter_num_int % 5) + 1 ))
+    local structural_template=""
+
+    case "${variation_mode}" in
+        high_random)
+            structural_template="Use a varied structure for this chapter. Mix explanatory narrative, worked examples, and short reflection prompts. Avoid repeating openings like 'In this chapter'."
+            ;;
+        fixed_classic)
+            structural_template="Use a classical textbook structure: short hook, clear framework, examples, and concise summary bridge."
+            ;;
+        *)
+            case "$template_selector" in
+                1) structural_template="Template A: Start with a real-world scene, extract a principle, then present a repeatable framework and practical checklist." ;;
+                2) structural_template="Template B: Start with a common mistake, explain why it happens, then provide a corrective method with before/after examples." ;;
+                3) structural_template="Template C: Start with a surprising insight, break it into 3 mechanisms, and close each mechanism with one practical action." ;;
+                4) structural_template="Template D: Start with a reader question, answer progressively with layered examples, and synthesize into a field guide." ;;
+                *) structural_template="Template E: Start with a concise thesis, stress-test it with counterexamples, then provide a pragmatic playbook." ;;
+            esac
+            ;;
+    esac
+
+    local profile_directive=""
+    case "$book_profile" in
+        fiction_focused)
+            profile_directive="Prioritize scene continuity, character intent, and sensory detail while keeping the narrative progression coherent."
+            ;;
+        hybrid_general)
+            profile_directive="Blend practical explanation with story-led examples so each section adds either insight or momentum."
+            ;;
+        *)
+            profile_directive="For nonfiction premium style: include clear subheadings, applied examples, and action-oriented transitions."
+            ;;
+    esac
+
+    local system_prompt="You are a professional author writing a high-quality book. Write in ${style} style with ${tone} tone. Ensure content is original, engaging, and valuable to readers. The output language must be ${language}. Return only the chapter body in ${language}; do not add a heading line like '${chapter_label} ${chapter_num}: ${chapter_title}'. Avoid cliche meta-openers such as 'In this chapter', 'we will explore', or similar repetitive scaffolding."
     local chapter_word_floor=$(( min_words * 60 / 100 ))
     if [ "$chapter_word_floor" -lt 900 ]; then
         chapter_word_floor=900
@@ -652,6 +689,11 @@ Requirements:
 - Write in ${style} style with ${tone} tone
 - Write fully in ${language}
 - Default to chapter length that can realistically land near the upper half of the requested range
+- Insert meaningful subheadings to break long passages (roughly every 350-700 words for nonfiction)
+- Keep paragraph rhythm natural; mix short, medium, and occasional long paragraphs
+- Avoid repetitive chapter-intro cliches and avoid robotic transition phrases
+- ${structural_template}
+- ${profile_directive}
 - Do not add a chapter heading, title line, or English label before the body
 
 Begin writing the chapter body now:"
@@ -712,7 +754,26 @@ generate_chapter_segment_with_smart_api() {
         segment_word_floor=240
     fi
 
-    local system_prompt="You are a professional author assembling a long-form book in compact passes. Write only the requested segment body in ${language}. Keep the voice consistent, original, and practical. Do not add a heading like '${chapter_label} ${chapter_num}: ${chapter_title}'."
+    local variation_mode="${BOOK_VARIATION_MODE:-${VARIATION_MODE:-controlled}}"
+    local profile_directive=""
+    case "${BOOK_PROFILE:-nonfiction_premium}" in
+        fiction_focused)
+            profile_directive="Maintain scene continuity and character-level causality."
+            ;;
+        hybrid_general)
+            profile_directive="Balance narrative readability with practical transfer value."
+            ;;
+        *)
+            profile_directive="Keep the segment practical, with concise subheadings and applicable examples."
+            ;;
+    esac
+
+    local anti_repetition_directive="Do not begin with repetitive meta-phrases like 'In this chapter' or 'we will explore'."
+    if [ "$variation_mode" = "fixed_classic" ]; then
+        anti_repetition_directive="Keep transitions elegant and non-repetitive; avoid boilerplate openers."
+    fi
+
+    local system_prompt="You are a professional author assembling a long-form book in compact passes. Write only the requested segment body in ${language}. Keep the voice consistent, original, and practical. Do not add a heading like '${chapter_label} ${chapter_num}: ${chapter_title}'. ${anti_repetition_directive}"
 
     local user_prompt="Write segment ${segment_index}/${segment_count} for ${chapter_label} ${chapter_num}.
 Target language: ${language}
@@ -745,6 +806,7 @@ Requirements:
 - Write in ${style} style with ${tone} tone
 - Return only the segment body in ${language}
 - Do not add markdown headings, labels, or bullet metadata
+- ${profile_directive}
 
 Begin the segment body now:"
 

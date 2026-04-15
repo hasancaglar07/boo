@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
@@ -22,53 +23,8 @@ import { getAccount, removeWizardState, saveWizardState } from "@/lib/preview-au
 import { useSessionGuard } from "@/lib/use-session-guard";
 import { cn } from "@/lib/utils";
 
-const questions = [
-  {
-    key: "type",
-    title: "What kind of book do you want to write?",
-    stepLabel: "Genre",
-    options: [
-      { value: "guide", label: "Guide" },
-      { value: "business", label: "Business" },
-      { value: "education", label: "Education" },
-      { value: "children", label: "Children's Book" },
-      { value: "other", label: "Other" },
-    ],
-  },
-  {
-    key: "topic",
-    title: "What is the topic?",
-    stepLabel: "Topic",
-    placeholder: "e.g.: practical prompting for small teams",
-  },
-  {
-    key: "audience",
-    title: "Who are you writing for?",
-    stepLabel: "Audience",
-    placeholder: "e.g.: first-time founders and operators",
-  },
-  {
-    key: "language",
-    title: "Which language to produce in?",
-    stepLabel: "Language",
-    options: [
-      { value: "English", label: "English" },
-      { value: "Turkish", label: "Turkish" },
-    ],
-  },
-  {
-    key: "depth",
-    title: "How much detail do you want?",
-    stepLabel: "Depth",
-    options: [
-      { value: "quick", label: "Short & Fast" },
-      { value: "balanced", label: "Balanced" },
-      { value: "detailed", label: "More Detailed" },
-    ],
-  },
-] as const;
-
 export function WizardScreen() {
+  const t = useTranslations("WizardScreen");
   const ready = useSessionGuard();
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
@@ -83,6 +39,56 @@ export function WizardScreen() {
     depth: "balanced",
   });
   const [backendUnavailable, setBackendUnavailable] = useState(false);
+
+  const questions = useMemo(
+    () => [
+      {
+        key: "type" as const,
+        title: t("questions.type.title"),
+        stepLabel: t("questions.type.stepLabel"),
+        options: [
+          { value: "guide", label: t("questions.type.options.guide") },
+          { value: "business", label: t("questions.type.options.business") },
+          { value: "education", label: t("questions.type.options.education") },
+          { value: "children", label: t("questions.type.options.children") },
+          { value: "other", label: t("questions.type.options.other") },
+        ],
+      },
+      {
+        key: "topic" as const,
+        title: t("questions.topic.title"),
+        stepLabel: t("questions.topic.stepLabel"),
+        placeholder: t("questions.topic.placeholder"),
+      },
+      {
+        key: "audience" as const,
+        title: t("questions.audience.title"),
+        stepLabel: t("questions.audience.stepLabel"),
+        placeholder: t("questions.audience.placeholder"),
+      },
+      {
+        key: "language" as const,
+        title: t("questions.language.title"),
+        stepLabel: t("questions.language.stepLabel"),
+        options: [
+          { value: "English", label: t("questions.language.options.English") },
+          { value: "Turkish", label: t("questions.language.options.Turkish") },
+        ],
+      },
+      {
+        key: "depth" as const,
+        title: t("questions.depth.title"),
+        stepLabel: t("questions.depth.stepLabel"),
+        options: [
+          { value: "quick", label: t("questions.depth.options.quick") },
+          { value: "balanced", label: t("questions.depth.options.balanced") },
+          { value: "detailed", label: t("questions.depth.options.detailed") },
+        ],
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [t],
+  );
 
   async function refreshBooks() {
     try {
@@ -113,14 +119,14 @@ export function WizardScreen() {
   }, [ready]);
 
   const step = questions[index];
-  const progress = useMemo(() => Math.round(((index + 1) / questions.length) * 100), [index]);
+  const progress = useMemo(() => Math.round(((index + 1) / questions.length) * 100), [index, questions.length]);
   const isLastStep = index === questions.length - 1;
 
   if (!ready) return null;
 
   if (backendUnavailable) {
     return (
-      <AppFrame current="new" title="Start Your First Book" subtitle="Connection error occurred." books={books}>
+      <AppFrame current="new" title={t("backendTitle")} subtitle={t("connectionError")} books={books}>
         <BackendUnavailableState onRetry={() => void refreshBooks()} />
       </AppFrame>
     );
@@ -130,7 +136,7 @@ export function WizardScreen() {
     const isTextStep = !("options" in step);
     const val = String(answers[step.key] || "").trim();
     if (isTextStep && !val) {
-      setFieldError("This field cannot be empty.");
+      setFieldError(t("fieldRequired"));
       return;
     }
     setFieldError("");
@@ -184,7 +190,7 @@ export function WizardScreen() {
   }
 
   return (
-    <AppFrame current="new" title="New Book" subtitle="Start with 5 quick questions." books={books}>
+    <AppFrame current="new" title={t("title")} subtitle={t("subtitle")} books={books}>
       <Card className="mx-auto max-w-3xl">
         <CardContent className="p-8">
           {/* Progress header */}
@@ -233,7 +239,7 @@ export function WizardScreen() {
           <div className="mt-8">
             {"options" in step ? (
               <div className="grid gap-3 sm:grid-cols-2">
-                {step.options.map((option) => (
+                {(step.options ?? []).map((option) => (
                   <button
                     key={option.value}
                     className={cn(
@@ -262,7 +268,7 @@ export function WizardScreen() {
                     setAnswers((current) => ({ ...current, [step.key]: event.target.value }));
                   }}
                   onKeyDown={(e) => e.key === "Enter" && goNext()}
-                  placeholder={step.placeholder}
+                  placeholder={"placeholder" in step ? step.placeholder : undefined}
                   className={cn("h-14 text-base", fieldError && "border-destructive focus-visible:ring-destructive")}
                   autoFocus
                 />
@@ -283,18 +289,18 @@ export function WizardScreen() {
                 setIndex((v) => Math.max(0, v - 1));
               }}
             >
-              Back
+              {t("back")}
             </Button>
             <Button onClick={goNext} disabled={creating}>
               {creating ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
-                  Preparing...
+                  {t("preparing")}
                 </>
               ) : isLastStep ? (
-                "Prepare the Book"
+                t("prepareBook")
               ) : (
-                "Continue"
+                t("continue")
               )}
             </Button>
           </div>

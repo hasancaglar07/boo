@@ -3,43 +3,45 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { Sparkles, BookOpen, CreditCard, ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { trackEvent } from "@/lib/analytics";
 
-const OPTIONS = [
-  {
-    key: "start_wizard",
-    href: "/start/topic",
-    icon: Sparkles,
-    label: "Recommended start: 5-question wizard",
-    description: "Enter your topic and let the system guide you step by step. See your chapter plan and preview in about 5 short questions; decide on the full book later.",
-    cta: "Start the Wizard Now",
-    highlight: true,
-  },
-  {
-    key: "view_examples",
-    href: "/examples",
-    icon: BookOpen,
-    label: "Browse example outputs",
-    description: "Explore real covers, chapter structures, and output surfaces to see what quality looks like.",
-    cta: "See Examples First",
-    highlight: false,
-  },
-  {
-    key: "view_pricing",
-    href: "/pricing",
-    icon: CreditCard,
-    label: "View pricing",
-    description: "$4 one-time opening or monthly plans. See the lowest-risk entry point for your first book.",
-    cta: "Check Pricing First",
-    highlight: false,
-  },
-] as const;
-
 export function StartOptionCards() {
+  const t = useTranslations("StartOptionCards");
   useEffect(() => {
     trackEvent("start_page_viewed");
   }, []);
+
+  const OPTIONS = [
+    {
+      key: "start_wizard",
+      href: "/start/topic",
+      icon: Sparkles,
+      label: t("wizardLabel"),
+      description: t("wizardDescription"),
+      cta: t("wizardCta"),
+      highlight: true,
+    },
+    {
+      key: "view_examples",
+      href: "/examples",
+      icon: BookOpen,
+      label: t("examplesLabel"),
+      description: t("examplesDescription"),
+      cta: t("examplesCta"),
+      highlight: false,
+    },
+    {
+      key: "view_pricing",
+      href: "/pricing",
+      icon: CreditCard,
+      label: t("pricingLabel"),
+      description: t("pricingDescription"),
+      cta: t("pricingCta"),
+      highlight: false,
+    },
+  ] as const;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl">

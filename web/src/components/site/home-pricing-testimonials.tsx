@@ -1,26 +1,21 @@
-import { KDP_GUARANTEE_CLAIM, NO_API_COST_CLAIM } from "@/lib/site-claims";
+"use client";
 
-const pricingNotes = [
-  {
-    title: "Low-risk book unlocking for $4",
-    text: "The Single Book pack is a clear and simple entry point for those who want to unlock a full book without a subscription. EPUB and PDF included.",
-  },
-  {
-    title: "Preview first, pay later",
-    text: "The pricing discussion happens not on the payment page, but gains meaning after the user sees the preview. Payment wall resistance drops.",
-  },
-  {
-    title: "Guarantee and cost transparency",
-    text: `${KDP_GUARANTEE_CLAIM} ve ${NO_API_COST_CLAIM.toLowerCase()} , pricing is clear and straightforward. No hidden fees.`,
-  },
-] as const;
+import { useTranslations } from "next-intl";
 
 export function HomePricingTestimonials() {
+  const t = useTranslations("HomePricingTestimonials");
+
+  const pricingNotes = [
+    { title: t("note1Title"), text: t("note1Text") },
+    { title: t("note2Title"), text: t("note2Text") },
+    { title: t("note3Title"), text: t("note3Text") },
+  ];
+
   return (
     <section className="border-b border-border/80 py-10">
       <div className="shell">
         <p className="mb-6 text-center text-sm font-medium text-muted-foreground">
-          Three things you should know before learning about pricing:
+          {t("intro")}
         </p>
         <div className="grid gap-4 md:grid-cols-3">
           {pricingNotes.map((item) => (

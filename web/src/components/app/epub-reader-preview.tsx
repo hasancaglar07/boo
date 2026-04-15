@@ -1,10 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 export function EpubReaderPreview({ url }: { url: string }) {
+  const t = useTranslations("EpubReaderPreview");
   const srcDoc = useMemo(() => {
     const escapedUrl = JSON.stringify(url);
+    const loadingStatus = t("loadingStatus");
+    const prevButton = t("prevButton");
+    const nextButton = t("nextButton");
+    const readerScriptError = t("readerScriptError");
+    const readyStatus = t("readyStatus");
+    const renderError = t("renderError");
     return `<!doctype html>
 <html lang="en">
   <head>
@@ -28,10 +36,10 @@ export function EpubReaderPreview({ url }: { url: string }) {
   </head>
   <body>
     <div class="toolbar">
-      <div class="status" id="status">Loading EPUB preview...</div>
+      <div class="status" id="status">${loadingStatus}</div>
       <div>
-        <button id="prev" type="button">Prev</button>
-        <button id="next" type="button">Next</button>
+        <button id="prev" type="button">${prevButton}</button>
+        <button id="next" type="button">${nextButton}</button>
       </div>
     </div>
     <div id="viewer"></div>
@@ -44,7 +52,7 @@ export function EpubReaderPreview({ url }: { url: string }) {
         var next = document.getElementById("next");
         var bookUrl = ${escapedUrl};
         if (!window.ePub) {
-          status.textContent = "EPUB reader script could not load.";
+          status.textContent = ${JSON.stringify(readerScriptError)};
           return;
         }
         var book = window.ePub(bookUrl);
@@ -58,10 +66,10 @@ export function EpubReaderPreview({ url }: { url: string }) {
         rendition.on("relocated", function (location) {
           var page = location && location.start && location.start.displayed && location.start.displayed.page;
           var total = location && location.start && location.start.displayed && location.start.displayed.total;
-          status.textContent = page && total ? ("Page " + page + " / " + total) : "EPUB preview ready.";
+          status.textContent = page && total ? ("Page " + page + " / " + total) : ${JSON.stringify(readyStatus)};
         });
         rendition.display().catch(function () {
-          status.textContent = "EPUB preview could not be rendered.";
+          status.textContent = ${JSON.stringify(renderError)};
         });
         prev.addEventListener("click", function () { rendition.prev(); });
         next.addEventListener("click", function () { rendition.next(); });
@@ -69,11 +77,11 @@ export function EpubReaderPreview({ url }: { url: string }) {
     </script>
   </body>
 </html>`;
-  }, [url]);
+  }, [url, t]);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/70 bg-white">
-      <iframe title="EPUB preview" srcDoc={srcDoc} className="h-[780px] w-full" sandbox="allow-scripts allow-same-origin" />
+      <iframe title={t("iframeTitle")} srcDoc={srcDoc} className="h-[780px] w-full" sandbox="allow-scripts allow-same-origin" />
     </div>
   );
 }

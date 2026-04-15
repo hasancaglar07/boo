@@ -1,6 +1,7 @@
 "use client";
 
 import { BarChart3, BookOpen, Flame, TrendingUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Chapter } from "@/lib/dashboard-api";
 import { calculateWritingStats, formatWordCount } from "@/lib/writing-utils";
@@ -12,34 +13,35 @@ interface WritingDashboardProps {
 }
 
 export function WritingDashboard({ chapters, targetWords = 2000 }: WritingDashboardProps) {
+  const t = useTranslations("WritingDashboard");
   const stats = calculateWritingStats(chapters);
 
   const statCards = [
     {
       icon: TrendingUp,
       value: formatWordCount(stats.totalWords),
-      label: "Total Words",
+      label: t("totalWords"),
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-50 dark:bg-blue-950",
     },
     {
       icon: BookOpen,
       value: `${stats.completedChapters}/${stats.totalChapters}`,
-      label: "Chapters Done",
+      label: t("chaptersDone"),
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-950",
     },
     {
       icon: BarChart3,
       value: formatWordCount(stats.avgWordsPerChapter),
-      label: "Avg Words/Chapter",
+      label: t("avgWordsPerChapter"),
       color: "text-purple-600 dark:text-purple-400",
       bgColor: "bg-purple-50 dark:bg-purple-950",
     },
     {
       icon: Flame,
       value: `${stats.writingStreak}`,
-      label: "Day Streak",
+      label: t("dayStreak"),
       color: "text-orange-600 dark:text-orange-400",
       bgColor: "bg-orange-50 dark:bg-orange-950",
     },
@@ -49,9 +51,9 @@ export function WritingDashboard({ chapters, targetWords = 2000 }: WritingDashbo
     <Card>
       <CardContent className="space-y-4 p-6">
         <div>
-          <h3 className="text-base font-semibold text-foreground">Writing Progress</h3>
+          <h3 className="text-base font-semibold text-foreground">{t("title")}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Track your writing statistics and goals
+            {t("subtitle")}
           </p>
         </div>
 
@@ -81,7 +83,7 @@ export function WritingDashboard({ chapters, targetWords = 2000 }: WritingDashbo
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Book Completion</span>
+            <span className="text-muted-foreground">{t("bookCompletion")}</span>
             <span className="font-semibold text-foreground">{stats.completionPercentage}%</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -94,7 +96,7 @@ export function WritingDashboard({ chapters, targetWords = 2000 }: WritingDashbo
 
         {/* Chapter Progress List */}
         <div className="space-y-2">
-          <div className="text-sm font-medium text-foreground">Chapter Progress</div>
+          <div className="text-sm font-medium text-foreground">{t("chapterProgress")}</div>
           <div className="space-y-1">
             {chapters.map((chapter, index) => {
               const wordCount = chapter.content ? chapter.content.split(/\s+/).filter(Boolean).length : 0;
@@ -104,7 +106,7 @@ export function WritingDashboard({ chapters, targetWords = 2000 }: WritingDashbo
               return (
                 <div key={index} className="flex items-center gap-3 text-sm">
                   <div className="w-24 shrink-0 truncate text-muted-foreground">
-                    Ch. {index + 1}
+                    {t("chapterAbbr", { number: index + 1 })}
                   </div>
                   <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-muted">
                     <div

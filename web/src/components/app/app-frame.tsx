@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { CommandPalette, type PaletteAction } from "@/components/app/command-palette";
 import { useOptionalAppContext } from "@/components/app/app-context";
@@ -53,11 +54,11 @@ const PLAN_LABELS: Record<string, string> = {
   premium: "Single Book",
 };
 
-function displayNameForViewer(viewer?: PreviewViewer | null) {
-  if (!viewer) return "Your Account";
+function displayNameForViewer(viewer?: PreviewViewer | null, fallback = "Your Account") {
+  if (!viewer) return fallback;
   const name = viewer.name.trim();
   if (!name || name === "Book Creator") {
-    return viewer.email.split("@")[0] || "Your Account";
+    return viewer.email.split("@")[0] || fallback;
   }
   return name;
 }
@@ -151,6 +152,7 @@ export function AppFrame({
   viewer,
   children,
 }: AppFrameProps) {
+  const t = useTranslations("AppFrame");
   const router = useRouter();
   const appCtx = useOptionalAppContext();
   const isInLayout = appCtx !== null;
@@ -169,7 +171,7 @@ export function AppFrame({
   const currentViewer = viewer || hydratedViewer;
 
   const planLabel = useMemo(() => viewerPlanLabel(currentViewer), [currentViewer]);
-  const displayName = useMemo(() => displayNameForViewer(currentViewer), [currentViewer]);
+  const displayName = useMemo(() => displayNameForViewer(currentViewer, t("yourAccount")), [currentViewer, t]);
 
   useEffect(() => {
     if (!accountMenuOpen) return;
@@ -218,12 +220,12 @@ export function AppFrame({
       : null;
 
     if (!response?.ok) {
-      setVerificationMessage(payload?.error || "Verification email could not be resent.");
+      setVerificationMessage(payload?.error || t("verificationResendFailed"));
       setVerificationSending(false);
       return;
     }
 
-    setVerificationMessage(payload?.message || "Verification email has been resent.");
+    setVerificationMessage(payload?.message || t("verificationResent"));
     setVerificationSending(false);
     await refreshViewer();
   }
@@ -253,18 +255,18 @@ export function AppFrame({
               "fixed inset-y-0 left-0 z-50 w-72 border-r border-sidebar-border bg-sidebar shadow-2xl transition-transform duration-300 lg:hidden",
               drawerOpen ? "translate-x-0" : "-translate-x-full",
             )}
-            aria-label="Mobile menu"
+            aria-label={t("mobileMenu")}
           >
             <div className="flex h-full flex-col px-3.5 py-4">
               <div className="mb-3 flex shrink-0 items-center justify-between">
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
-                  Menu
+                  {t("menu")}
                 </span>
                 <button
                   type="button"
                   className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent transition hover:bg-sidebar-accent/80"
                   onClick={() => setDrawerOpen(false)}
-                  aria-label="Close menu"
+                  aria-label={t("closeMenu")}
                 >
                   {/* X icon — only rendered outside layout */}
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -284,7 +286,7 @@ export function AppFrame({
               type="button"
               className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card transition hover:bg-accent lg:hidden"
               onClick={() => setDrawerOpen(true)}
-              aria-label="Open menu"
+              aria-label={t("openMenu")}
             >
               <Menu className="size-4" />
             </button>
@@ -353,12 +355,12 @@ export function AppFrame({
                           {currentViewer.emailVerified ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                               <CheckCircle2 className="size-3.5" />
-                              Verified
+                              {t("verified")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
                               <ShieldCheck className="size-3.5" />
-                              Verifyma bekleniyor
+                              {t("pendingVerification")}
                             </span>
                           )}
                         </div>
@@ -368,21 +370,21 @@ export function AppFrame({
                     <div className="mt-2 space-y-1">
                       <MenuLink
                         href="/app/settings/profile"
-                        label="Profile Settings"
-                        description="Manage your name, writing goal, and account status."
+                        label={t("profileSettings")}
+                        description={t("profileSettingsDesc")}
                         onSelect={() => setAccountMenuOpen(false)}
                       />
                       <MenuLink
                         href="/app/settings/billing"
-                        label="Plans"
-                        description="View your package, access status, and payment flow."
+                        label={t("plans")}
+                        description={t("plansDesc")}
                         onSelect={() => setAccountMenuOpen(false)}
                       />
                       {currentViewer.role !== "USER" ? (
                         <MenuLink
                           href="/admin"
-                          label="Admin"
-                          description="Quick access to the admin panel."
+                          label={t("admin")}
+                          description={t("adminDesc")}
                           onSelect={() => setAccountMenuOpen(false)}
                         />
                       ) : null}
@@ -395,7 +397,7 @@ export function AppFrame({
                         onClick={() => void handleLogout()}
                       >
                         <LogOut className="size-4 text-muted-foreground" />
-                        Sign Out
+                        {t("signOut")}
                       </button>
                     </div>
                   </div>
@@ -411,10 +413,10 @@ export function AppFrame({
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-foreground">
-                    Verify your email address
+                    {t("verifyEmailTitle")}
                   </div>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    Verify your email for account security, login recovery, and notifications to work properly. This step is required only once.
+                    {t("verifyEmailDesc")}
                   </p>
                   {verificationMessage ? (
                     <p className="mt-2 text-xs font-medium text-primary">{verificationMessage}</p>
@@ -428,14 +430,14 @@ export function AppFrame({
                       onClick={() => void handleResendVerification()}
                       disabled={verificationSending}
                     >
-                    {verificationSending ? "Sending..." : "Resend verification email"}
+                    {verificationSending ? t("sending") : t("resendVerification")}
                     </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => router.push("/app/settings/profile")}
                   >
-                    Open Profile Settings
+                    {t("openProfileSettings")}
                   </Button>
                 </div>
               </div>

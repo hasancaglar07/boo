@@ -3,68 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronUp, Copy, LinkIcon, BadgeDollarSign, CheckCircle2, Users, Zap } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/components/site/section-heading";
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
 
-const COMMISSIONS = [
-  { plan: "Starter", price: "$19", perMonth: "$5.70", total3: "$17.10" },
-  { plan: "Creator", price: "$39", perMonth: "$11.70", total3: "$35.10" },
-  { plan: "Pro", price: "$79", perMonth: "$23.70", total3: "$71.10" },
-];
-
-const STEPS = [
-  {
-    icon: Users,
-    title: "Sign up for free",
-    desc: "Sign up for BookGenerator.net. Your account automatically receives an affiliate link — no extra application required.",
-  },
-  {
-    icon: LinkIcon,
-    title: "Share your affiliate link",
-    desc: "Copy your special link from your profile and share it on social media, blogs, email, or WhatsApp.",
-  },
-  {
-    icon: BadgeDollarSign,
-    title: "Earn 30% from every payment",
-    desc: "Earn a permanent 30% commission from everyone who signs up through your link and makes a payment. No limit.",
-  },
-];
-
-const FAQS = [
-  {
-    q: "Do I need to apply?",
-    a: "No! Your affiliate link is automatically created as soon as you register. You can access it immediately from your profile settings or the /affiliate page.",
-  },
-  {
-    q: "What is the commission rate?",
-    a: "You earn a 30% commission from every active subscription payment. This repeats every month as long as the subscription is active.",
-  },
-  {
-    q: "Is the Premium plan ($4) included in commissions?",
-    a: "No. Affiliate commissions only apply to monthly subscription plans (Starter, Creator, Pro).",
-  },
-  {
-    q: "How are payments made?",
-    a: "Payments are made via PayPal or bank transfer. Minimum payout threshold is $50. Payments are processed monthly.",
-  },
-  {
-    q: "When is the commission approved?",
-    a: "After the 30-day refund period expires, the commission is approved and added to your balance.",
-  },
-  {
-    q: "How many people can I invite?",
-    a: "No limit. The more you share, the more you earn. Every paying member you invite brings a 30% commission.",
-  },
-  {
-    q: "Is it mandatory for my invitee to use my link?",
-    a: "Yes. The affiliate system requires members to sign up through your special link. Your link carries the ?ref=YOURCODE parameter and is automatically recognized.",
-  },
-];
-
 function LoggedInAffiliateCard() {
+  const t = useTranslations("AffiliatePage");
   const [data, setData] = useState<{ referralUrl: string; clicks: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -90,14 +37,14 @@ function LoggedInAffiliateCard() {
   function handleWhatsApp() {
     if (!data) return;
     trackEvent("affiliate_whatsapp_clicked", { source: "affiliate_page_loggedin" });
-    const text = `Write a professional book in minutes with BookGenerator.net! ${data.referralUrl}`;
+    const text = t("whatsAppText", { url: data.referralUrl });
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }
 
   function handleTwitter() {
     if (!data) return;
     trackEvent("affiliate_twitter_clicked", { source: "affiliate_page_loggedin" });
-    const text = `I wrote a book in minutes with AI 🚀 Try BookGenerator.net:`;
+    const text = t("twitterText");
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(data.referralUrl)}`, "_blank");
   }
 
@@ -108,7 +55,7 @@ function LoggedInAffiliateCard() {
           <div className="mb-6 flex items-center gap-2">
             <CheckCircle2 className="size-4 text-emerald-500" />
             <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-              Your affiliate account is active
+              {t("cardActive")}
             </span>
           </div>
 
@@ -118,8 +65,8 @@ function LoggedInAffiliateCard() {
                 <LinkIcon className="size-4" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-foreground">Your Affiliate Link</h3>
-                <p className="text-xs text-muted-foreground">Copy, share — earn 30% from every payment</p>
+                <h3 className="text-base font-semibold text-foreground">{t("cardLinkTitle")}</h3>
+                <p className="text-xs text-muted-foreground">{t("cardLinkDesc")}</p>
               </div>
             </div>
 
@@ -131,7 +78,7 @@ function LoggedInAffiliateCard() {
                 onClick={handleCopy}
               >
                 <span className="min-w-0 flex-1 truncate font-mono text-sm text-foreground select-all">
-                  {data?.referralUrl || "Loading..."}
+                  {data?.referralUrl || t("cardLoading")}
                 </span>
                 <Copy className="size-4 shrink-0 text-muted-foreground" />
               </div>
@@ -140,23 +87,23 @@ function LoggedInAffiliateCard() {
             <div className="mt-4 flex flex-wrap gap-2">
               <Button size="sm" className="min-h-[40px]" onClick={handleCopy} disabled={!data}>
                 {copied ? (
-                  <><CheckCircle2 className="mr-1.5 size-3.5" /> Copied!</>
+                  <><CheckCircle2 className="mr-1.5 size-3.5" /> {t("btnCopied")}</>
                 ) : (
-                  <><Copy className="mr-1.5 size-3.5" /> Copy Link</>
+                  <><Copy className="mr-1.5 size-3.5" /> {t("btnCopyLink")}</>
                 )}
               </Button>
               <Button size="sm" variant="outline" className="min-h-[40px]" onClick={handleWhatsApp} disabled={!data}>
-                WhatsApp
+                {t("btnWhatsApp")}
               </Button>
               <Button size="sm" variant="outline" className="min-h-[40px]" onClick={handleTwitter} disabled={!data}>
-                X (Twitter)
+                {t("btnTwitter")}
               </Button>
             </div>
 
             {data && data.clicks > 0 && (
               <p className="mt-3 text-xs text-muted-foreground">
                 <Users className="inline size-3 mr-1" />
-                <strong className="text-foreground">{data.clicks}</strong> people clicked your link
+                <strong className="text-foreground">{data.clicks}</strong> {t("clicksLabel", { count: data.clicks }).replace(`${data.clicks} `, "")}
               </p>
             )}
           </div>
@@ -167,7 +114,7 @@ function LoggedInAffiliateCard() {
               className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/8 px-5 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/14"
             >
               <BadgeDollarSign className="size-3.5" />
-              Open detailed affiliate panel
+              {t("btnOpenDetailedPanel")}
               <span className="text-muted-foreground">→</span>
             </Link>
           </div>
@@ -195,6 +142,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export function AffiliatePage() {
+  const t = useTranslations("AffiliatePage");
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -206,6 +154,28 @@ export function AffiliatePage() {
       .catch(() => setIsLoggedIn(false));
   }, []);
 
+  const STEPS = [
+    { title: t("step1Title"), desc: t("step1Desc"), icon: Users },
+    { title: t("step2Title"), desc: t("step2Desc"), icon: LinkIcon },
+    { title: t("step3Title"), desc: t("step3Desc"), icon: BadgeDollarSign },
+  ];
+
+  const FAQS = [
+    { q: t("faq1Q"), a: t("faq1A") },
+    { q: t("faq2Q"), a: t("faq2A") },
+    { q: t("faq3Q"), a: t("faq3A") },
+    { q: t("faq4Q"), a: t("faq4A") },
+    { q: t("faq5Q"), a: t("faq5A") },
+    { q: t("faq6Q"), a: t("faq6A") },
+    { q: t("faq7Q"), a: t("faq7A") },
+  ];
+
+  const COMMISSIONS = [
+    { plan: "Starter", price: "$19", perMonth: "$5.70", total3: "$17.10" },
+    { plan: "Creator", price: "$39", perMonth: "$11.70", total3: "$35.10" },
+    { plan: "Pro", price: "$79", perMonth: "$23.70", total3: "$71.10" },
+  ];
+
   return (
     <div className="flex flex-col">
       {/* Show direct URL to logged-in user */}
@@ -216,30 +186,29 @@ export function AffiliatePage() {
         <div className="shell">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto inline-flex items-center rounded-full border border-border/80 bg-card/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground">
-              Affiliate Program
+              {t("badge")}
             </div>
 
             <h1 className="mx-auto mt-8 max-w-3xl text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-              Earn 30% Commission from Every Membership
+              {t("heroTitle")}
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-8 text-muted-foreground">
-              Everyone who signs up for BookGenerator.net automatically receives an affiliate link. 
-              Share your link, earn a permanent 30% commission from every paying invitee.
+              {t("heroDescription")}
             </p>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
                 <CheckCircle2 className="size-3 text-emerald-500" />
-                No application required
+                {t("badgeNoApplication")}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
                 <Zap className="size-3 text-primary" />
-                Instant affiliate link
+                {t("badgeInstantLink")}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
                 <BadgeDollarSign className="size-3 text-primary" />
-                Permanent 30% commission
+                {t("badgePermanentCommission")}
               </span>
             </div>
 
@@ -249,11 +218,11 @@ export function AffiliatePage() {
                   <Button asChild size="lg" className="px-8">
                     <Link href="/app/affiliate">
                       <BadgeDollarSign className="mr-2 size-4" />
-                      Open Affiliate Panel
+                      {t("btnOpenPanel")}
                     </Link>
                   </Button>
                   <Button asChild size="lg" variant="outline" className="px-8">
-                    <Link href="/app/library">Back to My Books</Link>
+                    <Link href="/app/library">{t("btnBackToBooks")}</Link>
                   </Button>
                 </>
               ) : (
@@ -261,11 +230,11 @@ export function AffiliatePage() {
                   <Button asChild size="lg" className="px-8">
                     <Link href="/register">
                       <Users className="mr-2 size-4" />
-                      Sign Up Free
+                      {t("btnSignUpFree")}
                     </Link>
                   </Button>
                   <Button asChild size="lg" variant="outline" className="px-8">
-                    <a href="#nasil-calisir">How It Works?</a>
+                    <a href="#nasil-calisir">{t("btnHowItWorks")}</a>
                   </Button>
                 </>
               )}
@@ -278,9 +247,9 @@ export function AffiliatePage() {
       <section id="nasil-calisir" className="border-b border-border/80 py-18">
         <div className="shell">
           <SectionHeading
-            badge="How It Works?"
-            title="Earn 30% Commission in 3 Steps"
-            description="Sign up, share your link, earnings are calculated automatically. No extra tools or application required."
+            badge={t("howItWorksBadge")}
+            title={t("howItWorksTitle")}
+            description={t("howItWorksDescription")}
             align="center"
           />
 
@@ -314,9 +283,9 @@ export function AffiliatePage() {
       <section className="border-b border-border/80 py-18">
         <div className="shell max-w-2xl">
           <SectionHeading
-            badge="Commission Table"
-            title="30% for Every Plan"
-            description="You earn commission every month as long as the person you invited continues their payment."
+            badge={t("commissionBadge")}
+            title={t("commissionTitle")}
+            description={t("commissionDescription")}
             align="center"
           />
 
@@ -325,10 +294,10 @@ export function AffiliatePage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/60 bg-muted/50">
-                    <th className="px-5 py-3 text-left font-semibold text-foreground">Plan</th>
-                    <th className="px-5 py-3 text-right font-semibold text-foreground">Monthly</th>
-                    <th className="px-5 py-3 text-right font-semibold text-foreground">Commission/Month</th>
-                    <th className="px-5 py-3 text-right font-semibold text-primary">3 Ay</th>
+                    <th className="px-5 py-3 text-left font-semibold text-foreground">{t("tableHeaderPlan")}</th>
+                    <th className="px-5 py-3 text-right font-semibold text-foreground">{t("tableHeaderMonthly")}</th>
+                    <th className="px-5 py-3 text-right font-semibold text-foreground">{t("tableHeaderCommissionPerMonth")}</th>
+                    <th className="px-5 py-3 text-right font-semibold text-primary">{t("tableHeader3Months")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -344,7 +313,7 @@ export function AffiliatePage() {
               </table>
             </div>
             <div className="border-t border-border/40 bg-muted/30 px-5 py-3 text-xs text-muted-foreground">
-              Premium ($4 one-time) is outside commission scope. Approved after the 30-day refund period.
+              {t("tableFootnote")}
             </div>
           </div>
         </div>
@@ -354,8 +323,8 @@ export function AffiliatePage() {
       <section className="border-b border-border/80 py-18">
         <div className="shell max-w-2xl">
           <SectionHeading
-            badge="SSS"
-            title="Frequently Asked Questions"
+            badge={t("faqBadge")}
+            title={t("faqTitle")}
             align="center"
           />
 
@@ -373,11 +342,11 @@ export function AffiliatePage() {
       <section className="py-18 text-center">
         <div className="shell max-w-xl">
           <SectionHeading
-            title={isLoggedIn === true ? "Go to Affiliate Panel" : "Start Now"}
+            title={isLoggedIn === true ? t("ctaTitleLoggedIn") : t("ctaTitleGuest")}
             description={
               isLoggedIn === true
-                ? "You can copy your link and track commissions from the detailed affiliate panel."
-                : "Sign up, get your affiliate link, and start sharing. Earn a permanent 30% commission from every paying member."
+                ? t("ctaDescLoggedIn")
+                : t("ctaDescGuest")
             }
             align="center"
           />
@@ -387,7 +356,7 @@ export function AffiliatePage() {
               <Button asChild size="lg" className="px-8">
                 <Link href="/app/affiliate">
                   <BadgeDollarSign className="mr-2 size-4" />
-                  Open Affiliate Panel
+                  {t("btnOpenPanel")}
                 </Link>
               </Button>
             ) : (
@@ -395,18 +364,18 @@ export function AffiliatePage() {
                 <Button asChild size="lg" className="px-8">
                   <Link href="/register">
                     <Users className="mr-2 size-4" />
-                    Sign Up Free
+                    {t("btnSignUpFree")}
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="px-8">
-                  <a href="mailto:affiliate@bookgenerator.net?subject=Affiliate%20Question">Ask a Question</a>
+                  <a href="mailto:affiliate@bookgenerator.net?subject=Affiliate%20Question">{t("btnAskQuestion")}</a>
                 </Button>
               </>
             )}
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground/70">
-            affiliate@bookgenerator.net · Questions are answered within 2 business days
+            {t("ctaFootnote")}
           </p>
         </div>
       </section>

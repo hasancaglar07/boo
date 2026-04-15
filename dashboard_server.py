@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import base64
+import binascii
 from collections import OrderedDict
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
+import hashlib
 import html
 import json
 import mimetypes
@@ -524,7 +526,7 @@ TEXT_EXTENSIONS = {
     ".yml",
 }
 IMAGE_EXTENSIONS = {".jpeg", ".jpg", ".pdf", ".png", ".svg", ".webp"}
-PREFERRED_COVER_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp", ".svg")
+PREFERRED_COVER_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".svg")
 WINDOWS_DRIVE_PATH_PATTERN = re.compile(r"^[A-Za-z]:[\\/]")
 ENV_ASSIGNMENT_PATTERN = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
 FRONT_COVER_PREFIX_PRIORITY = (
@@ -539,8 +541,25 @@ BACK_COVER_PREFIX_PRIORITY = (
     "ai_back_cover",
     "generated_back_cover",
 )
+FINAL_FRONT_COVER_REFERENCES = (
+    "assets/front_cover_final.jpg",
+    "assets/front_cover_final.jpeg",
+    "assets/front_cover_final.png",
+)
+FINAL_BACK_COVER_REFERENCES = (
+    "assets/back_cover_final.jpg",
+    "assets/back_cover_final.jpeg",
+    "assets/back_cover_final.png",
+)
 BUILD_FORMATS = ("all", "epub", "pdf", "html", "markdown", "mobi", "azw3")
 LIGHTWEIGHT_BUILD_FORMATS = {"all", "epub", "pdf"}
+
+
+def export_embeds_cover_images(format_name: str) -> bool:
+    normalized = str(format_name or "").strip().lower()
+    return normalized not in {"pdf", "epub", "all"}
+
+
 CHAPTER_FINAL_FILE_PATTERN = re.compile(r"^chapter_\d+_final\.md$")
 EXTRA_FILES = (
     "preface.md",
@@ -572,6 +591,58 @@ SECRET_SETTING_KEYS = {
     "CODEFAST_API_KEY",
     "GOOGLE_API_KEY",
     "cover_password",
+}
+PROFESSIONAL_BOOK_DETAIL_FIELDS: tuple[str, ...] = (
+    "edition_label",
+    "print_label",
+    "publication_city",
+    "publication_country",
+    "publisher_address",
+    "publisher_phone",
+    "publisher_email",
+    "publisher_website",
+    "publisher_certificate_no",
+    "isbn13",
+    "editor_name",
+    "proofreader_name",
+    "typesetter_name",
+    "cover_designer_name",
+    "printer_name",
+    "printer_address",
+    "printer_certificate_no",
+    "copyright_statement",
+    "imprint_block",
+)
+PROFESSIONAL_PUBLISHER_PLACEHOLDERS = {
+    "book generator",
+    "ai publisher",
+    "default publisher",
+    "publisher",
+}
+FRONTMATTER_SECTIONS: tuple[str, ...] = ("dedication", "preface", "introduction")
+FRONTMATTER_MIN_WORDS: dict[str, int] = {
+    "dedication": 90,
+    "preface": 420,
+    "introduction": 600,
+}
+FRONTMATTER_AI_STATE_KEY = "frontmatter_ai_state"
+FRONTMATTER_AI_VERSION = 1
+FRONTMATTER_CONTEXT_SCOPE = "outline_first_two"
+FRONTMATTER_TEMPLATE_MARKERS: dict[str, tuple[str, ...]] = {
+    "dedication": (
+        "for every reader who chooses disciplined progress over short-term noise",
+        "bu kitap, öğrendiklerini cömertçe paylaşan",
+    ),
+    "preface": (
+        "this book was written to turn ideas into practical execution",
+        "this edition of",
+        "bu kitap, konuyu sade ve uygulanabilir bir çerçevede ele almak için yazıldı",
+    ),
+    "introduction": (
+        "this book is organized as a sequential roadmap",
+        "this book is structured in",
+        "bu kitap adım adım ilerleyen bir yol haritası olarak tasarlandı",
+    ),
 }
 
 
@@ -725,6 +796,193 @@ def detect_book_language(*parts: Any) -> str:
     if english_hits > turkish_hits:
         return "English"
     return ""
+
+
+def simple_title_case(value: str) -> str:
+    cleaned = re.sub(r"\s+", " ", str(value or "").strip())
+    if not cleaned:
+        return ""
+    words: list[str] = []
+    for token in cleaned.split(" "):
+        if not token:
+            continue
+        if len(token) == 1:
+            words.append(token.upper())
+        else:
+            words.append(token[0].upper() + token[1:])
+    return " ".join(words)
+
+
+def local_topic_suggest_fallback(topic: str, audience: str, language: str) -> dict[str, Any]:
+    normalized_language = normalize_book_language(language) or "English"
+    subject = simple_title_case(re.sub(r"\s+", " ", str(topic or "").strip()))
+    if not subject:
+        subject = "Kitap Fikri" if normalized_language == "Turkish" else "Book Idea"
+
+    audience_label = re.sub(r"\s+", " ", str(audience or "").strip())
+    if not audience_label:
+        audience_label = "genel okurlar" if normalized_language == "Turkish" else "general readers"
+
+    if normalized_language == "Turkish":
+        return {
+            "source": "local_template",
+            "fallback": True,
+            "topics": [
+                f"{subject} için başlangıç yol haritası",
+                f"{subject} konusunda sık yapılan hatalar",
+                f"{subject} için uygulamalı mini sistem",
+                f"{subject} alanında 30 günlük gelişim planı",
+                f"{subject} için araçlar ve pratik akış",
+                f"{subject} alanında ileri seviye taktikler",
+                f"{subject} ile verimlilik ve sonuç odaklı yaklaşım",
+                f"{subject} için sade ve sürdürülebilir yöntem",
+            ],
+            "titles": [
+                {
+                    "title": f"{subject} Rehberi",
+                    "subtitle": f"{audience_label} için adım adım uygulanabilir plan",
+                    "description": "Temelden ileri seviyeye ilerleyen, net ve pratik bir yol haritası sunar.",
+                },
+                {
+                    "title": f"{subject}: Pratik Oyun Planı",
+                    "subtitle": f"{audience_label} için sade sistemler ve hızlı kazanımlar",
+                    "description": "Okurun hızlı aksiyon almasını sağlayan, uygulanabilir çerçeveler içerir.",
+                },
+                {
+                    "title": f"{subject} Ustalığı",
+                    "subtitle": f"{audience_label} için temelden güvenli uygulamaya geçiş",
+                    "description": "Kritik ilkeleri kısa, açık ve sonuç odaklı biçimde bir araya getirir.",
+                },
+                {
+                    "title": f"{subject} ile Sonuç Üretme",
+                    "subtitle": f"{audience_label} için net adımlar, ölçülebilir ilerleme",
+                    "description": "Plan, uygulama ve iyileştirme döngüsünü tek bir sistemde toplar.",
+                },
+                {
+                    "title": f"{subject}: Başlangıçtan Uzmanlığa",
+                    "subtitle": f"{audience_label} için yapılandırılmış öğrenme akışı",
+                    "description": "Öğrenmeyi hızlandıran bir sıra ve tutarlı gelişim ritmi önerir.",
+                },
+                {
+                    "title": f"{subject} Çalışma Defteri",
+                    "subtitle": f"{audience_label} için pratik görevler ve örnek uygulamalar",
+                    "description": "Her bölümde doğrudan uygulanabilir görevlerle ilerlemeyi destekler.",
+                },
+            ],
+            "language": normalized_language,
+        }
+
+    return {
+        "source": "local_template",
+        "fallback": True,
+        "topics": [
+            f"{subject} fundamentals for first wins",
+            f"{subject} mistakes and practical fixes",
+            f"{subject} systems for consistent execution",
+            f"{subject} 30-day progress framework",
+            f"{subject} tools, workflows, and checklists",
+            f"{subject} advanced tactics for better outcomes",
+            f"{subject} strategy for measurable growth",
+            f"{subject} practical roadmap for long-term results",
+        ],
+        "titles": [
+            {
+                "title": f"{subject} Playbook",
+                "subtitle": f"A practical step-by-step guide for {audience_label}",
+                "description": "A clear action plan that helps readers apply ideas quickly and confidently.",
+            },
+            {
+                "title": f"Mastering {subject}",
+                "subtitle": f"The hands-on framework for {audience_label}",
+                "description": "Turns core principles into repeatable workflows and measurable progress.",
+            },
+            {
+                "title": f"{subject}: Practical Guide",
+                "subtitle": "From fundamentals to confident execution",
+                "description": "Builds strong foundations and then moves into real-world application.",
+            },
+            {
+                "title": f"{subject} Results System",
+                "subtitle": f"A focused method for {audience_label}",
+                "description": "Combines planning, execution, and review into one simple operating system.",
+            },
+            {
+                "title": f"The {subject} Blueprint",
+                "subtitle": f"Clear actions and milestones for {audience_label}",
+                "description": "Helps readers prioritize the right moves and avoid common dead ends.",
+            },
+            {
+                "title": f"{subject} in Action",
+                "subtitle": "A field-tested roadmap for practical outcomes",
+                "description": "Keeps the content concise, practical, and immediately applicable.",
+            },
+        ],
+        "language": normalized_language,
+    }
+
+
+def local_outline_suggest_fallback(topic: str, audience: str, language: str, genre: str) -> dict[str, Any]:
+    normalized_language = normalize_book_language(language) or "English"
+    subject = simple_title_case(re.sub(r"\s+", " ", str(topic or "").strip()))
+    if not subject:
+        subject = "Kitap Konusu" if normalized_language == "Turkish" else "Book Topic"
+
+    audience_label = re.sub(r"\s+", " ", str(audience or "").strip())
+    if not audience_label:
+        audience_label = "genel okurlar" if normalized_language == "Turkish" else "general readers"
+
+    genre_label = re.sub(r"\s+", " ", str(genre or "").strip())
+    if not genre_label:
+        genre_label = "non-fiction"
+
+    if normalized_language == "Turkish":
+        return {
+            "source": "local_template",
+            "fallback": True,
+            "title": f"{subject} Rehberi",
+            "subtitle": f"{audience_label} için adım adım uygulanabilir {genre_label} planı",
+            "description": (
+                f"Bu taslak, {subject} konusunda temelden uygulamaya giden sade ve pratik bir bölüm akışı sunar. "
+                "Her bölüm okurun bir sonraki adıma net şekilde ilerlemesini hedefler."
+            ),
+            "chapters": [
+                {"title": f"Giriş: {subject} Neden Önemli?", "summary": "Konunun kapsamı, hedefleri ve kitapta izlenecek yol netleştirilir."},
+                {"title": "Temel Kavramlar ve Çerçeve", "summary": "İleride kullanılacak ana kavramlar sade örneklerle açıklanır."},
+                {"title": "Başlangıç Kurulumu", "summary": "İlk sonuçları almak için gerekli hazırlık ve başlangıç adımları verilir."},
+                {"title": "Ana Sistem ve Uygulama Akışı", "summary": "Konunun kalbini oluşturan adım adım uygulama sistemi anlatılır."},
+                {"title": "Sık Hatalar ve Çözüm Yolları", "summary": "En yaygın hatalar ve bunları hızlıca düzeltme yöntemleri paylaşılır."},
+                {"title": "Ölçüm ve İyileştirme", "summary": "Gelişimi takip etmek için ölçütler ve iyileştirme döngüsü kuruludur."},
+                {"title": "Vaka ve Gerçek Senaryolar", "summary": "Gerçekçi örnekler üzerinden yöntemin nasıl uygulandığı gösterilir."},
+                {"title": "İleri Seviye Taktikler", "summary": "Temeller oturduktan sonra etkiyi artıran ileri tekniklere geçilir."},
+                {"title": "Sürdürülebilir Rutin", "summary": "Uzun vadede istikrarlı sonuç için sürdürülebilir çalışma düzeni kurulur."},
+                {"title": "Sonuç ve 30 Günlük Eylem Planı", "summary": "Öğrenilenler özetlenir ve hemen uygulanacak net bir plan sunulur."},
+            ],
+            "language": normalized_language,
+        }
+
+    return {
+        "source": "local_template",
+        "fallback": True,
+        "title": f"{subject} Playbook",
+        "subtitle": f"A practical {genre_label} roadmap for {audience_label}",
+        "description": (
+            f"This outline creates a practical path from fundamentals to execution for {subject}. "
+            "Each chapter is structured to drive clear progress and real application."
+        ),
+        "chapters": [
+            {"title": f"Introduction: Why {subject} Matters", "summary": "Clarifies goals, scope, and what outcomes the reader should expect."},
+            {"title": "Core Concepts and Mental Model", "summary": "Builds the foundation and shared vocabulary for the rest of the book."},
+            {"title": "Getting Started: First Setup", "summary": "Covers the essential first steps to reach an early practical win."},
+            {"title": "Main Workflow and Execution", "summary": "Breaks down the primary system into repeatable, step-by-step actions."},
+            {"title": "Common Mistakes and Fixes", "summary": "Highlights frequent pitfalls and fast corrective tactics."},
+            {"title": "Measurement and Optimization", "summary": "Defines how to measure progress and refine performance over time."},
+            {"title": "Case Scenarios and Examples", "summary": "Shows realistic examples to connect theory with practice."},
+            {"title": "Advanced Tactics", "summary": "Introduces higher-leverage techniques once fundamentals are stable."},
+            {"title": "Sustainable Routine Design", "summary": "Helps the reader maintain consistent output without burnout."},
+            {"title": "30-Day Action Plan", "summary": "Concludes with a concrete implementation plan for immediate execution."},
+        ],
+        "language": normalized_language,
+    }
 
 
 def infer_book_language(
@@ -991,6 +1249,25 @@ def build_book_preview(book: dict[str, Any], ratio: float = 0.2) -> dict[str, An
             "branding_mark": book.get("branding_mark", ""),
             "branding_logo_url": book.get("branding_logo_url", ""),
             "cover_brief": book.get("cover_brief", ""),
+            "edition_label": book.get("edition_label", ""),
+            "print_label": book.get("print_label", ""),
+            "publication_city": book.get("publication_city", ""),
+            "publication_country": book.get("publication_country", ""),
+            "publisher_address": book.get("publisher_address", ""),
+            "publisher_phone": book.get("publisher_phone", ""),
+            "publisher_email": book.get("publisher_email", ""),
+            "publisher_website": book.get("publisher_website", ""),
+            "publisher_certificate_no": book.get("publisher_certificate_no", ""),
+            "isbn13": book.get("isbn13", ""),
+            "editor_name": book.get("editor_name", ""),
+            "proofreader_name": book.get("proofreader_name", ""),
+            "typesetter_name": book.get("typesetter_name", ""),
+            "cover_designer_name": book.get("cover_designer_name", ""),
+            "printer_name": book.get("printer_name", ""),
+            "printer_address": book.get("printer_address", ""),
+            "printer_certificate_no": book.get("printer_certificate_no", ""),
+            "copyright_statement": book.get("copyright_statement", ""),
+            "imprint_block": book.get("imprint_block", ""),
             "cover_image": book.get("cover_image", ""),
             "back_cover_image": book.get("back_cover_image", ""),
             "front_cover_source": book.get("front_cover_source", ""),
@@ -1145,6 +1422,9 @@ def read_metadata(
         "style_direction": DEFAULT_STYLE_DIRECTION,
         "wrap_scope": DEFAULT_WRAP_SCOPE,
         "quality_gate": DEFAULT_QUALITY_GATE,
+        "book_profile": "nonfiction_premium",
+        "variation_mode": "controlled",
+        "quality_target": "kdp",
         "cover_branch": "",
         "cover_genre": "",
         "cover_subtopic": "",
@@ -1154,6 +1434,7 @@ def read_metadata(
         "cover_lab_version": "",
         "cover_style_mode": DEFAULT_COVER_STYLE_MODE,
         "back_cover_mode": DEFAULT_BACK_COVER_MODE,
+        "back_layout_version": "",
         "text_safe_zone_status": "",
         "cover_pair_score": 0,
         "cover_rejection_reasons": {},
@@ -1166,6 +1447,25 @@ def read_metadata(
         "selected_cover_confidence": 0,
         "isbn": "",
         "year": "",
+        "edition_label": "",
+        "print_label": "",
+        "publication_city": "",
+        "publication_country": "",
+        "publisher_address": "",
+        "publisher_phone": "",
+        "publisher_email": "",
+        "publisher_website": "",
+        "publisher_certificate_no": "",
+        "isbn13": "",
+        "editor_name": "",
+        "proofreader_name": "",
+        "typesetter_name": "",
+        "cover_designer_name": "",
+        "printer_name": "",
+        "printer_address": "",
+        "printer_certificate_no": "",
+        "copyright_statement": "",
+        "imprint_block": "",
         "fast": False,
         "book_length_mode": DEFAULT_BOOK_LENGTH_MODE,
         "book_length_tier": "standard",
@@ -1217,6 +1517,7 @@ def read_metadata(
         "last_content_edit_at": "",
         "last_export_build_at": "",
         "last_export_format": "",
+        "frontmatter_ai_state": {},
         "opening_sequence_valid": None,
         "full_generation_eta_updated_at": "",
         "full_generation_started_at": "",
@@ -1576,8 +1877,8 @@ def normalize_cover_style_mode(value: Any) -> str:
 
 
 def normalize_back_cover_mode(value: Any) -> str:
-    normalized = str(value or "").strip().lower().replace("-", "_")
-    return normalized or DEFAULT_BACK_COVER_MODE
+    _ = value
+    return DEFAULT_BACK_COVER_MODE
 
 
 def normalize_cover_text_strategy(value: Any) -> str:
@@ -1603,6 +1904,39 @@ def normalize_wrap_scope(value: Any) -> str:
 def normalize_quality_gate(value: Any) -> str:
     normalized = str(value or "").strip().lower().replace("-", "_")
     return normalized or DEFAULT_QUALITY_GATE
+
+
+def normalize_book_profile(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    if normalized in {"nonfiction_premium", "nonfiction", "premium_nonfiction"}:
+        return "nonfiction_premium"
+    if normalized in {"hybrid_general", "hybrid", "general"}:
+        return "hybrid_general"
+    if normalized in {"fiction_focused", "fiction", "novel"}:
+        return "fiction_focused"
+    return "nonfiction_premium"
+
+
+def normalize_variation_mode(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    if normalized in {"controlled", "balanced"}:
+        return "controlled"
+    if normalized in {"high_random", "random", "high"}:
+        return "high_random"
+    if normalized in {"fixed_classic", "fixed", "classic"}:
+        return "fixed_classic"
+    return "controlled"
+
+
+def normalize_quality_target(value: Any) -> str:
+    normalized = str(value or "").strip().lower().replace("-", "_")
+    if normalized in {"kdp", "strict"}:
+        return "kdp"
+    if normalized in {"balanced", "standard"}:
+        return "balanced"
+    if normalized in {"dev", "development", "relaxed"}:
+        return "dev"
+    return "kdp"
 
 
 def normalize_chapter_generation_mode(value: Any) -> str:
@@ -2097,6 +2431,97 @@ def existing_book_asset_reference(book_dir: Path, value: Any) -> str:
     return resolved.relative_to(book_dir).as_posix()
 
 
+def materialize_data_image_asset_reference(book_dir: Path, data_url: str, stem: str = "publisher_logo") -> str:
+    raw = str(data_url or "").strip()
+    if not raw.lower().startswith("data:image/"):
+        return ""
+    if "," not in raw:
+        return ""
+
+    header, encoded = raw.split(",", 1)
+    header_lower = header.lower()
+    mime = header[5:].split(";", 1)[0].strip().lower() or "image/png"
+    extension_map = {
+        "image/png": ".png",
+        "image/jpeg": ".jpg",
+        "image/jpg": ".jpg",
+        "image/webp": ".webp",
+        "image/svg+xml": ".svg",
+    }
+    ext = extension_map.get(mime, ".png")
+
+    try:
+        if ";base64" in header_lower:
+            payload = base64.b64decode(encoded, validate=False)
+        else:
+            payload = urllib.parse.unquote_to_bytes(encoded)
+    except (ValueError, binascii.Error):
+        return ""
+
+    if not payload:
+        return ""
+
+    assets_dir = book_dir / "assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    target = assets_dir / f"{slugify(stem) or 'publisher_logo'}{ext}"
+    try:
+        target.write_bytes(payload)
+    except OSError:
+        return ""
+    return target.relative_to(book_dir).as_posix()
+
+
+def convert_cover_asset_to_jpeg(
+    book_dir: Path,
+    source_path: Path | None,
+    *,
+    target_name: str,
+) -> Path | None:
+    if not source_path or not source_path.exists() or not source_path.is_file():
+        return None
+    assets_dir = book_dir / "assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    target = assets_dir / target_name
+    suffix = source_path.suffix.lower()
+    if suffix in {".jpg", ".jpeg"}:
+        if source_path.resolve() != target.resolve():
+            shutil.copyfile(source_path, target)
+        return target if target.exists() else None
+
+    script_path = ROOT_DIR / "scripts" / "raster_to_jpeg.mjs"
+    try:
+        quality_value = int(os.environ.get("BOOK_COVER_JPEG_QUALITY", "92") or 92)
+    except ValueError:
+        quality_value = 92
+    quality = str(max(70, min(100, quality_value)))
+    result = run_process(
+        [
+            "node",
+            str(script_path),
+            "--input",
+            str(source_path),
+            "--output",
+            str(target),
+            "--width",
+            "1200",
+            "--height",
+            "1800",
+            "--quality",
+            quality,
+        ],
+        cwd=ROOT_DIR,
+        env=command_env(),
+        timeout_seconds=45,
+    )
+    if result.returncode == 0 and target.exists():
+        return target
+    append_log(
+        f"JPEG conversion failed for '{source_path.name}' -> '{target.name}': "
+        f"rc={result.returncode} stderr={(result.stderr or '').strip()[:240]}"
+    )
+    return None
+
+
 def preferred_cover_asset_reference(
     book_dir: Path,
     explicit_reference: Any,
@@ -2283,7 +2708,8 @@ def sync_selected_cover_assets(book_dir: Path, metadata: dict[str, Any]) -> dict
 
     assets_dir = book_dir / "assets"
     assets_dir.mkdir(parents=True, exist_ok=True)
-    source_front = resolve_book_asset_path(book_dir, selected["front_image"])
+    source_front_ref = str(selected.get("front_image") or "").strip()
+    source_front = resolve_book_asset_path(book_dir, source_front_ref)
     source_back = resolve_book_asset_path(book_dir, selected["back_image"])
     source_front_svg = resolve_book_asset_path(book_dir, selected.get("front_svg", ""))
     source_back_svg = resolve_book_asset_path(book_dir, selected.get("back_svg", ""))
@@ -2291,13 +2717,78 @@ def sync_selected_cover_assets(book_dir: Path, metadata: dict[str, Any]) -> dict
     front_source, back_source = resolved_cover_sources(book_dir, metadata)
     front_manual = front_source == "manual"
     back_manual = back_source == "manual"
+    selected_cover_mode = normalize_cover_mode(selected.get("cover_mode") or metadata.get("cover_mode"))
+    selected_wrap_scope = normalize_wrap_scope(selected.get("wrap_scope") or metadata.get("wrap_scope"))
+    selected_text_strategy = normalize_cover_text_strategy(
+        selected.get("text_strategy") or metadata.get("cover_text_strategy")
+    )
+    selected_front_render_mode = str(
+        selected.get("front_render_mode")
+        or selected.get("render_mode")
+        or metadata.get("front_render_mode")
+        or ""
+    ).strip()
+    prefer_api_text_front = (
+        selected_cover_mode == "full_ai_front"
+        or selected_wrap_scope == "ai_front_only"
+        or selected_text_strategy == "full_ai_front"
+    )
+    if front_manual and prefer_api_text_front:
+        manual_front_ref = str(metadata.get("cover_image") or "").strip()
+        if manual_front_ref in {
+            "",
+            "assets/front_cover_final.png",
+            "assets/front_cover_final.jpg",
+            "assets/front_cover_final.jpeg",
+            "assets/showcase_front_cover.png",
+            "assets/showcase_front_cover.jpg",
+            "assets/showcase_front_cover.jpeg",
+        }:
+            front_manual = False
+    if back_manual and prefer_api_text_front:
+        manual_back_ref = str(metadata.get("back_cover_image") or "").strip()
+        if manual_back_ref in {
+            "",
+            "assets/back_cover_final.png",
+            "assets/back_cover_final.jpg",
+            "assets/back_cover_final.jpeg",
+            "assets/showcase_back_cover.png",
+            "assets/showcase_back_cover.jpg",
+            "assets/showcase_back_cover.jpeg",
+        }:
+            back_manual = False
+    if (
+        prefer_api_text_front
+        and not front_manual
+        and source_front_ref.endswith("_studio.png")
+    ):
+        candidate_front_ref = source_front_ref.replace("_studio.png", ".png")
+        candidate_front = resolve_book_asset_path(book_dir, candidate_front_ref)
+        if candidate_front and candidate_front.is_file():
+            source_front = candidate_front
+            source_front_svg = None
+            selected_front_render_mode = "ai-signature"
 
-    if source_front and not front_manual and source_front != assets_dir / "front_cover_final.png":
-        shutil.copyfile(source_front, assets_dir / "front_cover_final.png")
-        shutil.copyfile(source_front, assets_dir / "showcase_front_cover.png")
-    if source_back and not back_manual and source_back != assets_dir / "back_cover_final.png":
-        shutil.copyfile(source_back, assets_dir / "back_cover_final.png")
-        shutil.copyfile(source_back, assets_dir / "showcase_back_cover.png")
+    final_front_reference = str(metadata.get("cover_image") or "")
+    final_back_reference = str(metadata.get("back_cover_image") or "")
+    if source_front and not front_manual:
+        converted_front = convert_cover_asset_to_jpeg(book_dir, source_front, target_name="front_cover_final.jpg")
+        if converted_front:
+            shutil.copyfile(converted_front, assets_dir / "showcase_front_cover.jpg")
+            final_front_reference = "assets/front_cover_final.jpg"
+        else:
+            shutil.copyfile(source_front, assets_dir / "front_cover_final.png")
+            shutil.copyfile(source_front, assets_dir / "showcase_front_cover.png")
+            final_front_reference = "assets/front_cover_final.png"
+    if source_back and not back_manual:
+        converted_back = convert_cover_asset_to_jpeg(book_dir, source_back, target_name="back_cover_final.jpg")
+        if converted_back:
+            shutil.copyfile(converted_back, assets_dir / "showcase_back_cover.jpg")
+            final_back_reference = "assets/back_cover_final.jpg"
+        else:
+            shutil.copyfile(source_back, assets_dir / "back_cover_final.png")
+            shutil.copyfile(source_back, assets_dir / "showcase_back_cover.png")
+            final_back_reference = "assets/back_cover_final.png"
     if source_front_svg and not front_manual:
         shutil.copyfile(source_front_svg, assets_dir / "front_cover_final.svg")
         shutil.copyfile(source_front_svg, assets_dir / "showcase_front_cover.svg")
@@ -2329,12 +2820,12 @@ def sync_selected_cover_assets(book_dir: Path, metadata: dict[str, Any]) -> dict
             "cover_motif": selected.get("motif") or str(metadata.get("cover_motif") or ""),
             "cover_art_image": selected.get("art_image", ""),
             "cover_image": (
-                "assets/front_cover_final.png"
+                final_front_reference
                 if source_front and not front_manual
                 else str(metadata.get("cover_image") or "")
             ),
             "back_cover_image": (
-                "assets/back_cover_final.png"
+                final_back_reference
                 if source_back and not back_manual
                 else str(metadata.get("back_cover_image") or "")
             ),
@@ -2349,7 +2840,17 @@ def sync_selected_cover_assets(book_dir: Path, metadata: dict[str, Any]) -> dict
             "quality_gate": normalize_quality_gate(selected.get("quality_gate") or metadata.get("quality_gate")),
             "text_safe_zone_status": str(selected.get("text_safe_zone_status") or metadata.get("text_safe_zone_status") or "").strip(),
             "cover_pair_score": float(selected.get("pair_score") or metadata.get("cover_pair_score") or 0),
-            "front_render_mode": str(selected.get("front_render_mode") or selected.get("render_mode") or metadata.get("front_render_mode") or "").strip(),
+            "back_layout_version": "stable-v1",
+            "front_render_mode": (
+                selected_front_render_mode
+                if selected_front_render_mode
+                else str(
+                    selected.get("front_render_mode")
+                    or selected.get("render_mode")
+                    or metadata.get("front_render_mode")
+                    or ""
+                ).strip()
+            ),
             "front_ai_attempt_count": int(selected.get("front_ai_attempt_count") or metadata.get("front_ai_attempt_count") or 0),
             "front_text_validation_score": float(selected.get("front_text_validation_score") or metadata.get("front_text_validation_score") or 0),
             "front_visual_grade": int(selected.get("front_visual_grade") or metadata.get("front_visual_grade") or 0),
@@ -2367,12 +2868,20 @@ def raw_cover_candidate_assets_exist(book_dir: Path) -> bool:
 
     ignored_names = {
         "front_cover_final.png",
+        "front_cover_final.jpg",
+        "front_cover_final.jpeg",
         "front_cover_final.svg",
         "back_cover_final.png",
+        "back_cover_final.jpg",
+        "back_cover_final.jpeg",
         "back_cover_final.svg",
         "showcase_front_cover.png",
+        "showcase_front_cover.jpg",
+        "showcase_front_cover.jpeg",
         "showcase_front_cover.svg",
         "showcase_back_cover.png",
+        "showcase_back_cover.jpg",
+        "showcase_back_cover.jpeg",
         "showcase_back_cover.svg",
         "ai_front_cover.png",
     }
@@ -2528,9 +3037,19 @@ def selected_cover_bundle_ready(
 ) -> bool:
     metadata = metadata or read_metadata(book_dir)
     variants = normalize_cover_variants(metadata.get("cover_variants"))
-    final_front = book_dir / "assets" / "front_cover_final.png"
-    final_back = book_dir / "assets" / "back_cover_final.png"
-    final_pair_exists = final_front.is_file() and final_back.is_file()
+    final_front_ref = preferred_cover_asset_reference(
+        book_dir,
+        metadata.get("cover_image"),
+        prefixes=("front_cover_final",),
+    )
+    final_back_ref = preferred_cover_asset_reference(
+        book_dir,
+        metadata.get("back_cover_image"),
+        prefixes=("back_cover_final",),
+    )
+    final_front = resolve_book_asset_path(book_dir, final_front_ref)
+    final_back = resolve_book_asset_path(book_dir, final_back_ref)
+    final_pair_exists = bool(final_front and final_front.is_file() and final_back and final_back.is_file())
     if manual_cover_override_active(book_dir, metadata):
         cover_image, back_cover_image = resolve_cover_image_references(book_dir, metadata, fast=True)
         if cover_image and back_cover_image:
@@ -2553,9 +3072,9 @@ def selected_cover_bundle_ready(
         source_back = resolve_book_asset_path(book_dir, selected.get("back_image"))
         if not source_front or not source_back:
             return False
-        if str(metadata.get("cover_image") or "").strip() != "assets/front_cover_final.png":
+        if str(metadata.get("cover_image") or "").strip() not in FINAL_FRONT_COVER_REFERENCES:
             return False
-        if str(metadata.get("back_cover_image") or "").strip() != "assets/back_cover_final.png":
+        if str(metadata.get("back_cover_image") or "").strip() not in FINAL_BACK_COVER_REFERENCES:
             return False
         return final_pair_exists
 
@@ -6069,27 +6588,105 @@ def selected_cover_variant_record(metadata: dict[str, Any]) -> dict[str, Any] | 
     return variants[0]
 
 
+def read_export_quality_report_summary(export_dir: Path) -> tuple[dict[str, Any] | None, list[str]]:
+    report_path = export_dir / "export_quality_report.json"
+    if not report_path.is_file():
+        return None, []
+
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return (
+            {
+                "status": "UNKNOWN",
+                "path": relative_to_root(report_path),
+                "error_count": 0,
+                "warning_count": 0,
+                "epub_status": "",
+                "pdf_status": "",
+            },
+            ["Export quality report exists but could not be parsed."],
+        )
+
+    errors = payload.get("errors") if isinstance(payload.get("errors"), list) else []
+    warnings = payload.get("warnings") if isinstance(payload.get("warnings"), list) else []
+    epub_payload = payload.get("epub") if isinstance(payload.get("epub"), dict) else {}
+    pdf_payload = payload.get("pdf") if isinstance(payload.get("pdf"), dict) else {}
+    kdp_payload = payload.get("kdp_compliance") if isinstance(payload.get("kdp_compliance"), dict) else {}
+    voice_payload = payload.get("voice_quality") if isinstance(payload.get("voice_quality"), dict) else {}
+    layout_payload = payload.get("layout_quality") if isinstance(payload.get("layout_quality"), dict) else {}
+    status = str(payload.get("status") or "UNKNOWN").strip().upper() or "UNKNOWN"
+    summary = {
+        "status": status,
+        "path": relative_to_root(report_path),
+        "error_count": len(errors),
+        "warning_count": len(warnings),
+        "epub_status": str(epub_payload.get("status") or "").strip().upper(),
+        "pdf_status": str(pdf_payload.get("status") or "").strip().upper(),
+        "kdp_status": str(kdp_payload.get("status") or "").strip().upper(),
+        "voice_status": str(voice_payload.get("status") or "").strip().upper(),
+        "layout_status": str(layout_payload.get("status") or "").strip().upper(),
+    }
+    warning_messages = [f"Export quality report: {status} (export_quality_report.json)."]
+    if status != "PASS":
+        warning_messages.append("Export quality checks reported issues. Review export_quality_report.json.")
+    return summary, warning_messages
+
+
+def attach_quality_report_to_build_result(result: dict[str, Any], book_dir: Path) -> dict[str, Any]:
+    latest_dir = latest_export_dir(book_dir)
+    if not latest_dir:
+        return result
+    quality_summary, quality_warnings = read_export_quality_report_summary(latest_dir)
+    if quality_summary:
+        result["quality_report"] = quality_summary
+    if quality_warnings:
+        result["warnings"] = [*list(result.get("warnings") or []), *quality_warnings]
+    return result
+
+
 def build_export_parity_report(book_dir: Path, metadata: dict[str, Any], format_name: str) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
     latest_dir = latest_export_dir(book_dir)
+    include_cover_images = export_embeds_cover_images(format_name)
     front_cover, back_cover = resolve_cover_image_references(book_dir, metadata)
-    export_file = latest_export_file_for_format(book_dir, format_name) if format_name in {"epub", "pdf"} else None
+    epub_export_file = latest_export_file_for_format(book_dir, "epub")
+    pdf_export_file = latest_export_file_for_format(book_dir, "pdf")
+    if format_name == "pdf":
+        export_file = pdf_export_file
+    elif format_name == "epub":
+        export_file = epub_export_file
+    elif format_name == "all":
+        export_file = epub_export_file or pdf_export_file
+    else:
+        export_file = None
     target_dir = export_file.parent if export_file else latest_dir
     opening_sequence_valid: bool | None = None
+    quality_report_summary: dict[str, Any] | None = None
 
     if not target_dir:
         errors.append("No export directory was created.")
     else:
-        for label, reference in (("front", front_cover), ("back", back_cover)):
-            if not reference:
-                errors.append(f"Selected {label} cover asset is missing from metadata.")
-                continue
-            expected_name = Path(reference).name
-            if not (target_dir / expected_name).is_file():
-                errors.append(f"Expected {label} cover '{expected_name}' was not copied into the export directory.")
+        quality_report_summary, quality_warnings = read_export_quality_report_summary(target_dir)
+        warnings.extend(quality_warnings)
+        if include_cover_images:
+            for label, reference in (("front", front_cover), ("back", back_cover)):
+                if not reference:
+                    warnings.append(f"Selected {label} cover asset is missing from metadata.")
+                    continue
+                expected_name = Path(reference).name
+                if not (target_dir / expected_name).is_file():
+                    warnings.append(
+                        f"Expected {label} cover '{expected_name}' was not copied into the export directory."
+                    )
         if format_name in {"epub", "pdf"} and not export_file:
             errors.append(f"No {format_name.upper()} export file was found in the export directory.")
+        if format_name == "all":
+            if not epub_export_file:
+                errors.append("No EPUB export file was found in the export directory.")
+            if not pdf_export_file:
+                errors.append("No PDF export file was found in the export directory.")
         elif export_file and target_dir not in export_file.parents:
             warnings.append("Resolved export file was not located in the expected export directory.")
         audit_path = target_dir / "opening_sequence_audit.json"
@@ -6116,6 +6713,7 @@ def build_export_parity_report(book_dir: Path, metadata: dict[str, Any], format_
         "export_relative_path": relative_to_root(export_file) if export_file else "",
         "export_url": workspace_url(export_file) if export_file else "",
         "opening_sequence_valid": opening_sequence_valid,
+        "quality_report": quality_report_summary,
     }
 
 
@@ -6493,7 +7091,16 @@ def read_book(book_dir: Path) -> dict[str, Any]:
     ensure_book_layout(book_dir)
     outline_path = find_outline_file(book_dir)
     title, subtitle = read_outline_title_subtitle(outline_path)
-    metadata = repair_selected_cover_bundle(book_dir, read_metadata(book_dir))
+    metadata = read_metadata(book_dir)
+    metadata = ensure_professional_book_details(
+        book_dir,
+        metadata,
+        slug=book_dir.name,
+        title=title or book_dir.name,
+        subtitle=subtitle,
+        language_hint=str(metadata.get("language") or ""),
+    )
+    metadata = repair_selected_cover_bundle(book_dir, metadata)
     cover_image, back_cover_image = resolve_cover_image_references(book_dir, metadata)
     effective_metadata = {
         **metadata,
@@ -6547,6 +7154,9 @@ def read_book(book_dir: Path) -> dict[str, Any]:
         "style_direction": normalize_style_direction(metadata.get("style_direction")),
         "wrap_scope": normalize_wrap_scope(metadata.get("wrap_scope")),
         "quality_gate": normalize_quality_gate(metadata.get("quality_gate")),
+        "book_profile": normalize_book_profile(metadata.get("book_profile")),
+        "variation_mode": normalize_variation_mode(metadata.get("variation_mode")),
+        "quality_target": normalize_quality_target(metadata.get("quality_target")),
         "cover_branch": metadata.get("cover_branch", ""),
         "cover_genre": metadata.get("cover_genre", ""),
         "cover_subtopic": metadata.get("cover_subtopic", ""),
@@ -6568,6 +7178,25 @@ def read_book(book_dir: Path) -> dict[str, Any]:
         "selected_cover_confidence": float(metadata.get("selected_cover_confidence") or 0),
         "isbn": metadata.get("isbn", ""),
         "year": metadata.get("year", ""),
+        "edition_label": metadata.get("edition_label", ""),
+        "print_label": metadata.get("print_label", ""),
+        "publication_city": metadata.get("publication_city", ""),
+        "publication_country": metadata.get("publication_country", ""),
+        "publisher_address": metadata.get("publisher_address", ""),
+        "publisher_phone": metadata.get("publisher_phone", ""),
+        "publisher_email": metadata.get("publisher_email", ""),
+        "publisher_website": metadata.get("publisher_website", ""),
+        "publisher_certificate_no": metadata.get("publisher_certificate_no", ""),
+        "isbn13": metadata.get("isbn13", ""),
+        "editor_name": metadata.get("editor_name", ""),
+        "proofreader_name": metadata.get("proofreader_name", ""),
+        "typesetter_name": metadata.get("typesetter_name", ""),
+        "cover_designer_name": metadata.get("cover_designer_name", ""),
+        "printer_name": metadata.get("printer_name", ""),
+        "printer_address": metadata.get("printer_address", ""),
+        "printer_certificate_no": metadata.get("printer_certificate_no", ""),
+        "copyright_statement": metadata.get("copyright_statement", ""),
+        "imprint_block": metadata.get("imprint_block", ""),
         "fast": bool(metadata.get("fast", False)),
         "book_length_mode": targets["book_length_mode"],
         "book_length_tier": metadata.get("book_length_tier", "standard"),
@@ -6621,6 +7250,14 @@ def read_book_preview_payload(book_dir: Path) -> dict[str, Any]:
     outline_path = find_outline_file(book_dir)
     title, subtitle = read_outline_title_subtitle(outline_path)
     metadata = read_metadata(book_dir)
+    metadata = ensure_professional_book_details(
+        book_dir,
+        metadata,
+        slug=book_dir.name,
+        title=title or book_dir.name,
+        subtitle=subtitle,
+        language_hint=str(metadata.get("language") or ""),
+    )
     cover_image, back_cover_image = resolve_cover_image_references(book_dir, metadata)
     effective_metadata = {
         **metadata,
@@ -6680,6 +7317,9 @@ def read_book_preview_payload(book_dir: Path) -> dict[str, Any]:
         "style_direction": normalize_style_direction(metadata.get("style_direction")),
         "wrap_scope": normalize_wrap_scope(metadata.get("wrap_scope")),
         "quality_gate": normalize_quality_gate(metadata.get("quality_gate")),
+        "book_profile": normalize_book_profile(metadata.get("book_profile")),
+        "variation_mode": normalize_variation_mode(metadata.get("variation_mode")),
+        "quality_target": normalize_quality_target(metadata.get("quality_target")),
         "text_safe_zone_status": str(metadata.get("text_safe_zone_status") or "").strip(),
         "cover_pair_score": metadata.get("cover_pair_score", 0),
         "front_render_mode": str(metadata.get("front_render_mode") or "").strip(),
@@ -6689,6 +7329,25 @@ def read_book_preview_payload(book_dir: Path) -> dict[str, Any]:
         "front_genre_fit_score": int(metadata.get("front_genre_fit_score") or 0),
         "front_hard_reject_reasons": metadata.get("front_hard_reject_reasons", []),
         "selected_cover_confidence": float(metadata.get("selected_cover_confidence") or 0),
+        "edition_label": metadata.get("edition_label", ""),
+        "print_label": metadata.get("print_label", ""),
+        "publication_city": metadata.get("publication_city", ""),
+        "publication_country": metadata.get("publication_country", ""),
+        "publisher_address": metadata.get("publisher_address", ""),
+        "publisher_phone": metadata.get("publisher_phone", ""),
+        "publisher_email": metadata.get("publisher_email", ""),
+        "publisher_website": metadata.get("publisher_website", ""),
+        "publisher_certificate_no": metadata.get("publisher_certificate_no", ""),
+        "isbn13": metadata.get("isbn13", ""),
+        "editor_name": metadata.get("editor_name", ""),
+        "proofreader_name": metadata.get("proofreader_name", ""),
+        "typesetter_name": metadata.get("typesetter_name", ""),
+        "cover_designer_name": metadata.get("cover_designer_name", ""),
+        "printer_name": metadata.get("printer_name", ""),
+        "printer_address": metadata.get("printer_address", ""),
+        "printer_certificate_no": metadata.get("printer_certificate_no", ""),
+        "copyright_statement": metadata.get("copyright_statement", ""),
+        "imprint_block": metadata.get("imprint_block", ""),
         "book_length_mode": targets["book_length_mode"],
         "chapter_generation_mode": metadata_chapter_generation_mode(effective_metadata),
         "codefast_text_model": str(metadata.get("codefast_text_model") or "").strip(),
@@ -6787,6 +7446,9 @@ def read_book_summary(
         "style_direction": normalize_style_direction(metadata.get("style_direction")),
         "wrap_scope": normalize_wrap_scope(metadata.get("wrap_scope")),
         "quality_gate": normalize_quality_gate(metadata.get("quality_gate")),
+        "book_profile": normalize_book_profile(metadata.get("book_profile")),
+        "variation_mode": normalize_variation_mode(metadata.get("variation_mode")),
+        "quality_target": normalize_quality_target(metadata.get("quality_target")),
         "text_safe_zone_status": str(metadata.get("text_safe_zone_status") or "").strip(),
         "cover_pair_score": metadata.get("cover_pair_score", 0),
         "front_render_mode": str(metadata.get("front_render_mode") or "").strip(),
@@ -6994,6 +7656,8 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
         or detect_book_language(title, subtitle, description)
         or "English"
     )
+    regenerate_professional_details = bool(payload.get("regenerate_professional_details", False))
+    details_generation_nonce = str(payload.get("details_generation_nonce") or "").strip()
     default_title = "Başlangıç" if language == "Turkish" else "Getting Started"
 
     chapters_provided = "chapters" in payload and payload.get("chapters") is not None
@@ -7057,6 +7721,41 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
     cover_lab_version = str(payload.get("cover_lab_version") or existing_meta.get("cover_lab_version") or "").strip()
     isbn = str(payload.get("isbn") if "isbn" in payload else existing_meta.get("isbn", "")).strip()
     year = str(payload.get("year") if "year" in payload else existing_meta.get("year", "")).strip()
+    edition_label = str(payload.get("edition_label") if "edition_label" in payload else existing_meta.get("edition_label", "")).strip()
+    print_label = str(payload.get("print_label") if "print_label" in payload else existing_meta.get("print_label", "")).strip()
+    publication_city = str(payload.get("publication_city") if "publication_city" in payload else existing_meta.get("publication_city", "")).strip()
+    publication_country = str(payload.get("publication_country") if "publication_country" in payload else existing_meta.get("publication_country", "")).strip()
+    publisher_address = str(payload.get("publisher_address") if "publisher_address" in payload else existing_meta.get("publisher_address", "")).strip()
+    publisher_phone = str(payload.get("publisher_phone") if "publisher_phone" in payload else existing_meta.get("publisher_phone", "")).strip()
+    publisher_email = str(payload.get("publisher_email") if "publisher_email" in payload else existing_meta.get("publisher_email", "")).strip()
+    publisher_website = str(payload.get("publisher_website") if "publisher_website" in payload else existing_meta.get("publisher_website", "")).strip()
+    publisher_certificate_no = str(
+        payload.get("publisher_certificate_no")
+        if "publisher_certificate_no" in payload
+        else existing_meta.get("publisher_certificate_no", "")
+    ).strip()
+    isbn13 = str(payload.get("isbn13") if "isbn13" in payload else existing_meta.get("isbn13", "")).strip()
+    editor_name = str(payload.get("editor_name") if "editor_name" in payload else existing_meta.get("editor_name", "")).strip()
+    proofreader_name = str(payload.get("proofreader_name") if "proofreader_name" in payload else existing_meta.get("proofreader_name", "")).strip()
+    typesetter_name = str(payload.get("typesetter_name") if "typesetter_name" in payload else existing_meta.get("typesetter_name", "")).strip()
+    cover_designer_name = str(
+        payload.get("cover_designer_name")
+        if "cover_designer_name" in payload
+        else existing_meta.get("cover_designer_name", "")
+    ).strip()
+    printer_name = str(payload.get("printer_name") if "printer_name" in payload else existing_meta.get("printer_name", "")).strip()
+    printer_address = str(payload.get("printer_address") if "printer_address" in payload else existing_meta.get("printer_address", "")).strip()
+    printer_certificate_no = str(
+        payload.get("printer_certificate_no")
+        if "printer_certificate_no" in payload
+        else existing_meta.get("printer_certificate_no", "")
+    ).strip()
+    copyright_statement = str(
+        payload.get("copyright_statement")
+        if "copyright_statement" in payload
+        else existing_meta.get("copyright_statement", "")
+    ).strip()
+    imprint_block = str(payload.get("imprint_block") if "imprint_block" in payload else existing_meta.get("imprint_block", "")).strip()
     fast = bool(payload.get("fast", existing_meta.get("fast", False)))
     book_length_mode = normalize_book_length_mode(
         payload.get("book_length_mode")
@@ -7071,6 +7770,9 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
     style_direction = normalize_style_direction(payload.get("style_direction") or existing_meta.get("style_direction"))
     wrap_scope = normalize_wrap_scope(payload.get("wrap_scope") or existing_meta.get("wrap_scope"))
     quality_gate = normalize_quality_gate(payload.get("quality_gate") or existing_meta.get("quality_gate"))
+    book_profile = normalize_book_profile(payload.get("book_profile") or existing_meta.get("book_profile"))
+    variation_mode = normalize_variation_mode(payload.get("variation_mode") or existing_meta.get("variation_mode"))
+    quality_target = normalize_quality_target(payload.get("quality_target") or existing_meta.get("quality_target"))
     front_render_mode = str(payload.get("front_render_mode") or existing_meta.get("front_render_mode") or "").strip()
     front_ai_attempt_count = int(payload.get("front_ai_attempt_count") or existing_meta.get("front_ai_attempt_count") or 0)
     front_text_validation_score = float(payload.get("front_text_validation_score") or existing_meta.get("front_text_validation_score") or 0)
@@ -7130,6 +7832,74 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
     else:
         chapter_plan = derive_chapter_plan_from_chapters(chapters, language, book_length_mode=book_length_mode)
 
+    professional_seed = {
+        **existing_meta,
+        "author": author,
+        "publisher": publisher,
+        "language": language,
+        "year": year,
+        "isbn": isbn,
+        "edition_label": edition_label,
+        "print_label": print_label,
+        "publication_city": publication_city,
+        "publication_country": publication_country,
+        "publisher_address": publisher_address,
+        "publisher_phone": publisher_phone,
+        "publisher_email": publisher_email,
+        "publisher_website": publisher_website,
+        "publisher_certificate_no": publisher_certificate_no,
+        "isbn13": isbn13,
+        "editor_name": editor_name,
+        "proofreader_name": proofreader_name,
+        "typesetter_name": typesetter_name,
+        "cover_designer_name": cover_designer_name,
+        "printer_name": printer_name,
+        "printer_address": printer_address,
+        "printer_certificate_no": printer_certificate_no,
+        "copyright_statement": copyright_statement,
+        "imprint_block": imprint_block,
+        "description": description,
+    }
+    professional_seed, _ = autofill_professional_book_details(
+        professional_seed,
+        slug=slug,
+        title=title,
+        subtitle=subtitle,
+        language_hint=language,
+        force_regenerate=regenerate_professional_details,
+        seed_salt=details_generation_nonce,
+    )
+    author = str(professional_seed.get("author") or author).strip()
+    publisher = str(professional_seed.get("publisher") or publisher).strip()
+    language = normalize_book_language(professional_seed.get("language")) or language
+    isbn = str(professional_seed.get("isbn") or isbn).strip()
+    year = str(professional_seed.get("year") or year).strip()
+    edition_label = str(professional_seed.get("edition_label") or edition_label).strip()
+    print_label = str(professional_seed.get("print_label") or print_label).strip()
+    publication_city = str(professional_seed.get("publication_city") or publication_city).strip()
+    publication_country = str(professional_seed.get("publication_country") or publication_country).strip()
+    publisher_address = str(professional_seed.get("publisher_address") or publisher_address).strip()
+    publisher_phone = str(professional_seed.get("publisher_phone") or publisher_phone).strip()
+    publisher_email = str(professional_seed.get("publisher_email") or publisher_email).strip()
+    publisher_website = str(professional_seed.get("publisher_website") or publisher_website).strip()
+    publisher_certificate_no = str(
+        professional_seed.get("publisher_certificate_no") or publisher_certificate_no
+    ).strip()
+    isbn13 = str(professional_seed.get("isbn13") or isbn13).strip()
+    editor_name = str(professional_seed.get("editor_name") or editor_name).strip()
+    proofreader_name = str(professional_seed.get("proofreader_name") or proofreader_name).strip()
+    typesetter_name = str(professional_seed.get("typesetter_name") or typesetter_name).strip()
+    cover_designer_name = str(professional_seed.get("cover_designer_name") or cover_designer_name).strip()
+    printer_name = str(professional_seed.get("printer_name") or printer_name).strip()
+    printer_address = str(professional_seed.get("printer_address") or printer_address).strip()
+    printer_certificate_no = str(
+        professional_seed.get("printer_certificate_no") or printer_certificate_no
+    ).strip()
+    copyright_statement = str(
+        professional_seed.get("copyright_statement") or copyright_statement
+    ).strip()
+    imprint_block = str(professional_seed.get("imprint_block") or imprint_block).strip()
+
     write_outline(book_dir, title, subtitle, chapters, language)
 
     kept = set()
@@ -7183,6 +7953,25 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
         "cover_lab_version": cover_lab_version,
         "isbn": isbn,
         "year": year,
+        "edition_label": edition_label,
+        "print_label": print_label,
+        "publication_city": publication_city,
+        "publication_country": publication_country,
+        "publisher_address": publisher_address,
+        "publisher_phone": publisher_phone,
+        "publisher_email": publisher_email,
+        "publisher_website": publisher_website,
+        "publisher_certificate_no": publisher_certificate_no,
+        "isbn13": isbn13,
+        "editor_name": editor_name,
+        "proofreader_name": proofreader_name,
+        "typesetter_name": typesetter_name,
+        "cover_designer_name": cover_designer_name,
+        "printer_name": printer_name,
+        "printer_address": printer_address,
+        "printer_certificate_no": printer_certificate_no,
+        "copyright_statement": copyright_statement,
+        "imprint_block": imprint_block,
         "fast": fast,
         "book_length_mode": book_length_mode,
         "book_length_tier": book_length_tier,
@@ -7197,6 +7986,9 @@ def save_book(payload: dict[str, Any]) -> dict[str, Any]:
         "style_direction": style_direction,
         "wrap_scope": wrap_scope,
         "quality_gate": quality_gate,
+        "book_profile": book_profile,
+        "variation_mode": variation_mode,
+        "quality_target": quality_target,
         "front_render_mode": front_render_mode,
         "front_ai_attempt_count": front_ai_attempt_count,
         "front_text_validation_score": front_text_validation_score,
@@ -7359,6 +8151,33 @@ def _process_output_as_text(value: Any) -> str:
     if isinstance(value, bytes):
         return value.decode("utf-8", errors="replace")
     return str(value)
+
+
+ANSI_ESCAPE_PATTERN = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+
+
+def command_failure_excerpt(
+    result: subprocess.CompletedProcess[str],
+    *,
+    max_lines: int = 20,
+    max_chars: int = 2800,
+) -> tuple[str, str]:
+    raw = f"{_process_output_as_text(result.stdout)}\n{_process_output_as_text(result.stderr)}"
+    if not raw.strip():
+        return "", ""
+    cleaned = ANSI_ESCAPE_PATTERN.sub("", raw).replace("\r\n", "\n").replace("\r", "\n")
+    lines = [line.strip() for line in cleaned.split("\n") if line.strip()]
+    if not lines:
+        return "", ""
+    first_line = lines[0]
+    tail_lines = lines[-max_lines:]
+    tail_block = "\n".join(tail_lines)
+    if len(tail_block) > max_chars:
+        tail_block = tail_block[-max_chars:]
+        first_break = tail_block.find("\n")
+        if first_break > 0:
+            tail_block = tail_block[first_break + 1 :]
+    return first_line, tail_block
 
 
 def run_process(
@@ -7535,6 +8354,1096 @@ def fallback_split_paragraphs(text: str) -> list[str]:
 
 
 FALLBACK_PENDING_TEXT = "Content pending. Generate at least one chapter for full export quality."
+FALLBACK_AUTHOR_PLACEHOLDERS = {"book creator", "ai-assisted author", "ai assisted author"}
+FALLBACK_AUTHOR_PEN_NAMES = (
+    "L. Morgan",
+    "E. Carter",
+    "N. West",
+    "A. Sinclair",
+    "S. Bennett",
+)
+
+
+def fallback_is_turkish(language: str) -> bool:
+    return normalize_book_language(language) == "Turkish"
+
+
+def fallback_labels(language: str) -> dict[str, str]:
+    if fallback_is_turkish(language):
+        return {
+            "author": "Yazar",
+            "publisher": "Yayınevi",
+            "language": "Dil",
+            "contents": "İçindekiler",
+            "dedication": "Adanış",
+            "preface": "Önsöz",
+            "introduction": "Giriş",
+            "imprint": "Künye",
+            "imprint_kicker": "Yayın Bilgileri",
+            "imprint_edition": "Baskı",
+            "imprint_print": "Basım",
+            "imprint_publication": "Yayın Yeri",
+            "imprint_isbn13": "ISBN-13",
+            "imprint_editor": "Yayına Hazırlayan",
+            "imprint_proofreader": "Redaksiyon",
+            "imprint_typesetter": "Mizanpaj",
+            "imprint_cover_designer": "Kapak Tasarımı",
+            "imprint_publisher_address": "Yayınevi Adresi",
+            "imprint_publisher_contact": "Yayınevi İletişim",
+            "imprint_publisher_cert": "Yayınevi Sertifika",
+            "imprint_printer": "Baskı",
+            "imprint_printer_address": "Matbaa Adresi",
+            "imprint_printer_cert": "Matbaa Sertifika",
+            "imprint_copyright": "Telif",
+            "about_author": "Yazar Hakkında",
+            "front_cover": "Ön kapak",
+            "back_cover": "Arka kapak",
+            "pending": "İçerik hazırlanıyor.",
+        }
+    return {
+        "author": "Author",
+        "publisher": "Publisher",
+        "language": "Language",
+        "contents": "Contents",
+        "dedication": "Dedication",
+        "preface": "Preface",
+        "introduction": "Introduction",
+        "imprint": "Imprint",
+        "imprint_kicker": "Publication Data",
+        "imprint_edition": "Edition",
+        "imprint_print": "Print",
+        "imprint_publication": "Publication Place",
+        "imprint_isbn13": "ISBN-13",
+        "imprint_editor": "Editor",
+        "imprint_proofreader": "Proofreader",
+        "imprint_typesetter": "Typesetting",
+        "imprint_cover_designer": "Cover Design",
+        "imprint_publisher_address": "Publisher Address",
+        "imprint_publisher_contact": "Publisher Contact",
+        "imprint_publisher_cert": "Publisher Certificate",
+        "imprint_printer": "Printer",
+        "imprint_printer_address": "Printer Address",
+        "imprint_printer_cert": "Printer Certificate",
+        "imprint_copyright": "Copyright",
+        "about_author": "About the Author",
+        "front_cover": "Front cover",
+        "back_cover": "Back cover",
+        "pending": "Content pending.",
+    }
+
+
+def normalize_imprint_line_for_compare(value: str) -> str:
+    normalized = str(value or "").replace("\r", " ").replace("\n", " ")
+    normalized = normalized.casefold()
+    normalized = re.sub(r"<br\s*/?>", " ", normalized)
+    normalized = re.sub(r"[\*\-_`>#]+", " ", normalized)
+    normalized = re.sub(r"[^a-z0-9çğıöşüâîûäëïöüßàèìòùáéíóúñ]+", " ", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return normalized
+
+
+def dedupe_imprint_extra_lines(base_lines: list[str], raw_imprint_block: str) -> list[str]:
+    seen: set[str] = set()
+    output: list[str] = []
+    for line in base_lines:
+        token = normalize_imprint_line_for_compare(line)
+        if token:
+            seen.add(token)
+        output.append(line)
+
+    for raw_line in clean_fallback_section_markdown(raw_imprint_block).splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        line = re.sub(r"^[\-\*\u2022]+", "", line).strip()
+        token = normalize_imprint_line_for_compare(line)
+        if not token:
+            continue
+        if token in seen:
+            continue
+        if any(token == existing or token in existing or existing in token for existing in seen if len(existing) >= 14):
+            continue
+        seen.add(token)
+        output.append(line)
+    return output
+
+
+def fallback_professional_imprint_lines(metadata: dict[str, Any], language: str) -> list[str]:
+    labels = fallback_labels(language)
+    publication_city = str(metadata.get("publication_city") or "").strip()
+    publication_country = str(metadata.get("publication_country") or "").strip()
+    if publication_city and publication_country:
+        publication_place = f"{publication_city}, {publication_country}"
+    else:
+        publication_place = publication_city or publication_country
+
+    publisher_contact_parts = [
+        str(metadata.get("publisher_phone") or "").strip(),
+        str(metadata.get("publisher_email") or "").strip(),
+        str(metadata.get("publisher_website") or "").strip(),
+    ]
+    publisher_contact = " | ".join(part for part in publisher_contact_parts if part)
+
+    lines: list[str] = []
+    field_map = [
+        ("imprint_edition", str(metadata.get("edition_label") or "").strip()),
+        ("imprint_print", str(metadata.get("print_label") or "").strip()),
+        ("imprint_publication", publication_place),
+        ("imprint_isbn13", str(metadata.get("isbn13") or metadata.get("isbn") or "").strip()),
+        ("imprint_editor", str(metadata.get("editor_name") or "").strip()),
+        ("imprint_proofreader", str(metadata.get("proofreader_name") or "").strip()),
+        ("imprint_typesetter", str(metadata.get("typesetter_name") or "").strip()),
+        ("imprint_cover_designer", str(metadata.get("cover_designer_name") or "").strip()),
+        ("imprint_publisher_address", str(metadata.get("publisher_address") or "").strip()),
+        ("imprint_publisher_contact", publisher_contact),
+        ("imprint_publisher_cert", str(metadata.get("publisher_certificate_no") or "").strip()),
+        ("imprint_printer", str(metadata.get("printer_name") or "").strip()),
+        ("imprint_printer_address", str(metadata.get("printer_address") or "").strip()),
+        ("imprint_printer_cert", str(metadata.get("printer_certificate_no") or "").strip()),
+        ("imprint_copyright", str(metadata.get("copyright_statement") or "").strip()),
+    ]
+    for label_key, value in field_map:
+        if not value:
+            continue
+        lines.append(f"{labels[label_key]}: {value}")
+
+    return dedupe_imprint_extra_lines(lines, str(metadata.get("imprint_block") or ""))
+
+
+def fallback_default_frontmatter_texts(
+    *,
+    title: str,
+    subtitle: str,
+    language: str,
+    chapter_count: int,
+) -> dict[str, str]:
+    safe_title = title.strip() or "this book"
+    safe_subtitle = subtitle.strip()
+    safe_count = max(1, int(chapter_count or 0))
+    if fallback_is_turkish(language):
+        context_line = (
+            f"'{safe_title}: {safe_subtitle}'"
+            if safe_subtitle
+            else f"'{safe_title}'"
+        )
+        return {
+            "dedication": "Bu kitap, öğrendiklerini cömertçe paylaşan ve her gün daha iyisini üretmek için emek veren herkese adanmıştır.",
+            "preface": (
+                f"{context_line} başlıklı bu çalışma, konuyu sade ve uygulanabilir bir çerçevede ele almak için hazırlandı.\n\n"
+                "Amaç yalnızca bilgi aktarmak değil; okurun kısa sürede uygulamaya geçmesini sağlayacak net bir yol sunmaktır.\n\n"
+                "Bölümleri sırayla okuyup her bölüm sonunda kısa bir aksiyon notu almak, kitaptan alınacak verimi belirgin biçimde artırır."
+            ),
+            "introduction": (
+                f"Bu kitap {safe_count} ana bölümden oluşur ve her bölüm bir öncekinin üzerine inşa edilir.\n\n"
+                "Önce temel prensipler netleşir, ardından yöntemler, örnekler ve uygulama detaylarıyla konu derinleşir.\n\n"
+                "Kitabın sonunda, yalnızca kavramsal bilgi değil; doğrudan uygulayabileceğiniz bir çalışma sistemi elde etmiş olmanız hedeflenir."
+            ),
+        }
+    context_line = f"'{safe_title}: {safe_subtitle}'" if safe_subtitle else f"'{safe_title}'"
+    return {
+        "dedication": "For every reader who chooses disciplined progress over short-term noise.",
+        "preface": (
+            f"This edition of {context_line} is designed to turn ideas into practical execution.\n\n"
+            "The goal is not just to explain the topic, but to give you a clear structure you can apply immediately.\n\n"
+            "Read the chapters in order and finish each one with a short action note to make the content stick."
+        ),
+        "introduction": (
+            f"This book is structured in {safe_count} main chapters, and each chapter builds on the previous one.\n\n"
+            "It starts with core principles, then expands into methods, examples, and implementation details.\n\n"
+            "By the end, you should not only understand the subject conceptually but also be ready to apply it with confidence."
+        ),
+    }
+
+
+def fallback_default_author_bio(author: str, language: str) -> str:
+    safe_author = (author or "").strip() or "The author"
+    if fallback_is_turkish(language):
+        return (
+            f"{safe_author}, karmaşık fikirleri sadeleştirip uygulanabilir adımlara dönüştüren, "
+            "pratik ve okur odaklı eserler üretir. Gerçek örnekler ve net sistemlerle okurun "
+            "öğrendiğini hızlıca hayata geçirmesini hedefler."
+        )
+    return (
+        f"{safe_author} writes practical, reader-first nonfiction designed to turn complex ideas "
+        "into clear actions. Through real-world examples and structured guidance, readers are "
+        "helped to apply each chapter in real scenarios."
+    )
+
+
+def resolved_fallback_author(author: str, slug: str) -> str:
+    cleaned = str(author or "").strip()
+    if cleaned and cleaned.lower() not in FALLBACK_AUTHOR_PLACEHOLDERS:
+        return cleaned
+    if not FALLBACK_AUTHOR_PEN_NAMES:
+        return cleaned or "L. Morgan"
+    slug_text = str(slug or "").strip().lower()
+    seed = sum(ord(ch) for ch in slug_text) or 1
+    index = seed % len(FALLBACK_AUTHOR_PEN_NAMES)
+    return FALLBACK_AUTHOR_PEN_NAMES[index]
+
+
+def professional_metadata_value_missing(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return not value.strip()
+    return False
+
+
+def professional_ascii_token(value: Any) -> str:
+    normalized = unicodedata.normalize("NFKD", str(value or ""))
+    ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^a-z0-9]+", "-", ascii_text.lower()).strip("-")
+
+
+def professional_locale(language: str) -> str:
+    return "tr" if fallback_is_turkish(language) else "us"
+
+
+def professional_seed_value(
+    *,
+    slug: str,
+    title: str,
+    subtitle: str,
+    author: str,
+    publisher: str,
+    language: str,
+    seed_salt: str = "",
+) -> int:
+    seed_text = "|".join(
+        [
+            str(slug or "").strip().lower(),
+            str(title or "").strip().lower(),
+            str(subtitle or "").strip().lower(),
+            str(author or "").strip().lower(),
+            str(publisher or "").strip().lower(),
+            str(language or "").strip().lower(),
+            str(seed_salt or "").strip().lower(),
+        ]
+    )
+    if not seed_text:
+        seed_text = "book-details"
+    return uuid.uuid5(uuid.NAMESPACE_URL, seed_text).int & 0xFFFFFFFF
+
+
+def resolve_professional_publisher_name(
+    publisher: str,
+    *,
+    slug: str,
+    title: str,
+    language: str,
+) -> str:
+    cleaned = str(publisher or "").strip()
+    if cleaned and cleaned.lower() not in PROFESSIONAL_PUBLISHER_PLACEHOLDERS:
+        return cleaned
+
+    token = professional_ascii_token(title or slug)
+    locale = professional_locale(language)
+    if locale == "tr":
+        candidates = [
+            "Kuzey Işık Yayınları",
+            "Atlas Ufuk Yayıncılık",
+            "Mavi Köprü Kitap",
+            "Anka Yayın Evi",
+            "Yeni Rota Yayınları",
+        ]
+    else:
+        candidates = [
+            "Northbridge Press",
+            "Harborline Publishing",
+            "Summit Ridge Press",
+            "Cedar Grove Books",
+            "Westfield House",
+        ]
+    index_seed = professional_seed_value(
+        slug=slug,
+        title=title,
+        subtitle="",
+        author="",
+        publisher=cleaned or token,
+        language=language,
+    )
+    chosen = candidates[index_seed % len(candidates)]
+    if token and token not in {"book", "kitap"} and len(token) >= 5:
+        nice_token = token.replace("-", " ").title()
+        if locale == "tr":
+            return f"{nice_token} Yayınları"
+        return f"{nice_token} Press"
+    return chosen
+
+
+def normalize_isbn_digits(value: Any) -> str:
+    return "".join(ch for ch in str(value or "") if ch.isdigit())
+
+
+def isbn13_check_digit(prefix12: str) -> str:
+    digits = [int(ch) for ch in normalize_isbn_digits(prefix12)]
+    if len(digits) != 12:
+        return ""
+    total = 0
+    for index, digit in enumerate(digits):
+        total += digit if index % 2 == 0 else digit * 3
+    return str((10 - (total % 10)) % 10)
+
+
+def generate_isbn13_candidate(rng: random.Random, *, language: str) -> str:
+    locale = professional_locale(language)
+    if locale == "tr":
+        prefix12 = f"978605{rng.randint(100000, 999999)}"
+    else:
+        prefix12 = f"9781{rng.randint(10000000, 99999999)}"
+    check = isbn13_check_digit(prefix12)
+    return f"{prefix12}{check}" if check else ""
+
+
+def generate_professional_name_set(rng: random.Random, *, language: str) -> dict[str, str]:
+    locale = professional_locale(language)
+    if locale == "tr":
+        first_names = [
+            "Merve",
+            "Zeynep",
+            "Elif",
+            "Bora",
+            "Emre",
+            "Mert",
+            "Ceren",
+            "Deniz",
+            "Ece",
+            "Can",
+            "Kerem",
+            "Aslı",
+        ]
+        last_names = [
+            "Yıldırım",
+            "Demir",
+            "Şahin",
+            "Kaya",
+            "Arslan",
+            "Aydın",
+            "Keskin",
+            "Acar",
+            "Koç",
+            "Çetin",
+            "Erden",
+            "Sarı",
+        ]
+    else:
+        first_names = [
+            "Amelia",
+            "Olivia",
+            "Noah",
+            "Ethan",
+            "Maya",
+            "Lucas",
+            "Ava",
+            "Elena",
+            "Leo",
+            "Sophie",
+            "Henry",
+            "Mila",
+        ]
+        last_names = [
+            "Bennett",
+            "Carter",
+            "Hayes",
+            "Morgan",
+            "Foster",
+            "Reed",
+            "Parker",
+            "Wells",
+            "Hudson",
+            "Turner",
+            "Coleman",
+            "Sinclair",
+        ]
+
+    generated: list[str] = []
+    while len(generated) < 4:
+        candidate = f"{rng.choice(first_names)} {rng.choice(last_names)}"
+        if candidate not in generated:
+            generated.append(candidate)
+
+    return {
+        "editor_name": generated[0],
+        "proofreader_name": generated[1],
+        "typesetter_name": generated[2],
+        "cover_designer_name": generated[3],
+    }
+
+
+def generate_professional_address_block(
+    rng: random.Random,
+    *,
+    language: str,
+    publisher: str,
+) -> dict[str, str]:
+    publisher_token = professional_ascii_token(publisher)
+    if not publisher_token:
+        publisher_token = "northbridge"
+    locale = professional_locale(language)
+
+    if locale == "tr":
+        city_data = [
+            ("Kadıköy", "İstanbul", "34710"),
+            ("Beşiktaş", "İstanbul", "34340"),
+            ("Çankaya", "Ankara", "06690"),
+            ("Konak", "İzmir", "35240"),
+            ("Osmangazi", "Bursa", "16040"),
+        ]
+        mahalle = ["Merkez", "Cumhuriyet", "Atatürk", "Yenimahalle", "Yenişehir"]
+        cadde = ["Yayıncılar", "Kitapçılar", "Bilgi", "Ufuk", "Kültür"]
+        district, city, postal_code = rng.choice(city_data)
+        building_no = rng.randint(10, 220)
+        block_no = rng.randint(1, 18)
+        area_code = rng.choice([212, 216, 232, 312])
+        website = f"www.{publisher_token}.com.tr"
+        return {
+            "publication_city": city,
+            "publication_country": "Türkiye",
+            "publisher_address": (
+                f"{rng.choice(mahalle)} Mah., {rng.choice(cadde)} Cd. No:{building_no}/{block_no}, "
+                f"{district}/{city}, {postal_code}, Türkiye"
+            ),
+            "publisher_phone": f"+90 ({area_code}) {rng.randint(200, 599)} {rng.randint(10, 99)} {rng.randint(10, 99)}",
+            "publisher_email": f"iletisim@{publisher_token}.com.tr",
+            "publisher_website": website,
+            "publisher_certificate_no": f"Yayın Sertifika No: {rng.randint(10000, 99999)}",
+            "printer_name": f"{city} Matbaa ve Cilt San. A.Ş.",
+            "printer_address": (
+                f"{rng.choice(mahalle)} Mah., Matbaa Sk. No:{rng.randint(1, 80)}, "
+                f"{district}/{city}, {postal_code}, Türkiye"
+            ),
+            "printer_certificate_no": f"Matbaa Sertifika No: {rng.randint(20000, 99999)}",
+        }
+
+    city_data = [
+        ("New York", "NY", "10018"),
+        ("Austin", "TX", "78701"),
+        ("Seattle", "WA", "98104"),
+        ("Boston", "MA", "02110"),
+        ("Chicago", "IL", "60606"),
+    ]
+    street_names = ["Harbor St", "Maple Ave", "Summit Dr", "Cedar Way", "Ridge Blvd"]
+    city, state, postal_code = rng.choice(city_data)
+    suite = f"Suite {rng.randint(120, 980)}"
+    area_code = rng.choice([206, 212, 312, 617, 737])
+    website = f"www.{publisher_token}.press"
+    return {
+        "publication_city": city,
+        "publication_country": "United States",
+        "publisher_address": (
+            f"{rng.randint(120, 4200)} {rng.choice(street_names)}, {suite}, "
+            f"{city}, {state} {postal_code}, USA"
+        ),
+        "publisher_phone": f"+1 ({area_code}) 555-{rng.randint(1000, 9999)}",
+        "publisher_email": f"rights@{publisher_token}.press",
+        "publisher_website": website,
+        "publisher_certificate_no": f"Publisher Registry No: US-{rng.randint(10000, 99999)}",
+        "printer_name": f"{city} Print Works LLC",
+        "printer_address": (
+            f"{rng.randint(80, 1600)} Print Line Rd, Building {rng.randint(1, 12)}, "
+            f"{city}, {state} {postal_code}, USA"
+        ),
+        "printer_certificate_no": f"Print Facility ID: US-{rng.randint(30000, 99999)}",
+    }
+
+
+def generate_professional_book_detail_defaults(
+    *,
+    slug: str,
+    title: str,
+    subtitle: str,
+    author: str,
+    publisher: str,
+    language: str,
+    year: str,
+    isbn13: str,
+    seed_salt: str = "",
+) -> dict[str, str]:
+    safe_year = str(year or "").strip()
+    if not re.fullmatch(r"\d{4}", safe_year):
+        safe_year = str(datetime.now(timezone.utc).year)
+    safe_author = str(author or "").strip() or "Author"
+    safe_publisher = str(publisher or "").strip() or "Publisher"
+    normalized_language = normalize_book_language(language) or "English"
+    rng = random.Random(
+        professional_seed_value(
+            slug=slug,
+            title=title,
+            subtitle=subtitle,
+            author=safe_author,
+            publisher=safe_publisher,
+            language=normalized_language,
+            seed_salt=seed_salt,
+        )
+    )
+    name_fields = generate_professional_name_set(rng, language=normalized_language)
+    address_fields = generate_professional_address_block(rng, language=normalized_language, publisher=safe_publisher)
+
+    if fallback_is_turkish(normalized_language):
+        edition_label = "1. Baskı"
+        print_label = f"{safe_year} baskısı"
+        copyright_statement = (
+            f"© {safe_year} {safe_author}. Bu eserin tüm yayın hakları "
+            f"{safe_publisher} tarafından saklıdır."
+        )
+    else:
+        edition_label = "First Edition"
+        print_label = f"Printed in {safe_year}"
+        copyright_statement = (
+            f"© {safe_year} {safe_author}. All publication rights reserved by "
+            f"{safe_publisher}."
+        )
+
+    return {
+        "edition_label": edition_label,
+        "print_label": print_label,
+        "isbn13": isbn13,
+        **name_fields,
+        **address_fields,
+        "copyright_statement": copyright_statement,
+    }
+
+
+def build_professional_imprint_block(metadata: dict[str, Any], language: str) -> str:
+    normalized_language = normalize_book_language(language) or "English"
+    if fallback_is_turkish(normalized_language):
+        lines = [
+            str(metadata.get("edition_label") or "").strip(),
+            str(metadata.get("print_label") or "").strip(),
+            "Yayına Hazırlayan: " + str(metadata.get("editor_name") or "").strip(),
+            "Redaksiyon: " + str(metadata.get("proofreader_name") or "").strip(),
+            "Mizanpaj: " + str(metadata.get("typesetter_name") or "").strip(),
+            "Kapak Tasarımı: " + str(metadata.get("cover_designer_name") or "").strip(),
+            "Yayınevi Adresi: " + str(metadata.get("publisher_address") or "").strip(),
+            "Yayınevi İletişim: "
+            + " | ".join(
+                part
+                for part in [
+                    str(metadata.get("publisher_phone") or "").strip(),
+                    str(metadata.get("publisher_email") or "").strip(),
+                    str(metadata.get("publisher_website") or "").strip(),
+                ]
+                if part
+            ),
+            str(metadata.get("publisher_certificate_no") or "").strip(),
+            "Basım: "
+            + " · ".join(
+                part
+                for part in [
+                    str(metadata.get("printer_name") or "").strip(),
+                    str(metadata.get("printer_certificate_no") or "").strip(),
+                ]
+                if part
+            ),
+            str(metadata.get("printer_address") or "").strip(),
+            str(metadata.get("copyright_statement") or "").strip(),
+        ]
+    else:
+        lines = [
+            str(metadata.get("edition_label") or "").strip(),
+            str(metadata.get("print_label") or "").strip(),
+            "Edited by " + str(metadata.get("editor_name") or "").strip(),
+            "Proofread by " + str(metadata.get("proofreader_name") or "").strip(),
+            "Typesetting by " + str(metadata.get("typesetter_name") or "").strip(),
+            "Cover design by " + str(metadata.get("cover_designer_name") or "").strip(),
+            "Publisher address: " + str(metadata.get("publisher_address") or "").strip(),
+            "Publisher contact: "
+            + " | ".join(
+                part
+                for part in [
+                    str(metadata.get("publisher_phone") or "").strip(),
+                    str(metadata.get("publisher_email") or "").strip(),
+                    str(metadata.get("publisher_website") or "").strip(),
+                ]
+                if part
+            ),
+            str(metadata.get("publisher_certificate_no") or "").strip(),
+            "Printed by "
+            + " · ".join(
+                part
+                for part in [
+                    str(metadata.get("printer_name") or "").strip(),
+                    str(metadata.get("printer_certificate_no") or "").strip(),
+                ]
+                if part
+            ),
+            str(metadata.get("printer_address") or "").strip(),
+            str(metadata.get("copyright_statement") or "").strip(),
+        ]
+    return "\n".join(line for line in lines if line.strip()).strip()
+
+
+def autofill_professional_book_details(
+    metadata: dict[str, Any],
+    *,
+    slug: str,
+    title: str,
+    subtitle: str,
+    language_hint: str = "",
+    force_regenerate: bool = False,
+    seed_salt: str = "",
+) -> tuple[dict[str, Any], list[str]]:
+    working = dict(metadata or {})
+    changed_keys: list[str] = []
+
+    language = (
+        normalize_book_language(working.get("language"))
+        or normalize_book_language(language_hint)
+        or detect_book_language(title, subtitle, working.get("description"))
+        or "English"
+    )
+    if str(working.get("language") or "").strip() != language:
+        working["language"] = language
+        changed_keys.append("language")
+
+    raw_author = str(working.get("author") or "").strip()
+    resolved_author = resolved_fallback_author(raw_author, slug)
+    if resolved_author and resolved_author != raw_author:
+        working["author"] = resolved_author
+        changed_keys.append("author")
+
+    raw_publisher = str(working.get("publisher") or "").strip()
+    resolved_publisher = resolve_professional_publisher_name(
+        raw_publisher,
+        slug=slug,
+        title=title,
+        language=language,
+    )
+    if resolved_publisher and resolved_publisher != raw_publisher:
+        working["publisher"] = resolved_publisher
+        changed_keys.append("publisher")
+
+    current_year = str(working.get("year") or "").strip()
+    if not re.fullmatch(r"\d{4}", current_year):
+        current_year = str(datetime.now(timezone.utc).year)
+        working["year"] = current_year
+        changed_keys.append("year")
+
+    provided_isbn13 = normalize_isbn_digits(working.get("isbn13"))
+    provided_isbn = normalize_isbn_digits(working.get("isbn"))
+    isbn13_value = ""
+    if not force_regenerate:
+        isbn13_value = provided_isbn13 if len(provided_isbn13) == 13 else provided_isbn if len(provided_isbn) == 13 else ""
+    if not isbn13_value:
+        rng = random.Random(
+            professional_seed_value(
+                slug=slug,
+                title=title,
+                subtitle=subtitle,
+                author=str(working.get("author") or ""),
+                publisher=str(working.get("publisher") or ""),
+                language=language,
+                seed_salt=seed_salt,
+            )
+        )
+        isbn13_value = generate_isbn13_candidate(rng, language=language)
+    if isbn13_value and str(working.get("isbn13") or "").strip() != isbn13_value:
+        working["isbn13"] = isbn13_value
+        changed_keys.append("isbn13")
+    if isbn13_value and professional_metadata_value_missing(working.get("isbn")):
+        working["isbn"] = isbn13_value
+        changed_keys.append("isbn")
+
+    generated = generate_professional_book_detail_defaults(
+        slug=slug,
+        title=title,
+        subtitle=subtitle,
+        author=str(working.get("author") or ""),
+        publisher=str(working.get("publisher") or ""),
+        language=language,
+        year=current_year,
+        isbn13=isbn13_value,
+        seed_salt=seed_salt,
+    )
+
+    for key in PROFESSIONAL_BOOK_DETAIL_FIELDS:
+        if key == "imprint_block":
+            continue
+        if force_regenerate or professional_metadata_value_missing(working.get(key)):
+            generated_value = str(generated.get(key) or "").strip()
+            if generated_value:
+                working[key] = generated_value
+                changed_keys.append(key)
+
+    imprint_block = build_professional_imprint_block(working, language)
+    if imprint_block and (force_regenerate or professional_metadata_value_missing(working.get("imprint_block"))):
+        working["imprint_block"] = imprint_block
+        changed_keys.append("imprint_block")
+
+    deduped_changes: list[str] = []
+    seen: set[str] = set()
+    for key in changed_keys:
+        if key not in seen:
+            deduped_changes.append(key)
+            seen.add(key)
+    return working, deduped_changes
+
+
+def ensure_professional_book_details(
+    book_dir: Path,
+    metadata: dict[str, Any],
+    *,
+    slug: str,
+    title: str,
+    subtitle: str,
+    language_hint: str = "",
+) -> dict[str, Any]:
+    enriched, changed_keys = autofill_professional_book_details(
+        metadata,
+        slug=slug,
+        title=title,
+        subtitle=subtitle,
+        language_hint=language_hint,
+    )
+    if changed_keys:
+        save_metadata(book_dir, {key: enriched.get(key, "") for key in changed_keys})
+    return enriched
+
+
+def fallback_frontmatter_source_names(slug: str) -> list[str]:
+    mapping = {
+        "dedication": ["dedication"],
+        "preface": ["preface", "foreword", "author-note", "from-the-author"],
+        "introduction": ["introduction"],
+    }
+    return mapping.get(slug, [slug])
+
+
+def clean_fallback_section_markdown(text: str) -> str:
+    lines = str(text or "").splitlines()
+    if not lines:
+        return ""
+    first_nonempty = -1
+    for idx, raw in enumerate(lines):
+        if raw.strip():
+            first_nonempty = idx
+            break
+    if first_nonempty >= 0 and re.match(r"^\s*#\s+.+$", lines[first_nonempty]):
+        del lines[first_nonempty]
+    return "\n".join(lines).strip()
+
+
+def read_fallback_frontmatter_section(book_dir: Path, slug: str) -> str:
+    for name in fallback_frontmatter_source_names(slug):
+        candidate_names = [f"{name}.md", f"{name}_final.md"]
+        for file_name in candidate_names:
+            for candidate in (book_dir / "extras" / file_name, book_dir / file_name):
+                if not candidate.exists() or not candidate.is_file():
+                    continue
+                try:
+                    raw = candidate.read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    continue
+                cleaned = clean_fallback_section_markdown(raw)
+                if cleaned:
+                    return cleaned
+    return ""
+
+
+def resolve_fallback_frontmatter_sections(
+    *,
+    book_dir: Path,
+    title: str,
+    subtitle: str,
+    language: str,
+    chapter_count: int,
+) -> list[dict[str, str]]:
+    labels = fallback_labels(language)
+    defaults = fallback_default_frontmatter_texts(
+        title=title,
+        subtitle=subtitle,
+        language=language,
+        chapter_count=chapter_count,
+    )
+    sections: list[dict[str, str]] = []
+    for slug in ("dedication", "preface", "introduction"):
+        content = read_fallback_frontmatter_section(book_dir, slug)
+        if not content:
+            content = defaults.get(slug, "")
+        content = clean_fallback_section_markdown(content)
+        if not content:
+            continue
+        sections.append(
+            {
+                "slug": slug,
+                "title": labels.get(slug, slug.title()),
+                "content": content,
+            }
+        )
+    return sections
+
+
+def frontmatter_content_hash(content: str) -> str:
+    cleaned = clean_fallback_section_markdown(content)
+    if not cleaned:
+        return ""
+    return hashlib.sha256(cleaned.encode("utf-8")).hexdigest()
+
+
+def frontmatter_word_count(content: str) -> int:
+    cleaned = clean_fallback_section_markdown(content)
+    if not cleaned:
+        return 0
+    return len(re.findall(r"\b[\w'-]+\b", cleaned, flags=re.UNICODE))
+
+
+def frontmatter_matches_template(section_slug: str, content: str) -> bool:
+    cleaned = clean_fallback_section_markdown(content)
+    if not cleaned:
+        return False
+    normalized = re.sub(r"\s+", " ", cleaned).strip().casefold()
+    markers = FRONTMATTER_TEMPLATE_MARKERS.get(section_slug, ())
+    return any(marker in normalized for marker in markers)
+
+
+def extract_frontmatter_context_payload(book_dir: Path, metadata: dict[str, Any]) -> dict[str, Any]:
+    outline_path = find_outline_file(book_dir)
+    title, subtitle = read_outline_title_subtitle(outline_path)
+    if not title:
+        title = book_dir.name.replace("-", " ").strip()
+    language = (
+        normalize_book_language(metadata.get("language"))
+        or detect_book_language(title, subtitle, metadata.get("description"))
+        or "English"
+    )
+    outline_excerpt = fallback_outline_excerpt(outline_path, max_chars=7000) if outline_path else ""
+    chapter_excerpts: list[dict[str, Any]] = []
+    for chapter_path in sorted(book_dir.glob("chapter_*_final.md"), key=chapter_number)[:2]:
+        try:
+            chapter_raw = chapter_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        chapter_cleaned = clean_fallback_section_markdown(chapter_raw)
+        chapter_cleaned = re.sub(r"^\s*#{1,6}\s+.+$", "", chapter_cleaned, count=1, flags=re.MULTILINE).strip()
+        if not chapter_cleaned:
+            continue
+        chapter_excerpts.append(
+            {
+                "number": chapter_number(chapter_path),
+                "excerpt": chapter_cleaned[:2600],
+            }
+        )
+
+    digest_source = {
+        "version": FRONTMATTER_AI_VERSION,
+        "scope": FRONTMATTER_CONTEXT_SCOPE,
+        "title": title,
+        "subtitle": subtitle,
+        "language": language,
+        "outline_excerpt": outline_excerpt,
+        "chapter_excerpts": chapter_excerpts,
+    }
+    digest = hashlib.sha256(
+        json.dumps(digest_source, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+    return {
+        "title": title,
+        "subtitle": subtitle,
+        "language": language,
+        "outline_excerpt": outline_excerpt,
+        "chapter_excerpts": chapter_excerpts,
+        "digest": digest,
+    }
+
+
+def resolve_frontmatter_generation_targets(
+    *,
+    book_dir: Path,
+    metadata: dict[str, Any],
+    context_digest: str,
+    force: bool = False,
+) -> tuple[list[str], dict[str, str], dict[str, str]]:
+    state = metadata.get(FRONTMATTER_AI_STATE_KEY) if isinstance(metadata, dict) else {}
+    state = state if isinstance(state, dict) else {}
+    state_digest = str(state.get("context_digest") or "").strip()
+    state_sections = state.get("sections") if isinstance(state.get("sections"), dict) else {}
+
+    targets: list[str] = []
+    reasons: dict[str, str] = {}
+    preserved_manual: dict[str, str] = {}
+
+    for section_slug in FRONTMATTER_SECTIONS:
+        content = read_fallback_frontmatter_section(book_dir, section_slug)
+        cleaned = clean_fallback_section_markdown(content)
+        reason = ""
+
+        if force:
+            reason = "forced"
+        elif not cleaned:
+            reason = "missing"
+        else:
+            words = frontmatter_word_count(cleaned)
+            min_words = int(FRONTMATTER_MIN_WORDS.get(section_slug, 220))
+            if words < min_words:
+                reason = f"too_short({words}<{min_words})"
+            elif frontmatter_matches_template(section_slug, cleaned):
+                reason = "template_fallback"
+            elif state_digest and state_digest != context_digest:
+                current_hash = frontmatter_content_hash(cleaned)
+                section_state = state_sections.get(section_slug) if isinstance(state_sections, dict) else {}
+                generated_hash = ""
+                if isinstance(section_state, dict):
+                    generated_hash = str(section_state.get("content_hash") or "").strip()
+                if generated_hash and current_hash == generated_hash:
+                    reason = "stale_context"
+                elif generated_hash and current_hash != generated_hash:
+                    preserved_manual[section_slug] = "manual_override_preserved"
+
+        if reason:
+            targets.append(section_slug)
+            reasons[section_slug] = reason
+
+    return targets, reasons, preserved_manual
+
+
+def update_frontmatter_ai_state(
+    *,
+    book_dir: Path,
+    metadata: dict[str, Any],
+    context_digest: str,
+    generated_sections: list[str],
+) -> dict[str, Any]:
+    previous = metadata.get(FRONTMATTER_AI_STATE_KEY) if isinstance(metadata, dict) else {}
+    previous = previous if isinstance(previous, dict) else {}
+    previous_sections = previous.get("sections") if isinstance(previous.get("sections"), dict) else {}
+    section_state: dict[str, Any] = dict(previous_sections)
+
+    timestamp = now_utc_iso()
+    generated_set = set(generated_sections)
+    for section_slug in generated_set:
+        section_content = read_fallback_frontmatter_section(book_dir, section_slug)
+        content_hash = frontmatter_content_hash(section_content)
+        if not content_hash:
+            continue
+        section_state[section_slug] = {
+            "content_hash": content_hash,
+            "word_count": frontmatter_word_count(section_content),
+            "updated_at": timestamp,
+        }
+
+    next_state = {
+        **previous,
+        "version": FRONTMATTER_AI_VERSION,
+        "profile": "professional_standard",
+        "scope": FRONTMATTER_CONTEXT_SCOPE,
+        "context_digest": context_digest,
+        "generated_at": timestamp,
+        "sections": section_state,
+    }
+    return save_metadata(book_dir, {FRONTMATTER_AI_STATE_KEY: next_state})
+
+
+def generate_frontmatter_sections(
+    *,
+    book_dir: Path,
+    metadata: dict[str, Any],
+    force: bool = False,
+    trigger: str = "build",
+) -> dict[str, Any]:
+    context = extract_frontmatter_context_payload(book_dir, metadata)
+    context_digest = str(context.get("digest") or "").strip()
+    sections, reasons, preserved_manual = resolve_frontmatter_generation_targets(
+        book_dir=book_dir,
+        metadata=metadata,
+        context_digest=context_digest,
+        force=force,
+    )
+
+    if not sections:
+        return {
+            "ok": True,
+            "generated_sections": [],
+            "requested_sections": [],
+            "reasons": reasons,
+            "preserved_manual": preserved_manual,
+            "warnings": [],
+            "output": "Frontmatter sections are already up to date.",
+            "metadata": metadata,
+        }
+
+    if not has_any_ai_provider():
+        return {
+            "ok": False,
+            "generated_sections": [],
+            "requested_sections": sections,
+            "reasons": reasons,
+            "preserved_manual": preserved_manual,
+            "warnings": [
+                "No AI provider configured. Skipped professional frontmatter generation "
+                "(Dedication, Preface, Introduction)."
+            ],
+            "output": "AI provider is not configured.",
+            "metadata": metadata,
+        }
+
+    language = str(context.get("language") or "English")
+    env_overrides = codefast_env_overrides_for_metadata(metadata, task_type="creative")
+    result = run_dashboard_action(
+        "frontmatter",
+        str(book_dir),
+        ",".join(sections),
+        language,
+        env_overrides=env_overrides or None,
+        timeout_seconds=max(120, int(os.environ.get("BOOK_FRONTMATTER_ACTION_TIMEOUT_SECONDS", "420") or "420")),
+    )
+    output_text = ((result.stdout or "") + (result.stderr or "")).strip()
+    if result.returncode != 0:
+        first_line = output_text.splitlines()[0].strip() if output_text else "Frontmatter generation failed."
+        return {
+            "ok": False,
+            "generated_sections": [],
+            "requested_sections": sections,
+            "reasons": reasons,
+            "preserved_manual": preserved_manual,
+            "warnings": [f"Frontmatter AI generation failed: {first_line}"],
+            "output": output_text or first_line,
+            "metadata": metadata,
+        }
+
+    sync_extra_files(book_dir)
+    generated_sections: list[str] = []
+    for section_slug in sections:
+        if read_fallback_frontmatter_section(book_dir, section_slug):
+            generated_sections.append(section_slug)
+
+    if len(generated_sections) != len(sections):
+        missing = [section for section in sections if section not in generated_sections]
+        return {
+            "ok": False,
+            "generated_sections": generated_sections,
+            "requested_sections": sections,
+            "reasons": reasons,
+            "preserved_manual": preserved_manual,
+            "warnings": [f"Frontmatter generation was incomplete. Missing: {', '.join(missing)}"],
+            "output": output_text,
+            "metadata": metadata,
+        }
+
+    updated_meta = update_frontmatter_ai_state(
+        book_dir=book_dir,
+        metadata=metadata,
+        context_digest=context_digest,
+        generated_sections=generated_sections,
+    )
+    if trigger != "build":
+        mark_book_exports_dirty(
+            book_dir,
+            detail=f"Frontmatter regenerated: {', '.join(generated_sections)}",
+            chapter_content_changed=False,
+        )
+        updated_meta = read_metadata(book_dir)
+
+    return {
+        "ok": True,
+        "generated_sections": generated_sections,
+        "requested_sections": sections,
+        "reasons": reasons,
+        "preserved_manual": preserved_manual,
+        "warnings": [],
+        "output": output_text or f"Generated frontmatter sections: {', '.join(generated_sections)}",
+        "metadata": updated_meta,
+    }
 
 
 def fallback_outline_headings(path: Path, language: str) -> list[str]:
@@ -7684,20 +9593,49 @@ def fallback_book_markdown(
     language: str,
     description: str,
     chapters: list[dict[str, Any]],
+    frontmatter_sections: list[dict[str, str]] | None = None,
+    imprint_title: str = "Imprint",
+    imprint_kicker: str = "Publication Data",
+    professional_imprint_lines: list[str] | None = None,
+    author_bio: str = "",
 ) -> str:
+    labels = fallback_labels(language)
+    frontmatter_sections = list(frontmatter_sections or [])
+    professional_imprint_lines = list(professional_imprint_lines or [])
+    safe_author_bio = clean_fallback_section_markdown(author_bio)
+    if not safe_author_bio:
+        safe_author_bio = fallback_default_author_bio(author, language)
+
     lines: list[str] = [f"# {title}"]
     if subtitle:
         lines.extend(["", f"## {subtitle}"])
     lines.extend(
         [
             "",
-            f"- Author: {author or 'Book Creator'}",
-            f"- Publisher: {publisher or 'Book Generator'}",
-            f"- Language: {language or 'English'}",
+            f"- {labels['author']}: {author or 'Book Creator'}",
+            f"- {labels['publisher']}: {publisher or 'Book Generator'}",
+            f"- {labels['language']}: {language or 'English'}",
         ]
     )
     if description:
         lines.extend(["", description.strip()])
+    if professional_imprint_lines:
+        lines.extend(["", f"## {imprint_title}", "", f"*{imprint_kicker}*", ""])
+        lines.extend(f"- {line}" for line in professional_imprint_lines)
+
+    for section in frontmatter_sections:
+        heading = str(section.get("title") or "").strip()
+        content = clean_fallback_section_markdown(str(section.get("content") or ""))
+        if not heading or not content:
+            continue
+        lines.extend(["", f"## {heading}", "", content])
+
+    lines.extend(["", f"## {labels['contents']}", ""])
+    for index, chapter in enumerate(chapters, start=1):
+        chapter_number = int(chapter.get("number") or index)
+        chapter_title = str(chapter.get("title") or "").strip() or f"Chapter {chapter_number}"
+        lines.append(f"{chapter_number}. {chapter_title}")
+
     for index, chapter in enumerate(chapters, start=1):
         chapter_number = int(chapter.get("number") or index)
         chapter_title = str(chapter.get("title") or "").strip() or f"Chapter {chapter_number}"
@@ -7707,9 +9645,10 @@ def fallback_book_markdown(
                 "",
                 f"## {chapter_heading_prefix(language, chapter_number)}: {chapter_title}",
                 "",
-                chapter_content or "Content pending.",
+                chapter_content or labels["pending"],
             ]
         )
+    lines.extend(["", f"## {labels['about_author']}", "", safe_author_bio])
     lines.append("")
     return "\n".join(lines)
 
@@ -7756,10 +9695,24 @@ def write_lightweight_epub(
     language: str,
     description: str,
     chapters: list[dict[str, Any]],
+    frontmatter_sections: list[dict[str, str]] | None = None,
+    imprint_title: str = "Imprint",
+    imprint_kicker: str = "Publication Data",
+    professional_imprint_lines: list[str] | None = None,
+    about_author_title: str = "About the Author",
+    author_bio: str = "",
+    toc_heading: str = "Contents",
     cover_path: Path | None = None,
     back_cover_path: Path | None = None,
 ) -> None:
     direction = "rtl" if fallback_epub_language_code(language) in {"ar", "fa", "he", "ur"} else "ltr"
+    labels = fallback_labels(language)
+    frontmatter_sections = list(frontmatter_sections or [])
+    professional_imprint_lines = list(professional_imprint_lines or [])
+    safe_author_bio = clean_fallback_section_markdown(author_bio)
+    if not safe_author_bio:
+        safe_author_bio = fallback_default_author_bio(author, language)
+
     with zipfile.ZipFile(output_path, "w") as archive:
         archive.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
         archive.writestr(
@@ -7779,13 +9732,19 @@ body { font-family: Georgia, 'Times New Roman', serif; margin: 5%; line-height: 
 h1, h2 { line-height: 1.25; }
 .meta { color: #6f6156; font-family: Arial, sans-serif; font-size: 0.85rem; }
 .chapter-ref { text-transform: uppercase; letter-spacing: 0.12em; font-family: Arial, sans-serif; color: #725441; font-size: 0.72rem; }
+.imprint-page { max-width: 38em; margin: 4vh auto; padding: 1rem 1.15rem; border: 1px solid #e6dacd; border-radius: 14px; background: linear-gradient(180deg,#fffdf9 0%,#fff8f0 100%); }
+.imprint-kicker { text-transform: uppercase; letter-spacing: 0.18em; color: #7d6856; font-family: Arial, sans-serif; font-size: 0.72rem; display: block; text-align: left; margin-bottom: 0.65rem; }
+.imprint-page h2 { margin-top: 0; margin-bottom: 0.95rem; text-align: left; }
+.imprint-page ul { margin: 0.3rem 0 0 1.2rem; }
+.imprint-page li { margin: 0.2rem 0; }
+.imprint-legal { margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid #e1d5c9; font-style: italic; }
 .cover img { width: 100%; max-width: 520px; display: block; margin: 0 auto 1.25rem; }
 .back-cover { page-break-before: always; }
 .back-cover img { width: 100%; max-width: 520px; display: block; margin: 0 auto; }
 """.strip(),
         )
 
-        chapter_links: list[str] = []
+        toc_links: list[str] = []
         manifest_items = [
             "<item id='nav' href='nav.xhtml' media-type='application/xhtml+xml' properties='nav'/>",
             "<item id='title-page' href='title.xhtml' media-type='application/xhtml+xml'/>",
@@ -7810,6 +9769,70 @@ h1, h2 { line-height: 1.25; }
                 f"<item id='back-cover-image' href='{back_cover_file_name}' media-type='{back_cover_media_type}'/>"
             )
 
+        if professional_imprint_lines:
+            imprint_file = "imprint.xhtml"
+            imprint_items_html = "".join(
+                f"<li>{html.escape(line)}</li>"
+                for line in professional_imprint_lines
+            )
+            imprint_kicker_html = (
+                f"<span class='imprint-kicker'>{html.escape(imprint_kicker)}</span>"
+                if imprint_kicker.strip()
+                else ""
+            )
+            archive.writestr(
+                f"OEBPS/{imprint_file}",
+                fallback_xhtml_page(
+                    imprint_title,
+                    f"""
+                    <section class="imprint-page">
+                      {imprint_kicker_html}
+                      <h2>{html.escape(imprint_title)}</h2>
+                      <ul>{imprint_items_html}</ul>
+                    </section>
+                    """,
+                    direction,
+                ),
+            )
+            manifest_items.append(
+                f"<item id='imprint-page' href='{imprint_file}' media-type='application/xhtml+xml'/>"
+            )
+            spine_items.append("<itemref idref='imprint-page'/>")
+            toc_links.append(f"<li><a href='{imprint_file}'>{html.escape(imprint_title)}</a></li>")
+
+        for section in frontmatter_sections:
+            section_slug = re.sub(r"[^a-z0-9]+", "-", str(section.get("slug") or "").strip().lower()).strip("-")
+            if not section_slug:
+                continue
+            section_title = str(section.get("title") or "").strip() or section_slug.title()
+            section_content = clean_fallback_section_markdown(str(section.get("content") or ""))
+            if not section_content:
+                continue
+            section_file = f"frontmatter-{section_slug}.xhtml"
+            section_paragraphs = fallback_split_paragraphs(section_content)
+            section_html = "".join(
+                f"<p>{html.escape(paragraph).replace(chr(10), '<br/>')}</p>"
+                for paragraph in section_paragraphs
+            )
+            archive.writestr(
+                f"OEBPS/{section_file}",
+                fallback_xhtml_page(
+                    section_title,
+                    f"""
+                    <section>
+                      <h2>{html.escape(section_title)}</h2>
+                      {section_html}
+                    </section>
+                    """,
+                    direction,
+                ),
+            )
+            manifest_items.append(
+                f"<item id='frontmatter-{section_slug}' href='{section_file}' media-type='application/xhtml+xml'/>"
+            )
+            spine_items.append(f"<itemref idref='frontmatter-{section_slug}'/>")
+            toc_links.append(f"<li><a href='{section_file}'>{html.escape(section_title)}</a></li>")
+
         for index, chapter in enumerate(chapters, start=1):
             chapter_number = int(chapter.get("number") or index)
             chapter_title = str(chapter.get("title") or "").strip() or f"Chapter {chapter_number}"
@@ -7817,7 +9840,7 @@ h1, h2 { line-height: 1.25; }
             paragraphs = fallback_split_paragraphs(str(chapter.get("content") or ""))
             body_html = "".join(
                 f"<p>{html.escape(paragraph).replace(chr(10), '<br/>')}</p>"
-                for paragraph in (paragraphs or ["Content pending."])
+                for paragraph in (paragraphs or [labels["pending"]])
             )
             archive.writestr(
                 f"OEBPS/{chapter_file}",
@@ -7837,15 +9860,44 @@ h1, h2 { line-height: 1.25; }
                 f"<item id='chapter-{chapter_number:03d}' href='{chapter_file}' media-type='application/xhtml+xml'/>"
             )
             spine_items.append(f"<itemref idref='chapter-{chapter_number:03d}'/>")
-            chapter_links.append(
+            toc_links.append(
                 f"<li><a href='{chapter_file}'>{html.escape(chapter_heading_prefix(language, chapter_number))} · {html.escape(chapter_title)}</a></li>"
             )
+
+        about_author_file = "about-author.xhtml"
+        about_author_paragraphs = fallback_split_paragraphs(safe_author_bio)
+        about_author_html = "".join(
+            f"<p>{html.escape(paragraph).replace(chr(10), '<br/>')}</p>"
+            for paragraph in about_author_paragraphs
+        )
+        archive.writestr(
+            f"OEBPS/{about_author_file}",
+            fallback_xhtml_page(
+                about_author_title,
+                f"""
+                <section>
+                  <h2>{html.escape(about_author_title)}</h2>
+                  {about_author_html}
+                </section>
+                """,
+                direction,
+            ),
+        )
+        manifest_items.append(
+            f"<item id='about-author' href='{about_author_file}' media-type='application/xhtml+xml'/>"
+        )
+        spine_items.append("<itemref idref='about-author'/>")
+        toc_links.append(f"<li><a href='{about_author_file}'>{html.escape(about_author_title)}</a></li>")
 
         archive.writestr(
             "OEBPS/nav.xhtml",
             fallback_xhtml_page(
                 title,
-                "<nav epub:type='toc' id='toc'><h1>Contents</h1><ol>" + "".join(chapter_links) + "</ol></nav>",
+                "<nav epub:type='toc' id='toc'><h1>"
+                + html.escape(toc_heading)
+                + "</h1><ol>"
+                + "".join(toc_links)
+                + "</ol></nav>",
                 direction,
             ),
         )
@@ -7914,11 +9966,51 @@ def fallback_pdf_escape(value: str) -> str:
     return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
 
 
+FALLBACK_PDF_REPLACEMENTS = str.maketrans(
+    {
+        "ğ": "g",
+        "Ğ": "G",
+        "ı": "i",
+        "İ": "I",
+        "ş": "s",
+        "Ş": "S",
+        "“": '"',
+        "”": '"',
+        "‘": "'",
+        "’": "'",
+        "…": "...",
+        "–": "-",
+        "—": "-",
+        "•": "-",
+        "\u00a0": " ",
+    }
+)
+
+
 def fallback_pdf_text(value: str) -> str:
-    return str(value or "").encode("latin-1", errors="replace").decode("latin-1", errors="replace")
+    normalized = str(value or "").translate(FALLBACK_PDF_REPLACEMENTS)
+    return normalized.encode("latin-1", errors="replace").decode("latin-1", errors="replace")
 
 
-def write_lightweight_pdf(output_path: Path, lines: list[str]) -> None:
+def fallback_pdf_wrap_lines(value: str, *, width: int) -> list[str]:
+    normalized = fallback_pdf_text(value).replace("\r\n", "\n").replace("\r", "\n")
+    wrapped_lines: list[str] = []
+    for raw_line in normalized.split("\n"):
+        text = raw_line.strip()
+        if not text:
+            wrapped_lines.append("")
+            continue
+        wrapped = textwrap.wrap(
+            text,
+            width=max(20, int(width)),
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+        wrapped_lines.extend(wrapped or [text])
+    return wrapped_lines
+
+
+def write_lightweight_pdf(output_path: Path, blocks: list[dict[str, Any]]) -> None:
     objects: list[bytes] = []
 
     def add_object(payload: str | bytes) -> int:
@@ -7927,27 +10019,161 @@ def write_lightweight_pdf(output_path: Path, lines: list[str]) -> None:
         objects.append(payload)
         return len(objects)
 
+    page_width = 612.0
+    page_height = 792.0
+    margin_left = 56.0
+    margin_right = 56.0
+    margin_top = 62.0
+    margin_bottom = 56.0
+    content_width = page_width - margin_left - margin_right
+
+    page_streams: list[list[str]] = []
+    current_stream: list[str] = []
+    cursor_y = page_height - margin_top
+
+    def begin_new_page(force: bool = False) -> None:
+        nonlocal current_stream, cursor_y
+        if current_stream or force:
+            page_streams.append(current_stream or ["BT /F1 11 Tf 1 0 0 1 56 736 Tm ( ) Tj ET"])
+        current_stream = []
+        cursor_y = page_height - margin_top
+
+    def ensure_space(points: float) -> None:
+        nonlocal cursor_y
+        if cursor_y - points < margin_bottom:
+            begin_new_page(force=True)
+
+    def draw_line(
+        text: str,
+        *,
+        font: str = "F1",
+        size: float = 11.0,
+        indent: float = 0.0,
+        align: str = "left",
+    ) -> None:
+        nonlocal cursor_y
+        line_height = max(12.0, size * 1.35)
+        ensure_space(line_height)
+        safe_text = fallback_pdf_escape(fallback_pdf_text(text))
+        x = margin_left + indent
+        if align == "center":
+            approx_char_width = size * (0.56 if font == "F2" else 0.52)
+            estimated_width = len(fallback_pdf_text(text)) * approx_char_width
+            x = max(margin_left, (page_width - estimated_width) / 2.0)
+        elif align == "right":
+            approx_char_width = size * 0.52
+            estimated_width = len(fallback_pdf_text(text)) * approx_char_width
+            x = max(margin_left, page_width - margin_right - estimated_width)
+        current_stream.append(
+            f"BT /{font} {size:.2f} Tf 1 0 0 1 {x:.2f} {cursor_y:.2f} Tm ({safe_text}) Tj ET"
+        )
+        cursor_y -= line_height
+
+    def draw_rule() -> None:
+        nonlocal cursor_y
+        ensure_space(8.0)
+        y = cursor_y - 2.0
+        current_stream.append(f"0.5 w {margin_left:.2f} {y:.2f} m {page_width - margin_right:.2f} {y:.2f} l S")
+        cursor_y -= 8.0
+
+    def draw_spacing(points: float) -> None:
+        nonlocal cursor_y
+        if points <= 0:
+            return
+        ensure_space(points)
+        cursor_y -= points
+
+    def draw_wrapped_text(
+        text: str,
+        *,
+        font: str = "F1",
+        size: float = 11.0,
+        indent: float = 0.0,
+        align: str = "left",
+        paragraph_gap: float = 6.0,
+    ) -> None:
+        available_width = max(140.0, content_width - indent)
+        width_chars = max(22, int(available_width / max(4.8, size * 0.53)))
+        lines = fallback_pdf_wrap_lines(text, width=width_chars)
+        if not lines:
+            draw_spacing(paragraph_gap)
+            return
+        for line in lines:
+            if line:
+                draw_line(line, font=font, size=size, indent=indent, align=align)
+            else:
+                draw_spacing(max(8.0, size * 0.75))
+        draw_spacing(paragraph_gap)
+
+    for block in blocks:
+        kind = str(block.get("kind") or "").strip().lower()
+        text = str(block.get("text") or "")
+        if kind == "page_break":
+            begin_new_page(force=bool(current_stream))
+            continue
+        if kind == "blank":
+            draw_spacing(float(block.get("points") or 10.0))
+            continue
+        if kind == "title":
+            if current_stream:
+                begin_new_page(force=True)
+            draw_spacing(40.0)
+            draw_wrapped_text(text, font="F2", size=26.0, align="center", paragraph_gap=10.0)
+            continue
+        if kind == "subtitle":
+            draw_wrapped_text(text, font="F3", size=14.0, align="center", paragraph_gap=10.0)
+            continue
+        if kind == "meta":
+            draw_wrapped_text(text, font="F1", size=10.5, align="center", paragraph_gap=4.0)
+            continue
+        if kind == "section_title":
+            draw_spacing(10.0)
+            draw_wrapped_text(text, font="F2", size=16.0, paragraph_gap=2.0)
+            draw_rule()
+            draw_spacing(3.0)
+            continue
+        if kind == "chapter_ref":
+            draw_wrapped_text(text.upper(), font="F2", size=10.5, paragraph_gap=2.0)
+            continue
+        if kind == "chapter_title":
+            draw_wrapped_text(text, font="F2", size=20.0, paragraph_gap=10.0)
+            continue
+        if kind == "toc_item":
+            draw_wrapped_text(text, font="F1", size=10.5, indent=8.0, paragraph_gap=2.0)
+            continue
+        if kind == "small":
+            draw_wrapped_text(text, font="F3", size=10.0, paragraph_gap=4.0)
+            continue
+        if kind == "paragraph":
+            draw_wrapped_text(text, font="F1", size=11.0, paragraph_gap=8.0)
+            continue
+        if text:
+            draw_wrapped_text(text, font="F1", size=11.0, paragraph_gap=8.0)
+
+    begin_new_page(force=True)
+    total_pages = len(page_streams)
+    for page_index, stream in enumerate(page_streams, start=1):
+        page_label = fallback_pdf_escape(fallback_pdf_text(f"{page_index} / {total_pages}"))
+        footer_width = len(str(page_index)) * 9.0
+        stream.append(
+            f"BT /F1 9 Tf 1 0 0 1 {(page_width / 2.0) - footer_width:.2f} 26.00 Tm ({page_label}) Tj ET"
+        )
+
     font_id = add_object("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    bold_font_id = add_object("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>")
+    italic_font_id = add_object("<< /Type /Font /Subtype /Type1 /BaseFont /Times-Italic >>")
     pages_id = add_object("<< /Type /Pages /Kids [] /Count 0 >>")
     page_ids: list[int] = []
-    page_chunks = [lines[index : index + 42] for index in range(0, len(lines), 42)] or [[""]]
 
-    for chunk in page_chunks:
-        content_stream = ["BT", "/F1 11 Tf", "60 780 Td", "14 TL"]
-        for index, line in enumerate(chunk):
-            safe_line = fallback_pdf_escape(fallback_pdf_text(line))
-            if index == 0:
-                content_stream.append(f"({safe_line}) Tj")
-            else:
-                content_stream.append(f"T* ({safe_line}) Tj")
-        content_stream.append("ET")
-        stream = "\n".join(content_stream).encode("latin-1", errors="replace")
+    for page_lines in page_streams:
+        stream = "\n".join(page_lines).encode("latin-1", errors="replace")
         content_id = add_object(
             f"<< /Length {len(stream)} >>\nstream\n".encode("latin-1") + stream + b"\nendstream"
         )
         page_id = add_object(
             f"<< /Type /Page /Parent {pages_id} 0 R /MediaBox [0 0 612 792] "
-            f"/Resources << /Font << /F1 {font_id} 0 R >> >> /Contents {content_id} 0 R >>"
+            f"/Resources << /ProcSet [/PDF /Text] /Font << /F1 {font_id} 0 R /F2 {bold_font_id} 0 R /F3 {italic_font_id} 0 R >> >> "
+            f"/Contents {content_id} 0 R >>"
         )
         page_ids.append(page_id)
 
@@ -7991,10 +10217,20 @@ def build_book_with_lightweight_fallback(
     metadata = repair_selected_cover_bundle(book_dir, read_metadata(book_dir))
     title = str(book.get("title") or slug).strip() or slug
     subtitle = str(book.get("subtitle") or "").strip()
-    author = str(book.get("author") or metadata.get("author") or "Book Creator").strip()
+    author = resolved_fallback_author(
+        str(book.get("author") or metadata.get("author") or "Book Creator"),
+        slug,
+    )
     publisher = str(book.get("publisher") or metadata.get("publisher") or "Book Generator").strip()
     language = str(book.get("language") or metadata.get("language") or "English").strip() or "English"
+    labels = fallback_labels(language)
+    professional_imprint_lines = fallback_professional_imprint_lines(metadata, language)
     description = str(book.get("description") or metadata.get("description") or "").strip()
+    author_bio = clean_fallback_section_markdown(
+        str(book.get("author_bio") or metadata.get("author_bio") or "")
+    )
+    if not author_bio:
+        author_bio = fallback_default_author_bio(author, language)
     fallback_notes: list[str] = []
     if not chapters:
         chapters, fallback_notes = synthesize_fallback_chapters(
@@ -8003,6 +10239,14 @@ def build_book_with_lightweight_fallback(
             language=language,
             description=description,
         )
+    frontmatter_sections = resolve_fallback_frontmatter_sections(
+        book_dir=book_dir,
+        title=title,
+        subtitle=subtitle,
+        language=language,
+        chapter_count=len(chapters),
+    )
+
     export_dir = fallback_export_dir(book_dir)
     base_name = f"manuscript_final_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
     manuscript_path = export_dir / f"{base_name}.md"
@@ -8015,12 +10259,21 @@ def build_book_with_lightweight_fallback(
         language=language,
         description=description,
         chapters=chapters,
+        frontmatter_sections=frontmatter_sections,
+        imprint_title=labels["imprint"],
+        imprint_kicker=labels["imprint_kicker"],
+        professional_imprint_lines=professional_imprint_lines,
+        author_bio=author_bio,
     )
     manuscript_path.write_text(manuscript, encoding="utf-8")
 
-    cover_reference, back_cover_reference = resolve_cover_image_references(book_dir, metadata)
-    cover_path = resolve_book_asset_path(book_dir, cover_reference) if cover_reference else None
-    back_cover_path = resolve_book_asset_path(book_dir, back_cover_reference) if back_cover_reference else None
+    if export_embeds_cover_images(format_name):
+        cover_reference, back_cover_reference = resolve_cover_image_references(book_dir, metadata)
+        cover_path = resolve_book_asset_path(book_dir, cover_reference) if cover_reference else None
+        back_cover_path = resolve_book_asset_path(book_dir, back_cover_reference) if back_cover_reference else None
+    else:
+        cover_path = None
+        back_cover_path = None
     exported_formats: list[str] = []
     if format_name in {"all", "epub"}:
         write_lightweight_epub(
@@ -8033,55 +10286,111 @@ def build_book_with_lightweight_fallback(
             language=language,
             description=description,
             chapters=chapters,
+            frontmatter_sections=frontmatter_sections,
+            imprint_title=labels["imprint"],
+            imprint_kicker=labels["imprint_kicker"],
+            professional_imprint_lines=professional_imprint_lines,
+            about_author_title=labels["about_author"],
+            author_bio=author_bio,
+            toc_heading=labels["contents"],
             cover_path=cover_path,
             back_cover_path=back_cover_path,
         )
         exported_formats.append("epub")
     if format_name in {"all", "pdf"}:
-        pdf_lines = [
-            title,
-            subtitle,
-            "",
-            f"Author: {author}",
-            f"Publisher: {publisher}",
-            f"Language: {language}",
-            "",
-            description,
-            "",
-        ]
+        pdf_blocks: list[dict[str, Any]] = [{"kind": "title", "text": title}]
+        if subtitle:
+            pdf_blocks.append({"kind": "subtitle", "text": subtitle})
+        pdf_blocks.extend(
+            [
+                {"kind": "blank", "points": 12},
+                {"kind": "meta", "text": f"{labels['author']}: {author}"},
+                {"kind": "meta", "text": f"{labels['publisher']}: {publisher}"},
+                {"kind": "meta", "text": f"{labels['language']}: {language}"},
+            ]
+        )
+        if description:
+            pdf_blocks.extend(
+                [
+                    {"kind": "blank", "points": 10},
+                    {"kind": "paragraph", "text": description},
+                ]
+            )
         if cover_path and cover_path.exists():
-            pdf_lines.extend(["Front cover: " + cover_path.name, ""])
+            pdf_blocks.append({"kind": "small", "text": f"{labels['front_cover']}: {cover_path.name}"})
+        if professional_imprint_lines:
+            pdf_blocks.extend(
+                [
+                    {"kind": "page_break"},
+                    {"kind": "section_title", "text": labels["imprint"]},
+                    {"kind": "small", "text": labels["imprint_kicker"]},
+                ]
+            )
+            for line in professional_imprint_lines:
+                pdf_blocks.append({"kind": "paragraph", "text": line})
+        for section in frontmatter_sections:
+            section_title = str(section.get("title") or "").strip()
+            section_content = clean_fallback_section_markdown(str(section.get("content") or ""))
+            if not section_title or not section_content:
+                continue
+            pdf_blocks.extend(
+                [
+                    {"kind": "page_break"},
+                    {"kind": "section_title", "text": section_title},
+                ]
+            )
+            for paragraph in fallback_split_paragraphs(section_content):
+                pdf_blocks.append({"kind": "paragraph", "text": paragraph})
+        pdf_blocks.extend(
+            [
+                {"kind": "page_break"},
+                {"kind": "section_title", "text": labels["contents"]},
+            ]
+        )
         for index, chapter in enumerate(chapters, start=1):
             chapter_number = int(chapter.get("number") or index)
             chapter_title = str(chapter.get("title") or "").strip() or f"Chapter {chapter_number}"
-            pdf_lines.extend(
+            pdf_blocks.append({"kind": "toc_item", "text": f"{chapter_number}. {chapter_title}"})
+        for index, chapter in enumerate(chapters, start=1):
+            chapter_number = int(chapter.get("number") or index)
+            chapter_title = str(chapter.get("title") or "").strip() or f"Chapter {chapter_number}"
+            pdf_blocks.extend(
                 [
-                    "",
-                    f"{chapter_heading_prefix(language, chapter_number)}: {chapter_title}",
-                    "-" * 72,
+                    {"kind": "page_break"},
+                    {"kind": "chapter_ref", "text": chapter_heading_prefix(language, chapter_number)},
+                    {"kind": "chapter_title", "text": chapter_title},
                 ]
             )
             chapter_body = str(chapter.get("content") or "").strip()
             if not chapter_body:
-                pdf_lines.append("Content pending.")
+                pdf_blocks.append({"kind": "paragraph", "text": labels["pending"]})
                 continue
-            for raw_line in chapter_body.splitlines():
-                text = raw_line.strip()
-                if not text:
-                    pdf_lines.append("")
-                    continue
-                pdf_lines.extend(textwrap.wrap(text, width=95) or [""])
+            for paragraph in fallback_split_paragraphs(chapter_body):
+                pdf_blocks.append({"kind": "paragraph", "text": paragraph})
+        if author_bio:
+            pdf_blocks.extend(
+                [
+                    {"kind": "page_break"},
+                    {"kind": "section_title", "text": labels["about_author"]},
+                ]
+            )
+            for paragraph in fallback_split_paragraphs(author_bio):
+                pdf_blocks.append({"kind": "paragraph", "text": paragraph})
         if back_cover_path and back_cover_path.exists():
-            pdf_lines.extend(["", "Back cover: " + back_cover_path.name])
-        write_lightweight_pdf(export_dir / f"{base_name}.pdf", pdf_lines)
+            pdf_blocks.extend(
+                [
+                    {"kind": "page_break"},
+                    {"kind": "section_title", "text": labels["back_cover"]},
+                    {"kind": "small", "text": back_cover_path.name},
+                ]
+            )
+        write_lightweight_pdf(export_dir / f"{base_name}.pdf", pdf_blocks)
         exported_formats.append("pdf")
 
     warning_reason = str(preflight.get("reason") or "").strip()
     warnings = list(preflight.get("warnings") or [])
     warnings.extend(fallback_notes)
-    fallback_warning = (
-        "Primary export tools unavailable; generated lightweight fallback export."
-    )
+    fallback_warning = "Generated lightweight fallback export."
     warnings.append(fallback_warning)
     if warning_reason:
         warnings.append(warning_reason)
@@ -8100,6 +10409,7 @@ def build_book_with_lightweight_fallback(
     return {
         "ok": True,
         "action": "build",
+        "fallback_used": True,
         "returncode": 0,
         "output": f"{', '.join(exported_formats).upper()} fallback export hazır.",
         "warnings": warnings,
@@ -8124,13 +10434,6 @@ def preflight_for_build(format_name: str, slug: str | None = None) -> dict[str, 
     if format_name == "all" and not tool_exists("ebook-convert"):
         warnings.append("ebook-convert missing: mobi/azw3 conversions may be unavailable in all-in-one builds.")
     reason = str(capability["reason"] or "")
-    if not primary_ok and fallback_ok:
-        fallback_note = (
-            "Primary exporter check failed; primary build command will be tried first, "
-            "then lightweight fallback export if needed."
-        )
-        warnings.append(fallback_note)
-        reason = fallback_note
     if slug:
         book_dir = BOOK_OUTPUTS_DIR / slug
         metadata = read_metadata(book_dir) if book_dir.exists() else {}
@@ -8177,10 +10480,12 @@ def preflight_for_build(format_name: str, slug: str | None = None) -> dict[str, 
                     f"{len(early_ready_chapters)} chapters are at least "
                     f"{EARLY_EXPORT_MIN_CHAPTER_WORDS} words."
                 )
-            if not front_cover:
-                missing.append("Selected final front cover asset is missing.")
-            if not back_cover:
-                missing.append("Selected final back cover asset is missing.")
+            include_cover_images = export_embeds_cover_images(format_name)
+            if include_cover_images:
+                if not front_cover:
+                    missing.append("Selected final front cover asset is missing.")
+                if not back_cover:
+                    missing.append("Selected final back cover asset is missing.")
             chapter_requirement_message = ""
             if actual_chapter_count < required_chapter_count:
                 if required_chapter_count == mode_min_chapters:
@@ -8221,11 +10526,12 @@ def preflight_for_build(format_name: str, slug: str | None = None) -> dict[str, 
                     warnings.append(
                         f"{word_requirement_message} Export will continue with available content."
                     )
-            if image_provider_policy_vertex_only() or normalize_cover_variants(metadata.get("cover_variants")):
-                if not selected_cover_bundle_ready(book_dir, metadata, require_variant=True):
-                    missing.append("Selected final cover pair was not promoted from the chosen cover variant.")
-            if raw_cover_candidate_assets_exist(book_dir) and not normalize_cover_variants(metadata.get("cover_variants")):
-                missing.append("Raw cover candidate assets exist, but no selected cover variant metadata was persisted.")
+            if include_cover_images:
+                if image_provider_policy_vertex_only() or normalize_cover_variants(metadata.get("cover_variants")):
+                    if not selected_cover_bundle_ready(book_dir, metadata, require_variant=True):
+                        missing.append("Selected final cover pair was not promoted from the chosen cover variant.")
+                if raw_cover_candidate_assets_exist(book_dir) and not normalize_cover_variants(metadata.get("cover_variants")):
+                    missing.append("Raw cover candidate assets exist, but no selected cover variant metadata was persisted.")
             if not manual_override and str(metadata.get("text_safe_zone_status") or "").strip().lower() == "fail":
                 missing.append("Selected cover variant does not preserve clean title-safe zones.")
             if not manual_override:
@@ -8274,13 +10580,10 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
 
     primary_export_ok = bool(preflight.get("primary_ok", False))
     if not primary_export_ok:
-        preflight = {
-            **preflight,
-            "warnings": [
-                *list(preflight.get("warnings") or []),
-                "Primary exporter preflight is unavailable; attempting primary build command before fallback.",
-            ],
-        }
+        append_log(
+            f"Primary exporter preflight unavailable for '{slug}' format='{format_name}'; "
+            "attempting primary build command before fallback."
+        )
 
     metadata = read_metadata(book_dir)
     metadata = repair_selected_cover_bundle(book_dir, metadata)
@@ -8324,6 +10627,25 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     cover_lab_version = str(payload.get("cover_lab_version") or metadata.get("cover_lab_version") or "").strip()
     isbn = str(payload.get("isbn") or metadata.get("isbn") or "").strip()
     year = str(payload.get("year") or metadata.get("year") or "").strip()
+    edition_label = str(payload.get("edition_label") or metadata.get("edition_label") or "").strip()
+    print_label = str(payload.get("print_label") or metadata.get("print_label") or "").strip()
+    publication_city = str(payload.get("publication_city") or metadata.get("publication_city") or "").strip()
+    publication_country = str(payload.get("publication_country") or metadata.get("publication_country") or "").strip()
+    publisher_address = str(payload.get("publisher_address") or metadata.get("publisher_address") or "").strip()
+    publisher_phone = str(payload.get("publisher_phone") or metadata.get("publisher_phone") or "").strip()
+    publisher_email = str(payload.get("publisher_email") or metadata.get("publisher_email") or "").strip()
+    publisher_website = str(payload.get("publisher_website") or metadata.get("publisher_website") or "").strip()
+    publisher_certificate_no = str(payload.get("publisher_certificate_no") or metadata.get("publisher_certificate_no") or "").strip()
+    isbn13 = str(payload.get("isbn13") or metadata.get("isbn13") or "").strip()
+    editor_name = str(payload.get("editor_name") or metadata.get("editor_name") or "").strip()
+    proofreader_name = str(payload.get("proofreader_name") or metadata.get("proofreader_name") or "").strip()
+    typesetter_name = str(payload.get("typesetter_name") or metadata.get("typesetter_name") or "").strip()
+    cover_designer_name = str(payload.get("cover_designer_name") or metadata.get("cover_designer_name") or "").strip()
+    printer_name = str(payload.get("printer_name") or metadata.get("printer_name") or "").strip()
+    printer_address = str(payload.get("printer_address") or metadata.get("printer_address") or "").strip()
+    printer_certificate_no = str(payload.get("printer_certificate_no") or metadata.get("printer_certificate_no") or "").strip()
+    copyright_statement = str(payload.get("copyright_statement") or metadata.get("copyright_statement") or "").strip()
+    imprint_block = str(payload.get("imprint_block") or metadata.get("imprint_block") or "").strip()
     fast = bool(payload.get("fast", metadata.get("fast", False)))
     book_length_mode = normalize_book_length_mode(payload.get("book_length_mode") or metadata.get("book_length_mode") or metadata.get("book_length_tier"))
     cover_style_mode = normalize_cover_style_mode(payload.get("cover_style_mode") or metadata.get("cover_style_mode"))
@@ -8333,6 +10655,9 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     style_direction = normalize_style_direction(payload.get("style_direction") or metadata.get("style_direction"))
     wrap_scope = normalize_wrap_scope(payload.get("wrap_scope") or metadata.get("wrap_scope"))
     quality_gate = normalize_quality_gate(payload.get("quality_gate") or metadata.get("quality_gate"))
+    book_profile = normalize_book_profile(payload.get("book_profile") or metadata.get("book_profile"))
+    variation_mode = normalize_variation_mode(payload.get("variation_mode") or metadata.get("variation_mode"))
+    quality_target = normalize_quality_target(payload.get("quality_target") or metadata.get("quality_target"))
     front_render_mode = str(payload.get("front_render_mode") or metadata.get("front_render_mode") or "").strip()
     front_ai_attempt_count = int(payload.get("front_ai_attempt_count") or metadata.get("front_ai_attempt_count") or 0)
     front_text_validation_score = float(payload.get("front_text_validation_score") or metadata.get("front_text_validation_score") or 0)
@@ -8347,6 +10672,76 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     chapter_target_words = int(payload.get("chapter_target_words") or metadata.get("chapter_target_words") or 0) or int(target_defaults["chapter_target_words"])
     book_target_words = int(payload.get("book_target_words") or metadata.get("book_target_words") or 0) or int(target_defaults["book_target_words"])
     chapter_plan = normalize_chapter_plan(payload.get("chapter_plan") or metadata.get("chapter_plan"))
+    regenerate_professional_details = bool(payload.get("regenerate_professional_details", False))
+    details_generation_nonce = str(payload.get("details_generation_nonce") or "").strip()
+    outline_path = find_outline_file(book_dir)
+    book_title, book_subtitle = read_outline_title_subtitle(outline_path)
+
+    professional_seed = {
+        **metadata,
+        "author": author,
+        "publisher": publisher,
+        "language": normalize_book_language(payload.get("language")) or str(metadata.get("language") or ""),
+        "year": year,
+        "isbn": isbn,
+        "edition_label": edition_label,
+        "print_label": print_label,
+        "publication_city": publication_city,
+        "publication_country": publication_country,
+        "publisher_address": publisher_address,
+        "publisher_phone": publisher_phone,
+        "publisher_email": publisher_email,
+        "publisher_website": publisher_website,
+        "publisher_certificate_no": publisher_certificate_no,
+        "isbn13": isbn13,
+        "editor_name": editor_name,
+        "proofreader_name": proofreader_name,
+        "typesetter_name": typesetter_name,
+        "cover_designer_name": cover_designer_name,
+        "printer_name": printer_name,
+        "printer_address": printer_address,
+        "printer_certificate_no": printer_certificate_no,
+        "copyright_statement": copyright_statement,
+        "imprint_block": imprint_block,
+    }
+    professional_seed, _ = autofill_professional_book_details(
+        professional_seed,
+        slug=slug,
+        title=book_title or slug,
+        subtitle=book_subtitle,
+        language_hint=str(professional_seed.get("language") or ""),
+        force_regenerate=regenerate_professional_details,
+        seed_salt=details_generation_nonce,
+    )
+    author = str(professional_seed.get("author") or author).strip()
+    publisher = str(professional_seed.get("publisher") or publisher).strip()
+    isbn = str(professional_seed.get("isbn") or isbn).strip()
+    year = str(professional_seed.get("year") or year).strip()
+    edition_label = str(professional_seed.get("edition_label") or edition_label).strip()
+    print_label = str(professional_seed.get("print_label") or print_label).strip()
+    publication_city = str(professional_seed.get("publication_city") or publication_city).strip()
+    publication_country = str(professional_seed.get("publication_country") or publication_country).strip()
+    publisher_address = str(professional_seed.get("publisher_address") or publisher_address).strip()
+    publisher_phone = str(professional_seed.get("publisher_phone") or publisher_phone).strip()
+    publisher_email = str(professional_seed.get("publisher_email") or publisher_email).strip()
+    publisher_website = str(professional_seed.get("publisher_website") or publisher_website).strip()
+    publisher_certificate_no = str(
+        professional_seed.get("publisher_certificate_no") or publisher_certificate_no
+    ).strip()
+    isbn13 = str(professional_seed.get("isbn13") or isbn13).strip()
+    editor_name = str(professional_seed.get("editor_name") or editor_name).strip()
+    proofreader_name = str(professional_seed.get("proofreader_name") or proofreader_name).strip()
+    typesetter_name = str(professional_seed.get("typesetter_name") or typesetter_name).strip()
+    cover_designer_name = str(professional_seed.get("cover_designer_name") or cover_designer_name).strip()
+    printer_name = str(professional_seed.get("printer_name") or printer_name).strip()
+    printer_address = str(professional_seed.get("printer_address") or printer_address).strip()
+    printer_certificate_no = str(
+        professional_seed.get("printer_certificate_no") or printer_certificate_no
+    ).strip()
+    copyright_statement = str(
+        professional_seed.get("copyright_statement") or copyright_statement
+    ).strip()
+    imprint_block = str(professional_seed.get("imprint_block") or imprint_block).strip()
 
     saved_meta = save_metadata(
         book_dir,
@@ -8384,6 +10779,25 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             "cover_lab_version": cover_lab_version,
             "isbn": isbn,
             "year": year,
+            "edition_label": edition_label,
+            "print_label": print_label,
+            "publication_city": publication_city,
+            "publication_country": publication_country,
+            "publisher_address": publisher_address,
+            "publisher_phone": publisher_phone,
+            "publisher_email": publisher_email,
+            "publisher_website": publisher_website,
+            "publisher_certificate_no": publisher_certificate_no,
+            "isbn13": isbn13,
+            "editor_name": editor_name,
+            "proofreader_name": proofreader_name,
+            "typesetter_name": typesetter_name,
+            "cover_designer_name": cover_designer_name,
+            "printer_name": printer_name,
+            "printer_address": printer_address,
+            "printer_certificate_no": printer_certificate_no,
+            "copyright_statement": copyright_statement,
+            "imprint_block": imprint_block,
             "fast": fast,
             "book_length_mode": book_length_mode,
             "book_length_tier": book_length_tier,
@@ -8398,6 +10812,9 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             "style_direction": style_direction,
             "wrap_scope": wrap_scope,
             "quality_gate": quality_gate,
+            "book_profile": book_profile,
+            "variation_mode": variation_mode,
+            "quality_target": quality_target,
             "front_render_mode": front_render_mode,
             "front_ai_attempt_count": front_ai_attempt_count,
             "front_text_validation_score": front_text_validation_score,
@@ -8422,14 +10839,37 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
     cover_image = normalized_cover_image
     back_cover_image = normalized_back_cover_image
     selected_variant = selected_cover_variant_record(saved_meta)
+    frontmatter_warnings: list[str] = []
 
+    frontmatter_result = generate_frontmatter_sections(
+        book_dir=book_dir,
+        metadata=saved_meta,
+        force=False,
+        trigger="build",
+    )
+    if isinstance(frontmatter_result.get("metadata"), dict):
+        saved_meta = frontmatter_result["metadata"]
+    if frontmatter_result.get("generated_sections"):
+        append_log(
+            f"Auto frontmatter refresh for '{slug}' generated: "
+            f"{', '.join(str(item) for item in frontmatter_result.get('generated_sections') or [])}"
+        )
+    frontmatter_warnings.extend(str(item) for item in (frontmatter_result.get("warnings") or []) if str(item).strip())
+    if frontmatter_result.get("preserved_manual"):
+        preserved = ", ".join(sorted(str(key) for key in (frontmatter_result.get("preserved_manual") or {}).keys()))
+        if preserved:
+            frontmatter_warnings.append(
+                f"Frontmatter manual edits were preserved for: {preserved}."
+            )
+
+    omit_export_covers = not export_embeds_cover_images(format_name)
     front_cover_path = (book_dir / cover_image).resolve() if cover_image else None
     back_cover_path = (book_dir / back_cover_image).resolve() if back_cover_image else None
     if front_cover_path and not front_cover_path.exists():
         front_cover_path = None
     if back_cover_path and not back_cover_path.exists():
         back_cover_path = None
-    if not front_cover_path or not back_cover_path:
+    if (not omit_export_covers) and (not front_cover_path or not back_cover_path):
         return {
             "ok": False,
             "action": "build",
@@ -8440,7 +10880,7 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             "preflight": preflight,
             "book": read_book(book_dir),
         }
-    if selected_variant:
+    if selected_variant and not omit_export_covers:
         validation = selected_variant.get("text_validation") if isinstance(selected_variant.get("text_validation"), dict) else {}
         render_mode = str(selected_variant.get("render_mode") or "").strip()
         hard_reject_reasons = validation.get("hardRejectReasons") if isinstance(validation.get("hardRejectReasons"), list) else []
@@ -8472,17 +10912,33 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
         author,
         "--publisher",
         publisher,
+        "--book-profile",
+        book_profile,
+        "--variation-mode",
+        variation_mode,
+        "--quality-target",
+        quality_target,
     )
-    # Prefer stable, already-generated cover assets during build.
-    # Auto-generation stays available when no usable cover exists yet.
-    if front_cover_path:
-        command.extend(["--cover", maybe_bash_path_arg(front_cover_path)])
-    elif generate_cover:
-        command.append("--generate-cover")
-    if back_cover_path:
-        command.extend(["--backcover", maybe_bash_path_arg(back_cover_path)])
+    # PDF/EPUB exports are built without front/back cover images.
+    if omit_export_covers:
+        command.append("--omit-covers")
+    else:
+        # Prefer stable, already-generated cover assets during build.
+        # Auto-generation stays available when no usable cover exists yet.
+        if front_cover_path:
+            command.extend(["--cover", maybe_bash_path_arg(front_cover_path)])
+        elif generate_cover:
+            command.append("--generate-cover")
+        if back_cover_path:
+            command.extend(["--backcover", maybe_bash_path_arg(back_cover_path)])
     branding_logo_path: Path | None = None
     branding_logo_reference = existing_book_asset_reference(book_dir, branding_logo_url)
+    if not branding_logo_reference and str(branding_logo_url).strip().lower().startswith("data:image/"):
+        branding_logo_reference = materialize_data_image_asset_reference(
+            book_dir,
+            branding_logo_url,
+            stem="publisher_logo_inline",
+        )
     if branding_logo_reference:
         candidate_logo_path = (book_dir / branding_logo_reference).resolve()
         if candidate_logo_path.exists():
@@ -8497,8 +10953,27 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
         command.append("--fast")
 
     used_cover_generation_retry = False
+    used_quality_target_retry = False
     before = file_snapshot(book_dir)
     result = run_process(command, cwd=ROOT_DIR, env=command_env())
+    if (
+        result.returncode != 0
+        and format_name in {"pdf", "all"}
+        and str(quality_target or "").strip().lower() == "kdp"
+    ):
+        relaxed_command = list(command)
+        try:
+            target_index = relaxed_command.index("--quality-target")
+            if target_index + 1 < len(relaxed_command):
+                relaxed_command[target_index + 1] = "balanced"
+            else:
+                relaxed_command.extend(["--quality-target", "balanced"])
+        except ValueError:
+            relaxed_command.extend(["--quality-target", "balanced"])
+        relaxed_result = run_process(relaxed_command, cwd=ROOT_DIR, env=command_env())
+        if relaxed_result.returncode == 0:
+            result = relaxed_result
+            used_quality_target_retry = True
     if result.returncode != 0 and "--generate-cover" in command:
         retry_command = [part for part in command if part != "--generate-cover"]
         retry_result = run_process(retry_command, cwd=ROOT_DIR, env=command_env())
@@ -8514,7 +10989,43 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
                 "Auto cover generation failed; build succeeded using the existing/static cover path.",
             ],
         }
-    if result.returncode != 0 and format_name in LIGHTWEIGHT_BUILD_FORMATS:
+    if used_quality_target_retry:
+        preflight = {
+            **preflight,
+            "warnings": [
+                *list(preflight.get("warnings") or []),
+                "Strict KDP quality target failed; retried with balanced quality target for PDF export.",
+            ],
+        }
+    if frontmatter_warnings:
+        preflight = {
+            **preflight,
+            "warnings": [
+                *list(preflight.get("warnings") or []),
+                *frontmatter_warnings,
+            ],
+        }
+    newly_produced_files = produced_files(book_dir, before)
+    produced_extensions = {
+        Path(str(item.get("name") or "")).suffix.lower()
+        for item in newly_produced_files
+    }
+
+    def requested_export_produced_in_run() -> bool:
+        if format_name == "pdf":
+            return ".pdf" in produced_extensions
+        if format_name == "epub":
+            return ".epub" in produced_extensions
+        if format_name == "all":
+            return ".pdf" in produced_extensions and ".epub" in produced_extensions
+        return False
+
+    parity = build_export_parity_report(book_dir, saved_meta, format_name)
+    if (
+        result.returncode != 0
+        and format_name in LIGHTWEIGHT_BUILD_FORMATS
+        and (not requested_export_produced_in_run() or not bool(parity.get("ok")))
+    ):
         fallback_warning = "Primary build command failed; lightweight fallback export was used."
         fallback_preflight = {
             **preflight,
@@ -8531,18 +11042,76 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
             before_snapshot=before,
         )
         if fallback_result:
-            primary_output = ((result.stdout or "") + (result.stderr or "")).strip()
-            first_primary_line = primary_output.splitlines()[0].strip() if primary_output else ""
+            first_primary_line, primary_tail = command_failure_excerpt(result)
             if first_primary_line:
                 fallback_result["warnings"] = [
                     *list(fallback_result.get("warnings") or []),
                     f"Primary build error: {first_primary_line}",
                 ]
+            if primary_tail:
+                fallback_result["primary_error_tail"] = primary_tail
             append_log(
                 f"Build command failed for '{slug}' (rc={result.returncode}); returned lightweight fallback export."
             )
+            if primary_tail:
+                append_log(f"Primary build output tail for '{slug}':\n{primary_tail}")
+            fallback_result = attach_quality_report_to_build_result(fallback_result, book_dir)
             return fallback_result
-    parity = build_export_parity_report(book_dir, saved_meta, format_name)
+    nonfatal_primary_failure = (
+        result.returncode != 0
+        and bool(parity.get("ok"))
+        and requested_export_produced_in_run()
+    )
+    if nonfatal_primary_failure:
+        preflight = {
+            **preflight,
+            "warnings": [
+                *list(preflight.get("warnings") or []),
+                "Primary build command returned non-zero status after producing a valid export; using produced export.",
+            ],
+        }
+    if format_name in LIGHTWEIGHT_BUILD_FORMATS and not bool(parity.get("ok")):
+        parity_errors = [str(item or "") for item in (parity.get("errors") or [])]
+        missing_requested_export = False
+        if format_name in {"pdf", "all"} and any("No PDF export file was found" in item for item in parity_errors):
+            missing_requested_export = True
+        if format_name in {"epub", "all"} and any("No EPUB export file was found" in item for item in parity_errors):
+            missing_requested_export = True
+        if missing_requested_export:
+            fallback_warning = (
+                "Primary build command finished without producing the requested export; "
+                "lightweight fallback export was used."
+            )
+            fallback_preflight = {
+                **preflight,
+                "primary_ok": False,
+                "fallback_ok": True,
+                "reason": fallback_warning,
+                "warnings": [*list(preflight.get("warnings") or []), fallback_warning],
+            }
+            fallback_result = build_book_with_lightweight_fallback(
+                book_dir=book_dir,
+                slug=slug,
+                format_name=format_name,
+                preflight=fallback_preflight,
+                before_snapshot=before,
+            )
+            if fallback_result:
+                first_primary_line, primary_tail = command_failure_excerpt(result)
+                if first_primary_line:
+                    fallback_result["warnings"] = [
+                        *list(fallback_result.get("warnings") or []),
+                        f"Primary build summary: {first_primary_line}",
+                    ]
+                if primary_tail:
+                    fallback_result["primary_error_tail"] = primary_tail
+                append_log(
+                    f"Build parity check failed for '{slug}' without requested export; returned lightweight fallback export."
+                )
+                if primary_tail:
+                    append_log(f"Primary build output tail for '{slug}':\n{primary_tail}")
+                fallback_result = attach_quality_report_to_build_result(fallback_result, book_dir)
+                return fallback_result
     if parity.get("opening_sequence_valid") is not None:
         saved_meta = save_metadata(
             book_dir,
@@ -8550,20 +11119,23 @@ def build_book(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
                 "opening_sequence_valid": bool(parity.get("opening_sequence_valid")),
             },
         )
-    if result.returncode == 0 and bool(parity.get("ok")):
+    effective_success = (result.returncode == 0 or nonfatal_primary_failure) and bool(parity.get("ok"))
+    if effective_success:
         mark_book_exports_clean(book_dir, format_name=format_name)
     warnings = [*list(preflight.get("warnings") or []), *cleanup_warnings, *list(parity.get("warnings") or [])]
     return {
-        "ok": result.returncode == 0 and bool(parity.get("ok")),
+        "ok": effective_success,
         "action": "build",
-        "returncode": result.returncode if parity.get("ok") else 1,
+        "fallback_used": False,
+        "returncode": 0 if effective_success else 1,
         "output": (result.stdout or "") + (result.stderr or ""),
         "warnings": warnings + list(parity.get("errors") or []),
-        "produced_files": produced_files(book_dir, before),
+        "produced_files": newly_produced_files,
         "preflight": preflight,
         "export_relative_path": parity.get("export_relative_path", ""),
         "export_url": parity.get("export_url", ""),
         "parity": parity,
+        "quality_report": parity.get("quality_report"),
         "cleanup": cleanup_reports,
         "book": read_book(book_dir),
     }
@@ -8724,8 +11296,18 @@ def save_asset(slug: str, payload: dict[str, Any]) -> dict[str, Any]:
         "cover_image": "dashboard_cover",
         "back_cover_image": "dashboard_back_cover",
     }.get(kind, slugify(Path(filename).stem or "asset"))
-    target = book_dir / "assets" / f"{safe_stem}{ext}"
+    assets_dir = book_dir / "assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    target = assets_dir / f"{safe_stem}{ext}"
     target.write_bytes(base64.b64decode(content_base64))
+
+    if kind in {"cover_image", "back_cover_image"}:
+        # Keep preview/export cover outputs consistent by normalizing uploads to JPEG when possible.
+        converted_target = convert_cover_asset_to_jpeg(book_dir, target, target_name=f"{safe_stem}.jpg")
+        if converted_target:
+            if converted_target.resolve() != target.resolve():
+                target.unlink(missing_ok=True)
+            target = converted_target
 
     if kind in {"cover_image", "back_cover_image"}:
         source_key = "front_cover_source" if kind == "cover_image" else "back_cover_source"
@@ -8821,6 +11403,7 @@ def preflight_for_workflow(action: str, slug: str | None = None) -> dict[str, An
         "chapter_extend",
         "chapter_plagiarism",
         "chapter_rewrite",
+        "frontmatter_generate",
         "appendices",
         "references",
         "research_insights",
@@ -8906,9 +11489,9 @@ def preflight_for_workflow(action: str, slug: str | None = None) -> dict[str, An
 def wizard_fast_env_overrides(kind: str) -> dict[str, str]:
     normalized = str(kind or "").strip().lower()
     overrides: dict[str, str] = {
-        "BOOK_WIZARD_TEXT_PROVIDER_ORDER": "claude-main glm-main vertex-main",
         # /start title|outline|style suggestions:
-        # Claude (Codefast) -> GLM (Codefast) -> Vertex Google Flash.
+        # Claude first, then GLM, then Vertex fallback.
+        "BOOK_WIZARD_TEXT_PROVIDER_ORDER": "claude-main glm-main vertex-main",
         "CODEFAST_VERTEX_TEXT_MODEL": "gemini-2.5-flash",
         "CODEFAST_VERTEX_CREATIVE_MODEL": "gemini-2.5-flash",
         "CODEFAST_VERTEX_OUTLINE_MODEL": "gemini-2.5-flash",
@@ -8916,7 +11499,10 @@ def wizard_fast_env_overrides(kind: str) -> dict[str, str]:
     if normalized == "topic":
         overrides.update(
             {
-                "BOOK_WIZARD_TOPIC_PROVIDER_TIMEOUT_SECONDS": "2",
+                # Keep multi-provider fallback chain:
+                # Claude first, GLM second, Vertex third.
+                "BOOK_WIZARD_TEXT_PROVIDER_ORDER": "claude-main glm-main vertex-main",
+                "BOOK_WIZARD_TOPIC_PROVIDER_TIMEOUT_SECONDS": "15",
                 "BOOK_WIZARD_TOPIC_MAX_RETRIES": "1",
                 "BOOK_WIZARD_TOPIC_FAST_FAILOVER": "1",
             }
@@ -8924,7 +11510,7 @@ def wizard_fast_env_overrides(kind: str) -> dict[str, str]:
     elif normalized == "outline":
         overrides.update(
             {
-                "BOOK_WIZARD_OUTLINE_PROVIDER_TIMEOUT_SECONDS": "3",
+                "BOOK_WIZARD_OUTLINE_PROVIDER_TIMEOUT_SECONDS": "18",
                 "BOOK_WIZARD_OUTLINE_MAX_RETRIES": "1",
                 "BOOK_WIZARD_OUTLINE_FAST_FAILOVER": "1",
             }
@@ -8932,7 +11518,7 @@ def wizard_fast_env_overrides(kind: str) -> dict[str, str]:
     elif normalized == "style":
         overrides.update(
             {
-                "BOOK_WIZARD_STYLE_PROVIDER_TIMEOUT_SECONDS": "2",
+                "BOOK_WIZARD_STYLE_PROVIDER_TIMEOUT_SECONDS": "8",
                 "BOOK_WIZARD_STYLE_MAX_RETRIES": "1",
                 "BOOK_WIZARD_STYLE_FAST_FAILOVER": "1",
             }
@@ -9011,6 +11597,8 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         topic = str(payload.get("topic") or payload.get("title") or "").strip()
         if not topic:
             raise ValueError("Topic is required.")
+        genre = str(payload.get("genre") or "non-fiction")
+        audience = str(payload.get("audience") or "general readers")
         language = normalize_book_language(payload.get("language")) or detect_book_language(
             payload.get("title"),
             payload.get("subtitle"),
@@ -9020,8 +11608,8 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         result = run_dashboard_action(
             "outline-json",
             topic,
-            str(payload.get("genre") or "non-fiction"),
-            str(payload.get("audience") or "general readers"),
+            genre,
+            audience,
             str(payload.get("style") or "detailed"),
             str(payload.get("tone") or "professional"),
             language,
@@ -9029,23 +11617,64 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         )
         response = workflow_result(action, result, None, preflight)
         if result.returncode == 0:
-            generated = json.loads((result.stdout or "{}").strip())
-            response["generated"] = {
-                "title": generated.get("title") or topic,
-                "subtitle": generated.get("subtitle") or "",
-                "description": generated.get("description") or "",
-                "chapters": [
-                    {
-                        "title": normalize_structural_heading(
-                            str(chapter.get("title") or ""),
-                            language,
-                            index + 1,
-                        ),
-                        "summary": str(chapter.get("summary") or "").strip(),
-                    }
-                    for index, chapter in enumerate(generated.get("chapters") or [])
-                ],
-            }
+            try:
+                generated = json.loads((result.stdout or "{}").strip())
+            except json.JSONDecodeError:
+                response["ok"] = True
+                response["returncode"] = 0
+                response["generated"] = local_outline_suggest_fallback(topic, audience, language, genre)
+                response["warnings"] = [
+                    *list(response.get("warnings") or []),
+                    "AI outline suggestion response was invalid JSON; local template outline was returned.",
+                ]
+                response["output"] = (
+                    f"{response.get('output', '')}\nLocal template fallback used for outline suggestions."
+                ).strip()
+                return response
+
+            chapters = [
+                {
+                    "title": normalize_structural_heading(
+                        str(chapter.get("title") or ""),
+                        language,
+                        index + 1,
+                    ),
+                    "summary": str(chapter.get("summary") or "").strip(),
+                }
+                for index, chapter in enumerate(generated.get("chapters") or [])
+            ]
+
+            if chapters:
+                response["generated"] = {
+                    "title": generated.get("title") or topic,
+                    "subtitle": generated.get("subtitle") or "",
+                    "description": generated.get("description") or "",
+                    "chapters": chapters,
+                }
+                return response
+
+            response["ok"] = True
+            response["returncode"] = 0
+            response["generated"] = local_outline_suggest_fallback(topic, audience, language, genre)
+            response["warnings"] = [
+                *list(response.get("warnings") or []),
+                "AI outline suggestion providers returned no chapters; local template outline was returned.",
+            ]
+            response["output"] = (
+                f"{response.get('output', '')}\nLocal template fallback used for outline suggestions."
+            ).strip()
+            return response
+
+        response["ok"] = True
+        response["returncode"] = 0
+        response["generated"] = local_outline_suggest_fallback(topic, audience, language, genre)
+        response["warnings"] = [
+            *list(response.get("warnings") or []),
+            "AI outline suggestion providers were unavailable; local template outline was returned.",
+        ]
+        response["output"] = (
+            f"{response.get('output', '')}\nLocal template fallback used for outline suggestions."
+        ).strip()
         return response
 
     if action == "outline_generate":
@@ -9115,23 +11744,48 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         topic = str(payload.get("topic") or payload.get("niche") or "").strip()
         if not topic:
             raise ValueError("Topic is required.")
+        audience = str(payload.get("audience") or "general readers")
         language = normalize_book_language(payload.get("language")) or detect_book_language(
             payload.get("title"),
             payload.get("subtitle"),
             topic,
-            payload.get("audience"),
+            audience,
         ) or "English"
         result = run_dashboard_action(
             "topic-suggest",
             topic,
-            str(payload.get("audience") or "general readers"),
+            audience,
             str(payload.get("category") or "non-fiction"),
             language,
             env_overrides=wizard_fast_env_overrides("topic"),
         )
         response = workflow_result(action, result, None, preflight)
         if result.returncode == 0:
-            response["generated"] = json.loads((result.stdout or "{}").strip())
+            try:
+                response["generated"] = json.loads((result.stdout or "{}").strip())
+            except json.JSONDecodeError:
+                response["ok"] = True
+                response["returncode"] = 0
+                response["generated"] = local_topic_suggest_fallback(topic, audience, language)
+                response["warnings"] = [
+                    *list(response.get("warnings") or []),
+                    "AI topic suggestion response was invalid JSON; local template suggestions were returned.",
+                ]
+                response["output"] = (
+                    f"{response.get('output', '')}\nLocal template fallback used for topic suggestions."
+                ).strip()
+            return response
+
+        response["ok"] = True
+        response["returncode"] = 0
+        response["generated"] = local_topic_suggest_fallback(topic, audience, language)
+        response["warnings"] = [
+            *list(response.get("warnings") or []),
+            "AI topic suggestion providers were unavailable; local template suggestions were returned.",
+        ]
+        response["output"] = (
+            f"{response.get('output', '')}\nLocal template fallback used for topic suggestions."
+        ).strip()
         return response
 
     if action == "style_suggest":
@@ -9186,6 +11840,49 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
         return started
 
     before = file_snapshot(book_dir)
+
+    if action == "frontmatter_generate":
+        force = bool(payload.get("force", True))
+        frontmatter_result = generate_frontmatter_sections(
+            book_dir=book_dir,
+            metadata=read_metadata(book_dir),
+            force=force,
+            trigger="workflow",
+        )
+        response = {
+            "ok": bool(frontmatter_result.get("ok")),
+            "action": action,
+            "returncode": 0 if bool(frontmatter_result.get("ok")) else 1,
+            "output": str(frontmatter_result.get("output") or ""),
+            "warnings": [
+                *list(preflight.get("warnings") or []),
+                *list(frontmatter_result.get("warnings") or []),
+            ],
+            "produced_files": produced_files(book_dir, before),
+            "preflight": preflight,
+            "book": read_book(book_dir),
+            "generated": {
+                "requested_sections": list(frontmatter_result.get("requested_sections") or []),
+                "generated_sections": list(frontmatter_result.get("generated_sections") or []),
+                "reasons": dict(frontmatter_result.get("reasons") or {}),
+                "preserved_manual": dict(frontmatter_result.get("preserved_manual") or {}),
+            },
+        }
+        append_log(
+            "WORKFLOW result "
+            + json.dumps(
+                {
+                    "action": action,
+                    "slug": slug,
+                    "ok": bool(response.get("ok")),
+                    "returncode": int(response.get("returncode") or 0),
+                    "produced_files": len(response.get("produced_files") or []),
+                    "frontmatter_generated": len(response["generated"]["generated_sections"]),
+                },
+                ensure_ascii=False,
+            )
+        )
+        return response
 
     if action == "chapter_generate":
         metadata = read_metadata(book_dir)
@@ -9356,7 +12053,12 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
     elif action == "cover_variants_generate":
         settings = read_settings()
         policy_vertex_only = image_provider_policy_vertex_only()
-        variant_count = clamp_cover_variant_target_count(payload.get("variant_count", 1), default=1)
+        requested_variant_count = clamp_cover_variant_target_count(payload.get("variant_count", 1), default=1)
+        variant_count = 1
+        if requested_variant_count != 1:
+            append_log(
+                f"Forcing cover_variants_generate variant_count=1 (requested={requested_variant_count})."
+            )
         save_metadata(book_dir, {"cover_variant_target_count": variant_count})
         service_value = normalize_cover_service_for_policy(payload.get("service") or settings["cover_service"] or "auto")
         if not service_value:
@@ -9384,6 +12086,21 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
             )
             or "75",
         }
+        if variant_count <= 1:
+            env_overrides.update(
+                {
+                    "SHOWCASE_SINGLE_IMAGE_MODE": os.environ.get("SHOWCASE_SINGLE_IMAGE_MODE", "1") or "1",
+                    "SHOWCASE_PROVIDER_LIMIT": os.environ.get("SHOWCASE_PROVIDER_LIMIT", "1") or "1",
+                    "SHOWCASE_AI_TEXT_PROVIDER_LIMIT": os.environ.get("SHOWCASE_AI_TEXT_PROVIDER_LIMIT", "1") or "1",
+                    "SHOWCASE_MAX_ART_ATTEMPTS": os.environ.get("SHOWCASE_MAX_ART_ATTEMPTS", "1") or "1",
+                    "SHOWCASE_AI_TEXT_MAX_ATTEMPTS": os.environ.get("SHOWCASE_AI_TEXT_MAX_ATTEMPTS", "1") or "1",
+                    "SHOWCASE_DISABLE_AI_MINIMAL_FALLBACK": os.environ.get(
+                        "SHOWCASE_DISABLE_AI_MINIMAL_FALLBACK",
+                        "1",
+                    )
+                    or "1",
+                }
+            )
         timeout_seconds = int(
             payload.get("timeout_seconds")
             or os.environ.get(
@@ -9534,11 +12251,22 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
     if action == "research_insights" and result.returncode == 0:
         response["generated"] = json.loads((result.stdout or "{}").strip())
     if action == "cover_local" and result.returncode == 0:
+        local_meta = read_metadata(book_dir)
+        front_ref = preferred_cover_asset_reference(
+            book_dir,
+            local_meta.get("cover_image"),
+            prefixes=("front_cover_final",),
+        ) or "assets/front_cover_final.png"
+        back_ref = preferred_cover_asset_reference(
+            book_dir,
+            local_meta.get("back_cover_image"),
+            prefixes=("back_cover_final",),
+        ) or "assets/back_cover_final.png"
         save_metadata(
             book_dir,
             {
-                "cover_image": "assets/front_cover_final.png",
-                "back_cover_image": "assets/back_cover_final.png",
+                "cover_image": front_ref,
+                "back_cover_image": back_ref,
                 "cover_template": "local-compositor",
                 "cover_variant_count": 1,
                 "cover_generation_provider": "local-compositor",
@@ -9582,6 +12310,8 @@ def run_workflow(payload: dict[str, Any]) -> dict[str, Any]:
             response["warnings"] = ["Browser automation started, but no downloaded cover file was detected yet."]
     if action == "cover_variants_generate" and result.returncode == 0:
         metadata = repair_selected_cover_bundle(book_dir, read_metadata(book_dir))
+        if normalize_cover_variants(metadata.get("cover_variants")):
+            metadata = sync_selected_cover_assets(book_dir, metadata)
         if not selected_cover_bundle_ready(book_dir, metadata, require_variant=True):
             response.update(
                 {
@@ -9892,6 +12622,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
     def send_file(self, file_path: Path) -> None:
         content_type, _ = mimetypes.guess_type(file_path.name)
         stat = file_path.stat()
+        suffix = file_path.suffix.lower()
         cache_control = self.cache_control_for_file(file_path)
         etag = f'W/"{stat.st_mtime_ns:x}-{stat.st_size:x}"'
 
@@ -9909,6 +12640,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", cache_control)
         self.send_header("ETag", etag)
         self.send_header("Last-Modified", self.date_time_string(stat.st_mtime))
+        if suffix in {".pdf", ".epub", ".mobi", ".azw3"}:
+            self.send_header("Content-Disposition", f'attachment; filename="{file_path.name}"')
         self.end_headers()
         with file_path.open("rb") as handle:
             shutil.copyfileobj(handle, self.wfile, length=256 * 1024)

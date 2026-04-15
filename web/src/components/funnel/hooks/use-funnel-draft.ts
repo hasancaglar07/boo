@@ -161,7 +161,7 @@ export function useFunnelDraft(step: FunnelStep, routeBase = "/start", appShellE
       { label: "Topic", value: draft.topic || "Not yet selected" },
       { label: "Title", value: draft.title || "Not yet selected" },
       { label: "Author", value: draft.authorName || "Not yet entered" },
-      { label: "Dil", value: languageLabel(draft.language) },
+      { label: "Language", value: languageLabel(draft.language) },
       { label: "Length", value: draft.outline.length ? `${draft.outline.length} chapters` : "Not yet generated" },
     ],
     [draft.topic, draft.title, draft.authorName, draft.language, draft.outline.length],

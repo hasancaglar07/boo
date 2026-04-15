@@ -45,3 +45,50 @@ export type AdminOverviewPayload = {
     metadata?: Record<string, unknown> | null;
   }>;
 };
+
+export type AdminLiveActivityPayload = {
+  snapshotAt: string;
+  summary: {
+    concurrentOperations: number;
+    activeUsers: number;
+    activeBooks: number;
+    booksGeneratingNow: number;
+    queueDepth: number;
+    failedLastHour: number;
+  };
+  health: {
+    status: "healthy" | "degraded" | "down";
+    backendReachable: boolean;
+    staleOperations: number;
+    errorRatePct: number;
+    alerts: string[];
+  };
+  providers: Array<{
+    provider: string;
+    active: number;
+    total: number;
+  }>;
+  apiUsage: Array<{
+    api: string;
+    inFlight: number;
+    total: number;
+    errors: number;
+    lastRequestAt: string | null;
+  }>;
+  operations: Array<{
+    id: string;
+    bookSlug: string;
+    title: string;
+    owner: string;
+    lifecycle: "processing" | "pending" | "failed" | "completed";
+    stage: string;
+    stepCode: string;
+    progress: number;
+    message: string;
+    provider: string;
+    api: string;
+    startedAt: string;
+    updatedAt: string;
+    stale: boolean;
+  }>;
+};

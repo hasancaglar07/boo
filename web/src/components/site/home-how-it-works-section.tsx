@@ -1,16 +1,26 @@
-import { ArrowRight } from "lucide-react";
+"use client";
 
-import { howItWorksSteps } from "@/lib/marketing-data";
+import { ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import { SectionHeading } from "@/components/site/section-heading";
 
 export function HomeHowItWorksSection() {
+  const t = useTranslations("HomeHowItWorks");
+
+  const steps = [1, 2, 3, 4, 5].map((n) => ({
+    step: String(n),
+    title: t(`steps.${n}.title`),
+    text: t(`steps.${n}.text`),
+  }));
+
   return (
     <section className="border-b border-border/80 py-18">
       <div className="shell">
         <SectionHeading
-          badge="AI Book Writing Process"
-          title="AI Book Writing: Publication-Ready EPUB and PDF in 5 Steps"
-          description="From topic to EPUB output, every step in a single workflow. No need for separate tools for drafts, covers, and KDP-compliant output."
+          badge={t("badge")}
+          title={t("title")}
+          description={t("description")}
         />
 
         <div className="relative mt-12">
@@ -18,7 +28,7 @@ export function HomeHowItWorksSection() {
           <div className="absolute left-0 right-0 top-10 hidden border-t border-dashed border-border/60 lg:block" />
 
           <div className="grid gap-6 md:grid-cols-5">
-            {howItWorksSteps.map((item) => (
+            {steps.map((item) => (
               <div key={item.step} className="relative">
                 <div className="rounded-[28px] border border-border/80 bg-card/80 px-6 pb-6 pt-5 shadow-sm">
                   {/* Step number */}
@@ -48,7 +58,7 @@ export function HomeHowItWorksSection() {
             href="/start/topic"
             className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/8 px-6 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/14"
           >
-            Start the Wizard — Create a Free Preview
+            {t("ctaText")}
             <ArrowRight className="h-4 w-4" />
           </a>
         </div>

@@ -41,6 +41,8 @@ const BACKEND_BOOK_DETAIL_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_DET
 const BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS || "45000") * BACKEND_TIMEOUT_MULTIPLIER;
 const BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS || "45000") * BACKEND_TIMEOUT_MULTIPLIER;
 const BACKEND_WORKFLOW_FETCH_TIMEOUT_MS = Number(process.env.BACKEND_WORKFLOW_FETCH_TIMEOUT_MS || "240000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_BOOK_BUILD_TIMEOUT_MS = Number(process.env.BACKEND_BOOK_BUILD_TIMEOUT_MS || "240000") * BACKEND_TIMEOUT_MULTIPLIER;
+const BACKEND_WORKSPACE_EXPORT_TIMEOUT_MS = Number(process.env.BACKEND_WORKSPACE_EXPORT_TIMEOUT_MS || "240000") * BACKEND_TIMEOUT_MULTIPLIER;
 const BACKEND_HEALTH_PROBE_TIMEOUT_MS = Number(process.env.BACKEND_HEALTH_PROBE_TIMEOUT_MS || "3000");
 const BACKEND_HEALTH_PROBE_TTL_MS = Number(process.env.BACKEND_HEALTH_PROBE_TTL_MS || "3000");
 const BACKEND_LOCAL_FAST_FAIL_ENABLED = process.env.BACKEND_LOCAL_FAST_FAIL !== "0";
@@ -53,6 +55,7 @@ const BACKEND_RECOVERY_RETRY_TIMEOUT_MS = Number(process.env.BACKEND_RECOVERY_RE
 const PREVIEW_CACHE_TTL_MS = Number(process.env.PREVIEW_CACHE_TTL_MS || "600000");
 const BACKEND_BOOKS_STALE_CACHE_TTL_MS = Number(process.env.BACKEND_BOOKS_STALE_CACHE_TTL_MS || "45000");
 const BACKEND_AUTO_START_ENABLED = process.env.BOOK_AUTO_START_DASHBOARD !== "0";
+const BACKEND_API_USAGE_EVENT = "backend_api_request";
 
 const IMAGE_FILE_PATTERN = /\.(png|jpe?g|webp|gif|svg|ico)$/i;
 
@@ -230,9 +233,60 @@ function shouldUseShortRecoveryTimeout(method: string, upstreamPath: string) {
   if (method === "GET" && upstreamPath === "/api/books") return false;
   if (method === "POST" && upstreamPath === "/api/books") return false;
   if (method === "GET" && /^\/api\/books\/[^/]+\/preview$/.test(upstreamPath)) return false;
+  if (method === "GET" && /^\/workspace\/.+\.(pdf|epub|mobi|azw3)$/i.test(upstreamPath)) return false;
+  if (method === "POST" && /^\/api\/books\/[^/]+\/build$/.test(upstreamPath)) return false;
+  if (method === "POST" && upstreamPath === "/api/build") return false;
   if (method === "POST" && upstreamPath === "/api/workflows") return false;
   if (method === "POST" && /^\/api\/books\/[^/]+\/preview-bootstrap$/.test(upstreamPath)) return false;
   return true;
+}
+
+function normalizeBackendTelemetryPath(upstreamPath: string) {
+  if (/^\/api\/books\/[^/]+\/preview$/.test(upstreamPath)) return "/api/books/:slug/preview";
+  if (/^\/api\/books\/[^/]+\/preview-bootstrap$/.test(upstreamPath)) return "/api/books/:slug/preview-bootstrap";
+  if (/^\/api\/books\/[^/]+\/full-bootstrap$/.test(upstreamPath)) return "/api/books/:slug/full-bootstrap";
+  if (/^\/api\/books\/[^/]+$/.test(upstreamPath)) return "/api/books/:slug";
+  if (/^\/workspace\/[^/]+\/assets\//.test(upstreamPath)) return "/workspace/:slug/assets/*";
+  if (/^\/workspace\/[^/]+\//.test(upstreamPath)) return "/workspace/:slug/*";
+  return upstreamPath;
+}
+
+function shouldTrackBackendTelemetryPath(normalizedPath: string) {
+  if (normalizedPath.startsWith("/workspace/")) return false;
+  if (normalizedPath === "/api/health") return false;
+  return normalizedPath.startsWith("/api/");
+}
+
+function recordBackendApiUsage(input: {
+  method: string;
+  upstreamPath: string;
+  status: number;
+  durationMs: number;
+  outcome: "ok" | "upstream_error" | "backend_unavailable";
+  retried: boolean;
+}) {
+  const endpoint = normalizeBackendTelemetryPath(input.upstreamPath);
+  if (!shouldTrackBackendTelemetryPath(endpoint)) {
+    return;
+  }
+
+  void prisma.analyticsEvent.create({
+    data: {
+      eventName: BACKEND_API_USAGE_EVENT,
+      pathname: endpoint,
+      properties: {
+        endpoint,
+        method: input.method,
+        status: input.status,
+        duration_ms: Math.max(0, Math.round(input.durationMs)),
+        outcome: input.outcome,
+        retried: input.retried,
+        upstream_path: input.upstreamPath,
+      } as never,
+    },
+  }).catch(() => {
+    // Telemetry must never block user-facing backend proxy flow.
+  });
 }
 
 async function probeBackendHealth(force = false) {
@@ -422,6 +476,31 @@ function cloneHeaders(headers: Headers) {
   return nextHeaders;
 }
 
+function isInternalBuildPreflightMessage(value: unknown) {
+  const normalized = typeof value === "string" ? value.trim() : String(value || "").trim();
+  if (!normalized) return false;
+  return /Primary exporter check failed; primary build command will be tried first, then lightweight fallback export if needed\.?/i.test(normalized) ||
+    /Primary exporter preflight is unavailable; attempting primary build command before fallback\.?/i.test(normalized);
+}
+
+function sanitizeInternalBuildMessages(payload: Record<string, unknown>): Record<string, unknown> {
+  const next: Record<string, unknown> = { ...payload };
+  if (typeof next.reason === "string" && isInternalBuildPreflightMessage(next.reason)) {
+    next.reason = "";
+  }
+  if (Array.isArray(next.warnings)) {
+    next.warnings = next.warnings
+      .map((item) => String(item || "").trim())
+      .filter(Boolean)
+      .filter((item) => !isInternalBuildPreflightMessage(item));
+  }
+  const nestedPreflight = next.preflight;
+  if (nestedPreflight && typeof nestedPreflight === "object" && !Array.isArray(nestedPreflight)) {
+    next.preflight = sanitizeInternalBuildMessages(nestedPreflight as Record<string, unknown>);
+  }
+  return next;
+}
+
 function withGuestCookie(response: NextResponse, rawToken?: string | null) {
   if (rawToken) {
     attachGuestCookie(response, rawToken);
@@ -438,6 +517,53 @@ async function readJsonBody(body: ArrayBuffer | null) {
   }
 }
 
+const PREVIEW_BOOK_DETAILS_UPDATE_KEYS = new Set([
+  "slug",
+  "title",
+  "subtitle",
+  "description",
+  "language",
+  "author",
+  "publisher",
+  "author_bio",
+  "cover_brief",
+  "branding_mark",
+  "branding_logo_url",
+  "isbn",
+  "year",
+  "edition_label",
+  "print_label",
+  "publication_city",
+  "publication_country",
+  "publisher_address",
+  "publisher_phone",
+  "publisher_email",
+  "publisher_website",
+  "publisher_certificate_no",
+  "isbn13",
+  "editor_name",
+  "proofreader_name",
+  "typesetter_name",
+  "cover_designer_name",
+  "printer_name",
+  "printer_address",
+  "printer_certificate_no",
+  "copyright_statement",
+  "imprint_block",
+  "regenerate_professional_details",
+  "details_generation_nonce",
+]);
+
+function isPreviewBookDetailsUpdatePayload(payload: Record<string, unknown> | null) {
+  if (!payload) return false;
+  const slug = typeof payload.slug === "string" ? payload.slug.trim() : "";
+  const title = typeof payload.title === "string" ? payload.title.trim() : "";
+  if (!slug || !title) return false;
+  const keys = Object.keys(payload);
+  if (keys.length === 0) return false;
+  return keys.every((key) => PREVIEW_BOOK_DETAILS_UPDATE_KEYS.has(key));
+}
+
 async function forwardToBackend(
   request: NextRequest,
   upstreamPath: string,
@@ -452,8 +578,10 @@ async function forwardToBackend(
 
   const isPreviewPath = /^\/api\/books\/[^/]+\/preview$/.test(upstreamPath);
   const isBookDetailPath = /^\/api\/books\/[^/]+$/.test(upstreamPath);
+  const isBookBuildPath = /^\/api\/books\/[^/]+\/build$/.test(upstreamPath);
   const isPreviewBootstrapPath = /^\/api\/books\/[^/]+\/preview-bootstrap$/.test(upstreamPath);
   const isFullBootstrapPath = /^\/api\/books\/[^/]+\/full-bootstrap$/.test(upstreamPath);
+  const isWorkspaceExportPath = /^\/workspace\/.+\.(pdf|epub|mobi|azw3)$/i.test(upstreamPath);
   const timeoutMs =
     upstreamPath === "/api/books" && request.method === "GET"
       ? BACKEND_BOOKS_FETCH_TIMEOUT_MS
@@ -465,6 +593,10 @@ async function forwardToBackend(
         ? BACKEND_BOOK_PREVIEW_BOOTSTRAP_TIMEOUT_MS
       : isPreviewPath && request.method === "GET"
         ? BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS
+      : isWorkspaceExportPath && request.method === "GET"
+        ? BACKEND_WORKSPACE_EXPORT_TIMEOUT_MS
+      : (isBookBuildPath && request.method === "POST") || (upstreamPath === "/api/build" && request.method === "POST")
+        ? BACKEND_BOOK_BUILD_TIMEOUT_MS
       : isFullBootstrapPath
         ? BACKEND_BOOK_PREVIEW_FETCH_TIMEOUT_MS
       : upstreamPath === "/api/workflows" && request.method === "POST"
@@ -513,6 +645,7 @@ async function forwardToBackend(
     hadBody: Boolean(body && body.byteLength > 0),
     search: request.nextUrl.search || "",
   });
+  const startedAt = Date.now();
   const controller = new AbortController();
   let didTimeout = false;
   const timeout = setTimeout(() => {
@@ -538,6 +671,14 @@ async function forwardToBackend(
       status: response.status,
       ok: response.ok,
     });
+    recordBackendApiUsage({
+      method: request.method,
+      upstreamPath,
+      status: response.status,
+      durationMs: Date.now() - startedAt,
+      outcome: response.ok ? "ok" : "upstream_error",
+      retried: false,
+    });
     return response;
   } catch (error) {
     const recovered = await retryUpstreamAfterRecovery({
@@ -549,6 +690,14 @@ async function forwardToBackend(
     });
     if (recovered) {
       clearBackendUnavailable(circuitPathKey);
+      recordBackendApiUsage({
+        method: request.method,
+        upstreamPath,
+        status: recovered.status,
+        durationMs: Date.now() - startedAt,
+        outcome: recovered.ok ? "ok" : "upstream_error",
+        retried: true,
+      });
       return recovered;
     }
 
@@ -569,6 +718,14 @@ async function forwardToBackend(
         markBackendUnavailable(circuitPathKey);
       }
     }
+    recordBackendApiUsage({
+      method: request.method,
+      upstreamPath,
+      status: 503,
+      durationMs: Date.now() - startedAt,
+      outcome: "backend_unavailable",
+      retried: false,
+    });
     throw new BackendUnavailableError();
   } finally {
     clearTimeout(timeout);
@@ -743,6 +900,7 @@ async function handleBookCreateOrUpdate(
 ) {
   const payload = await readJsonBody(body);
   const slug = typeof payload?.slug === "string" ? payload.slug.trim() : "";
+  const isPreviewDetailsUpdate = isPreviewBookDetailsUpdatePayload(payload);
   const existingBook = slug
     ? await prisma.bookRecord.findUnique({
         where: { slug },
@@ -751,11 +909,18 @@ async function handleBookCreateOrUpdate(
     : null;
 
   if (existingBook) {
-    const denied = await requireFullAccess({
-      slug: existingBook.slug,
-      userId,
-      guestIdentityId,
-    });
+    const denied = isPreviewDetailsUpdate
+      ? await requirePreviewAccess({
+          request,
+          slug: existingBook.slug,
+          userId,
+          guestIdentityId,
+        })
+      : await requireFullAccess({
+          slug: existingBook.slug,
+          userId,
+          guestIdentityId,
+        });
     if (denied) {
       return denied;
     }
@@ -770,7 +935,8 @@ async function handleBookCreateOrUpdate(
     await assignBookOwner({
       slug: String(upstreamPayload.slug || slug),
       userId,
-      origin: "api.books.update",
+      guestIdentityId: userId ? null : guestIdentityId,
+      origin: isPreviewDetailsUpdate ? "api.books.preview_update" : "api.books.update",
       statusSnapshot: upstreamPayload.status,
     });
 
@@ -974,6 +1140,19 @@ async function handleBookScopedRoute(
   });
   if (denied) {
     return denied;
+  }
+
+  if ((action === "build" || action === "preflight") && request.method === "POST") {
+    const response = await forwardToBackend(request, upstreamPath, body);
+    const payload = (await response.clone().json().catch(() => null)) as Record<string, unknown> | null;
+    if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+      const sanitized = sanitizeInternalBuildMessages(payload);
+      return NextResponse.json(sanitized, { status: response.status });
+    }
+    return new NextResponse(response.body, {
+      status: response.status,
+      headers: cloneHeaders(response.headers),
+    });
   }
 
   return forwardResponse(request, upstreamPath, body);

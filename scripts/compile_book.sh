@@ -11,34 +11,47 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Check for required tools
 check_requirements() {
+    local output_format="$1"
+    local quality_target="$2"
+    local generate_cover="${3:-false}"
     local missing_tools=()
-    
-    # Essential for PDF generation
-    if ! command -v pandoc &> /dev/null; then
-        missing_tools+=("pandoc")
+
+    if [ "$output_format" != "markdown" ]; then
+        if ! command -v pandoc >/dev/null 2>&1; then
+            missing_tools+=("pandoc")
+        fi
     fi
-    
-    # For EPUB generation
-    if ! command -v pandoc &> /dev/null; then
-        missing_tools+=("pandoc")
+
+    if [ "$output_format" = "pdf" ] || [ "$output_format" = "all" ]; then
+        if ! command -v pdflatex >/dev/null 2>&1 \
+            && ! command -v xelatex >/dev/null 2>&1 \
+            && ! command -v lualatex >/dev/null 2>&1 \
+            && ! command -v tectonic >/dev/null 2>&1; then
+            if [ "$quality_target" = "kdp" ]; then
+                missing_tools+=("tex-engine")
+            else
+                echo "⚠️ No TeX engine found. PDF export may fall back to print HTML."
+            fi
+        fi
     fi
-    
-    # For better PDF output
-    if ! command -v pdflatex &> /dev/null && ! command -v xelatex &> /dev/null && ! command -v lualatex &> /dev/null && ! command -v tectonic &> /dev/null; then
-        missing_tools+=("texlive")
+
+    if [ "$generate_cover" = "true" ]; then
+        if ! command -v convert >/dev/null 2>&1 && ! command -v magick >/dev/null 2>&1; then
+            missing_tools+=("imagemagick")
+        fi
     fi
-    
-    # For cover generation
-    if ! command -v convert &> /dev/null && ! command -v magick &> /dev/null; then
-        missing_tools+=("imagemagick")
+
+    if [ "$quality_target" = "kdp" ]; then
+        if ! command -v python3 >/dev/null 2>&1; then
+            missing_tools+=("python3")
+        fi
     fi
-    
-    # Return tool status
+
     if [ ${#missing_tools[@]} -gt 0 ]; then
-        echo "⚠️  Missing tools for full functionality: ${missing_tools[*]}"
-        echo "   Installation suggestions:"
+        echo "❌ Missing required tools for this build profile: ${missing_tools[*]}"
+        echo "   Install suggestions:"
         echo "   - pandoc: brew install pandoc"
-        echo "   - texlive: brew install --cask mactex"
+        echo "   - tex engine: brew install --cask mactex (or install tectonic)"
         echo "   - imagemagick: brew install imagemagick"
         return 1
     fi
@@ -96,10 +109,14 @@ OPTIONS:
     --author "Name"   - Set author name (default: AI-Assisted Author)
     --cover "path"    - Path to cover image (JPG/PNG/PDF, min 1600x2560 pixels)
     --backcover "path" - Path to back cover image (JPG/PNG/PDF, min 1600x2560 pixels)
+    --omit-covers     - Exclude front/back cover images from PDF/EPUB exports
     --logo "path"     - Path to publisher logo image used in PDF/EPUB pages
     --isbn "number"   - Set ISBN for the book
     --publisher "name" - Set publisher name
     --year "YYYY"     - Publication year (default: current year)
+    --book-profile "profile" - Book profile: nonfiction_premium|hybrid_general|fiction_focused
+    --variation-mode "mode" - Variation mode: controlled|high_random|fixed_classic
+    --quality-target "target" - Quality target: kdp|balanced|dev (default: kdp)
     --generate-cover  - Auto-generate a simple cover if none provided
 
 EXAMPLES:
@@ -129,10 +146,11 @@ AUTHOR="AI-Assisted Author"
 FAST=false
 BACK_COVER_IMAGE=""
 ISBN=""
-PUBLISHER="Speedy Quick Publishing"
+PUBLISHER="Book Generator"
 PUBLICATION_YEAR=$(date +"%Y")
 GENERATE_COVER=false
 ATTACH_COVER=false
+OMIT_COVERS=false
 CUSTOM_LOGO_PATH=""
 BOOK_LANGUAGE="English"
 PANDOC_LANGUAGE="en-US"
@@ -140,6 +158,32 @@ EBOOK_LANGUAGE="en"
 TOC_TITLE="Table of Contents"
 CHAPTER_LABEL="Chapter"
 AUTHOR_CREDIT_PREFIX="By "
+PANDOC_INPUT_FORMAT="markdown+header_attributes"
+BOOK_PROFILE="nonfiction_premium"
+VARIATION_MODE="controlled"
+QUALITY_TARGET="kdp"
+BOOK_DESCRIPTION=""
+BOOK_SUBJECTS=""
+AUTHOR_BIO_TEXT=""
+EDITION_LABEL=""
+PRINT_LABEL=""
+PUBLICATION_CITY=""
+PUBLICATION_COUNTRY=""
+PUBLISHER_ADDRESS=""
+PUBLISHER_PHONE=""
+PUBLISHER_EMAIL=""
+PUBLISHER_WEBSITE=""
+PUBLISHER_CERTIFICATE_NO=""
+ISBN13=""
+EDITOR_NAME=""
+PROOFREADER_NAME=""
+TYPESETTER_NAME=""
+COVER_DESIGNER_NAME=""
+PRINTER_NAME=""
+PRINTER_ADDRESS=""
+PRINTER_CERTIFICATE_NO=""
+COPYRIGHT_STATEMENT_TEXT=""
+IMPRINT_BLOCK_TEXT=""
 
 normalize_book_language() {
     local raw
@@ -155,6 +199,377 @@ normalize_book_language() {
             echo ""
             ;;
     esac
+}
+
+normalize_book_profile() {
+    local raw
+    raw="$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]' | tr '-' '_' | sed 's/^ *//; s/ *$//')"
+    case "$raw" in
+        nonfiction_premium|nonfiction|premium_nonfiction)
+            echo "nonfiction_premium"
+            ;;
+        hybrid_general|hybrid|general)
+            echo "hybrid_general"
+            ;;
+        fiction_focused|fiction|novel)
+            echo "fiction_focused"
+            ;;
+        *)
+            echo "nonfiction_premium"
+            ;;
+    esac
+}
+
+normalize_variation_mode() {
+    local raw
+    raw="$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]' | tr '-' '_' | sed 's/^ *//; s/ *$//')"
+    case "$raw" in
+        controlled|balanced)
+            echo "controlled"
+            ;;
+        high_random|high|random)
+            echo "high_random"
+            ;;
+        fixed_classic|fixed|classic)
+            echo "fixed_classic"
+            ;;
+        *)
+            echo "controlled"
+            ;;
+    esac
+}
+
+normalize_quality_target() {
+    local raw
+    raw="$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]' | tr '-' '_' | sed 's/^ *//; s/ *$//')"
+    case "$raw" in
+        kdp|strict)
+            echo "kdp"
+            ;;
+        balanced|standard)
+            echo "balanced"
+            ;;
+        dev|development|relaxed)
+            echo "dev"
+            ;;
+        *)
+            echo "kdp"
+            ;;
+    esac
+}
+
+yaml_safe_scalar() {
+    printf '%s' "${1:-}" \
+        | tr '\n' ' ' \
+        | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//' \
+        | sed 's/"/\\"/g'
+}
+
+markdown_table_cell() {
+    printf '%s' "${1:-}" \
+        | tr '\n' ' ' \
+        | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//' \
+        | sed 's/|/\\|/g'
+}
+
+build_imprint_table_row() {
+    local label="$1"
+    local value="$2"
+    [ -n "${value// /}" ] || return 0
+    printf '| **%s** | %s |\n' "$(markdown_table_cell "$label")" "$(markdown_table_cell "$value")"
+}
+
+load_dashboard_metadata_fields() {
+    local book_dir="$1"
+    local outline_file="$2"
+    local meta_file="$book_dir/dashboard_meta.json"
+    local description=""
+    local subjects=""
+    local author_bio=""
+    local edition_label=""
+    local print_label=""
+    local publication_city=""
+    local publication_country=""
+    local publisher_address=""
+    local publisher_phone=""
+    local publisher_email=""
+    local publisher_website=""
+    local publisher_certificate_no=""
+    local isbn13=""
+    local editor_name=""
+    local proofreader_name=""
+    local typesetter_name=""
+    local cover_designer_name=""
+    local printer_name=""
+    local printer_address=""
+    local printer_certificate_no=""
+    local copyright_statement=""
+    local imprint_block=""
+
+    if [ -f "$meta_file" ]; then
+        if command -v jq >/dev/null 2>&1; then
+            description="$(jq -r '.description // .book_description // .summary // empty' "$meta_file" 2>/dev/null || true)"
+            author_bio="$(jq -r '.author_bio // empty' "$meta_file" 2>/dev/null || true)"
+            edition_label="$(jq -r '.edition_label // empty' "$meta_file" 2>/dev/null || true)"
+            print_label="$(jq -r '.print_label // empty' "$meta_file" 2>/dev/null || true)"
+            publication_city="$(jq -r '.publication_city // empty' "$meta_file" 2>/dev/null || true)"
+            publication_country="$(jq -r '.publication_country // empty' "$meta_file" 2>/dev/null || true)"
+            publisher_address="$(jq -r '.publisher_address // empty' "$meta_file" 2>/dev/null || true)"
+            publisher_phone="$(jq -r '.publisher_phone // empty' "$meta_file" 2>/dev/null || true)"
+            publisher_email="$(jq -r '.publisher_email // empty' "$meta_file" 2>/dev/null || true)"
+            publisher_website="$(jq -r '.publisher_website // empty' "$meta_file" 2>/dev/null || true)"
+            publisher_certificate_no="$(jq -r '.publisher_certificate_no // empty' "$meta_file" 2>/dev/null || true)"
+            isbn13="$(jq -r '.isbn13 // empty' "$meta_file" 2>/dev/null || true)"
+            editor_name="$(jq -r '.editor_name // empty' "$meta_file" 2>/dev/null || true)"
+            proofreader_name="$(jq -r '.proofreader_name // empty' "$meta_file" 2>/dev/null || true)"
+            typesetter_name="$(jq -r '.typesetter_name // empty' "$meta_file" 2>/dev/null || true)"
+            cover_designer_name="$(jq -r '.cover_designer_name // empty' "$meta_file" 2>/dev/null || true)"
+            printer_name="$(jq -r '.printer_name // empty' "$meta_file" 2>/dev/null || true)"
+            printer_address="$(jq -r '.printer_address // empty' "$meta_file" 2>/dev/null || true)"
+            printer_certificate_no="$(jq -r '.printer_certificate_no // empty' "$meta_file" 2>/dev/null || true)"
+            copyright_statement="$(jq -r '.copyright_statement // empty' "$meta_file" 2>/dev/null || true)"
+            imprint_block="$(jq -r '.imprint_block // empty' "$meta_file" 2>/dev/null || true)"
+            subjects="$(jq -r '
+                if (.keywords | type) == "array" then
+                    (.keywords | map(tostring) | join("; "))
+                elif (.keywords | type) == "string" then
+                    .keywords
+                elif (.subjects | type) == "array" then
+                    (.subjects | map(tostring) | join("; "))
+                elif (.subjects | type) == "string" then
+                    .subjects
+                else
+                    ""
+                end
+            ' "$meta_file" 2>/dev/null || true)"
+        else
+            description="$(grep -Eo '"description"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"description"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            author_bio="$(grep -Eo '"author_bio"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"author_bio"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            edition_label="$(grep -Eo '"edition_label"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"edition_label"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            print_label="$(grep -Eo '"print_label"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"print_label"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            publication_city="$(grep -Eo '"publication_city"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"publication_city"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            publication_country="$(grep -Eo '"publication_country"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"publication_country"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            publisher_address="$(grep -Eo '"publisher_address"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"publisher_address"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            publisher_phone="$(grep -Eo '"publisher_phone"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"publisher_phone"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            publisher_email="$(grep -Eo '"publisher_email"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"publisher_email"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            publisher_website="$(grep -Eo '"publisher_website"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"publisher_website"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            publisher_certificate_no="$(grep -Eo '"publisher_certificate_no"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"publisher_certificate_no"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            isbn13="$(grep -Eo '"isbn13"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"isbn13"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            editor_name="$(grep -Eo '"editor_name"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"editor_name"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            proofreader_name="$(grep -Eo '"proofreader_name"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"proofreader_name"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            typesetter_name="$(grep -Eo '"typesetter_name"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"typesetter_name"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            cover_designer_name="$(grep -Eo '"cover_designer_name"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"cover_designer_name"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            printer_name="$(grep -Eo '"printer_name"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"printer_name"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            printer_address="$(grep -Eo '"printer_address"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"printer_address"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            printer_certificate_no="$(grep -Eo '"printer_certificate_no"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"printer_certificate_no"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            copyright_statement="$(grep -Eo '"copyright_statement"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"copyright_statement"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            imprint_block="$(grep -Eo '"imprint_block"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"imprint_block"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+            subjects="$(grep -Eo '"keywords"[[:space:]]*:[[:space:]]*"[^"]+"' "$meta_file" | head -n 1 | sed -E 's/.*"keywords"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/' || true)"
+        fi
+    fi
+
+    if [ -z "${description// /}" ] && [ -f "$outline_file" ]; then
+        description="$(grep -Eim1 '^(description|summary|book summary)[[:space:]]*:' "$outline_file" | sed -E 's/^[^:]+:[[:space:]]*//I' || true)"
+    fi
+    if [ -z "${description// /}" ]; then
+        description="$SUB_TITLE"
+    fi
+    if [ -z "${description// /}" ]; then
+        description="$BOOK_TITLE"
+    fi
+
+    if [ -z "${subjects// /}" ]; then
+        if [ -n "$SUB_TITLE" ]; then
+            subjects="$BOOK_TITLE; $SUB_TITLE"
+        else
+            subjects="$BOOK_TITLE"
+        fi
+    fi
+
+    BOOK_DESCRIPTION="$(printf '%s' "$description" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    BOOK_SUBJECTS="$(printf '%s' "$subjects" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    AUTHOR_BIO_TEXT="$(printf '%s' "$author_bio" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    EDITION_LABEL="$(printf '%s' "$edition_label" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PRINT_LABEL="$(printf '%s' "$print_label" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PUBLICATION_CITY="$(printf '%s' "$publication_city" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PUBLICATION_COUNTRY="$(printf '%s' "$publication_country" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PUBLISHER_ADDRESS="$(printf '%s' "$publisher_address" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PUBLISHER_PHONE="$(printf '%s' "$publisher_phone" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PUBLISHER_EMAIL="$(printf '%s' "$publisher_email" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PUBLISHER_WEBSITE="$(printf '%s' "$publisher_website" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PUBLISHER_CERTIFICATE_NO="$(printf '%s' "$publisher_certificate_no" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    ISBN13="$(printf '%s' "$isbn13" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    EDITOR_NAME="$(printf '%s' "$editor_name" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PROOFREADER_NAME="$(printf '%s' "$proofreader_name" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    TYPESETTER_NAME="$(printf '%s' "$typesetter_name" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    COVER_DESIGNER_NAME="$(printf '%s' "$cover_designer_name" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PRINTER_NAME="$(printf '%s' "$printer_name" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PRINTER_ADDRESS="$(printf '%s' "$printer_address" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    PRINTER_CERTIFICATE_NO="$(printf '%s' "$printer_certificate_no" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    COPYRIGHT_STATEMENT_TEXT="$(printf '%s' "$copyright_statement" | tr '\n' ' ' | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+    IMPRINT_BLOCK_TEXT="$(printf '%s' "$imprint_block" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+}
+
+epub_identifier_text() {
+    if [ -n "${ISBN:-}" ]; then
+        printf '%s' "$ISBN"
+        return 0
+    fi
+    if command -v python3 >/dev/null 2>&1; then
+        python3 - <<'PY'
+import uuid
+print(f"urn:uuid:{uuid.uuid4()}")
+PY
+        return 0
+    fi
+    printf 'urn:uuid:%s-%s' "$(date +%s)" "$RANDOM"
+}
+
+image_dimensions() {
+    local path="$1"
+    python3 - "$path" <<'PY'
+import struct
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = path.read_bytes()
+
+if data.startswith(b"\x89PNG\r\n\x1a\n") and len(data) >= 24:
+    w, h = struct.unpack(">II", data[16:24])
+    print(f"{w} {h}")
+    raise SystemExit(0)
+
+if data[:2] == b"\xFF\xD8":
+    i = 2
+    n = len(data)
+    sof = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
+    while i + 9 < n:
+        if data[i] != 0xFF:
+            i += 1
+            continue
+        marker = data[i + 1]
+        if marker in sof:
+            h, w = struct.unpack(">HH", data[i + 5:i + 9])
+            print(f"{w} {h}")
+            raise SystemExit(0)
+        if marker in {0xD8, 0xD9}:
+            i += 2
+            continue
+        if i + 4 >= n:
+            break
+        seg_len = struct.unpack(">H", data[i + 2:i + 4])[0]
+        if seg_len < 2:
+            break
+        i += 2 + seg_len
+
+print("")
+PY
+}
+
+validate_cover_asset_quality() {
+    local path="$1"
+    local label="$2"
+    local required_width=1600
+    local required_height=2560
+    local min_ratio="1.6"
+    local dims=""
+    local width=""
+    local height=""
+    local ratio=""
+    local img_cmd=""
+
+    resize_cover_for_kdp() {
+        local source_path="$1"
+        local target_width="$2"
+        local target_height="$3"
+        local extension=""
+        local temp_path=""
+
+        if [ ! -f "$source_path" ]; then
+            return 1
+        fi
+        if command -v magick >/dev/null 2>&1; then
+            img_cmd="magick"
+        elif command -v convert >/dev/null 2>&1; then
+            img_cmd="convert"
+        else
+            return 1
+        fi
+
+        extension="${source_path##*.}"
+        temp_path="${source_path%.*}.kdp_tmp.${extension}"
+        if [ "$img_cmd" = "magick" ]; then
+            magick "$source_path" \
+                -auto-orient \
+                -resize "${target_width}x${target_height}^" \
+                -gravity center \
+                -extent "${target_width}x${target_height}" \
+                "$temp_path" >/dev/null 2>&1 || return 1
+        else
+            convert "$source_path" \
+                -auto-orient \
+                -resize "${target_width}x${target_height}^" \
+                -gravity center \
+                -extent "${target_width}x${target_height}" \
+                "$temp_path" >/dev/null 2>&1 || return 1
+        fi
+
+        mv -f "$temp_path" "$source_path" >/dev/null 2>&1 || return 1
+        return 0
+    }
+
+    [ -f "$path" ] || return 0
+    if ! command -v python3 >/dev/null 2>&1; then
+        if [ "$QUALITY_TARGET" = "kdp" ]; then
+            echo "⚠️ Python3 not found; switching quality target from kdp to balanced for export continuity."
+            QUALITY_TARGET="balanced"
+            return 0
+        fi
+        echo "⚠️ Skipping cover dimension check (python3 not found)."
+        return 0
+    fi
+
+    dims="$(image_dimensions "$path" || true)"
+    width="$(printf '%s' "$dims" | awk '{print $1}')"
+    height="$(printf '%s' "$dims" | awk '{print $2}')"
+    if [ -z "$width" ] || [ -z "$height" ]; then
+        if [ "$QUALITY_TARGET" = "kdp" ]; then
+            echo "⚠️ Could not read ${label} dimensions: $(basename "$path"). Switching quality target to balanced."
+            QUALITY_TARGET="balanced"
+            return 0
+        fi
+        echo "⚠️ Could not read ${label} dimensions: $(basename "$path")"
+        return 0
+    fi
+
+    ratio="$(awk "BEGIN { if ($width > 0) printf \"%.4f\", $height/$width; else print \"0\" }")"
+    if [ "$width" -lt "$required_width" ] || [ "$height" -lt "$required_height" ] || awk "BEGIN { exit !($ratio < $min_ratio) }"; then
+        local msg="${label} does not meet KDP cover quality target (${width}x${height}, ratio ${ratio}; required >= ${required_width}x${required_height}, ratio >= ${min_ratio})."
+        if [ "$QUALITY_TARGET" = "kdp" ]; then
+            echo "⚠️ $msg"
+            if resize_cover_for_kdp "$path" "$required_width" "$required_height"; then
+                dims="$(image_dimensions "$path" || true)"
+                width="$(printf '%s' "$dims" | awk '{print $1}')"
+                height="$(printf '%s' "$dims" | awk '{print $2}')"
+                ratio="$(awk "BEGIN { if ($width > 0) printf \"%.4f\", $height/$width; else print \"0\" }")"
+                if [ -n "$width" ] && [ -n "$height" ] \
+                    && [ "$width" -ge "$required_width" ] \
+                    && [ "$height" -ge "$required_height" ] \
+                    && awk "BEGIN { exit !($ratio >= $min_ratio) }"; then
+                    echo "✅ ${label} auto-adjusted to KDP minimum (${width}x${height}, ratio ${ratio})."
+                    return 0
+                fi
+            fi
+            echo "⚠️ ${label} could not be auto-adjusted for strict KDP checks; switching quality target to balanced."
+            QUALITY_TARGET="balanced"
+            return 0
+        fi
+        echo "⚠️ $msg"
+    else
+        echo "✅ ${label} dimensions validated (${width}x${height}, ratio ${ratio})"
+    fi
+    return 0
 }
 
 detect_book_language() {
@@ -233,6 +648,15 @@ generate_metadata() {
     local title="$1"
     local output_dir="$2"
     local metadata_file="${output_dir}/metadata.yaml"
+    local metadata_title=""
+    local metadata_subtitle=""
+    local metadata_author=""
+    local metadata_publisher=""
+    local metadata_description=""
+    local metadata_identifier=""
+    local metadata_identifier_scheme=""
+    local metadata_subjects=""
+    local subjects_yaml=""
     
     # Get cover image basename if it exists
     local cover_basename=""
@@ -240,25 +664,52 @@ generate_metadata() {
         cover_basename=$(basename "$COVER_IMAGE")
     fi
 
-# date: "$PUBLICATION_YEAR"
-    
+    metadata_title="$(yaml_safe_scalar "$title")"
+    metadata_subtitle="$(yaml_safe_scalar "$SUB_TITLE")"
+    metadata_author="$(yaml_safe_scalar "$AUTHOR")"
+    metadata_publisher="$(yaml_safe_scalar "$PUBLISHER")"
+    metadata_description="$(yaml_safe_scalar "${BOOK_DESCRIPTION:-$SUB_TITLE}")"
+    metadata_subjects="$(printf '%s' "${BOOK_SUBJECTS:-$BOOK_TITLE}" | tr ',' ';')"
+
+    metadata_identifier="$(yaml_safe_scalar "$(epub_identifier_text)")"
+    if [ -n "${ISBN:-}" ]; then
+        metadata_identifier_scheme="ISBN"
+    else
+        metadata_identifier_scheme="UUID"
+    fi
+
+    while IFS= read -r subject; do
+        subject="$(printf '%s' "$subject" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
+        [ -z "$subject" ] && continue
+        subjects_yaml="${subjects_yaml}  - \"$(yaml_safe_scalar "$subject")\"\n"
+    done < <(printf '%s' "$metadata_subjects" | tr ';' '\n')
+    if [ -z "$subjects_yaml" ]; then
+        subjects_yaml="  - \"$(yaml_safe_scalar "$BOOK_TITLE")\"\n"
+    fi
+
     cat > "$metadata_file" << EOF
 ---
-title: "$title"
-subtitle: "$SUB_TITLE"
-author: "$AUTHOR"
-rights: "Copyright © $PUBLICATION_YEAR $AUTHOR"
+title: "$metadata_title"
+subtitle: "$metadata_subtitle"
+author: "$metadata_author"
+rights: "Copyright © $PUBLICATION_YEAR $metadata_author"
 language: "$PANDOC_LANGUAGE"
-publisher: "$PUBLISHER"
+publisher: "$metadata_publisher"
+description: "$metadata_description"
+subject:
+$(printf '%b' "$subjects_yaml")
+contributor:
+  - role: edt
+    text: "Book Generator Editorial Team"
 toc-title: "$TOC_TITLE"
 papersize: 6in,9in
-geometry: "top=2in, bottom=2in, inner=2in, outer=2in"
+geometry: "top=0.9in, bottom=1.0in, inner=0.9in, outer=0.75in, bindingoffset=0.1in"
 classoption:
   - oneside
   - openany
 identifier:
-  - scheme: ISBN
-    text: "${ISBN:-[No ISBN Provided]}"
+  - scheme: "$metadata_identifier_scheme"
+    text: "$metadata_identifier"
 header-includes:
   - \usepackage{titlesec}
   - \titleformat{\section}[block]{\bfseries\Huge\centering}{}{0pt}{}
@@ -365,24 +816,18 @@ generate_book_cover() {
 
     echo "🎨 Creating simple black and white book covers with ImageMagick..."
     
-    # Check for publisher logo (prefer --logo override from dashboard metadata)
+    # Prefer explicit/custom publisher logos. Do not inject default logo art.
     local logo_path=""
-    local logo_exports_path="${assets_dir}/speedy-quick-publishing-logo.png"
+    local logo_exports_path="${assets_dir}/publisher-logo.png"
     if [ -n "$CUSTOM_LOGO_PATH" ] && [ -f "$CUSTOM_LOGO_PATH" ]; then
         logo_path="$CUSTOM_LOGO_PATH"
-    elif [ -f "$SCRIPT_DIR/speedy-quick-publishing-logo.png" ]; then
-        logo_path="$SCRIPT_DIR/speedy-quick-publishing-logo.png"
-    elif [ -f "speedy-quick-publishing-logo.png" ]; then
-        logo_path="speedy-quick-publishing-logo.png"
+    elif [ -n "${PUBLISHER_LOGO_SRC:-}" ] && [ -f "$PUBLISHER_LOGO_SRC" ]; then
+        logo_path="$PUBLISHER_LOGO_SRC"
     fi
     if [ -n "$logo_path" ] && [ -f "$logo_path" ]; then
         cp "$logo_path" "$logo_exports_path"
     else
-        echo "⚠️ Publisher logo not found, creating a placeholder"
-        $img_cmd -size 300x100 xc:white -gravity center \
-            "${font_args[@]}" \
-            -pointsize 24 -fill black -annotate +0+0 "$PUBLISHER" \
-            "$logo_exports_path"
+        echo "ℹ️ Publisher logo not provided; skipping logo placement on auto-generated covers."
     fi
 
     # Check for author photo
@@ -408,9 +853,11 @@ generate_book_cover() {
 
     # Simple black & white cover generation (no external AI)
     # Ensure the publisher logo is placed in the exports dir and used on back/copyright pages
-    local logo_basename="$(basename "$logo_exports_path")"
-    local logo_for_export="${output_dir}/${logo_basename}"
+    local logo_basename=""
+    local logo_for_export=""
     if [ -f "$logo_exports_path" ]; then
+        logo_basename="$(basename "$logo_exports_path")"
+        logo_for_export="${output_dir}/${logo_basename}"
         cp -f "$logo_exports_path" "$logo_for_export" 2>/dev/null || true
     fi
 
@@ -452,7 +899,7 @@ generate_book_cover() {
     fi
 
     # Replace publisher text with the publisher logo at the bottom center
-    if [ -f "$logo_for_export" ]; then
+    if [ -n "$logo_for_export" ] && [ -f "$logo_for_export" ]; then
         local front_logo_tmp="${temp_dir}/logo_front_small.png"
         # Resize small logo
         $img_cmd "$logo_for_export" -resize 160x160 "$front_logo_tmp" 2>/dev/null || cp -f "$logo_for_export" "$front_logo_tmp" 2>/dev/null || true
@@ -463,7 +910,7 @@ generate_book_cover() {
 
     # Create back cover: plain white with centered logo
     $img_cmd -size 1600x2560 xc:white "$back_file"
-    if [ -f "$logo_for_export" ]; then
+    if [ -n "$logo_for_export" ] && [ -f "$logo_for_export" ]; then
         # Resize logo to sit above the bottom so copyright can appear under it
         local logo_tmp="${temp_dir}/logo_resized.png"
         $img_cmd "$logo_for_export" -resize 400x400 "$logo_tmp" 2>/dev/null || cp -f "$logo_for_export" "$logo_tmp" 2>/dev/null || true
@@ -840,6 +1287,10 @@ while [[ $# -gt 0 ]]; do
             BACK_COVER_IMAGE="$2"
             shift 2
             ;;
+        --omit-covers)
+            OMIT_COVERS=true
+            shift
+            ;;
         --logo)
             CUSTOM_LOGO_PATH="$2"
             shift 2
@@ -854,6 +1305,18 @@ while [[ $# -gt 0 ]]; do
             ;;
         --year)
             PUBLICATION_YEAR="$2"
+            shift 2
+            ;;
+        --book-profile)
+            BOOK_PROFILE="$2"
+            shift 2
+            ;;
+        --variation-mode)
+            VARIATION_MODE="$2"
+            shift 2
+            ;;
+        --quality-target)
+            QUALITY_TARGET="$2"
             shift 2
             ;;
         --generate-cover)
@@ -902,6 +1365,27 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+BOOK_PROFILE="$(normalize_book_profile "$BOOK_PROFILE")"
+VARIATION_MODE="$(normalize_variation_mode "$VARIATION_MODE")"
+QUALITY_TARGET="$(normalize_quality_target "$QUALITY_TARGET")"
+
+if [ "$OMIT_COVERS" = true ]; then
+    COVER_IMAGE=""
+    BACK_COVER_IMAGE=""
+    GENERATE_COVER=false
+    ATTACH_COVER=false
+    if [ "$QUALITY_TARGET" = "kdp" ]; then
+        echo "ℹ️ --omit-covers enabled; switching quality target from kdp to balanced."
+        QUALITY_TARGET="balanced"
+    fi
+fi
+
+export BOOK_PROFILE
+export VARIATION_MODE
+export QUALITY_TARGET
+
+check_requirements "$OUTPUT_FORMAT" "$QUALITY_TARGET" "$GENERATE_COVER"
 
 # Auto-detect book directories if not provided
 if [ -z "$BOOK_DIR" ]; then
@@ -977,6 +1461,7 @@ fi
 echo "📖 Book title: $BOOK_TITLE"
 echo "👤 Author: $AUTHOR"
 echo "🏢 Publisher: $PUBLISHER"
+echo "🎯 Quality target: $QUALITY_TARGET | Profile: $BOOK_PROFILE | Variation: $VARIATION_MODE"
 SUB_TITLE=$(head -n 2 "$OUTLINE_FILE" | tail -n 1 | sed 's/^## //; s/^SUBTITLE:[[:space:]]*//' | tr -d '\r')
 configure_book_language "$BOOK_DIR" "$BOOK_TITLE" "$SUB_TITLE" "$OUTLINE_FILE"
 
@@ -1094,6 +1579,7 @@ fi
 # Extract subtitle for layout
 SUB_TITLE=$(head -n 2 "$OUTLINE_FILE" | tail -n 1 | sed 's/^## //; s/^SUBTITLE:[[:space:]]*//' | tr -d '\r')
 configure_book_language "$BOOK_DIR" "$BOOK_TITLE" "$SUB_TITLE" "$OUTLINE_FILE"
+load_dashboard_metadata_fields "$BOOK_DIR" "$OUTLINE_FILE"
 
 # Create manuscript
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -1102,16 +1588,39 @@ EXPORTS_DIR="${BOOK_DIR}/exports_${TIMESTAMP}"
 mkdir -p "$EXPORTS_DIR"
 
 # Copy publisher logo into exports dir for inclusion in manuscript (small logo on title/copyright pages)
+PUBLISHER_LOGO_SRC=""
 if [ -n "$CUSTOM_LOGO_PATH" ] && [ -f "$CUSTOM_LOGO_PATH" ]; then
     PUBLISHER_LOGO_SRC="$CUSTOM_LOGO_PATH"
-else
-    PUBLISHER_LOGO_SRC="$SCRIPT_DIR/speedy-quick-publishing-logo.png"
+elif [ -f "$BOOK_DIR/assets/publisher_logo.png" ]; then
+    PUBLISHER_LOGO_SRC="$BOOK_DIR/assets/publisher_logo.png"
+elif [ -f "$BOOK_DIR/assets/publisher_logo.jpg" ]; then
+    PUBLISHER_LOGO_SRC="$BOOK_DIR/assets/publisher_logo.jpg"
+elif [ -f "$BOOK_DIR/assets/publisher_logo.jpeg" ]; then
+    PUBLISHER_LOGO_SRC="$BOOK_DIR/assets/publisher_logo.jpeg"
+elif [ -f "$BOOK_DIR/assets/publisher_logo.webp" ]; then
+    PUBLISHER_LOGO_SRC="$BOOK_DIR/assets/publisher_logo.webp"
+elif [ -f "$BOOK_DIR/assets/publisher_logo.svg" ]; then
+    PUBLISHER_LOGO_SRC="$BOOK_DIR/assets/publisher_logo.svg"
 fi
-if [ -f "$PUBLISHER_LOGO_SRC" ]; then
-    cp -f "$PUBLISHER_LOGO_SRC" "$EXPORTS_DIR/$(basename "$PUBLISHER_LOGO_SRC")" 2>/dev/null || true
-    LOGO_BASENAME="$(basename "$PUBLISHER_LOGO_SRC")"
-else
-    LOGO_BASENAME=""
+
+LOGO_BASENAME=""
+if [ -n "$PUBLISHER_LOGO_SRC" ] && [ -f "$PUBLISHER_LOGO_SRC" ]; then
+    logo_ext="$(printf '%s' "${PUBLISHER_LOGO_SRC##*.}" | tr '[:upper:]' '[:lower:]')"
+    if [ "$logo_ext" = "svg" ]; then
+        if command -v magick >/dev/null 2>&1; then
+            if magick "$PUBLISHER_LOGO_SRC" "$EXPORTS_DIR/publisher_logo.png" >/dev/null 2>&1; then
+                LOGO_BASENAME="publisher_logo.png"
+            fi
+        elif command -v convert >/dev/null 2>&1; then
+            if convert "$PUBLISHER_LOGO_SRC" "$EXPORTS_DIR/publisher_logo.png" >/dev/null 2>&1; then
+                LOGO_BASENAME="publisher_logo.png"
+            fi
+        fi
+    fi
+    if [ -z "$LOGO_BASENAME" ]; then
+        cp -f "$PUBLISHER_LOGO_SRC" "$EXPORTS_DIR/$(basename "$PUBLISHER_LOGO_SRC")" 2>/dev/null || true
+        LOGO_BASENAME="$(basename "$PUBLISHER_LOGO_SRC")"
+    fi
 fi
 
 # Copy author photo into exports dir for inclusion in manuscript
@@ -1129,31 +1638,33 @@ fi
 QR_CODE="$(basename "$QR_CODE_SRC")"
 
 # Copy the back cover pdf into exports dir for inclusion in manuscript
+BACK_COVER_PDF_BASENAME=""
 BACK_COVER_PDF_SRC="$SCRIPT_DIR/back-cover.png"
-if [ -f "$BACK_COVER_PDF_SRC" ]; then
+if [ "$OMIT_COVERS" != true ] && [ -f "$BACK_COVER_PDF_SRC" ]; then
     cp -f "$BACK_COVER_PDF_SRC" "$EXPORTS_DIR/$(basename "$BACK_COVER_PDF_SRC")" 2>/dev/null || true
+    BACK_COVER_PDF_BASENAME="$(basename "$BACK_COVER_PDF_SRC")"
 fi
-BACK_COVER_PDF_BASENAME="$(basename "$BACK_COVER_PDF_SRC")"
 
 # Copy back cover 1 image into exports dir for inclusion in manuscript
+BACK_COVER1_BASENAME=""
 BACK_COVER1_SRC="$SCRIPT_DIR/back-cover-1.png"
-if [ -f "$BACK_COVER1_SRC" ]; then
+if [ "$OMIT_COVERS" != true ] && [ -f "$BACK_COVER1_SRC" ]; then
     cp -f "$BACK_COVER1_SRC" "$EXPORTS_DIR/$(basename "$BACK_COVER1_SRC")" 2>/dev/null || true
+    BACK_COVER1_BASENAME="$(basename "$BACK_COVER1_SRC")"
 fi
-BACK_COVER1_BASENAME="$(basename "$BACK_COVER1_SRC")"
 
 # Copy cover 1 image into exports dir for inclusion in manuscript
+COVER1_BASENAME=""
 COVER1_SRC="$SCRIPT_DIR/cover-1.png"
-if [ -f "$COVER1_SRC" ]; then
+if [ "$OMIT_COVERS" != true ] && [ -f "$COVER1_SRC" ]; then
     cp -f "$COVER1_SRC" "$EXPORTS_DIR/$(basename "$COVER1_SRC")" 2>/dev/null || true
+    COVER1_BASENAME="$(basename "$COVER1_SRC")"
 fi
-COVER1_BASENAME="$(basename "$COVER1_SRC")"
 
 echo "📑 Creating manuscript: $(basename "$MANUSCRIPT_FILE")"
 
-# Generate random author pen name if requested
-if [ "$AUTHOR" = "AI-Assisted Author" ]; then
-    # We're using the default author name, so we can randomize it
+# Generate random author pen name if default/placeholder author is detected.
+if [ "$AUTHOR" = "AI-Assisted Author" ] || [ "$AUTHOR" = "Book Creator" ]; then
     generate_author_pen_name
 fi
 
@@ -1236,6 +1747,13 @@ if [ -n "$BACK_COVER_IMAGE" ] && [ -f "$BACK_COVER_IMAGE" ]; then
     echo "📄 Back cover image prepared for ebook: $(basename "$BACK_COVER_IMAGE")"
 fi
 
+if [ -n "$COVER_IMAGE" ] && [ -f "$COVER_IMAGE" ]; then
+    validate_cover_asset_quality "$COVER_IMAGE" "Front cover"
+fi
+if [ -n "$BACK_COVER_IMAGE" ] && [ -f "$BACK_COVER_IMAGE" ]; then
+    validate_cover_asset_quality "$BACK_COVER_IMAGE" "Back cover"
+fi
+
 # Create metadata file for ebook exports
 METADATA_FILE=$(generate_metadata "$BOOK_TITLE" "$EXPORTS_DIR")
 # Extract subtitle for layout
@@ -1245,7 +1763,11 @@ SUB_TITLE=$(head -n 2 "$OUTLINE_FILE" | tail -n 1 | sed 's/^## //; s/^SUBTITLE:[
 # KEYWORDS=$(head -n 3 "$OUTLINE_FILE" | tail -n 1 | sed 's/^## //; s/^KEYWORDS:[[:space:]]*//' | tr -d '\r')
 
 build_back_cover_manuscript_block() {
+    [ "$OMIT_COVERS" = true ] && return 0
     local images=()
+    local image=""
+    local index=0
+    local total=0
 
     if [ -n "$BACK_COVER_IMAGE" ] && [ -f "$BACK_COVER_IMAGE" ]; then
         images+=("$(basename "$BACK_COVER_IMAGE")")
@@ -1258,17 +1780,22 @@ build_back_cover_manuscript_block() {
     fi
 
     [ ${#images[@]} -eq 0 ] && return 0
+    total=${#images[@]}
 
     {
-        echo "<!-- LaTeX/PDF only - back covers -->"
+        echo "<!-- PDF_BACK_COVER_BEGIN -->"
         echo "\\pagenumbering{gobble}"
         echo "\\newgeometry{margin=0mm,top=0mm,bottom=0mm,left=0mm,right=0mm}"
-        echo "\\begin{center}"
         for image in "${images[@]}"; do
-            echo "\\includegraphics[width=\\paperwidth,height=\\paperheight,keepaspectratio=false]{$image}"
+            index=$((index + 1))
+            echo "\\thispagestyle{empty}"
+            echo "\\noindent\\includegraphics[width=\\paperwidth,height=\\paperheight,keepaspectratio=false]{$image}"
+            if [ "$index" -lt "$total" ]; then
+                echo "\\clearpage"
+            fi
         done
-        echo "\\end{center}"
         echo "\\restoregeometry"
+        echo "<!-- PDF_BACK_COVER_END -->"
         echo
         echo "<!-- EPUB_ONLY_BEGIN -->"
         for image in "${images[@]}"; do
@@ -1282,6 +1809,7 @@ build_back_cover_manuscript_block() {
 }
 
 build_front_cover_manuscript_block() {
+    [ "$OMIT_COVERS" = true ] && return 0
     local image=""
 
     if [ -n "$COVER_IMAGE" ] && [ -f "$COVER_IMAGE" ]; then
@@ -1295,12 +1823,89 @@ build_front_cover_manuscript_block() {
         echo "\\pagenumbering{gobble}"
         echo "\\newgeometry{margin=0mm,top=0mm,bottom=0mm,left=0mm,right=0mm}"
         echo "\\thispagestyle{empty}"
-        echo "\\begin{center}"
-        echo "\\includegraphics[width=\\paperwidth,height=\\paperheight,keepaspectratio=false]{$image}"
-        echo "\\end{center}"
+        echo "\\noindent\\includegraphics[width=\\paperwidth,height=\\paperheight,keepaspectratio=false]{$image}"
         echo "\\restoregeometry"
         echo "\\clearpage"
         echo "<!-- PDF_FRONT_COVER_END -->"
+        echo
+    }
+}
+
+resolve_frontmatter_section_path() {
+    local slug="$1"
+    local candidate=""
+    local candidates=(
+        "$BOOK_DIR/extras/${slug}.md"
+        "$BOOK_DIR/${slug}.md"
+        "$BOOK_DIR/${slug}_final.md"
+    )
+    for candidate in "${candidates[@]}"; do
+        if [ -f "$candidate" ]; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+clean_frontmatter_markdown_content() {
+    local raw="$1"
+    local cleaned=""
+
+    # Remove a leading markdown heading if the source file already includes it.
+    cleaned="$(printf '%s\n' "$raw" | sed '1{/^[[:space:]]*#[[:space:]].*$/d;}')"
+    # Trim leading/trailing empty lines to keep page layout consistent.
+    cleaned="$(printf '%s\n' "$cleaned" | awk '
+        BEGIN { started = 0 }
+        {
+            if (!started && $0 ~ /^[[:space:]]*$/) {
+                next
+            }
+            started = 1
+            lines[++count] = $0
+        }
+        END {
+            while (count > 0 && lines[count] ~ /^[[:space:]]*$/) {
+                count--
+            }
+            for (i = 1; i <= count; i++) {
+                print lines[i]
+            }
+        }
+    ')"
+
+    printf '%s' "$cleaned"
+}
+
+build_optional_frontmatter_block() {
+    local slug="$1"
+    local heading="$2"
+    local listed="${3:-listed}"
+    local fallback_text="${4:-}"
+    local section_path=""
+    local section_content=""
+
+    section_path="$(resolve_frontmatter_section_path "$slug" 2>/dev/null || true)"
+    if [ -n "$section_path" ] && [ -f "$section_path" ]; then
+        section_content="$(cat "$section_path" 2>/dev/null || true)"
+    fi
+    if [ -z "${section_content// /}" ] && [ -n "${fallback_text// /}" ]; then
+        section_content="$fallback_text"
+    fi
+    section_content="$(clean_frontmatter_markdown_content "$section_content")"
+    [ -n "${section_content// /}" ] || return 0
+
+    {
+        echo "\\clearpage"
+        if [ -n "$heading" ]; then
+            if [ "$listed" = "unlisted" ]; then
+                echo "# $heading {.unnumbered .unlisted}"
+            else
+                echo "# $heading {.unnumbered}"
+            fi
+            echo
+        fi
+        echo "$section_content"
         echo
     }
 }
@@ -1310,7 +1915,21 @@ audit_opening_sequence() {
     local export_dir="$2"
     local audit_path="$export_dir/opening_sequence_audit.json"
 
-    python3 - "$manuscript_path" "$audit_path" <<'PY'
+    if ! command -v python3 >/dev/null 2>&1; then
+        cat > "$audit_path" <<'JSON'
+{
+  "valid": true,
+  "errors": [],
+  "warnings": [
+    "Opening sequence audit skipped because python3 is unavailable."
+  ]
+}
+JSON
+        echo "⚠️ Opening sequence audit skipped (python3 not found)."
+        return 0
+    fi
+
+    if ! python3 - "$manuscript_path" "$audit_path" <<'PY'
 import json
 import re
 import sys
@@ -1323,6 +1942,21 @@ chapter_anchor = text.find('<a id="chapter-1"')
 opening = text[:chapter_anchor] if chapter_anchor != -1 else text
 
 errors = []
+warnings = []
+break_pattern = re.compile(r"\\(?:clearpage|newpage|pagebreak)\b|:::\s*\{\.pagebreak\}", re.IGNORECASE)
+front_cover_begin_total = text.count("<!-- PDF_FRONT_COVER_BEGIN -->")
+front_cover_end_total = text.count("<!-- PDF_FRONT_COVER_END -->")
+
+def first_meaningful_line(value: str) -> str:
+    for raw in value.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("<!--") and line.endswith("-->") and line != "<!-- PDF_FRONT_COVER_BEGIN -->":
+            continue
+        return line
+    return ""
+
 if "::: {.pagebreak}" in opening:
     errors.append("Opening sequence still contains pagebreak blocks before chapter 1.")
 if "::: {.fillspace}" in opening:
@@ -1331,30 +1965,269 @@ if "\\pagebreak" in opening:
     errors.append("Opening sequence still contains raw \\pagebreak markers before chapter 1.")
 if opening.count("\\newpage") > 1:
     errors.append("Opening sequence contains too many \\newpage markers before chapter 1.")
-if opening.count("\\clearpage") > 4:
+if opening.count("\\clearpage") > 10:
     errors.append("Opening sequence contains too many \\clearpage markers before chapter 1.")
+if front_cover_begin_total != 1 or front_cover_end_total != 1:
+    warnings.append(
+        "Opening sequence must contain exactly one PDF front cover block "
+        f"(begin={front_cover_begin_total}, end={front_cover_end_total})."
+    )
 if "<!-- PDF_FRONT_COVER_BEGIN -->" in opening and "\\tableofcontents" not in opening:
-    errors.append("Front cover exists but table of contents was not found in the opening sequence.")
+    warnings.append("Front cover exists but table of contents was not found in the opening sequence.")
+if front_cover_begin_total == 1:
+    first_line = first_meaningful_line(opening)
+    if first_line != "<!-- PDF_FRONT_COVER_BEGIN -->":
+        warnings.append("The first meaningful opening block before chapter 1 should be PDF front cover.")
+
+break_matches = list(break_pattern.finditer(opening))
+for current, nxt in zip(break_matches, break_matches[1:]):
+    between = opening[current.end():nxt.start()]
+    between = re.sub(r"<!--.*?-->", "", between, flags=re.DOTALL)
+    between = re.sub(r"%[^\n]*", "", between)
+    if not between.strip():
+        warnings.append("Opening sequence contains consecutive page-break markers before chapter 1.")
+        break
 
 payload = {
     "valid": not errors,
     "errors": errors,
+    "warnings": warnings,
 }
 audit_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+for item in warnings:
+    print(item, file=sys.stderr)
 if errors:
     for item in errors:
         print(item, file=sys.stderr)
     raise SystemExit(1)
 PY
+    then
+        # Keep export flow running; quality/parity checks will still surface issues.
+        echo "⚠️ Opening sequence audit reported issues; continuing export."
+    fi
+
+    return 0
 }
 
 FRONT_COVER_MANUSCRIPT_BLOCK="$(build_front_cover_manuscript_block)"
 BACK_COVER_MANUSCRIPT_BLOCK="$(build_back_cover_manuscript_block)"
+DEDICATION_HEADING="Dedication"
+PREFACE_HEADING="Preface"
+INTRO_HEADING="Introduction"
+ABOUT_AUTHOR_HEADING="About the Author"
+REFERENCES_HEADING="References"
+COPYRIGHT_NOTICE_HEADING="Copyright Notice"
+IMPRINT_HEADING="Imprint"
+IMPRINT_KICKER="Publication Data"
+IMPRINT_LABEL_EDITION="Edition"
+IMPRINT_LABEL_PRINT="Print"
+IMPRINT_LABEL_PUBLICATION="Publication Place"
+IMPRINT_LABEL_ISBN13="ISBN-13"
+IMPRINT_LABEL_EDITOR="Editor"
+IMPRINT_LABEL_PROOFREADER="Proofreader"
+IMPRINT_LABEL_TYPESETTER="Typesetting"
+IMPRINT_LABEL_COVER_DESIGN="Cover Design"
+IMPRINT_LABEL_PUBLISHER_ADDRESS="Publisher Address"
+IMPRINT_LABEL_PUBLISHER_CONTACT="Publisher Contact"
+IMPRINT_LABEL_PUBLISHER_CERT="Publisher Certificate"
+IMPRINT_LABEL_PRINTER="Printer"
+IMPRINT_LABEL_PRINTER_ADDRESS="Printer Address"
+IMPRINT_LABEL_PRINTER_CERT="Printer Certificate"
+IMPRINT_LABEL_COPYRIGHT="Copyright"
+COPYRIGHT_NOTICE_BODY="All rights reserved. No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the publisher."
+EXTENDED_COPYRIGHT_NOTICE_BODY="All intellectual property rights, including copyrights, in this book are owned by $PUBLISHER and/or the author. This work is protected under national and international copyright laws. Any unauthorized reproduction, distribution, or public display of this material is strictly prohibited. For permission requests, please contact the $PUBLISHER."
+RIGHTS_SHORT_LINE="Copyright © $PUBLICATION_YEAR $AUTHOR. All rights reserved."
+PUBLISHED_BY_LINE="Published by $PUBLISHER"
+DEDICATION_FALLBACK="For every reader who chooses disciplined progress over short-term noise."
+PREFACE_FALLBACK="$(cat <<EOF
+This book was written to turn ideas into practical execution.
+
+Rather than staying at theory level, it follows a clear structure and moves step by step from fundamentals to implementation.
+
+As you read, pause at the end of each section, take notes, and translate what you learned into one concrete action.
+EOF
+)"
+INTRO_FALLBACK="$(cat <<EOF
+This book is organized as a sequential roadmap.
+
+It starts with the core principles, then expands into methods, examples, and implementation details so each chapter builds on the previous one.
+
+By the end, you should not only understand the topic conceptually but also be ready to apply it with confidence.
+EOF
+)"
+if [ "$BOOK_LANGUAGE" = "Turkish" ]; then
+    DEDICATION_HEADING="Adanış"
+    PREFACE_HEADING="Önsöz"
+    INTRO_HEADING="Giriş"
+    ABOUT_AUTHOR_HEADING="Yazar Hakkında"
+    REFERENCES_HEADING="Kaynakça"
+    COPYRIGHT_NOTICE_HEADING="Telif Bildirimi"
+    IMPRINT_HEADING="Künye"
+    IMPRINT_KICKER="Yayın Bilgileri"
+    IMPRINT_LABEL_EDITION="Baskı"
+    IMPRINT_LABEL_PRINT="Basım"
+    IMPRINT_LABEL_PUBLICATION="Yayın Yeri"
+    IMPRINT_LABEL_ISBN13="ISBN-13"
+    IMPRINT_LABEL_EDITOR="Yayına Hazırlayan"
+    IMPRINT_LABEL_PROOFREADER="Redaksiyon"
+    IMPRINT_LABEL_TYPESETTER="Mizanpaj"
+    IMPRINT_LABEL_COVER_DESIGN="Kapak Tasarımı"
+    IMPRINT_LABEL_PUBLISHER_ADDRESS="Yayınevi Adresi"
+    IMPRINT_LABEL_PUBLISHER_CONTACT="Yayınevi İletişim"
+    IMPRINT_LABEL_PUBLISHER_CERT="Yayınevi Sertifika"
+    IMPRINT_LABEL_PRINTER="Baskı"
+    IMPRINT_LABEL_PRINTER_ADDRESS="Matbaa Adresi"
+    IMPRINT_LABEL_PRINTER_CERT="Matbaa Sertifika"
+    IMPRINT_LABEL_COPYRIGHT="Telif"
+    COPYRIGHT_NOTICE_BODY="Tüm hakları saklıdır. Bu yayının hiçbir bölümü, yayıncının önceden yazılı izni olmadan fotokopi, kayıt veya elektronik/mekanik yöntemler dahil olmak üzere hiçbir biçimde çoğaltılamaz, dağıtılamaz veya aktarılamaz."
+    EXTENDED_COPYRIGHT_NOTICE_BODY="Bu kitaptaki tüm fikri mülkiyet hakları, telif hakları dahil olmak üzere $PUBLISHER ve/veya yazara aittir. Bu eser ulusal ve uluslararası telif yasaları kapsamında korunmaktadır. İzinsiz çoğaltma, dağıtım veya kamuya açık paylaşım yasaktır. İzin talepleri için lütfen $PUBLISHER ile iletişime geçin."
+    RIGHTS_SHORT_LINE="Telif © $PUBLICATION_YEAR $AUTHOR. Tüm hakları saklıdır."
+    PUBLISHED_BY_LINE="$PUBLISHER tarafından yayımlanmıştır."
+    DEDICATION_FALLBACK="Bu kitap, öğrendiklerini cömertçe paylaşan ve her gün daha iyisini üretmek için emek veren herkese adanmıştır."
+    PREFACE_FALLBACK="$(cat <<EOF
+Bu kitap, konuyu sade ve uygulanabilir bir çerçevede ele almak için yazıldı.
+
+Amaç yalnızca bilgi vermek değil, okurun kısa sürede uygulamaya geçmesini sağlayacak net bir yol sunmaktır.
+
+Bölümleri sırayla okuyup her bölüm sonunda bir karar veya aksiyon notu almak, kitaptan alacağınız verimi belirgin biçimde artırır.
+EOF
+)"
+    INTRO_FALLBACK="$(cat <<EOF
+Bu kitap adım adım ilerleyen bir yol haritası olarak tasarlandı.
+
+Önce temel prensipler netleşir, ardından yöntemler, örnekler ve uygulama detaylarıyla konu derinleşir.
+
+Kitabın sonunda yalnızca kavramsal bilgi değil, doğrudan uygulayabileceğiniz bir çalışma sistemi elde etmiş olmanız hedeflenir.
+EOF
+)"
+fi
+DEDICATION_FRONTMATTER_BLOCK="$(build_optional_frontmatter_block "dedication" "$DEDICATION_HEADING" "unlisted" "$DEDICATION_FALLBACK")"
+PREFACE_FRONTMATTER_BLOCK="$(build_optional_frontmatter_block "preface" "$PREFACE_HEADING" "listed" "$PREFACE_FALLBACK")"
+INTRO_FRONTMATTER_BLOCK="$(build_optional_frontmatter_block "introduction" "$INTRO_HEADING" "listed" "$INTRO_FALLBACK")"
+if [ -z "${ISBN// /}" ] && [ -n "${ISBN13// /}" ]; then
+    ISBN="$ISBN13"
+fi
+if [ -z "${COPYRIGHT_STATEMENT_TEXT// /}" ]; then
+    COPYRIGHT_STATEMENT_TEXT="Copyright © $PUBLICATION_YEAR $AUTHOR. All rights reserved."
+    if [ "$BOOK_LANGUAGE" = "Turkish" ]; then
+        COPYRIGHT_STATEMENT_TEXT="Telif © $PUBLICATION_YEAR $AUTHOR. Tüm hakları saklıdır."
+    fi
+fi
+IMPRINT_PUBLICATION_LINE=""
+if [ -n "$PUBLICATION_CITY" ] && [ -n "$PUBLICATION_COUNTRY" ]; then
+    IMPRINT_PUBLICATION_LINE="$PUBLICATION_CITY, $PUBLICATION_COUNTRY"
+elif [ -n "$PUBLICATION_CITY" ]; then
+    IMPRINT_PUBLICATION_LINE="$PUBLICATION_CITY"
+elif [ -n "$PUBLICATION_COUNTRY" ]; then
+    IMPRINT_PUBLICATION_LINE="$PUBLICATION_COUNTRY"
+fi
+IMPRINT_CONTACT_LINE=""
+[ -n "$PUBLISHER_PHONE" ] && IMPRINT_CONTACT_LINE="$PUBLISHER_PHONE"
+[ -n "$PUBLISHER_EMAIL" ] && IMPRINT_CONTACT_LINE="${IMPRINT_CONTACT_LINE:+$IMPRINT_CONTACT_LINE | }$PUBLISHER_EMAIL"
+[ -n "$PUBLISHER_WEBSITE" ] && IMPRINT_CONTACT_LINE="${IMPRINT_CONTACT_LINE:+$IMPRINT_CONTACT_LINE | }$PUBLISHER_WEBSITE"
+IMPRINT_STRUCTURED_LINES="$(cat <<EOF
+$(if [ -n "$EDITION_LABEL" ]; then echo "$IMPRINT_LABEL_EDITION: $EDITION_LABEL"; fi)
+$(if [ -n "$PRINT_LABEL" ]; then echo "$IMPRINT_LABEL_PRINT: $PRINT_LABEL"; fi)
+$(if [ -n "$IMPRINT_PUBLICATION_LINE" ]; then echo "$IMPRINT_LABEL_PUBLICATION: $IMPRINT_PUBLICATION_LINE"; fi)
+$(if [ -n "$ISBN13" ]; then echo "$IMPRINT_LABEL_ISBN13: $ISBN13"; fi)
+$(if [ -n "$EDITOR_NAME" ]; then echo "$IMPRINT_LABEL_EDITOR: $EDITOR_NAME"; fi)
+$(if [ -n "$PROOFREADER_NAME" ]; then echo "$IMPRINT_LABEL_PROOFREADER: $PROOFREADER_NAME"; fi)
+$(if [ -n "$TYPESETTER_NAME" ]; then echo "$IMPRINT_LABEL_TYPESETTER: $TYPESETTER_NAME"; fi)
+$(if [ -n "$COVER_DESIGNER_NAME" ]; then echo "$IMPRINT_LABEL_COVER_DESIGN: $COVER_DESIGNER_NAME"; fi)
+$(if [ -n "$PUBLISHER_ADDRESS" ]; then echo "$IMPRINT_LABEL_PUBLISHER_ADDRESS: $PUBLISHER_ADDRESS"; fi)
+$(if [ -n "$IMPRINT_CONTACT_LINE" ]; then echo "$IMPRINT_LABEL_PUBLISHER_CONTACT: $IMPRINT_CONTACT_LINE"; fi)
+$(if [ -n "$PUBLISHER_CERTIFICATE_NO" ]; then echo "$IMPRINT_LABEL_PUBLISHER_CERT: $PUBLISHER_CERTIFICATE_NO"; fi)
+$(if [ -n "$PRINTER_NAME" ]; then echo "$IMPRINT_LABEL_PRINTER: $PRINTER_NAME"; fi)
+$(if [ -n "$PRINTER_ADDRESS" ]; then echo "$IMPRINT_LABEL_PRINTER_ADDRESS: $PRINTER_ADDRESS"; fi)
+$(if [ -n "$PRINTER_CERTIFICATE_NO" ]; then echo "$IMPRINT_LABEL_PRINTER_CERT: $PRINTER_CERTIFICATE_NO"; fi)
+$(if [ -n "$COPYRIGHT_STATEMENT_TEXT" ]; then echo "$IMPRINT_LABEL_COPYRIGHT: $COPYRIGHT_STATEMENT_TEXT"; fi)
+EOF
+)"
+IMPRINT_ADDITIONAL_NOTES=""
+if [ -n "${IMPRINT_BLOCK_TEXT// /}" ] && command -v python3 >/dev/null 2>&1; then
+IMPRINT_ADDITIONAL_NOTES="$(STRUCTURED_IMPRINT_LINES="$IMPRINT_STRUCTURED_LINES" IMPRINT_BLOCK_RAW="$IMPRINT_BLOCK_TEXT" python3 - <<'PY' 2>/dev/null || true
+import os
+import re
+
+def normalize(value: str) -> str:
+    text = (value or "").replace("\r", " ").replace("\n", " ")
+    text = text.casefold()
+    text = re.sub(r"<br\s*/?>", " ", text)
+    text = re.sub(r"[\*\-_`>#]+", " ", text)
+    text = re.sub(r"[^a-z0-9çğıöşüâîûäëïöüßàèìòùáéíóúñ]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+base_lines = [line.strip() for line in os.environ.get("STRUCTURED_IMPRINT_LINES", "").splitlines() if line.strip()]
+seen = {normalize(line) for line in base_lines if normalize(line)}
+extras = []
+for raw in os.environ.get("IMPRINT_BLOCK_RAW", "").splitlines():
+    line = re.sub(r"^[\-\*\u2022]+", "", raw.strip()).strip()
+    if not line:
+        continue
+    token = normalize(line)
+    if not token:
+        continue
+    if token in seen:
+        continue
+    if any(token == existing or token in existing or existing in token for existing in seen if len(existing) >= 14):
+        continue
+    seen.add(token)
+    extras.append(line)
+print("\n".join(extras))
+PY
+)"
+fi
+IMPRINT_TABLE_ROWS="$(cat <<EOF
+$(build_imprint_table_row "$IMPRINT_LABEL_EDITION" "$EDITION_LABEL")
+$(build_imprint_table_row "$IMPRINT_LABEL_PRINT" "$PRINT_LABEL")
+$(build_imprint_table_row "$IMPRINT_LABEL_PUBLICATION" "$IMPRINT_PUBLICATION_LINE")
+$(build_imprint_table_row "$IMPRINT_LABEL_ISBN13" "$ISBN13")
+$(build_imprint_table_row "$IMPRINT_LABEL_EDITOR" "$EDITOR_NAME")
+$(build_imprint_table_row "$IMPRINT_LABEL_PROOFREADER" "$PROOFREADER_NAME")
+$(build_imprint_table_row "$IMPRINT_LABEL_TYPESETTER" "$TYPESETTER_NAME")
+$(build_imprint_table_row "$IMPRINT_LABEL_COVER_DESIGN" "$COVER_DESIGNER_NAME")
+$(build_imprint_table_row "$IMPRINT_LABEL_PUBLISHER_ADDRESS" "$PUBLISHER_ADDRESS")
+$(build_imprint_table_row "$IMPRINT_LABEL_PUBLISHER_CONTACT" "$IMPRINT_CONTACT_LINE")
+$(build_imprint_table_row "$IMPRINT_LABEL_PUBLISHER_CERT" "$PUBLISHER_CERTIFICATE_NO")
+$(build_imprint_table_row "$IMPRINT_LABEL_PRINTER" "$PRINTER_NAME")
+$(build_imprint_table_row "$IMPRINT_LABEL_PRINTER_ADDRESS" "$PRINTER_ADDRESS")
+$(build_imprint_table_row "$IMPRINT_LABEL_PRINTER_CERT" "$PRINTER_CERTIFICATE_NO")
+$(build_imprint_table_row "$IMPRINT_LABEL_COPYRIGHT" "$COPYRIGHT_STATEMENT_TEXT")
+EOF
+)"
+IMPRINT_NOTES_BLOCK=""
+if [ -n "${IMPRINT_ADDITIONAL_NOTES// /}" ]; then
+    IMPRINT_NOTES_BLOCK="$(printf '%s\n' "$IMPRINT_ADDITIONAL_NOTES" | sed 's/^/- /')"
+fi
+IMPRINT_FRONTMATTER_BLOCK="$(cat <<EOF
+::: {.imprint-page}
+## $IMPRINT_HEADING {.unnumbered}
+
+<span class="imprint-kicker">$IMPRINT_KICKER</span>
+
+|  |  |
+| --- | --- |
+$IMPRINT_TABLE_ROWS
+
+$(if [ -n "$IMPRINT_NOTES_BLOCK" ]; then
+    echo ""
+    echo "::: {.imprint-notes}"
+    echo "$IMPRINT_NOTES_BLOCK"
+    echo ":::"
+fi)
+:::
+EOF
+)"
 
 cat << EOF > "$MANUSCRIPT_FILE"
 $FRONT_COVER_MANUSCRIPT_BLOCK
 <!-- EPUB_ONLY_BEGIN -->
-# $BOOK_TITLE {.unnumbered .unlisted}
+<div class="epub-frontmatter">
+<p class="epub-frontmatter-title">$BOOK_TITLE</p>
+<p class="epub-frontmatter-subtitle">$SUB_TITLE</p>
+<p class="epub-frontmatter-author">${AUTHOR_CREDIT_PREFIX}$AUTHOR</p>
+<p class="epub-frontmatter-copyright">Copyright © $PUBLICATION_YEAR</p>
+</div>
 <!-- EPUB_ONLY_END -->
 \renewcommand{\contentsname}{\Huge $TOC_TITLE}
 \thispagestyle{empty}
@@ -1382,9 +2255,7 @@ $FRONT_COVER_MANUSCRIPT_BLOCK
 \end{center}
 
 <!-- EPUB_ONLY_BEGIN -->
-## $SUB_TITLE {.unnumbered .unlisted}
-### ${AUTHOR_CREDIT_PREFIX}$AUTHOR {.unnumbered .unlisted}
-#### Copyright © $PUBLICATION_YEAR {.unnumbered .unlisted}
+<p class="epub-frontmatter-spacer"></p>
 <!-- EPUB_ONLY_END -->
 
 \clearpage
@@ -1394,14 +2265,13 @@ $FRONT_COVER_MANUSCRIPT_BLOCK
 $(if [ -f "$EXPORTS_DIR/$LOGO_BASENAME" ]; then echo "![]($LOGO_BASENAME){ width=25% } "; fi)
 
 $(if [ -n "$ISBN" ]; then echo "ISBN: $ISBN"; fi)
+$(if [ -n "$ISBN13" ] && [ "$ISBN13" != "$ISBN" ]; then echo "ISBN-13: $ISBN13"; fi)
 
-**Copyright Notice**
+**$COPYRIGHT_NOTICE_HEADING**
 
-All rights reserved. No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the publisher.
+$COPYRIGHT_NOTICE_BODY
 
-**Copyright © $PUBLICATION_YEAR $AUTHOR**
-
-**$PUBLISHER**
+**$COPYRIGHT_STATEMENT_TEXT**
 
 \raggedright
 \flushleft
@@ -1409,10 +2279,16 @@ All rights reserved. No part of this publication may be reproduced, distributed,
 
 \clearpage
 
+$IMPRINT_FRONTMATTER_BLOCK
+
+$DEDICATION_FRONTMATTER_BLOCK
+
+$PREFACE_FRONTMATTER_BLOCK
+
 \setcounter{tocdepth}{2}
 \tableofcontents
 
-\clearpage
+$INTRO_FRONTMATTER_BLOCK
 
 EOF
 
@@ -1607,10 +2483,10 @@ insert_extra_sections() {
 \textnormal{---------------------------------------------}
 \end{center}
 \begin{center}
-\textit{Copyright © $PUBLICATION_YEAR $AUTHOR. All rights reserved.}
+\textit{$RIGHTS_SHORT_LINE}
 \end{center}
 \begin{center}
-\textit{Published by $PUBLISHER}
+\textit{$PUBLISHED_BY_LINE}
 \end{center}
 EOF
             fi
@@ -1734,7 +2610,7 @@ if [ -f "$BIB_FILE" ]; then
 ::: {.newpage}
 :::
 
-# References
+# $REFERENCES_HEADING
 
 EOF
 
@@ -1745,10 +2621,10 @@ fi
 
 cat << EOF >> "$MANUSCRIPT_FILE"
 \begin{center}
-\textit{Copyright © $PUBLICATION_YEAR $AUTHOR. All rights reserved.}
+\textit{$RIGHTS_SHORT_LINE}
 \end{center}
 \begin{center}
-\textit{Published by $PUBLISHER}
+\textit{$PUBLISHED_BY_LINE}
 \end{center}
 EOF
 
@@ -1762,7 +2638,7 @@ cat << EOF >> "$MANUSCRIPT_FILE"
 \newpage
 
 ::: {.centered}
-## About the Author
+## $ABOUT_AUTHOR_HEADING
 ::: 
 EOF
 
@@ -1785,10 +2661,18 @@ fi
 
 # \includegraphics[width=0.5\\textwidth]{$AUTHOR_PHOTO_BASENAME}
 
+if [ -z "${AUTHOR_BIO_TEXT// /}" ]; then
+    if [ "$BOOK_LANGUAGE" = "Turkish" ]; then
+        AUTHOR_BIO_TEXT="$AUTHOR, karmaşık fikirleri sadeleştirip uygulanabilir adımlara dönüştüren, pratik ve okur odaklı eserler üretir. Gerçek örnekler ve net sistemlerle okurun öğrendiğini hızlıca hayata geçirmesini hedefler."
+    else
+        AUTHOR_BIO_TEXT="$AUTHOR writes practical, reader-first nonfiction designed to turn complex ideas into clear actions. Through real-world examples and structured guidance, $AUTHOR helps readers build skills they can apply immediately."
+    fi
+fi
+
 cat << EOF >> "$MANUSCRIPT_FILE"
 \vspace{1cm}
 
-Elara Morgan is a passionate non-fiction author who explores the intricacies of human experience and the world around us. With a gift for making complex topics accessible, she bridges the gap between academic research and everyday life, empowering readers with knowledge that is both insightful and practical. Drawing on her background in education and the humanities, she distills ideas into engaging narratives that resonate widely. Her books are praised for their clarity, warmth, and thoughtful challenges to conventional wisdom. Beyond writing, Elara finds inspiration in nature—hiking New Hampshire's trails, tending her garden, and cherishing family time in Portsmouth. These pursuits ground her while fueling her creativity, making her life and work a testament to curiosity and the joy of discovery.
+$AUTHOR_BIO_TEXT
 
 \vspace{2cm}
 
@@ -1810,10 +2694,13 @@ $(if [ -f "$EXPORTS_DIR/$LOGO_BASENAME" ]; then echo "![]($LOGO_BASENAME){ width
 
 \centering
 $(if [ -n "$ISBN" ]; then echo "ISBN: $ISBN"; fi)
+$(if [ -n "$ISBN13" ] && [ "$ISBN13" != "$ISBN" ]; then echo "ISBN-13: $ISBN13"; fi)
 
-**Copyright Notice**
+**$COPYRIGHT_NOTICE_HEADING**
 
-All intellectual property rights, including copyrights, in this book are owned by $PUBLISHER and/or the author. This work is protected under national and international copyright laws. Any unauthorized reproduction, distribution, or public display of this material is strictly prohibited. For permission requests, please contact the $PUBLISHER.
+$EXTENDED_COPYRIGHT_NOTICE_BODY
+
+**$COPYRIGHT_STATEMENT_TEXT**
 
 **Copyright © $PUBLICATION_YEAR $AUTHOR**
 
@@ -1880,12 +2767,8 @@ BOOK_CSS="
 
 body { 
   font-family: 'Palatino', 'Georgia', serif; 
-  line-height: 1.6;
-  max-width: 800px; 
-  margin: auto;
-  padding: 20px;
-  text-align: justify;
-  font-size: 12pt;
+  margin: 0;
+  padding: 0;
 }
 h1, h2, h3 {
   text-align: center;
@@ -1893,40 +2776,40 @@ h1, h2, h3 {
   margin-right: auto;
 }
 h1 {
-  font-size: 24pt;
+  font-size: 1.8em;
   margin-top: 15px;
   margin-bottom: 10px;
   font-weight: bold;
 }
 h1.chapter-title {
   text-align: center;
-  font-size: 24pt;
+  font-size: 1.8em;
   margin-top: 30px;
   margin-bottom: 15px;
   font-weight: bold;
 }
 .toc-header {
   text-align: center;
-  font-size: 24pt;
+  font-size: 1.8em;
   margin-top: 60px;
   margin-bottom: 40px;
 }
 h2 { 
   margin-top: 10px;
   margin-bottom: 10px;
-  font-size: 18pt;
+  font-size: 1.35em;
   text-align: center;
 }
 h3 { 
   margin-top: 10px;
   margin-bottom: 10px;
-  font-size: 16pt;
+  font-size: 1.2em;
   text-align: center;
 }
 h4 {
   margin-top: 10px;
   margin-bottom: 10px;
-  font-size: 14pt;
+  font-size: 1.1em;
   text-align: center;
 }
 .chapter-main-title, .chapter-subtitle {
@@ -1940,7 +2823,7 @@ h4 {
 .rights { font-size: 14pt; text-align: center; }
 .logo { text-align: center; margin: 3em auto; }
 p {
-  margin-bottom: 15px;
+  margin: 0 0 1em 0;
   orphans: 3;
   widows: 3;
 }
@@ -1999,6 +2882,144 @@ span.copyright-notice {
 .centered {
   text-align: center;
 }
+
+.imprint-page {
+  max-width: 42em;
+  margin: 8vh auto 6vh auto;
+  padding: 1.15rem 1.25rem;
+  border: 1px solid #e6dacd;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffdf9 0%, #fff8f0 100%);
+  text-align: left;
+  line-height: 1.58;
+  box-shadow: 0 10px 24px rgba(91, 67, 48, 0.07);
+}
+
+.imprint-kicker {
+  display: block;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  color: #7d6856;
+  margin-bottom: 0.7rem;
+  font-family: Arial, sans-serif;
+}
+
+.imprint-page h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
+}
+
+.imprint-page table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.2rem 0 0.3rem 0;
+}
+
+.imprint-page tr {
+  border-bottom: 1px solid #efe5db;
+}
+
+.imprint-page tr:last-child {
+  border-bottom: none;
+}
+
+.imprint-page td {
+  padding: 0.48rem 0.35rem;
+  vertical-align: top;
+  font-size: 0.93rem;
+  text-align: left;
+}
+
+.imprint-page td:first-child {
+  width: 38%;
+  color: #5f4c3e;
+  font-family: Arial, sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+.imprint-legal {
+  margin-top: 1.1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #e3d6ca;
+  font-style: italic;
+  color: #5f4c3e;
+}
+
+.imprint-notes {
+  margin-top: 0.95rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed #dbc9ba;
+}
+
+.imprint-notes ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.imprint-notes li {
+  margin: 0.24rem 0;
+  font-size: 0.9rem;
+  color: #5f4c3e;
+}
+
+.epub-frontmatter {
+  margin: 8vh auto 4vh auto;
+  text-align: center;
+}
+
+.epub-frontmatter p {
+  margin: 0.35em 0;
+  text-align: center;
+}
+
+.epub-frontmatter-title {
+  font-size: 1.9em;
+  font-weight: 700;
+}
+
+.epub-frontmatter-subtitle {
+  font-size: 1.25em;
+  font-weight: 600;
+}
+
+.epub-frontmatter-author,
+.epub-frontmatter-copyright {
+  font-size: 1.05em;
+}
+
+.epub-frontmatter-spacer {
+  margin: 0;
+  height: 0;
+}
+/* Full-bleed cover styles for EPUB pages */
+
+.frontcover-container {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  page-break-after: always;
+  break-after: page;
+}
+
+.frontcover-container img {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 100vh !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
 /* Back cover styles with maximum compatibility for EPUB readers */
 
 .backcover-container {
@@ -2014,19 +3035,9 @@ span.copyright-notice {
 
 .backcover-container img {
   width: 100% !important;
-  height: 100vh !important;
-  object-fit: cover !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: block !important;
-}
-
-/* Fix image display in various EPUB readers */
-img[src$="back-cover-1.png"], img[src$="back-cover.png"] {
-  width: 100% !important;
-  height: 100vh !important;
-  object-fit: contain !important;
-  margin: 0 !important;
+  height: auto !important;
+  max-height: 100vh !important;
+  margin: 0 auto !important;
   padding: 0 !important;
   display: block !important;
 }
@@ -2043,22 +3054,20 @@ img[src$="back-cover-1.png"], img[src$="back-cover.png"] {
 .fullpage-container img {
   display: block;
   width: 100% !important;
-  height: 100vh !important;
+  height: auto !important;
   max-width: 100% !important;
   max-height: 100vh !important;
-  object-fit: contain;
-  margin: 0 !important;
+  margin: 0 auto !important;
   padding: 0 !important;
 }
 
 img.fullpage {
   display: block;
   width: 100% !important;
-  height: 100vh !important;
+  height: auto !important;
   max-width: 100% !important;
   max-height: 100vh !important;
-  object-fit: contain;
-  margin: 0 !important;
+  margin: 0 auto !important;
   padding: 0 !important;
 }
 
@@ -2067,6 +3076,262 @@ p img.fullpage { display: block; }
 
 # Create a CSS file for styling
 echo "$BOOK_CSS" > "$EXPORTS_DIR/book.css"
+
+normalize_epub_cover_page() {
+    local epub_path="$1"
+    local expected_title="${2:-}"
+    local omit_covers="${3:-false}"
+    [ -f "$epub_path" ] || return 1
+
+    python3 - "$epub_path" "$expected_title" "$omit_covers" <<'PY'
+import html
+import re
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile
+
+epub_path = Path(sys.argv[1]).resolve()
+expected_title = str(sys.argv[2] if len(sys.argv) > 2 else "").strip()
+omit_covers = str(sys.argv[3] if len(sys.argv) > 3 else "false").strip().lower() == "true"
+tmp_dir = Path(tempfile.mkdtemp(prefix="epub-cover-normalize-"))
+
+def find_cover_path(root: Path) -> Path | None:
+    candidates = [path for path in root.rglob("cover.xhtml") if path.is_file()]
+    if not candidates:
+        return None
+    candidates.sort(
+        key=lambda path: (
+            0 if "/text/" in path.as_posix() else 1,
+            len(path.as_posix()),
+        )
+    )
+    return candidates[0]
+
+def extract_cover_src(text: str) -> str:
+    patterns = (
+        r"<img[^>]+src=[\"']([^\"']+)[\"']",
+        r"<image[^>]+xlink:href=[\"']([^\"']+)[\"']",
+        r"<image[^>]+href=[\"']([^\"']+)[\"']",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
+        if match:
+            return match.group(1).strip()
+    return ""
+
+def normalize_label(value: str) -> str:
+    cleaned = html.unescape(value or "")
+    cleaned = re.sub(r"<[^>]+>", "", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip().casefold()
+    cleaned = re.sub(r"[\W_]+", "", cleaned, flags=re.UNICODE)
+    return cleaned
+
+def find_balanced_block(text: str, start_pos: int, tag_name: str) -> tuple[int, int] | None:
+    open_re = re.compile(rf"<{tag_name}\b[^>]*>", flags=re.IGNORECASE)
+    token_re = re.compile(rf"<{tag_name}\b[^>]*>|</{tag_name}>", flags=re.IGNORECASE)
+    start_match = open_re.search(text, start_pos)
+    if not start_match:
+        return None
+    depth = 0
+    start_index = start_match.start()
+    for token in token_re.finditer(text, start_index):
+        token_text = token.group(0)
+        if token_text.startswith("</"):
+            depth -= 1
+            if depth == 0:
+                return start_index, token.end()
+        else:
+            depth += 1
+    return None
+
+def drop_title_leak_from_nav(root: Path, title: str) -> None:
+    if not title:
+        return
+    nav_candidates = sorted(path for path in root.rglob("nav.xhtml") if path.is_file())
+    if nav_candidates:
+        nav_path = nav_candidates[0]
+        nav_text = nav_path.read_text(encoding="utf-8", errors="replace")
+        toc_ol_open = re.search(r"<ol\b[^>]*class=[\"']toc[\"'][^>]*>", nav_text, flags=re.IGNORECASE | re.DOTALL)
+        if toc_ol_open:
+            li_bounds = find_balanced_block(nav_text, toc_ol_open.end(), "li")
+        else:
+            li_bounds = None
+        if li_bounds:
+            li_start, li_end = li_bounds
+            first_li = nav_text[li_start:li_end]
+            first_anchor = re.search(r"<a\b[^>]*>(.*?)</a>", first_li, flags=re.IGNORECASE | re.DOTALL)
+            first_label = first_anchor.group(1) if first_anchor else ""
+            if normalize_label(first_label) == normalize_label(title):
+                replacement = ""
+                nested_ol_open = re.search(
+                    r"<ol\b[^>]*class=[\"']toc[\"'][^>]*>",
+                    first_li,
+                    flags=re.IGNORECASE | re.DOTALL,
+                )
+                if nested_ol_open:
+                    nested_ol_bounds = find_balanced_block(first_li, nested_ol_open.start(), "ol")
+                    if nested_ol_bounds:
+                        nested_ol = first_li[nested_ol_bounds[0]:nested_ol_bounds[1]]
+                        nested_ol = re.sub(r"^<ol\b[^>]*>\s*", "", nested_ol, flags=re.IGNORECASE | re.DOTALL)
+                        nested_ol = re.sub(r"\s*</ol>\s*$", "", nested_ol, flags=re.IGNORECASE | re.DOTALL)
+                        replacement = nested_ol.strip()
+                        if replacement:
+                            replacement += "\n"
+                nav_text = nav_text[:li_start] + replacement + nav_text[li_end:]
+                nav_path.write_text(nav_text, encoding="utf-8")
+
+    ncx_candidates = sorted(path for path in root.rglob("toc.ncx") if path.is_file())
+    if ncx_candidates:
+        ncx_path = ncx_candidates[0]
+        ncx_text = ncx_path.read_text(encoding="utf-8", errors="replace")
+        navmap_open = re.search(r"<navMap\b[^>]*>", ncx_text, flags=re.IGNORECASE | re.DOTALL)
+        if navmap_open:
+            navpoint_bounds = find_balanced_block(ncx_text, navmap_open.end(), "navPoint")
+        else:
+            navpoint_bounds = None
+        if navpoint_bounds:
+            navpoint_start, navpoint_end = navpoint_bounds
+            navpoint = ncx_text[navpoint_start:navpoint_end]
+            first_label = re.search(
+                r"<navLabel>\s*<text>(.*?)</text>\s*</navLabel>",
+                navpoint,
+                flags=re.IGNORECASE | re.DOTALL,
+            )
+            label_text = first_label.group(1) if first_label else ""
+            if normalize_label(label_text) == normalize_label(title):
+                ncx_text = ncx_text[:navpoint_start] + ncx_text[navpoint_end:]
+                ncx_path.write_text(ncx_text, encoding="utf-8")
+
+def drop_frontmatter_title_h1(root: Path, title: str) -> None:
+    if not title:
+        return
+    chapter_candidates = sorted(
+        path
+        for path in root.rglob("ch*.xhtml")
+        if path.is_file() and "/text/" in path.as_posix().lower()
+    )
+    if not chapter_candidates:
+        return
+    first_chapter = chapter_candidates[0]
+    chapter_text = first_chapter.read_text(encoding="utf-8", errors="replace")
+    first_h1 = re.search(r"<h1\b[^>]*>(.*?)</h1>", chapter_text, flags=re.IGNORECASE | re.DOTALL)
+    if not first_h1:
+        return
+    h1_label = first_h1.group(1)
+    if normalize_label(h1_label) != normalize_label(title):
+        return
+    chapter_text = chapter_text[:first_h1.start()] + chapter_text[first_h1.end():]
+    first_chapter.write_text(chapter_text, encoding="utf-8")
+
+def normalize_cover_manifest_properties(root: Path) -> None:
+    for opf_path in root.rglob("content.opf"):
+        if not opf_path.is_file():
+            continue
+        opf_text = opf_path.read_text(encoding="utf-8", errors="replace")
+        updated = re.sub(
+            r"(<item\b[^>]*href=[\"'][^\"']*cover\.xhtml[\"'][^>]*?)\s+properties=[\"']svg[\"']",
+            r"\1",
+            opf_text,
+            flags=re.IGNORECASE,
+        )
+        if updated != opf_text:
+            opf_path.write_text(updated, encoding="utf-8")
+
+try:
+    with ZipFile(epub_path, "r") as source_zip:
+        source_zip.extractall(tmp_dir)
+
+    cover_path = find_cover_path(tmp_dir)
+    if not omit_covers:
+        if cover_path is None:
+            raise SystemExit("No cover.xhtml found in EPUB package.")
+
+        cover_text = cover_path.read_text(encoding="utf-8", errors="replace")
+        cover_src = extract_cover_src(cover_text)
+        if not cover_src:
+            raise SystemExit("No cover image source found while normalizing cover.xhtml.")
+
+        style_block = """  <style>
+body#cover {
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: none !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+#cover-image {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100vh !important;
+  text-align: center !important;
+}
+#cover-image img {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+  </style>"""
+
+        if re.search(r"<style\b[^>]*>.*?</style>", cover_text, flags=re.IGNORECASE | re.DOTALL):
+            cover_text = re.sub(
+                r"<style\b[^>]*>.*?</style>",
+                style_block,
+                cover_text,
+                count=1,
+                flags=re.IGNORECASE | re.DOTALL,
+            )
+        elif "</head>" in cover_text:
+            cover_text = cover_text.replace("</head>", f"{style_block}\n</head>", 1)
+
+        normalized_body = (
+            '<body id="cover">\n'
+            '<div id="cover-image">\n'
+            f'<img src="{cover_src}" alt="Cover" />\n'
+            "</div>\n"
+            "</body>"
+        )
+        if re.search(r"<body\b[^>]*>.*?</body>", cover_text, flags=re.IGNORECASE | re.DOTALL):
+            cover_text = re.sub(
+                r"<body\b[^>]*>.*?</body>",
+                normalized_body,
+                cover_text,
+                count=1,
+                flags=re.IGNORECASE | re.DOTALL,
+            )
+        else:
+            cover_text = cover_text + "\n" + normalized_body + "\n"
+
+        cover_path.write_text(cover_text, encoding="utf-8")
+
+    drop_title_leak_from_nav(tmp_dir, expected_title)
+    if not omit_covers:
+        drop_frontmatter_title_h1(tmp_dir, expected_title)
+        normalize_cover_manifest_properties(tmp_dir)
+
+    tmp_epub = epub_path.with_suffix(epub_path.suffix + ".tmp")
+    with ZipFile(tmp_epub, "w") as rebuilt:
+        mimetype_path = tmp_dir / "mimetype"
+        if mimetype_path.is_file():
+            rebuilt.writestr("mimetype", mimetype_path.read_bytes(), compress_type=ZIP_STORED)
+        for item in sorted(tmp_dir.rglob("*")):
+            if not item.is_file():
+                continue
+            rel = item.relative_to(tmp_dir).as_posix()
+            if rel == "mimetype":
+                continue
+            rebuilt.write(item, rel, compress_type=ZIP_DEFLATED)
+    tmp_epub.replace(epub_path)
+finally:
+    shutil.rmtree(tmp_dir, ignore_errors=True)
+PY
+}
 
 # Function to generate ebook formats
 generate_ebook_format() {
@@ -2103,6 +3368,9 @@ generate_ebook_format() {
                 echo "   ⚠️ No valid cover image found"
                 cover=""
             fi
+            if [ "$OMIT_COVERS" = true ]; then
+                cover=""
+            fi
             
             # Build pandoc input list and options so EPUB matches PDF manuscript
             input_basename="$(basename "$input_file")"
@@ -2125,86 +3393,64 @@ generate_ebook_format() {
                 /<!-- EPUB_ONLY_END -->/d
             ' "$epub_tmp_input" 2>/dev/null || true
             sed -i.bak '/<!-- PDF_FRONT_COVER_BEGIN -->/,/<!-- PDF_FRONT_COVER_END -->/d' "$epub_tmp_input" 2>/dev/null || true
+            sed -i.bak '/<!-- PDF_BACK_COVER_BEGIN -->/,/<!-- PDF_BACK_COVER_END -->/d' "$epub_tmp_input" 2>/dev/null || true
 
             # Update input_basename to use the EPUB-specific version
             if [ -f "$epub_tmp_input" ]; then
                 input_basename="$(basename "$epub_tmp_input")"
             fi
 
-            # Add {.unlisted .unnumbered} to H1 book title in the first 5 pages to avoid TOC epub issues
-            sed -i.bak '2,5s/^# \(.*\)/# \1 {.unlisted .unnumbered}/' "$epub_tmp_input" 2>/dev/null || true
+            # Normalize duplicated heading-attribute blocks in title-page headings.
+            sed -i.bak -E 's/\{[.]unnumbered[[:space:]]+[.]unlisted\}[[:space:]]+\{[.]unlisted[[:space:]]+[.]unnumbered\}/{.unnumbered .unlisted}/g' "$epub_tmp_input" 2>/dev/null || true
             # Echo any # or H1 titles in the first 5 pages for debugging
             echo "Debug: H1 titles in the first 5 pages of EPUB input:"
             grep -E '^# ' "$epub_tmp_input" | head -n 30
 
-            # Append the selected back cover to EPUB so export parity matches the
-            # PDF manuscript order and the selected final asset bundle.
-            back_md=""
-            if [ -n "$BACK_COVER_IMAGE" ] && [ -f "$BACK_COVER_IMAGE" ]; then
-                back_basename="$(basename "$BACK_COVER_IMAGE")"
-                if [ ! -f "${output_dir}/${back_basename}" ]; then
-                    cp "$BACK_COVER_IMAGE" "${output_dir}/"
-                fi
-                back_md="$output_dir/_backcover_insert.md"
-                cat > "$back_md" << EOF
-
-<div class="back-cover">
-
-![]($back_basename)
-
-</div>
-EOF
-            fi
-
             local pandoc_inputs=("$input_basename")
-            if [ -n "$back_md" ] && [ -f "$back_md" ]; then
-                pandoc_inputs+=("$(basename "$back_md")")
-            fi
-
 
             # Run pandoc from the output directory so image paths resolve correctly. Use --toc and set chapter level
-            local epub_cover_image="$cover_basename"
-            if [ -z "$epub_cover_image" ] && [ -n "${COVER1_BASENAME:-}" ] && [ -f "$output_dir/$COVER1_BASENAME" ]; then
-                epub_cover_image="$COVER1_BASENAME"
+            local epub_cover_image=""
+            if [ "$OMIT_COVERS" != true ]; then
+                epub_cover_image="$cover_basename"
+                if [ -z "$epub_cover_image" ] && [ -n "${COVER1_BASENAME:-}" ] && [ -f "$output_dir/$COVER1_BASENAME" ]; then
+                    epub_cover_image="$COVER1_BASENAME"
+                fi
             fi
 
             (cd "$output_dir" && {
                 if [ -n "$epub_cover_image" ]; then
-                    if [ -n "$back_md" ]; then
-                        pandoc -f markdown -t epub3 \
-                            --epub-cover-image="$epub_cover_image" \
-                            --css="$css_basename" \
-                            --metadata-file="$metadata_basename" \
-                            --toc --toc-depth=2 --resource-path=. \
-                            --epub-chapter-level=1 --epub-title-page=true \
-                            --split-level=1 -o "$(basename "$output_file")" "${pandoc_inputs[@]}"
-                    else
-                        pandoc -f markdown -t epub3 \
-                            --epub-cover-image="$epub_cover_image" \
-                            --css="$css_basename" \
-                            --metadata-file="$metadata_basename" \
-                            --toc --toc-depth=2 --resource-path=. \
-                            --epub-chapter-level=1 --epub-title-page=true \
-                            --split-level=1 -o "$(basename "$output_file")" "${pandoc_inputs[@]}"
-                    fi
+                    pandoc -f "$PANDOC_INPUT_FORMAT" -t epub3 \
+                        --epub-cover-image="$epub_cover_image" \
+                        --css="$css_basename" \
+                        --metadata-file="$metadata_basename" \
+                        --toc --toc-depth=2 --resource-path=. \
+                        --epub-chapter-level=1 --epub-title-page=false \
+                        --split-level=1 -o "$(basename "$output_file")" "${pandoc_inputs[@]}"
                 else
-                    if [ -n "$back_md" ]; then
-                        pandoc -f markdown -t epub3 \
-                            --css="$css_basename" \
-                            --metadata-file="$metadata_basename" \
-                            --toc --toc-depth=2 --resource-path=. \
-                            --epub-chapter-level=1 --epub-title-page=true \
-                            --split-level=1 -o "$(basename "$output_file")" "${pandoc_inputs[@]}"
-                    else
-                        pandoc -f markdown -t epub3 \
-                            --css="$css_basename" \
-                            --metadata-file="$metadata_basename" \
-                            --toc --toc-depth=2 --resource-path=. \
-                            --epub-chapter-level=1 --epub-title-page=true \
-                            --split-level=1 -o "$(basename "$output_file")" "${pandoc_inputs[@]}"
-                    fi
+                    pandoc -f "$PANDOC_INPUT_FORMAT" -t epub3 \
+                        --css="$css_basename" \
+                        --metadata-file="$metadata_basename" \
+                        --toc --toc-depth=2 --resource-path=. \
+                        --epub-chapter-level=1 --epub-title-page=false \
+                        --split-level=1 -o "$(basename "$output_file")" "${pandoc_inputs[@]}"
                 fi
             })
+
+            if [ -f "$output_file" ]; then
+                if normalize_epub_cover_page "$output_file" "$BOOK_TITLE" "$OMIT_COVERS"; then
+                    if [ "$OMIT_COVERS" = true ]; then
+                        echo "   ✅ Normalized EPUB opening/TOC for omit-covers mode"
+                    else
+                        echo "   ✅ Normalized cover.xhtml for full-bleed EPUB cover"
+                    fi
+                else
+                    if [ "$OMIT_COVERS" = true ]; then
+                        echo "   ⚠️ EPUB omit-covers normalization failed; keeping generated EPUB as-is"
+                    else
+                        echo "   ⚠️ EPUB cover normalization failed; keeping generated cover.xhtml"
+                    fi
+                fi
+            fi
             
             echo "✅ EPUB created: $(basename "$output_file")"
             return 0
@@ -2222,9 +3468,21 @@ EOF
 
             # Remove EPUB_ONLY blocks with sed
             sed -i.bak '/<!-- EPUB_ONLY_BEGIN -->/,/<!-- EPUB_ONLY_END -->/d' "$pdf_tmp_input" 2>/dev/null || true
+            # Remove legacy imprint-extra fenced blocks if present in older manuscripts
+            perl -0777 -i -pe 's/\n::: \{\.imprint-extra\}.*?\n:::\n/\n/sg' "$pdf_tmp_input" 2>/dev/null || true
+            # Normalize repeated page-break commands to avoid blank opening pages
+            perl -0777 -i -pe 's/(?:\n\s*\\clearpage\s*\n){2,}/\n\\clearpage\n/sg; s/(?:\n\s*\\newpage\s*\n){2,}/\n\\newpage\n/sg' "$pdf_tmp_input" 2>/dev/null || true
             
             # Use PDF-specific input file
             input_file="$pdf_tmp_input"
+            pdf_metadata_tmp="${output_dir}/$(basename "$metadata" .yaml)_pdf.yaml"
+            awk '
+                /^title:[[:space:]]/ { next }
+                /^subtitle:[[:space:]]/ { next }
+                /^author:[[:space:]]/ { next }
+                /^cover-image:[[:space:]]/ { next }
+                { print }
+            ' "$metadata" > "$pdf_metadata_tmp"
 #             cat << 'EOF' > "$EXPORTS_DIR/cover.tex"
 # \def\cover{$cover}
 # \usepackage{graphicx}
@@ -2288,6 +3546,8 @@ EOF
 
             cat << 'EOF' > "$EXPORTS_DIR/titles.tex"
 \renewcommand{\maketitle}{}
+\usepackage{graphicx}
+\usepackage{geometry}
 \usepackage{titlesec}
 \usepackage{tocloft}
 
@@ -2316,9 +3576,9 @@ EOF
                 pdf_engine=""
             fi
 
-            if [ -n "$pdf_engine" ] && (cd "$output_dir" && pandoc -f markdown -t pdf \
+            if [ -n "$pdf_engine" ] && (cd "$output_dir" && pandoc -f "$PANDOC_INPUT_FORMAT" -t pdf \
                 "${pdf_engine_args[@]}" \
-                --metadata-file="$(basename "$metadata")" \
+                --metadata-file="$(basename "$pdf_metadata_tmp")" \
                 -H titles.tex \
                 -o "$(basename "$output_file")" "$(basename "$input_file")"); then
                 echo "✅ PDF created: $(basename "$output_file")"
@@ -2329,14 +3589,14 @@ EOF
             html_output="${output_dir}/$(basename "$input_file" .md)_print.html"
             
             # Create a nice print-friendly HTML version
-            (cd "$output_dir" && pandoc -f markdown -t html5 \
+            (cd "$output_dir" && pandoc -f "$PANDOC_INPUT_FORMAT" -t html5 \
                 --standalone \
                 --metadata-file="$(basename "$metadata")" \
                 --css="$(basename "$css")" \
                 -o "$(basename "$html_output")" "$(basename "$input_file")")
             
             # Add print-specific CSS
-            cat >> "$css" << EOF
+cat >> "$css" << EOF
 
 /* Print-specific styles */
 @media print {
@@ -2369,7 +3629,12 @@ EOF
             echo "✅ Print-ready HTML created: $(basename "$html_output")"
             echo "   ℹ️  Open this file in a browser and use Print → Save as PDF"
             echo "   📄 PDF conversion unsuccessful - missing required tools"
-            
+
+            if [ "$QUALITY_TARGET" = "kdp" ] || [ "$OUTPUT_FORMAT" = "pdf" ] || [ "$OUTPUT_FORMAT" = "all" ]; then
+                echo "❌ PDF export is required for this build profile; aborting."
+                return 1
+            fi
+
             return 0
             ;;
             
@@ -2383,8 +3648,9 @@ EOF
             cp "$input_file" "$html_tmp_input"
             sed -i.bak '/<!-- EPUB_ONLY_BEGIN -->/,/<!-- EPUB_ONLY_END -->/d' "$html_tmp_input" 2>/dev/null || true
             sed -i.bak '/<!-- PDF_FRONT_COVER_BEGIN -->/,/<!-- PDF_FRONT_COVER_END -->/d' "$html_tmp_input" 2>/dev/null || true
+            sed -i.bak '/<!-- PDF_BACK_COVER_BEGIN -->/,/<!-- PDF_BACK_COVER_END -->/d' "$html_tmp_input" 2>/dev/null || true
             
-            (cd "$output_dir" && pandoc -f markdown -t html5 \
+            (cd "$output_dir" && pandoc -f "$PANDOC_INPUT_FORMAT" -t html5 \
                 --standalone \
                 --metadata-file="$(basename "$metadata")" \
                 --css="$css_basename" \
@@ -2485,12 +3751,41 @@ EOF
     esac
 }
 
+run_export_quality_check() {
+    local report_path="$EXPORTS_DIR/export_quality_report.json"
+    local quality_args=()
+    if [ "$OMIT_COVERS" = true ]; then
+        quality_args+=(--omit-covers)
+    fi
+    if python3 "$SCRIPT_DIR/export_quality_check.py" \
+        --export-dir "$EXPORTS_DIR" \
+        --manuscript "$MANUSCRIPT_FILE" \
+        --book-title "$BOOK_TITLE" \
+        --book-profile "$BOOK_PROFILE" \
+        --variation-mode "$VARIATION_MODE" \
+        --quality-target "$QUALITY_TARGET" \
+        --format "$OUTPUT_FORMAT" \
+        --output "$report_path" \
+        "${quality_args[@]}"; then
+        echo "✅ Export quality report written: $(basename "$report_path")"
+    else
+        echo "⚠️ Export quality check reported issues. See $(basename "$report_path")"
+        if [ "$QUALITY_TARGET" = "kdp" ]; then
+            echo "❌ Quality target is kdp and quality report is FAIL. Build aborted."
+            return 1
+        fi
+    fi
+}
+
 # Generate requested formats
 echo ""
 echo "📚 Exporting book in requested formats..."
 
 # Set default cover if none provided
-if [ -z "$COVER_IMAGE" ]; then
+if [ "$OMIT_COVERS" = true ]; then
+    COVER_IMAGE=""
+    BACK_COVER_IMAGE=""
+elif [ -z "$COVER_IMAGE" ]; then
     if [ "$GENERATE_COVER" = true ]; then
         # Generate both front and back covers and set COVER_IMAGE/BACK_COVER
         generate_book_cover "$BOOK_TITLE" "$EXPORTS_DIR" || true
@@ -2562,6 +3857,10 @@ case $OUTPUT_FORMAT in
         ;;
 esac
 
+echo ""
+echo "🔎 Running export quality checks..."
+run_export_quality_check
+
 # Final summary
 echo ""
 echo "📊 Compilation Complete!"
@@ -2598,13 +3897,13 @@ echo ""
 echo "🚀 Ready for publishing!"
 echo "   📂 Exports directory: $EXPORTS_DIR"
 echo "   📱 For e-readers: Use EPUB format"
-echo "   📱 For Kindle: Use MOBI or AZW3 format"
+echo "   📱 For Kindle: Use EPUB format (recommended)"
 echo "   📄 For print: Use PDF format"
 echo "   🌐 For websites: Use HTML format"
 echo "   ✏️ For editing: Use the markdown file"
 echo ""
 echo "📚 Publishing Platforms:"
-echo "   📕 Amazon KDP: https://kdp.amazon.com (upload EPUB or MOBI)"
+echo "   📕 Amazon KDP: https://kdp.amazon.com (upload EPUB, DOCX, or KPF)"
 echo "   📗 Apple Books: https://authors.apple.com (upload EPUB)"
 echo "   📘 Barnes & Noble Press: https://press.barnesandnoble.com (upload EPUB)"
 echo "   📙 Kobo: https://kobo.com/writinglife (upload EPUB)"

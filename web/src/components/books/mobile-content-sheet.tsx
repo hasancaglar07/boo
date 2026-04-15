@@ -2,6 +2,7 @@
 
 import { BookOpen, Download, FileText, LayoutGrid, Menu, X } from "lucide-react";
 import { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -73,10 +74,11 @@ export function MobileContentSheetContent({
   activeTab = "toc",
   onTabChange,
 }: MobileContentSheetContentProps) {
+  const t = useTranslations("MobileContentSheet");
   const tabs = [
-    { id: "toc" as TabType, label: "Contents", icon: LayoutGrid },
-    { id: "details" as TabType, label: "Details", icon: FileText },
-    { id: "actions" as TabType, label: "Actions", icon: BookOpen },
+    { id: "toc" as TabType, label: t("tabContents"), icon: LayoutGrid },
+    { id: "details" as TabType, label: t("tabDetails"), icon: FileText },
+    { id: "actions" as TabType, label: t("tabActions"), icon: BookOpen },
   ];
 
   return (
@@ -130,13 +132,14 @@ export function MobileNavButton({
   isOpen: boolean;
   unreadCount?: number;
 }) {
+  const t = useTranslations("MobileContentSheet");
   return (
     <Button
       variant="ghost"
       size="icon"
       onClick={onClick}
       className="relative shrink-0"
-      aria-label={isOpen ? "Close menu" : "Open menu"}
+      aria-label={isOpen ? t("closeMenuLabel") : t("openMenuLabel")}
     >
       {isOpen ? (
         <X className="size-5" />

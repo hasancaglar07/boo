@@ -47,6 +47,7 @@ const MobileContentSheetContent = dynamic(
 );
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
+import { useTranslations } from "next-intl";
 
 // Scroll depth tracking
 const SCROLL_DEPTHS = [25, 50, 75, 100] as const;
@@ -161,6 +162,29 @@ function formatActivityTime(raw: string) {
 
 const CHAPTER_READY_WORD_THRESHOLD = 300;
 
+function isInlineImageDataUrl(value: string) {
+  return /^data:image\//i.test(String(value || "").trim());
+}
+
+function logoPathDisplayLabel(rawValue: string) {
+  const value = String(rawValue || "").trim();
+  if (!value) return "";
+  if (isInlineImageDataUrl(value)) {
+    const semicolonIndex = value.indexOf(";");
+    const mime = semicolonIndex > 5 ? value.slice(5, semicolonIndex) : "image";
+    return `${mime} inline data URL (${value.length.toLocaleString()} chars)`;
+  }
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const url = new URL(value);
+      return `${url.host}${url.pathname}`;
+    } catch {
+      return value;
+    }
+  }
+  return value;
+}
+
 type ActivityItem = {
   code: string;
   label: string;
@@ -178,6 +202,29 @@ function countWordsSafe(value: string | null | undefined) {
   const content = String(value || "").trim();
   if (!content) return 0;
   return content.split(/\s+/).filter(Boolean).length;
+}
+
+function triggerExportDownload(url: string, fallbackFilename: string) {
+  const href = String(url || "").trim();
+  if (!href || href === "#") return false;
+  try {
+    const anchor = document.createElement("a");
+    anchor.href = href;
+    anchor.download = fallbackFilename;
+    anchor.rel = "noopener noreferrer";
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    return true;
+  } catch {
+    try {
+      window.open(href, "_blank", "noopener,noreferrer");
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 function chapterNumberFromActivity(entry: { label?: string; detail?: string }) {
@@ -348,6 +395,31 @@ function mergePreviewExports(current: PreviewExportItem[], incoming: PreviewExpo
   return sortPreviewExports(Array.from(byKey.values())).slice(0, 10);
 }
 
+function isInternalBuildPreflightMessage(value: string) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return false;
+  return /Primary exporter check failed; primary build command will be tried first, then lightweight fallback export if needed\.?/i.test(normalized) ||
+    /Primary exporter preflight is unavailable; attempting primary build command before fallback\.?/i.test(normalized);
+}
+
+function normalizeInlineBuildMessage(value: string, maxLength = 280) {
+  const compact = String(value || "").replace(/\s+/g, " ").trim();
+  if (!compact) return "";
+  if (compact.length <= maxLength) return compact;
+  return `${compact.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+function extractPrimaryFailureDetail(
+  response: Record<string, unknown>,
+  warnings: string[],
+) {
+  const primaryErrorTail = normalizeInlineBuildMessage(String(response.primary_error_tail || ""));
+  if (primaryErrorTail) return primaryErrorTail;
+
+  const warningDetail = warnings.find((warning) => /Primary build failed:/i.test(warning)) || "";
+  return normalizeInlineBuildMessage(warningDetail.replace(/^Primary build failed:\s*/i, ""));
+}
+
 type BuildPreflightState = {
   ok: boolean;
   loading: boolean;
@@ -373,9 +445,22 @@ function normalizeBuildPreflight(raw: Record<string, unknown> | null | undefined
     ? raw!.missing.map((item) => String(item || "").trim()).filter(Boolean)
     : [];
   const warnings = Array.isArray(raw?.warnings)
-    ? raw!.warnings.map((item) => String(item || "").trim()).filter(Boolean)
+    ? raw!.warnings
+      .map((item) => String(item || "").trim())
+      .filter(Boolean)
+      .filter((item) => !isInternalBuildPreflightMessage(item))
     : [];
-  const reason = String(raw?.reason || "").trim();
+  const rawReason = String(raw?.reason || "").trim();
+  const suppressPrimaryUnavailableReason = (
+    Boolean(raw?.ok) &&
+    missing.length === 0 &&
+    Boolean(raw?.fallback_ok) &&
+    !Boolean(raw?.primary_ok)
+  );
+  const reason = (
+    isInternalBuildPreflightMessage(rawReason) ||
+    suppressPrimaryUnavailableReason
+  ) ? "" : rawReason;
   return {
     ok: Boolean(raw?.ok) && missing.length === 0,
     loading: false,
@@ -389,6 +474,7 @@ function normalizeBuildPreflight(raw: Record<string, unknown> | null | undefined
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export function BookPreviewScreen({ slug }: { slug: string }) {
+  const t = useTranslations("BookPreviewScreen");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [books, setBooks] = useState<Book[]>([]);
@@ -406,7 +492,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const [isRetryingPreview, setIsRetryingPreview] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isGeneratingEpub, setIsGeneratingEpub] = useState(false);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState<"front" | "back" | null>(null);
+  const isUploadingCover = uploadingCover !== null;
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [exports, setExports] = useState<PreviewExportItem[]>([]);
   const [buildPreflight, setBuildPreflight] = useState<{ pdf: BuildPreflightState; epub: BuildPreflightState }>({
@@ -706,7 +793,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
             setFullBookSections(normalizedSections);
             setFullBookLoadError("");
           } else {
-            setFullBookLoadError("Full chapters are not ready yet. We will keep checking automatically.");
+            setFullBookLoadError(t("fullChaptersNotReady"));
           }
         }
       })
@@ -715,7 +802,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
           console.error(error);
         }
         if (needsChapterSync) {
-          setFullBookLoadError("Full chapter sync is delayed. Keep this page open, it will auto-refresh.");
+          setFullBookLoadError(t("fullChapterSyncDelayed"));
         }
       })
       .finally(() => {
@@ -736,12 +823,12 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       if (!result.ok) {
         const retryReason = String(result.generation?.preview_retry?.reason || "").trim();
         if (retryReason === "manual_retry_limit_reached") {
-          toast.error("Retry limit reached for this book.");
+          toast.error(t("toastRetryLimit"));
         } else if (retryReason === "manual_retry_cooldown") {
           const seconds = Math.max(0, Number(result.generation?.preview_retry?.retry_after_seconds ?? 0));
-          toast.error(seconds > 0 ? `Please wait ${seconds}s before retrying again.` : "Please wait a moment before retrying.");
+          toast.error(seconds > 0 ? t("toastRetryWait", { seconds }) : t("toastRetryWaitMoment"));
         } else {
-          toast.error("Preview retry could not be started.");
+          toast.error(t("toastRetryFailed"));
         }
       }
       await startBookFullPipeline(slug, { force: true }).catch((error) => {
@@ -836,8 +923,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         current="preview"
         layout="book"
         currentBookSlug={slug}
-        title="Preview"
-        subtitle="Connection issue occurred."
+        title={t("samplePreview")}
+        subtitle={t("connectionIssue")}
         books={books}
       >
         <BackendUnavailableState onRetry={() => void hydrate({ includeBooks: true })} />
@@ -853,8 +940,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         current="preview"
         layout="book"
         currentBookSlug={slug}
-        title="Your book showcase is being prepared"
-        subtitle="Cover, first chapter, and sales surface are being placed."
+        title={t("preparingShowcase")}
+        subtitle={t("preparingShowcaseSubtitle")}
         books={books}
       >
         <PreviewPageSkeleton />
@@ -897,18 +984,18 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     )
   );
   const retryCardMessage = generationAppearsStuck
-    ? `Generation looks delayed (no status change for ${generationUpdateAgeSeconds}s). You can retry now.`
+    ? `Generation looks delayed (no status change for ${generationUpdateAgeSeconds}s). You can retry now.` // keep dynamic — includes raw seconds count, not a UI string
     : previewRetryPolicy === "transient"
-      ? "Preview generation is recovering from a temporary provider issue. You can retry now."
-      : "Preview generation needs attention. You can retry the pipeline once for this book.";
+      ? t("transientIssueNote")
+      : t("pipelineNeedsAttention");
   const retryLimitMessage = previewRetryReason === "manual_retry_cooldown"
     ? `Please wait ${previewRetryAfterSeconds}s before next retry.`
     : previewRetryPolicy === "transient"
-      ? "Transient failure mode: retry stays available while system recovers."
+      ? t("retryStaysAvailable")
       : previewRetryReason === "manual_retry_limit_reached"
-        ? "Retry limit reached for this book."
+        ? t("retryLimitReached")
         : previewRetryRemaining <= 0
-          ? "No retry attempts left for this book."
+          ? t("noRetryAttemptsLeft")
           : `${previewRetryRemaining} retry attempt left.`;
   const fullGeneration = generation.full_generation;
   const pipelineChapterReadyCount = Math.max(
@@ -939,18 +1026,20 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const coverUrl = frontCoverPath ? buildBookAssetUrl(slug, frontCoverPath) : "";
   const backCoverUrl = backCoverPath ? buildBookAssetUrl(slug, backCoverPath) : "";
   const publisherLogoUrl = brandingLogoPath ? buildBookAssetUrl(slug, brandingLogoPath) : "";
+  const brandingLogoDisplayPath = logoPathDisplayLabel(brandingLogoPath);
+  const brandingLogoIsDataUrl = isInlineImageDataUrl(brandingLogoPath);
   const frontCoverSource = String(preview.book.front_cover_source || "").trim().toLowerCase();
   const backCoverSource = String(preview.book.back_cover_source || "").trim().toLowerCase();
   const manualCoverLocked = frontCoverSource === "manual" || backCoverSource === "manual";
   const defaultCurrentStepLabel = generation.product_ready
-    ? "Your preview is ready."
+    ? t("previewReady")
     : !generation.cover_ready
-      ? "Creating your real book cover"
+      ? t("coverCreating")
       : !generation.preview_ready
-        ? "Writing the first readable chapter"
+        ? t("chapterWriting")
         : fullGeneration?.complete
-          ? "Your book is ready."
-          : "Remaining chapters continue in the background";
+          ? t("bookReady")
+          : t("chaptersBackground");
   const defaultPreviewStages: Array<{
     code: string;
     label: string;
@@ -959,21 +1048,21 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   }> = [
     {
       code: "cover",
-      label: "Cover",
+      label: t("coverLabel"),
       status: generation.cover_ready ? "done" : generation.cover_state === "error" ? "error" : "active",
-      detail: generation.cover_ready ? "Real cover ready" : "Creating your real book cover",
+      detail: generation.cover_ready ? t("coverReadyDetail") : t("coverCreating"),
     },
     {
       code: "first_chapter",
-      label: "First chapter",
+      label: t("firstChapterLabel"),
       status: generation.preview_ready ? "done" : generation.first_chapter_state === "error" ? "error" : generation.cover_ready ? "active" : "queued",
-      detail: generation.preview_ready ? "First readable chapter ready" : "Writing the first readable chapter",
+      detail: generation.preview_ready ? t("firstChapterReadyDetail") : t("chapterWriting"),
     },
     {
       code: "full_book",
-      label: "Full book",
+      label: t("fullBookLabel"),
       status: fullGeneration?.complete ? "done" : fullGeneration?.stage === "waiting" ? "waiting" : generation.active ? "active" : "queued",
-      detail: preferEnglishCopy(fullGeneration?.message, "Remaining chapters continue in the background"),
+      detail: preferEnglishCopy(fullGeneration?.message, t("chaptersBackground")),
     },
   ];
   const previewStages: Array<{
@@ -985,8 +1074,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     ? generation.activity_timeline.slice(0, 3).map((stage) => {
         const stageCode = String(stage.code || "").trim().toLowerCase();
         const fallbackStage = defaultPreviewStages.find((item) => item.code === stageCode);
-        const fallbackLabel = fallbackStage?.label || (stageCode ? humanizeStageCode(stageCode) : "Progress");
-        const fallbackDetail = fallbackStage?.detail || "Live updates";
+        const fallbackLabel = fallbackStage?.label || (stageCode ? humanizeStageCode(stageCode) : t("liveUpdates"));
+        const fallbackDetail = fallbackStage?.detail || t("liveUpdates");
         return {
           code: stageCode || "progress",
           label: fallbackLabel,
@@ -1013,19 +1102,19 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const stalePipelineEventCount = stalePipelineEvents.length;
   const heroKicker = generation.cover_ready
     ? generation.preview_ready
-      ? "Cover and first pages are live"
-      : "Cover is live"
-    : "Premium preview in production";
+      ? t("coverLive")
+      : t("coverOnlyLive")
+    : t("premiumInProduction");
 
   const pageSubtitle = premium
-    ? "Full access active. Book, cover, and export surface are unlocked."
+    ? t("fullAccessActive")
       : generation.product_ready
-      ? `Book ready - first ${ratio}% readable preview is open.`
+      ? t("bookReadyPreviewOpen", { ratio })
       : generation.preview_ready
-        ? "First chapter is ready. Remaining chapters keep writing in the background."
+        ? t("firstChapterReady")
         : generation.active
           ? currentStepLabel
-          : "Your book showcase is being prepared.";
+          : t("showcasePreparing");
 
   const visibleSections = preview.preview.visible_sections;
   const tocSections = preview.preview.toc;
@@ -1111,16 +1200,22 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const latestEpubExport = sortedExports.find((item) => item.format === "epub") || null;
   const pdfPreflight = buildPreflight.pdf;
   const epubPreflight = buildPreflight.epub;
-  const pdfPreflightReason =
-    pdfPreflight.missing[0] ||
-    pdfPreflight.reason ||
-    pdfPreflight.warnings[0] ||
-    "";
-  const epubPreflightReason =
-    epubPreflight.missing[0] ||
-    epubPreflight.reason ||
-    epubPreflight.warnings[0] ||
-    "";
+  const pdfPreflightReason = !pdfPreflight.ok
+    ? (
+      pdfPreflight.missing[0] ||
+      pdfPreflight.reason ||
+      pdfPreflight.warnings[0] ||
+      ""
+    )
+    : "";
+  const epubPreflightReason = !epubPreflight.ok
+    ? (
+      epubPreflight.missing[0] ||
+      epubPreflight.reason ||
+      epubPreflight.warnings[0] ||
+      ""
+    )
+    : "";
   const latestPdfExportStale = Boolean(
     generation.exports_dirty ||
     (
@@ -1143,7 +1238,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       ? Math.max(0, Math.min(totalChapters - 1, writingChapterNumber - 1))
       : Math.max(0, Math.min(totalChapters - 1, effectiveChapterReadyCount));
   const writingChapterLabel = generation.active && totalChapters
-    ? `Chapter ${writingChapterIndex + 1} is being written now.`
+    ? t("writingChapterNow", { number: writingChapterIndex + 1 })
     : "";
   const rawEtaSeconds = Number(fullGeneration?.eta_seconds || 0);
   const estimatedMinutesRemaining = rawEtaSeconds > 0
@@ -1153,7 +1248,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       : effectiveRemainingChapterCount > 0
         ? Math.max(1, effectiveRemainingChapterCount * 2)
         : 1;
-  const estimatedTimeLabel = estimatedMinutesRemaining > 0 ? `~${estimatedMinutesRemaining} min left` : "";
+  const estimatedTimeLabel = estimatedMinutesRemaining > 0 ? t("etaMinutesLeft", { minutes: estimatedMinutesRemaining }) : "";
   const livePreviewSection = chapterSections.find((section) => String(section.content || "").trim().length > 0) || chapterSections[0] || null;
   const livePreviewExcerpt = String(livePreviewSection?.content || "").trim().slice(0, 900);
   const canInstantPdfDownload = Boolean(latestPdfExport && !latestPdfExportStale);
@@ -1165,8 +1260,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     ? new Date(latestEpubExport.date).toLocaleString()
     : "";
   const previewReadyEmailHint = hasSession
-    ? "We keep auto-refreshing this page and notify your account email when background generation completes."
-    : "Create an account if you want a ready email when generation completes.";
+    ? t("autoRefreshNote")
+    : t("createAccountNote");
   const chapterSidebarItems = preview.preview.toc.map((chapter, index) => {
     const isLockedForPreview = !premium && index >= visibleSections.length;
     const status: "complete" | "writing" | "pending" | "locked" =
@@ -1193,21 +1288,9 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     router.push(`/app/book/${encodeURIComponent(slug)}/upgrade`);
   }
 
-  function openExistingExport(item: PreviewExportItem | null, format: "PDF" | "EPUB") {
-    if (!item?.url) {
-      toast.error(`Latest ${format} file is missing.`);
-      return false;
-    }
-    window.open(item.url, "_blank");
-    return true;
-  }
-
   async function handlePdfPrimaryAction() {
     if (!premium) {
       openUpgrade("pdf");
-      return;
-    }
-    if (canInstantPdfDownload && openExistingExport(latestPdfExport, "PDF")) {
       return;
     }
     await handleGeneratePdf();
@@ -1216,9 +1299,6 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   async function handleEpubPrimaryAction() {
     if (!premium) {
       openUpgrade("epub");
-      return;
-    }
-    if (canInstantEpubDownload && openExistingExport(latestEpubExport, "EPUB")) {
       return;
     }
     await handleGenerateEpub();
@@ -1243,7 +1323,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         const reason =
           preflightResult.missing[0] ||
           preflightResult.reason ||
-          "PDF export is not ready yet.";
+          t("pdfNotReady");
         toast.error(reason);
         return;
       }
@@ -1256,6 +1336,25 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         branding_mark: preview.book.branding_mark,
         branding_logo_url: preview.book.branding_logo_url,
         cover_brief: preview.book.cover_brief,
+        edition_label: preview.book.edition_label,
+        print_label: preview.book.print_label,
+        publication_city: preview.book.publication_city,
+        publication_country: preview.book.publication_country,
+        publisher_address: preview.book.publisher_address,
+        publisher_phone: preview.book.publisher_phone,
+        publisher_email: preview.book.publisher_email,
+        publisher_website: preview.book.publisher_website,
+        publisher_certificate_no: preview.book.publisher_certificate_no,
+        isbn13: preview.book.isbn13,
+        editor_name: preview.book.editor_name,
+        proofreader_name: preview.book.proofreader_name,
+        typesetter_name: preview.book.typesetter_name,
+        cover_designer_name: preview.book.cover_designer_name,
+        printer_name: preview.book.printer_name,
+        printer_address: preview.book.printer_address,
+        printer_certificate_no: preview.book.printer_certificate_no,
+        copyright_statement: preview.book.copyright_statement,
+        imprint_block: preview.book.imprint_block,
         generate_cover: false,
         cover_image: preview.book.cover_image,
         back_cover_image: preview.book.back_cover_image,
@@ -1278,8 +1377,19 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         const reason =
           missing[0] ||
           String((response as { output?: string }).output || "").trim() ||
-          "PDF generation failed. Please complete required steps first.";
+          t("toastPdfFailed");
         toast.error(reason);
+        return;
+      }
+      const responseWarnings = Array.isArray((response as { warnings?: unknown[] }).warnings)
+        ? (response as { warnings?: unknown[] }).warnings!.map((item) => String(item || "").trim()).filter(Boolean)
+        : [];
+      const fallbackUsed = Boolean((response as { fallback_used?: boolean }).fallback_used) ||
+        responseWarnings.some((warning) => /lightweight fallback/i.test(warning));
+      if (fallbackUsed) {
+        const fallbackReason = responseWarnings.find((warning) => /fallback/i.test(warning)) || t("toastPdfFailed");
+        const fallbackDetail = extractPrimaryFailureDetail(response as Record<string, unknown>, responseWarnings);
+        toast.error(fallbackDetail ? `${fallbackReason} (${fallbackDetail})` : fallbackReason);
         return;
       }
 
@@ -1292,17 +1402,21 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       };
       if (newExport.url !== "#") {
         setExports((prev) => mergePreviewExports(prev, [newExport]));
-        window.open(newExport.url, "_blank");
-        toast.success("PDF ready — opening in new tab");
+        const downloaded = triggerExportDownload(newExport.url, `${slug}.pdf`);
+        if (downloaded) {
+          toast.success(t("toastPdfReady"));
+        } else {
+          toast.error(t("toastPdfMissing"));
+        }
       } else {
-        toast.error("PDF was generated but the download URL is missing.");
+        toast.error(t("toastPdfMissing"));
       }
       void refreshBuildPreflight(true);
 
       trackEvent("pdf_export_completed", { slug });
     } catch (error) {
       console.error("PDF generation failed:", error);
-      toast.error("PDF generation failed. Please try again.");
+      toast.error(t("toastPdfFailed"));
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -1327,7 +1441,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         const reason =
           preflightResult.missing[0] ||
           preflightResult.reason ||
-          "EPUB export is not ready yet.";
+          t("epubNotReady");
         toast.error(reason);
         return;
       }
@@ -1340,6 +1454,25 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         branding_mark: preview.book.branding_mark,
         branding_logo_url: preview.book.branding_logo_url,
         cover_brief: preview.book.cover_brief,
+        edition_label: preview.book.edition_label,
+        print_label: preview.book.print_label,
+        publication_city: preview.book.publication_city,
+        publication_country: preview.book.publication_country,
+        publisher_address: preview.book.publisher_address,
+        publisher_phone: preview.book.publisher_phone,
+        publisher_email: preview.book.publisher_email,
+        publisher_website: preview.book.publisher_website,
+        publisher_certificate_no: preview.book.publisher_certificate_no,
+        isbn13: preview.book.isbn13,
+        editor_name: preview.book.editor_name,
+        proofreader_name: preview.book.proofreader_name,
+        typesetter_name: preview.book.typesetter_name,
+        cover_designer_name: preview.book.cover_designer_name,
+        printer_name: preview.book.printer_name,
+        printer_address: preview.book.printer_address,
+        printer_certificate_no: preview.book.printer_certificate_no,
+        copyright_statement: preview.book.copyright_statement,
+        imprint_block: preview.book.imprint_block,
         generate_cover: false,
         cover_image: preview.book.cover_image,
         back_cover_image: preview.book.back_cover_image,
@@ -1362,8 +1495,19 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
         const reason =
           missing[0] ||
           String((response as { output?: string }).output || "").trim() ||
-          "EPUB generation failed. Please complete required steps first.";
+          t("toastEpubFailed");
         toast.error(reason);
+        return;
+      }
+      const responseWarnings = Array.isArray((response as { warnings?: unknown[] }).warnings)
+        ? (response as { warnings?: unknown[] }).warnings!.map((item) => String(item || "").trim()).filter(Boolean)
+        : [];
+      const fallbackUsed = Boolean((response as { fallback_used?: boolean }).fallback_used) ||
+        responseWarnings.some((warning) => /lightweight fallback/i.test(warning));
+      if (fallbackUsed) {
+        const fallbackReason = responseWarnings.find((warning) => /fallback/i.test(warning)) || t("toastEpubFailed");
+        const fallbackDetail = extractPrimaryFailureDetail(response as Record<string, unknown>, responseWarnings);
+        toast.error(fallbackDetail ? `${fallbackReason} (${fallbackDetail})` : fallbackReason);
         return;
       }
 
@@ -1376,17 +1520,21 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       };
       if (newExport.url !== "#") {
         setExports((prev) => mergePreviewExports(prev, [newExport]));
-        window.open(newExport.url, "_blank");
-        toast.success("EPUB ready — opening in new tab");
+        const downloaded = triggerExportDownload(newExport.url, `${slug}.epub`);
+        if (downloaded) {
+          toast.success(t("toastEpubReady"));
+        } else {
+          toast.error(t("toastEpubMissing"));
+        }
       } else {
-        toast.error("EPUB was generated but the download URL is missing.");
+        toast.error(t("toastEpubMissing"));
       }
       void refreshBuildPreflight(true);
 
       trackEvent("epub_export_completed", { slug });
     } catch (error) {
       console.error("EPUB generation failed:", error);
-      toast.error("EPUB generation failed. Please try again.");
+      toast.error(t("toastEpubFailed"));
     } finally {
       setIsGeneratingEpub(false);
     }
@@ -1398,31 +1546,31 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("Only image files are allowed (PNG, JPG, WebP).");
+      toast.error(t("toastFileTypeMustBeImage"));
       return;
     }
 
     // Validate file size (4MB)
     if (file.size > 4 * 1024 * 1024) {
-      toast.error("File size must be under 4MB.");
+      toast.error(t("toastFileSizeLimit"));
       return;
     }
 
-    setIsUploadingCover(true);
+    setUploadingCover("front");
     try {
       await uploadBookAsset(slug, file, "cover_image");
 
       // Refresh preview
       await hydrate();
       void refreshBuildPreflight(true);
-      toast.success("Front cover uploaded.");
+      toast.success(t("toastFrontCoverUploaded"));
 
       trackEvent("preview_custom_front_cover_uploaded", { slug });
     } catch (error) {
       console.error("Front cover upload failed:", error);
-      toast.error("Front cover upload failed. Please try again.");
+      toast.error(t("toastFrontCoverFailed"));
     } finally {
-      setIsUploadingCover(false);
+      setUploadingCover(null);
       // Reset input
       if (frontCoverInputRef.current) {
         frontCoverInputRef.current.value = "";
@@ -1436,31 +1584,31 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("Only image files are allowed (PNG, JPG, WebP).");
+      toast.error(t("toastFileTypeMustBeImage"));
       return;
     }
 
     // Validate file size (4MB)
     if (file.size > 4 * 1024 * 1024) {
-      toast.error("File size must be under 4MB.");
+      toast.error(t("toastFileSizeLimit"));
       return;
     }
 
-    setIsUploadingCover(true);
+    setUploadingCover("back");
     try {
       await uploadBookAsset(slug, file, "back_cover_image");
 
       // Refresh preview
       await hydrate();
       void refreshBuildPreflight(true);
-      toast.success("Back cover uploaded.");
+      toast.success(t("toastBackCoverUploaded"));
 
       // trackEvent("cover_back_uploaded", { slug }); // TODO: Add to analytics type
     } catch (error) {
       console.error("Back cover upload failed:", error);
-      toast.error("Back cover upload failed. Please try again.");
+      toast.error(t("toastBackCoverFailed"));
     } finally {
-      setIsUploadingCover(false);
+      setUploadingCover(null);
       // Reset input
       if (backCoverInputRef.current) {
         backCoverInputRef.current.value = "";
@@ -1473,16 +1621,14 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
     if (!file || !preview) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Only image files are allowed (PNG, JPG, WebP).");
+      toast.error(t("toastFileTypeMustBeImage"));
       return;
     }
 
     if (file.size > 4 * 1024 * 1024) {
-      toast.error("File size must be under 4MB.");
+      toast.error(t("toastFileSizeLimit"));
       return;
-    }
-
-    setIsUploadingLogo(true);
+    }    setIsUploadingLogo(true);
     try {
       const uploaded = await uploadBookAsset(slug, file, "asset");
       const saved = await saveBook({
@@ -1499,10 +1645,10 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       setEditableBook(saved);
       await hydrate();
       void refreshBuildPreflight(true);
-      toast.success("Publisher logo updated.");
+      toast.success(t("toastLogoUpdated"));
     } catch (error) {
       console.error("Publisher logo upload failed:", error);
-      toast.error("Publisher logo upload failed. Please try again.");
+      toast.error(t("toastLogoFailed"));
     } finally {
       setIsUploadingLogo(false);
       if (publisherLogoInputRef.current) {
@@ -1541,11 +1687,11 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
           word_count: String(chapter.content || "").split(/\s+/).filter(Boolean).length,
         })),
       );
-      toast.success("Chapter saved.");
+      toast.success(t("toastChapterSaved"));
       await hydrate();
     } catch (error) {
       console.error("Inline chapter save failed:", error);
-      toast.error("Chapter save failed. Please try again.");
+      toast.error(t("toastChapterSaveFailed"));
     } finally {
       setIsSavingInlineChapter(false);
     }
@@ -1554,29 +1700,29 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
   const unlockFeatures = [
     {
       icon: BookOpen,
-      title: "All chapters",
-      detail: totalChapters ? `Continue from this sample into all ${totalChapters} chapters.` : "Unlock the complete manuscript.",
+      title: t("allChaptersTitle"),
+      detail: totalChapters ? t("allChaptersDetail", { total: totalChapters }) : t("allChaptersDetailNoCount"),
     },
     {
       icon: Download,
-      title: "PDF + EPUB",
-      detail: "Generate publishing files from the same approved preview surface.",
+      title: t("exportsTitle"),
+      detail: t("exportsDetail"),
     },
     {
       icon: ImagePlus,
-      title: "Front/back cover assets",
-      detail: "Keep the exact cover pair attached to preview and exports.",
+      title: t("coversTitle"),
+      detail: t("coversDetail"),
     },
     {
       icon: Sparkles,
-      title: "Edit workspace",
-      detail: "Adjust metadata, writing, and production details after unlock.",
+      title: t("workspaceTitle"),
+      detail: t("workspaceDetail"),
     },
   ];
   const unlockSummaryText = premium
-    ? "Unlocked."
-    : "One-time unlock.";
-  const sampleHeading = activeChapter?.title || livePreviewSection?.title || "Sample preview";
+    ? t("unlocked")
+    : t("oneTimeUnlock");
+  const sampleHeading = activeChapter?.title || livePreviewSection?.title || t("samplePreview");
   const showGuestSaveCard = !hasSession;
 
 
@@ -1591,88 +1737,47 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
       subtitle={pageSubtitle}
       books={books}
     >
-      <nav aria-label="Breadcrumb" className="mb-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Link href="/app/library" className="transition-colors hover:text-foreground">
-            Library
-          </Link>
-          <span aria-hidden="true">/</span>
-          <span className="max-w-[200px] truncate font-medium text-foreground">{preview.book.title}</span>
-        </div>
-        {!generation.product_ready && (
-          <div className="flex items-center gap-1.5 text-xs">
-            {generation.active ? (
-              <>
-                <div className="size-2 animate-pulse rounded-full bg-primary" />
-                <span className="font-medium text-foreground">Generating...</span>
-              </>
-            ) : (
-              <span className="text-muted-foreground">Preview ready</span>
-            )}
-          </div>
-        )}
+      <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Link href="/app/library" className="transition-colors hover:text-foreground">
+          {t("breadcrumbLibrary")}
+        </Link>
+        <span aria-hidden="true">/</span>
+        <span className="max-w-[200px] truncate font-medium text-foreground">{preview.book.title}</span>
       </nav>
 
-      {transientBackendIssue && (
-        <Card className="mb-4 border-amber-500/30 bg-amber-500/10">
-          <CardContent className="p-3 text-sm leading-6 text-amber-900 dark:text-amber-200">
-            Connection unstable. Showing the latest snapshot and auto-refreshing when the service responds.
-          </CardContent>
-        </Card>
-      )}
-
-      {planHasPremiumAccess && !backendPremium && (
+      {/* Warning cards — priority-based: show only the most urgent one at a time */}
+      {(transientBackendIssue || (planHasPremiumAccess && !backendPremium) || shouldShowRetryCard) && (
         <Card className="mb-4 border-amber-500/30 bg-amber-500/10">
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-3">
-            <p className="text-sm leading-6 text-amber-900 dark:text-amber-200">
-              Premium plan detected, but this preview is not fully unlocked yet. We are syncing access now.
-            </p>
-            <Button size="sm" variant="outline" className="h-9" onClick={() => void hydrate({ includeBooks: true })}>
-              Refresh access
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {shouldShowRetryCard && (
-        <Card className="mb-4 border-amber-500/30 bg-amber-500/10">
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-3">
-            <p className="text-sm leading-6 text-amber-900 dark:text-amber-200">{retryCardMessage}</p>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-amber-900/90 dark:text-amber-200/90">{retryLimitMessage}</span>
-              <Button size="sm" variant="outline" className="h-9" onClick={() => void hydrate({ includeBooks: true })}>
-                Refresh
-              </Button>
-              <Button size="sm" className="h-9" onClick={() => void handleRetryPreviewPipeline()} disabled={isRetryingPreview || !previewRetryAllowed}>
-                {isRetryingPreview ? "Retrying..." : "Retry pipeline"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {!generation.product_ready && generation.active && (
-        <Card className="mb-4 border-primary/10 bg-primary/5">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-3">
-              <Loader2 className="size-4 animate-spin text-primary" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
-                  {preferEnglishCopy(generation.message, currentStepLabel || "Creating your book...")}
-                </p>
-                {(generation.progress ?? 0) > 0 && (
-                  <div className="mt-1.5 h-1.5 w-full max-w-[220px] overflow-hidden rounded-full bg-border">
-                    <div className="h-full bg-primary transition-all duration-500" style={{ width: `${Math.min(100, generation.progress ?? 0)}%` }} />
-                  </div>
-                )}
-              </div>
-            </div>
+            {shouldShowRetryCard ? (
+              <>
+                <p className="text-sm leading-6 text-amber-900 dark:text-amber-200">{retryCardMessage}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-amber-900/70 dark:text-amber-200/70">{retryLimitMessage}</span>
+                  <Button size="sm" variant="outline" className="h-9" onClick={() => void hydrate({ includeBooks: true })}>
+                    {t("refresh")}
+                  </Button>
+                  <Button size="sm" className="h-9" onClick={() => void handleRetryPreviewPipeline()} disabled={isRetryingPreview || !previewRetryAllowed}>
+                    {isRetryingPreview ? t("retrying") : t("retryPipeline")}
+                  </Button>
+                </div>
+              </>
+            ) : planHasPremiumAccess && !backendPremium ? (
+              <>
+                <p className="text-sm leading-6 text-amber-900 dark:text-amber-200">{t("premiumPlanSyncNote")}</p>
+                <Button size="sm" variant="outline" className="h-9" onClick={() => void hydrate({ includeBooks: true })}>
+                  {t("refreshAccess")}
+                </Button>
+              </>
+            ) : (
+              <p className="text-sm leading-6 text-amber-900 dark:text-amber-200">{t("connectionUnstable")}</p>
+            )}
           </CardContent>
         </Card>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="min-w-0 space-y-8">
+        <div className="min-w-0 flex flex-col gap-8">
           <section className="overflow-hidden rounded-[32px] border border-[#eadbce] bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.08),transparent_32%),linear-gradient(180deg,#fffdf8_0%,#fff8f2_100%)] px-4 py-6 shadow-[0_28px_80px_rgba(31,24,19,0.08)] md:px-6 md:py-8 lg:px-8">
             <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start">
               <div className="space-y-4">
@@ -1705,33 +1810,27 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   </div>
                   <p className="mt-4 text-sm leading-6 text-[#6f5547]">
                     {coverUrl
-                      ? "This is the real cover currently attached to your preview and export surface."
-                      : "The cover area stays reserved here and updates automatically when the real cover is ready."}
+                      ? t("coverAttached")
+                      : t("coverReserved")}
                   </p>
                   {manualCoverLocked ? (
                     <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800">
-                      Manual cover lock is active. Your uploaded cover remains attached to preview and exports.
+                      {t("manualCoverLockActive")}
                     </div>
                   ) : null}
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[24px] border border-[#eadbce] bg-white/80 px-4 py-4">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">Status</div>
-                    <div className="mt-2 text-lg font-semibold text-[#1f1813]">{estimatedTimeLabel || "Live"}</div>
-                    <div className="mt-1 text-sm text-[#6f5547]">{currentStepLabel}</div>
+                {!premium && (
+                  <div className="rounded-2xl border border-[#eadbce] bg-white/70 px-4 py-2.5 text-center">
+                    <p className="text-xs font-semibold text-[#7f5a46]">{unlockSummaryText}</p>
+                    <p className="mt-0.5 text-[11px] text-[#8b6a59]">{t("freeSampleLine")}</p>
                   </div>
-                  <div className="rounded-[24px] border border-[#eadbce] bg-white/80 px-4 py-4">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">Access</div>
-                    <div className="mt-2 text-lg font-semibold text-[#1f1813]">{unlockSummaryText}</div>
-                    <div className="mt-1 text-sm text-[#6f5547]">{premium ? "PDF, EPUB, covers, edit." : "Full book, export, edit."}</div>
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="space-y-5">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#d8bfac]/70 bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#7f5a46]">
-                  {generation.cover_ready ? <CheckCircle2 className="size-3.5" /> : <Loader2 className="size-3.5 animate-spin" />}
+                <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] ${generation.cover_ready || generation.product_ready ? "border-emerald-200 bg-emerald-50 text-emerald-700" : generation.active ? "border-amber-200 bg-amber-50 text-amber-700" : "border-[#d8bfac]/70 bg-white/85 text-[#7f5a46]"}`}>
+                  {generation.cover_ready || generation.product_ready ? <CheckCircle2 className="size-3.5" /> : <Loader2 className="size-3.5 animate-spin" />}
                   {heroKicker}
                 </div>
 
@@ -1745,65 +1844,64 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                     </p>
                   ) : null}
                   <p className="mt-3 text-sm text-[#8b6a59]">by {authorName} · {imprint}</p>
+                  {premium && (
+                    <button
+                      type="button"
+                      className="mt-2 flex items-center gap-1.5 rounded-full border border-[#d8bfac]/60 bg-white/60 px-3 py-1 text-[11px] font-semibold text-[#7f5a46] transition-colors hover:bg-white/90 hover:text-[#2f1f17]"
+                      onClick={() => document.getElementById("book-details")?.scrollIntoView({ behavior: "smooth" })}
+                    >
+                      <FileText className="size-3" />
+                      {t("editBookInfoShortcut")}
+                    </button>
+                  )}
                 </div>
 
-                <div className="rounded-[28px] border border-white/80 bg-white/82 p-5 shadow-[0_18px_45px_rgba(31,24,19,0.06)] backdrop-blur">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">Current production step</div>
-                      <div className="mt-2 text-xl font-semibold text-[#2f1f17]">{currentStepLabel}</div>
-                    </div>
-                    <div className="rounded-full border border-[#eadbce] bg-[#fff8f2] px-4 py-2 text-sm font-semibold text-[#7f5a46]">
-                      {generation.current_step_code === "cover" && coverEta ? `ETA ${coverEta}` : generation.current_step_code === "first_chapter" && firstChapterEta ? `ETA ${firstChapterEta}` : generationEta ? `ETA ${generationEta}` : "Live updates"}
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid gap-3 md:grid-cols-3">
-                    {previewStages.map((stage) => (
-                      <div key={stage.code} className="rounded-[18px] border border-[#eadbce] bg-[#fffaf6] px-4 py-4">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-[#2f1f17]">
-                          {stage.status === "done" ? (
-                            <CheckCircle2 className="size-4 text-emerald-600" />
-                          ) : stage.status === "active" || stage.status === "waiting" ? (
-                            <Loader2 className="size-4 animate-spin text-[#7f5a46]" />
-                          ) : (
-                            <div className="size-4 rounded-full border border-[#d8bfac]" />
-                          )}
-                          {stage.label}
-                        </div>
-                        {stage.detail ? <p className="mt-2 text-sm leading-6 text-[#6f5547]">{stage.detail}</p> : null}
+                {!generation.product_ready && (
+                  <div className="flex items-center gap-3 rounded-2xl border border-[#eadbce] bg-white/70 px-4 py-3">
+                    <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                      {generation.active ? (
+                        <Loader2 className="size-4 shrink-0 animate-spin text-[#7f5a46]" />
+                      ) : (
+                        <div className="size-4 shrink-0 rounded-full border-2 border-[#d8bfac]" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-[#2f1f17]">{currentStepLabel}</p>
+                        {writingChapterLabel ? (
+                          <p className="mt-0.5 truncate text-xs text-[#8b6a59]">{writingChapterLabel}</p>
+                        ) : !hasSession ? (
+                          <p className="mt-0.5 truncate text-xs text-[#8b6a59]">{previewReadyEmailHint}</p>
+                        ) : null}
                       </div>
-                    ))}
+                    </div>
+                    {estimatedTimeLabel && (
+                      <span className="shrink-0 rounded-full border border-[#eadbce] bg-[#fff8f2] px-3 py-1 text-xs font-semibold text-[#7f5a46]">
+                        {estimatedTimeLabel}
+                      </span>
+                    )}
                   </div>
-
-                  <div className="mt-4 rounded-[18px] border border-[#eadbce] bg-[#fffaf6] px-4 py-3 text-sm leading-6 text-[#6f5547]">
-                    <div className="font-semibold text-[#2f1f17]">{estimatedTimeLabel || "Live ETA updates"}</div>
-                    {writingChapterLabel ? <div>{writingChapterLabel}</div> : null}
-                    <div>{previewReadyEmailHint}</div>
-                  </div>
-                </div>
+                )}
 
                 {!premium ? (
                   <div className="rounded-[28px] border border-[#221c18] bg-[#18120f] p-5 text-white shadow-[0_24px_70px_rgba(24,18,15,0.24)]">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="max-w-2xl">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#f5c9de]">Unlock</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#f5c9de]">{t("unlockLabel")}</div>
                         <h2 className="mt-2 text-2xl font-semibold md:text-3xl" style={{ fontFamily: "'Playfair Display', serif" }}>
-                          If the sample works, unlock the book.
+                          {t("unlockHeading")}
                         </h2>
                         <p className="mt-3 text-sm leading-6 text-white/75 md:text-base">
-                          All chapters, exports, covers, edit.
+                          {t("unlockSubtext")}
                         </p>
                       </div>
                       <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-right">
-                        <div className="text-[11px] uppercase tracking-[0.18em] text-white/60">One-time unlock</div>
+                        <div className="text-[11px] uppercase tracking-[0.18em] text-white/60">{t("oneTimeUnlockLabel")}</div>
                         <div className="mt-2 text-3xl font-semibold">$4</div>
                       </div>
                     </div>
                     <div className="mt-5 flex flex-wrap gap-3">
                       <Button size="lg" className="h-14 px-8 text-base font-semibold" onClick={() => openUpgrade("full_unlock")}>
                         <Sparkles className="mr-2 size-5" />
-                        Unlock Full Book
+                        {t("unlockFullBook")}
                         <ArrowRight className="ml-2 size-5" />
                       </Button>
                       <Button
@@ -1816,32 +1914,33 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                         }}
                       >
                         <BookOpen className="mr-2 size-5" />
-                        Read sample
+                        {t("readSample")}
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="h-14 border-[#dcc5b4] bg-white/80 px-8 text-base font-semibold text-[#2f1f17] hover:bg-[#fff8f2]"
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-3">
+                      <Button size="lg" className="h-12 flex-1 px-6 text-sm font-semibold" onClick={() => void handlePdfPrimaryAction()} disabled={isGeneratingPdf}>
+                        {isGeneratingPdf ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+                        {isGeneratingPdf ? t("generatingLabel") : canInstantPdfDownload ? t("openPdf") : t("generatePdf")}
+                      </Button>
+                      <Button size="lg" variant="outline" className="h-12 flex-1 border-[#dcc5b4] bg-white/80 px-6 text-sm font-semibold text-[#2f1f17] hover:bg-[#fff8f2]" onClick={() => void handleEpubPrimaryAction()} disabled={isGeneratingEpub}>
+                        {isGeneratingEpub ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+                        {isGeneratingEpub ? t("generatingLabel") : canInstantEpubDownload ? t("openEpub") : t("generateEpub")}
+                      </Button>
+                    </div>
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-center gap-2 py-1.5 text-sm text-[#8b6a59] transition-colors hover:text-[#2f1f17]"
                       onClick={() => {
                         trackEvent("preview_viewed", { slug });
                         document.getElementById("preview-content")?.scrollIntoView({ behavior: "smooth" });
                       }}
                     >
-                      <BookOpen className="mr-2 size-5" />
-                      Read sample
-                    </Button>
-                    <Button size="lg" className="h-14 px-8 text-base font-semibold" onClick={() => void handlePdfPrimaryAction()} disabled={isGeneratingPdf}>
-                      {isGeneratingPdf ? <Loader2 className="mr-2 size-5 animate-spin" /> : <Download className="mr-2 size-5" />}
-                      {canInstantPdfDownload ? "Open PDF" : "Generate PDF"}
-                    </Button>
-                    <Button size="lg" className="h-14 px-8 text-base font-semibold" onClick={() => void handleEpubPrimaryAction()} disabled={isGeneratingEpub}>
-                      {isGeneratingEpub ? <Loader2 className="mr-2 size-5 animate-spin" /> : <Download className="mr-2 size-5" />}
-                      {canInstantEpubDownload ? "Open EPUB" : "Generate EPUB"}
-                    </Button>
+                      <BookOpen className="size-4" />
+                      {t("readSample")}
+                    </button>
                   </div>
                 )}
 
@@ -1849,14 +1948,14 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   <div className="rounded-[24px] border border-[#d8bfac]/70 bg-[linear-gradient(180deg,#fffaf4_0%,#fff7ef_100%)] p-5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7f5a46]">Don’t lose this preview</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7f5a46]">{t("dontLosePreview")}</div>
                         <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6f5547]">
-                          You can keep reading as a guest. Create a free account if you want this preview and cover to stay in your library.
+                          {t("guestSaveNote")}
                         </p>
                       </div>
-                      <Button asChild size="sm" variant="outline">
+                      <Button asChild size="default" className="shrink-0">
                         <Link href={`/signup?next=${encodeURIComponent(`/app/book/${slug}/preview`)}`}>
-                          Create free account
+                          {t("createFreeAccount")}
                         </Link>
                       </Button>
                     </div>
@@ -1866,27 +1965,22 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
             </div>
           </section>
 
-          <section className="space-y-5" aria-labelledby="preview-content">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">Proof + Preview</div>
-                  <h2 id="preview-content" className="mt-2 text-3xl font-semibold text-[#1f1813]" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    Read the sample.
-                  </h2>
-                </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-[#eadbce] bg-white px-4 py-3 text-sm text-[#2f1f17] shadow-sm">
-                  <div className="font-semibold">Sample chapter</div>
-                  <div className="mt-1 text-[#6f5547]">{sampleHeading}</div>
-                </div>
-                <div className="rounded-2xl border border-[#eadbce] bg-white px-4 py-3 text-sm text-[#2f1f17] shadow-sm">
-                  <div className="font-semibold">Visible now</div>
-                  <div className="mt-1 text-[#6f5547]">{effectiveVisibleSectionCount}/{totalChapters || 0} chapters</div>
-                </div>
-                <div className="rounded-2xl border border-[#eadbce] bg-white px-4 py-3 text-sm text-[#2f1f17] shadow-sm">
-                  <div className="font-semibold">Exports</div>
-                  <div className="mt-1 text-[#6f5547]">{premium ? "Ready inside production panel" : "Included after unlock"}</div>
-                </div>
+          <section className={`space-y-5${premium ? ' order-2' : ''}`} aria-labelledby="preview-content">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">{t("proofPreviewLabel")}</div>
+                <h2 id="preview-content" className="mt-1 text-2xl font-semibold text-[#1f1813]" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  {t("readTheSample")}
+                </h2>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-[#8b6a59]">
+                <span>{t("visibleNowCount", { visible: effectiveVisibleSectionCount, total: totalChapters || 0 })}</span>
+                {!premium && (
+                  <>
+                    <span className="text-[#d8bfac]">·</span>
+                    <span className="rounded-full border border-[#eadbce] bg-white px-2.5 py-0.5 font-medium text-[#7f5a46]">{t("exportsIncludedAfterUnlock")}</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1915,10 +2009,10 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                   <Card className="border-primary/20 bg-primary/5">
                     <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
                       <p className="text-sm text-foreground">
-                        {isFullBookLoading ? "Syncing full chapter content to this preview..." : fullBookLoadError}
+                        {isFullBookLoading ? t("syncingFullChapters") : fullBookLoadError}
                       </p>
                       <Button size="sm" variant="outline" className="h-9" onClick={() => void hydrate()}>
-                        Refresh now
+                        {t("refreshNow")}
                       </Button>
                     </CardContent>
                   </Card>
@@ -1929,8 +2023,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                 <CardContent className="p-12 text-center">
                   <Loader2 className="mx-auto mb-4 size-8 animate-spin text-primary" />
                   <div className="text-sm font-semibold text-foreground">{currentStepLabel}</div>
-                  <p className="mt-2 text-xs text-muted-foreground">The first readable chapter will appear here automatically as soon as it is ready.</p>
-                  <p className="mt-1 text-xs text-muted-foreground">This page keeps refreshing in the background. You do not need to restart anything.</p>
+                  <p className="mt-2 text-xs text-muted-foreground">{t("firstChapterSoonNote")}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("pageAutoRefreshNote")}</p>
                 </CardContent>
               </Card>
             )}
@@ -1940,13 +2034,13 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
             <section className="rounded-[32px] border border-[#eadbce] bg-[linear-gradient(180deg,#fffaf6_0%,#fffdf9_100%)] p-6 shadow-[0_20px_50px_rgba(31,24,19,0.05)] md:p-8">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">Unlock Value</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">{t("unlockValueLabel")}</div>
                   <h2 className="mt-2 text-3xl font-semibold text-[#1f1813]" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    Everything in one unlock
+                    {t("everythingInOneUnlock")}
                   </h2>
                 </div>
                 <div className="rounded-full border border-[#eadbce] bg-white px-5 py-2 text-sm font-semibold text-[#7f5a46]">
-                  One-time $4
+                  {t("oneTimeFour")}
                 </div>
               </div>
 
@@ -1966,19 +2060,19 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                 <div className="rounded-[24px] border border-[#221c18] bg-[#18120f] p-6 text-white">
                   <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#f5c9de]">
                     <Shield className="size-4" />
-                    Clear next step
+                    {t("clearNextStep")}
                   </div>
                   <div className="mt-3 text-xl font-semibold" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    Sample first. Unlock if it feels right.
+                    {t("sampleFirstNote")}
                   </div>
                 </div>
                 <div className="rounded-[24px] border border-[#eadbce] bg-white/90 p-6">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">Action</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">{t("actionLabel")}</div>
                   <div className="mt-3 text-3xl font-semibold text-[#1f1813]">$4</div>
-                  <p className="mt-2 text-sm leading-6 text-[#6f5547]">Full book, PDF, EPUB, covers, edit.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#6f5547]">{t("fullBookExportEdit")}</p>
                   <Button size="lg" className="mt-5 h-12 w-full" onClick={() => openUpgrade("full_unlock")}>
                     <Sparkles className="mr-2 size-4" />
-                    Unlock Full Book
+                    {t("unlockFullBook")}
                   </Button>
                 </div>
               </div>
@@ -1986,15 +2080,20 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
           )}
 
           {premium ? (
-            <section className="space-y-6">
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">Premium Workspace Surface</div>
-                <h2 className="mt-2 text-3xl font-semibold text-[#1f1813]" style={{ fontFamily: "'Playfair Display', serif" }}>
-                  Production panel
-                </h2>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6f5547] md:text-base">
-                  Metadata, exports, and cover operations live here after unlock. This keeps the decision page simple for free users and operational for premium users.
-                </p>
+            <section className="space-y-6 order-1" id="book-details">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b6a59]">{t("premiumWorkspaceSurfaceLabel")}</div>
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">editable</span>
+                  </div>
+                  <h2 className="mt-2 text-3xl font-semibold text-[#1f1813]" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    {t("productionPanelTitle")}
+                  </h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6f5547] md:text-base">
+                    {t("productionPanelDesc")}
+                  </p>
+                </div>
               </div>
 
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -2003,12 +2102,32 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                     slug={slug}
                     title={preview.book.title}
                     subtitle={preview.book.subtitle}
+                    language={preview.book.language}
                     author={preview.book.author}
                     publisher={preview.book.publisher}
                     authorBio={preview.book.author_bio}
                     coverBrief={preview.book.cover_brief}
                     brandingMark={preview.book.branding_mark}
                     brandingLogoUrl={preview.book.branding_logo_url}
+                    editionLabel={preview.book.edition_label}
+                    printLabel={preview.book.print_label}
+                    publicationCity={preview.book.publication_city}
+                    publicationCountry={preview.book.publication_country}
+                    publisherAddress={preview.book.publisher_address}
+                    publisherPhone={preview.book.publisher_phone}
+                    publisherEmail={preview.book.publisher_email}
+                    publisherWebsite={preview.book.publisher_website}
+                    publisherCertificateNo={preview.book.publisher_certificate_no}
+                    isbn13={preview.book.isbn13}
+                    editorName={preview.book.editor_name}
+                    proofreaderName={preview.book.proofreader_name}
+                    typesetterName={preview.book.typesetter_name}
+                    coverDesignerName={preview.book.cover_designer_name}
+                    printerName={preview.book.printer_name}
+                    printerAddress={preview.book.printer_address}
+                    printerCertificateNo={preview.book.printer_certificate_no}
+                    copyrightStatement={preview.book.copyright_statement}
+                    imprintBlock={preview.book.imprint_block}
                     onUpdate={hydrate}
                   />
 
@@ -2016,18 +2135,18 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-[#1f1813]">
                         <ImagePlus className="size-5 text-primary" />
-                        Cover Management
-                        <span className="ml-auto text-xs text-muted-foreground">Limits: 1 front + 1 back</span>
+                        {t("coverManagementTitle")}
+                        <span className="ml-auto text-xs text-muted-foreground">{t("coverManagementLimits")}</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6 p-6">
                       <div className="grid gap-6 md:grid-cols-2">
                         <div>
                           <div className="mb-2 flex items-center justify-between gap-2">
-                            <div className="text-xs font-semibold text-foreground">Front Cover</div>
+                            <div className="text-xs font-semibold text-foreground">{t("frontCoverLabel")}</div>
                             <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{frontCoverSource || "variant"}</span>
                           </div>
-                          <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+                          <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-border bg-muted">
                             {coverUrl ? (
                               <Image src={coverUrl} alt={`${preview.book.title} front cover`} width={300} height={400} sizes="(max-width: 768px) 100vw, 280px" unoptimized className="h-full w-full object-contain" />
                             ) : (
@@ -2038,17 +2157,17 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                             <Button asChild variant="outline" size="sm" className="mt-2 w-full">
                               <a href={coverUrl} download>
                                 <Download className="mr-2 size-4" />
-                                Download Front Cover
+                                {t("downloadFrontCover")}
                               </a>
                             </Button>
                           ) : null}
                         </div>
                         <div>
                           <div className="mb-2 flex items-center justify-between gap-2">
-                            <div className="text-xs font-semibold text-foreground">Back Cover</div>
+                            <div className="text-xs font-semibold text-foreground">{t("backCoverLabel")}</div>
                             <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{backCoverSource || "variant"}</span>
                           </div>
-                          <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+                          <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-border bg-muted">
                             {backCoverUrl ? (
                               <Image src={backCoverUrl} alt={`${preview.book.title} back cover`} width={300} height={400} sizes="(max-width: 768px) 100vw, 280px" unoptimized className="h-full w-full object-contain" />
                             ) : (
@@ -2059,7 +2178,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                             <Button asChild variant="outline" size="sm" className="mt-2 w-full">
                               <a href={backCoverUrl} download>
                                 <Download className="mr-2 size-4" />
-                                Download Back Cover
+                                {t("downloadBackCover")}
                               </a>
                             </Button>
                           ) : null}
@@ -2068,28 +2187,32 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
 
                       {manualCoverLocked ? (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-800">
-                          Manual cover lock is active. Uploaded cover files are preserved in preview, PDF, and EPUB.
+                          {t("manualCoverLockActiveShort")}
                         </div>
                       ) : null}
 
                       <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-950">
                         <div className="mb-2 flex items-center justify-between gap-2">
-                          <div className="text-xs font-semibold text-foreground">Publisher Logo</div>
+                          <div className="text-xs font-semibold text-foreground">{t("publisherLogoLabel")}</div>
                           <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                             PDF / EPUB
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="flex h-14 w-36 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                          <div className="flex h-14 w-36 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
                             {publisherLogoUrl ? (
                               <Image src={publisherLogoUrl} alt="Publisher logo" width={144} height={56} unoptimized className="h-full w-full object-contain" />
                             ) : (
-                              <span className="text-[11px] text-muted-foreground">No logo selected</span>
+                              <span className="text-[11px] text-muted-foreground">{t("noLogoSelected")}</span>
                             )}
                           </div>
                           <div className="min-w-0 flex-1 text-xs text-muted-foreground">
-                            <div className="truncate">{brandingLogoPath || "Using default logo"}</div>
-                            <div className="mt-1">Update this logo to replace the default “Speedy Quick Publishing” mark in exports.</div>
+                            <div className="truncate">{brandingLogoDisplayPath || t("noExplicitLogoPath")}</div>
+                            <div className="mt-1">
+                              {brandingLogoIsDataUrl
+                                ? t("inlineDataUrlActive")
+                                : t("logoUsedInExports")}
+                            </div>
                           </div>
                         </div>
                         <input
@@ -2107,29 +2230,29 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                           onClick={() => publisherLogoInputRef.current?.click()}
                         >
                           <ImagePlus className="mr-2 size-4" />
-                          Upload or Replace Publisher Logo
+                          {t("uploadOrReplacePublisherLogo")}
                           {isUploadingLogo ? <Loader2 className="ml-auto size-4 animate-spin" /> : null}
                         </Button>
                       </div>
 
                       <div className="space-y-3">
                         <input ref={frontCoverInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleFrontCoverUpload} />
-                        <Button variant="outline" size="lg" className="w-full" disabled={isUploadingCover} onClick={() => frontCoverInputRef.current?.click()}>
+                        <Button variant="outline" size="lg" className="w-full" disabled={uploadingCover === "front"} onClick={() => frontCoverInputRef.current?.click()}>
                           <ImagePlus className="mr-2 size-5" />
-                          Upload or Replace Front Cover
-                          {isUploadingCover && <Loader2 className="ml-auto size-5 animate-spin" />}
+                          {t("uploadOrReplaceFrontCover")}
+                          {uploadingCover === "front" && <Loader2 className="ml-auto size-5 animate-spin" />}
                         </Button>
 
                         <input ref={backCoverInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleBackCoverUpload} />
-                        <Button variant="outline" size="lg" className="w-full" disabled={isUploadingCover} onClick={() => backCoverInputRef.current?.click()}>
+                        <Button variant="outline" size="lg" className="w-full" disabled={uploadingCover === "back"} onClick={() => backCoverInputRef.current?.click()}>
                           <ImagePlus className="mr-2 size-5" />
-                          Upload or Replace Back Cover
-                          {isUploadingCover && <Loader2 className="ml-auto size-5 animate-spin" />}
+                          {t("uploadOrReplaceBackCover")}
+                          {uploadingCover === "back" && <Loader2 className="ml-auto size-5 animate-spin" />}
                         </Button>
                       </div>
 
                       <div className="rounded-lg bg-slate-100 p-4 text-xs text-muted-foreground dark:bg-slate-800">
-                        You can replace front and back covers any time. Max file size: 4MB per image.
+                        {t("coverReplaceNote")}
                       </div>
                     </CardContent>
                   </Card>
@@ -2141,18 +2264,18 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <FileText className="size-5 text-primary" />
-                          PDF Export
-                          <span className="ml-auto text-xs text-muted-foreground">Production</span>
+                          {t("pdfExportTitle")}
+                          <span className="ml-auto text-xs text-muted-foreground">{t("productionLabel")}</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4 p-6">
                         {latestPdfExportStale ? (
-                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">Latest PDF is older than the current chapter or cover content. Regenerate to sync.</div>
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">{t("pdfStaleWarning")}</div>
                         ) : null}
-                        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-950">
-                          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Live PDF composition preview</p>
+                        <div className="rounded-lg border border-border bg-muted/50 p-4 shadow-sm">
+                          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t("livePdfCompositionPreview")}</p>
                           <div className="flex gap-4">
-                            <div className="w-[108px] shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                            <div className="w-[108px] shrink-0 overflow-hidden rounded-md border border-border bg-muted">
                               {coverUrl ? (
                                 <Image src={coverUrl} alt={`${preview.book.title} live PDF cover`} width={108} height={144} sizes="108px" unoptimized className="h-[144px] w-full object-contain" />
                               ) : (
@@ -2164,7 +2287,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                               {preview.book.subtitle ? <p className="mt-1 text-xs italic text-muted-foreground">{preview.book.subtitle}</p> : null}
                               <p className="mt-1 text-xs text-muted-foreground">by {authorName}</p>
                               {publisherLogoUrl ? (
-                                <div className="mt-2 w-[112px] overflow-hidden rounded border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                                <div className="mt-2 w-[112px] overflow-hidden rounded border border-border bg-muted">
                                   <Image src={publisherLogoUrl} alt="Publisher logo in PDF" width={112} height={36} unoptimized className="h-9 w-full object-contain" />
                                 </div>
                               ) : null}
@@ -2172,23 +2295,23 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                               {livePreviewExcerpt ? (
                                 <p className="mt-1 line-clamp-6 text-xs leading-5 text-muted-foreground">{livePreviewExcerpt}...</p>
                               ) : (
-                                <p className="mt-1 text-xs leading-5 text-muted-foreground">Chapter content is still being written.</p>
+                                <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("chapterContentStillWriting")}</p>
                               )}
                             </div>
                           </div>
                         </div>
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                          {latestPdfExport ? <div>Latest PDF generated at {latestPdfExportLabel}.</div> : <div>No PDF generated yet.</div>}
-                          {pdfPreflightReason ? <div className="mt-1 text-amber-700 dark:text-amber-400">Build check: {pdfPreflightReason}</div> : null}
+                        <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+                          {latestPdfExport ? <div>{t("latestPdfGeneratedAt", { date: latestPdfExportLabel })}</div> : <div>{t("noPdfGeneratedYet")}</div>}
+                          {pdfPreflightReason ? <div className="mt-1 text-amber-700 dark:text-amber-400">{t("buildCheck", { reason: pdfPreflightReason })}</div> : null}
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Button size="lg" className="min-w-[180px] flex-1" onClick={() => void handlePdfPrimaryAction()} disabled={isGeneratingPdf || pdfPreflight.loading}>
                             {isGeneratingPdf ? <Loader2 className="mr-2 size-5 animate-spin" /> : <Download className="mr-2 size-5" />}
-                            {isGeneratingPdf ? "Generating..." : canInstantPdfDownload ? "Open PDF" : latestPdfExport ? "Regenerate PDF" : "Generate PDF"}
+                            {isGeneratingPdf ? t("generatingLabel") : latestPdfExport ? t("regeneratePdf") : t("generatePdfAction")}
                           </Button>
                           {latestPdfExport ? (
                             <Button asChild size="lg" variant="outline" className="min-w-[180px] flex-1">
-                              <a href={latestPdfExport.url} target="_blank" rel="noreferrer">Open Latest PDF</a>
+                              <a href={latestPdfExport.url} target="_blank" rel="noreferrer">{t("openLatestPdf")}</a>
                             </Button>
                           ) : null}
                         </div>
@@ -2199,18 +2322,18 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <BookOpen className="size-5 text-primary" />
-                          EPUB Export
-                          <span className="ml-auto text-xs text-muted-foreground">Production</span>
+                          {t("epubExportTitle")}
+                          <span className="ml-auto text-xs text-muted-foreground">{t("productionLabel")}</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4 p-6">
                         {latestEpubExportStale ? (
-                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">Latest EPUB is older than the current chapter or cover content. Regenerate to sync.</div>
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">{t("epubStaleWarning")}</div>
                         ) : null}
-                        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-950">
-                          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Live EPUB composition preview</p>
+                        <div className="rounded-lg border border-border bg-muted/50 p-4 shadow-sm">
+                          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t("liveEpubCompositionPreview")}</p>
                           <div className="flex gap-4">
-                            <div className="w-[108px] shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                            <div className="w-[108px] shrink-0 overflow-hidden rounded-md border border-border bg-muted">
                               {coverUrl ? (
                                 <Image src={coverUrl} alt={`${preview.book.title} live EPUB cover`} width={108} height={144} sizes="108px" unoptimized className="h-[144px] w-full object-contain" />
                               ) : (
@@ -2222,7 +2345,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                               {preview.book.subtitle ? <p className="mt-1 text-xs italic text-muted-foreground">{preview.book.subtitle}</p> : null}
                               <p className="mt-1 text-xs text-muted-foreground">by {authorName}</p>
                               {publisherLogoUrl ? (
-                                <div className="mt-2 w-[112px] overflow-hidden rounded border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                                <div className="mt-2 w-[112px] overflow-hidden rounded border border-border bg-muted">
                                   <Image src={publisherLogoUrl} alt="Publisher logo in EPUB" width={112} height={36} unoptimized className="h-9 w-full object-contain" />
                                 </div>
                               ) : null}
@@ -2230,23 +2353,23 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                               {livePreviewExcerpt ? (
                                 <p className="mt-1 line-clamp-6 text-xs leading-5 text-muted-foreground">{livePreviewExcerpt}...</p>
                               ) : (
-                                <p className="mt-1 text-xs leading-5 text-muted-foreground">Chapter content is still being written.</p>
+                                <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("chapterContentStillWriting")}</p>
                               )}
                             </div>
                           </div>
                         </div>
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                          {latestEpubExport ? <div>Latest EPUB generated at {latestEpubExportLabel}.</div> : <div>No EPUB generated yet.</div>}
-                          {epubPreflightReason ? <div className="mt-1 text-amber-700 dark:text-amber-400">Build check: {epubPreflightReason}</div> : null}
+                        <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+                          {latestEpubExport ? <div>{t("latestEpubGeneratedAt", { date: latestEpubExportLabel })}</div> : <div>{t("noEpubGeneratedYet")}</div>}
+                          {epubPreflightReason ? <div className="mt-1 text-amber-700 dark:text-amber-400">{t("buildCheck", { reason: epubPreflightReason })}</div> : null}
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Button size="lg" className="min-w-[180px] flex-1" onClick={() => void handleEpubPrimaryAction()} disabled={isGeneratingEpub || epubPreflight.loading}>
                             {isGeneratingEpub ? <Loader2 className="mr-2 size-5 animate-spin" /> : <Download className="mr-2 size-5" />}
-                            {isGeneratingEpub ? "Generating..." : canInstantEpubDownload ? "Open EPUB" : latestEpubExport ? "Regenerate EPUB" : "Generate EPUB"}
+                            {isGeneratingEpub ? t("generatingLabel") : latestEpubExport ? t("regenerateEpub") : t("generateEpubAction")}
                           </Button>
                           {latestEpubExport ? (
                             <Button asChild size="lg" variant="outline" className="min-w-[180px] flex-1">
-                              <a href={latestEpubExport.url} target="_blank" rel="noreferrer">Open Latest EPUB</a>
+                              <a href={latestEpubExport.url} target="_blank" rel="noreferrer">{t("openLatestEpub")}</a>
                             </Button>
                           ) : null}
                         </div>
@@ -2259,7 +2382,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
               {(pdfPreflightReason || epubPreflightReason || pdfPreflight.loading || epubPreflight.loading) && (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-6 text-amber-900">
                   {pdfPreflight.loading || epubPreflight.loading ? (
-                    <div>Checking export readiness…</div>
+                    <div>{t("checkingExportReadiness")}</div>
                   ) : (
                     <>
                       {pdfPreflightReason ? <div>PDF: {pdfPreflightReason}</div> : null}
@@ -2298,9 +2421,9 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
           <Card className="border-[#eadbce] bg-[linear-gradient(180deg,#fffdf9_0%,#fff8f2_100%)]">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between gap-3 text-sm text-[#1f1813]">
-                <span>Live activity</span>
+                <span>{t("liveActivityTitle")}</span>
                 <span className="rounded-full border border-[#eadbce] bg-white px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#8b6a59]">
-                  Auto-refreshing
+                  {t("autoRefreshing")}
                 </span>
               </CardTitle>
             </CardHeader>
@@ -2309,10 +2432,10 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                   <div className="flex items-center gap-1.5 font-semibold">
                     <AlertTriangle className="size-3.5" />
-                    Stale run skipped ({stalePipelineEventCount})
+                    {t("staleRunSkipped", { count: stalePipelineEventCount })}
                   </div>
                   <p className="mt-1 leading-5">
-                    Older pipeline attempts were ignored to keep writing on the current run.
+                    {t("staleRunNote")}
                   </p>
                 </div>
               ) : null}
@@ -2326,7 +2449,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                     <div key={`${item.code || "activity"}-${index}`} className="rounded-lg border border-[#eadbce] bg-white px-3 py-2.5">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="truncate text-xs font-semibold text-[#2f1f17]">{item.label || "Pipeline event"}</p>
+                          <p className="truncate text-xs font-semibold text-[#2f1f17]">{item.label || t("pipelineEventFallback")}</p>
                           {item.detail ? (
                             <p className="mt-1 text-xs leading-5 text-[#6f5547]">{item.detail}</p>
                           ) : null}
@@ -2350,7 +2473,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                 })
               ) : (
                 <div className="rounded-lg border border-dashed border-[#eadbce] bg-white/80 px-3 py-4 text-xs text-[#8b6a59]">
-                  Pipeline log is waiting for the next event.
+                  {t("pipelineLogWaiting")}
                 </div>
               )}
             </CardContent>
@@ -2389,22 +2512,22 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
             detailsContent={
               <div className="space-y-3">
                 <div className="rounded-lg border border-border/50 bg-background/50 px-3 py-2.5">
-                  <div className="text-xs font-medium text-muted-foreground">Author</div>
+                  <div className="text-xs font-medium text-muted-foreground">{t("mobileAuthorLabel")}</div>
                   <div className="mt-0.5 text-sm text-foreground">{authorName}</div>
                 </div>
                 <div className="rounded-lg border border-border/50 bg-background/50 px-3 py-2.5">
-                  <div className="text-xs font-medium text-muted-foreground">Imprint</div>
+                  <div className="text-xs font-medium text-muted-foreground">{t("mobileImprintLabel")}</div>
                   <div className="mt-0.5 text-sm text-foreground">{imprint}</div>
                 </div>
                 {coverBrief ? (
                   <div className="rounded-lg border border-border/50 bg-background/50 px-3 py-2.5">
-                    <div className="text-xs font-medium text-muted-foreground">Cover Brief</div>
+                    <div className="text-xs font-medium text-muted-foreground">{t("mobileCoverBriefLabel")}</div>
                     <div className="mt-0.5 text-sm text-foreground">{coverBrief}</div>
                   </div>
                 ) : null}
                 {authorBio ? (
                   <div className="rounded-lg border border-border/50 bg-background/50 px-3 py-2.5">
-                    <div className="text-xs font-medium text-muted-foreground">Author Bio</div>
+                    <div className="text-xs font-medium text-muted-foreground">{t("mobileAuthorBioLabel")}</div>
                     <div className="mt-0.5 text-sm text-foreground">{authorBio}</div>
                   </div>
                 ) : null}
@@ -2415,7 +2538,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                 {!premium ? (
                   <Button size="default" className="w-full" onClick={() => openUpgrade("full_unlock")}>
                     <Sparkles className="mr-2 size-4" />
-                    Unlock Full Book · $4
+                    {t("unlockFullBookMobile")}
                   </Button>
                 ) : (
                   <Button
@@ -2428,7 +2551,7 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
                     }}
                   >
                     <BookOpen className="mr-2 size-4" />
-                    Read Full Book
+                    {t("readFullBook")}
                   </Button>
                 )}
               </div>
@@ -2442,8 +2565,8 @@ export function BookPreviewScreen({ slug }: { slug: string }) {
           <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/80 bg-background/95 px-4 py-3 pb-safe backdrop-blur-sm">
             <div className="mx-auto flex max-w-2xl items-center gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground">Unlock Full Book</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">All chapters · PDF · EPUB · Covers</p>
+                <p className="text-sm font-semibold text-foreground">{t("unlockFullBookSticky")}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{t("allChaptersPdfEpubCovers")}</p>
               </div>
               <Button size="default" className="h-10 shrink-0 px-5 text-sm font-semibold" onClick={() => openUpgrade("full_unlock")}>
                 <Sparkles className="mr-1.5 size-4" aria-hidden="true" />

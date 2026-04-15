@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { BarChart3, BookOpen, Check, Download, ExternalLink, FileText, FlaskConical, ImagePlus, Keyboard, Layers, Loader2, Sparkles, Upload, X } from "lucide-react";
 
 import { AppFrame } from "@/components/app/app-frame";
@@ -46,14 +47,6 @@ import { cn, titleCase } from "@/lib/utils";
 
 const tabOptions = ["home", "book", "writing", "research", "publish"] as const;
 type WorkspaceTab = (typeof tabOptions)[number];
-
-const TAB_LABELS: Record<WorkspaceTab, string> = {
-  home: "Overview",
-  book: "Book",
-  writing: "Content",
-  research: "Research",
-  publish: "Publish",
-};
 
 function normalizeTab(tab?: string): WorkspaceTab {
   return tab && tabOptions.includes(tab as WorkspaceTab) ? (tab as WorkspaceTab) : "home";
@@ -175,6 +168,7 @@ export function WorkspaceScreen({
   slug: string;
   initialTab?: string;
 }) {
+  const t = useTranslations("WorkspaceScreen");
   const ready = useSessionGuard();
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(() => normalizeTab(initialTab));
@@ -236,7 +230,7 @@ export function WorkspaceScreen({
         setBackendUnavailable(true);
         return;
       }
-      addToast(error instanceof Error ? error.message : "Loading failed.", "error");
+      addToast(error instanceof Error ? error.message : t("toast.loadingFailed"), "error");
     }
   }
 
@@ -319,7 +313,7 @@ export function WorkspaceScreen({
   async function autoSave() {
     if (!draft || isSaving) return;
     setIsSaving(true);
-    const toastId = addToast("Auto-saving...", "loading");
+    const toastId = addToast(t("toast.autoSaving"), "loading");
     try {
       const saved = await saveBook(draft);
       setBook(saved);
@@ -328,9 +322,9 @@ export function WorkspaceScreen({
       setLastSaved(new Date());
       setAutoSaveCountdown(0);
       if (countdownInterval.current) clearInterval(countdownInterval.current);
-      updateToast(toastId, "Auto-saved.", "success");
+      updateToast(toastId, t("toast.autoSaved"), "success");
     } catch {
-      updateToast(toastId, "Auto-save failed.", "error");
+      updateToast(toastId, t("toast.autoSaveFailed"), "error");
     } finally {
       setIsSaving(false);
     }
@@ -352,7 +346,7 @@ export function WorkspaceScreen({
   async function saveCurrentBook() {
     if (!draft) return;
     setIsSaving(true);
-    const toastId = addToast("Saving...", "loading");
+    const toastId = addToast(t("toast.saving"), "loading");
     try {
       const saved = await saveBook(draft);
       setBook(saved);
@@ -362,14 +356,14 @@ export function WorkspaceScreen({
       if (countdownInterval.current) clearInterval(countdownInterval.current);
       await refresh();
       setIsDirty(false);
-      updateToast(toastId, "Book saved.", "success");
+      updateToast(toastId, t("toast.bookSaved"), "success");
     } catch (error) {
       if (isBackendUnavailableError(error)) {
         setBackendUnavailable(true);
         dismissToast(toastId);
         return;
       }
-      updateToast(toastId, error instanceof Error ? error.message : "Save failed.", "error");
+      updateToast(toastId, error instanceof Error ? error.message : t("toast.saveFailed"), "error");
     } finally {
       setIsSaving(false);
     }
@@ -377,15 +371,15 @@ export function WorkspaceScreen({
 
   async function handleLogoUpload(file: File) {
     if (!file.type.startsWith("image/")) {
-      addToast("Only image files can be uploaded.", "error");
+      addToast(t("toast.onlyImages"), "error");
       return;
     }
     if (file.size > 4 * 1024 * 1024) {
-      addToast("Logo file must be under 4 MB.", "error");
+      addToast(t("toast.logoTooLarge"), "error");
       return;
     }
 
-    const toastId = addToast("Uploading logo...", "loading");
+    const toastId = addToast(t("toast.uploadingLogo"), "loading");
     try {
       const uploaded = await uploadBookAsset(slug, file, "asset");
       const nextDraft = {
@@ -396,9 +390,9 @@ export function WorkspaceScreen({
       setBook(saved);
       setDraft(saved);
       setIsDirty(false);
-      updateToast(toastId, "Logo uploaded and linked to brand.", "success");
+      updateToast(toastId, t("toast.logoUploaded"), "success");
     } catch (error) {
-      updateToast(toastId, error instanceof Error ? error.message : "Logo upload failed.", "error");
+      updateToast(toastId, error instanceof Error ? error.message : t("toast.logoUploadFailed"), "error");
     }
   }
 
@@ -408,13 +402,13 @@ export function WorkspaceScreen({
       {
         key: 's',
         ctrl: true,
-        description: 'Save book',
+        description: t("shortcuts.saveBook"),
         action: () => saveCurrentBook(),
       },
       {
         key: 'n',
         ctrl: true,
-        description: 'New chapter',
+        description: t("shortcuts.newChapter"),
         action: () => {
           const newChapter = {
             title: `Chapter ${(draft?.chapters.length || 0) + 1}`,
@@ -423,12 +417,12 @@ export function WorkspaceScreen({
             target_words: 2000,
           };
           updateDraft({ chapters: [...(draft?.chapters || []), newChapter] });
-          addToast('New chapter added.', 'success');
+          addToast(t("toast.newChapterAdded"), 'success');
         },
       },
       {
         key: '?',
-        description: 'Show keyboard shortcuts',
+        description: t("shortcuts.showShortcuts"),
         action: () => setShowKeyboardHelp(true),
       },
     ],
@@ -442,8 +436,8 @@ export function WorkspaceScreen({
         current="workspace"
         layout="book"
         currentBookSlug={slug}
-        title="Workspace"
-        subtitle="Connection issue occurred."
+        title={t("frame.title")}
+        subtitle={t("frame.connectionIssue")}
         books={books}
       >
         <BackendUnavailableState onRetry={() => void hydrateWorkspace()} />
@@ -466,16 +460,16 @@ export function WorkspaceScreen({
   const selectedCoverValidation = selectedCoverVariant?.text_validation;
 
   const actions = [
-    { label: "Overview", description: "Main progress summary", run: () => setActiveTab("home") },
-    { label: "Book", description: "Title and chapter backbone", run: () => setActiveTab("book") },
-    { label: "Content", description: "Outline and chapter writing", run: () => setActiveTab("writing") },
-    { label: "Research", description: "KDP and keyword tools", run: () => setActiveTab("research") },
-    { label: "Publish", description: "EPUB and PDF delivery", run: () => setActiveTab("publish") },
-    { label: "Save", description: "Save book", run: () => saveCurrentBook() },
+    { label: t("actions.overview"), description: t("actions.overviewDesc"), run: () => setActiveTab("home") },
+    { label: t("actions.book"), description: t("actions.bookDesc"), run: () => setActiveTab("book") },
+    { label: t("actions.content"), description: t("actions.contentDesc"), run: () => setActiveTab("writing") },
+    { label: t("actions.research"), description: t("actions.researchDesc"), run: () => setActiveTab("research") },
+    { label: t("actions.publish"), description: t("actions.publishDesc"), run: () => setActiveTab("publish") },
+    { label: t("actions.save"), description: t("actions.saveDesc"), run: () => saveCurrentBook() },
   ];
 
   async function triggerWorkflow(payload: Record<string, unknown>) {
-    const toastId = addToast("Processing...", "loading");
+    const toastId = addToast(t("toast.processing"), "loading");
     try {
       const response = await runWorkflow({ slug, ...payload });
       await refresh();
@@ -488,13 +482,13 @@ export function WorkspaceScreen({
         dismissToast(toastId);
         return;
       }
-      updateToast(toastId, error instanceof Error ? error.message : "Operation failed.", "error");
+      updateToast(toastId, error instanceof Error ? error.message : t("toast.operationFailed"), "error");
     }
   }
 
   async function triggerBuild(format: "epub" | "pdf") {
     const hadExportBefore = Number(currentDraft.status?.export_count || 0) > 0;
-    const toastId = addToast("Preparing output...", "loading");
+    const toastId = addToast(t("toast.preparingOutput"), "loading");
     try {
       const response = await buildBook(slug, {
         format,
@@ -530,7 +524,7 @@ export function WorkspaceScreen({
         dismissToast(toastId);
         return;
       }
-      updateToast(toastId, error instanceof Error ? error.message : "Output generation failed.", "error");
+      updateToast(toastId, error instanceof Error ? error.message : t("toast.outputFailed"), "error");
     }
   }
 
@@ -574,20 +568,20 @@ export function WorkspaceScreen({
     (stats.export_count > 0 ? 25 : 0);
 
   const nextStep = !book.outline_file
-    ? { label: "Generate Outline", tab: "writing" as WorkspaceTab, desc: "Don't start chapter generation before building the book's backbone." }
+    ? { label: t("home.nextSteps.generateOutline"), tab: "writing" as WorkspaceTab, desc: t("home.nextSteps.generateOutlineDesc") }
     : stats.chapter_count === 0
-    ? { label: "Generate First Chapter", tab: "writing" as WorkspaceTab, desc: "Outline is ready, now it's time to produce content." }
+    ? { label: t("home.nextSteps.generateFirstChapter"), tab: "writing" as WorkspaceTab, desc: t("home.nextSteps.generateFirstChapterDesc") }
     : stats.export_count === 0
-    ? { label: "Get EPUB", tab: "publish" as WorkspaceTab, desc: "Your first goal should be getting the EPUB and checking the structure." }
-    : { label: "Get New Version", tab: "publish" as WorkspaceTab, desc: "Improve cover, research and chapter quality." };
+    ? { label: t("home.nextSteps.getEpub"), tab: "publish" as WorkspaceTab, desc: t("home.nextSteps.getEpubDesc") }
+    : { label: t("home.nextSteps.getNewVersion"), tab: "publish" as WorkspaceTab, desc: t("home.nextSteps.getNewVersionDesc") };
 
   return (
     <AppFrame
       current="workspace"
       layout="book"
       currentBookSlug={slug}
-      title={draft.title || "Book"}
-      subtitle={isDirty ? "Unsaved changes pending." : "Overview, content production, research and publish delivery in one flow."}
+      title={draft.title || t("frame.title")}
+      subtitle={isDirty ? t("frame.unsavedChanges") : t("frame.subtitle")}
       books={books}
       actions={actions}
     >
@@ -609,7 +603,7 @@ export function WorkspaceScreen({
           <div className="overflow-x-auto" ref={tabScrollRef}>
             <TabsList className="w-max min-w-full">
               {tabOptions.map((tab) => (
-                <TabsTrigger key={tab} value={tab}>{TAB_LABELS[tab]}</TabsTrigger>
+                <TabsTrigger key={tab} value={tab}>{t(`tabs.${tab}`)}</TabsTrigger>
               ))}
             </TabsList>
           </div>
@@ -627,7 +621,7 @@ export function WorkspaceScreen({
                 <div className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
                   <Sparkles className="size-4" />
                 </div>
-                <div className="text-sm font-semibold text-primary">Next Recommended Step</div>
+                <div className="text-sm font-semibold text-primary">{t("home.nextStep")}</div>
               </div>
               <div className="text-2xl font-bold text-foreground">{nextStep.label}</div>
               <div className="text-sm leading-7 text-muted-foreground">{nextStep.desc}</div>
@@ -640,9 +634,9 @@ export function WorkspaceScreen({
           {/* Stats - Reduced to 3 */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { icon: Layers, value: stats.chapter_count, label: "Chapters", desc: "Completed chapters" },
-              { icon: FlaskConical, value: stats.research_count, label: "Research", desc: "Research files" },
-              { icon: BarChart3, value: stats.export_count, label: "Exports", desc: "Generated outputs" },
+              { icon: Layers, value: stats.chapter_count, label: t("home.stats.chapters"), desc: t("home.stats.chaptersDesc") },
+              { icon: FlaskConical, value: stats.research_count, label: t("home.stats.research"), desc: t("home.stats.researchDesc") },
+              { icon: BarChart3, value: stats.export_count, label: t("home.stats.exports"), desc: t("home.stats.exportsDesc") },
             ].map(({ icon: Icon, value, label, desc }) => (
               <Card key={label}>
                 <CardContent className="flex items-start gap-3">
@@ -664,8 +658,8 @@ export function WorkspaceScreen({
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-base font-semibold text-foreground">Book Progress</div>
-                  <div className="mt-1 text-sm text-muted-foreground">Overall completion status</div>
+                  <div className="text-base font-semibold text-foreground">{t("home.bookProgress")}</div>
+                  <div className="mt-1 text-sm text-muted-foreground">{t("home.overallCompletion")}</div>
                 </div>
                 <div className="text-3xl font-bold text-primary">{progressScore}%</div>
               </div>
@@ -677,10 +671,10 @@ export function WorkspaceScreen({
               </div>
               <div className="flex flex-wrap gap-3 text-xs">
                 {[
-                  { label: "Outline", done: !!book.outline_file },
-                  { label: "Chapters", done: stats.chapter_count > 0 },
-                  { label: "Research", done: stats.research_count > 0 },
-                  { label: "Output", done: stats.export_count > 0 },
+                  { label: t("home.progress.outline"), done: !!book.outline_file },
+                  { label: t("home.progress.chapters"), done: stats.chapter_count > 0 },
+                  { label: t("home.progress.research"), done: stats.research_count > 0 },
+                  { label: t("home.progress.output"), done: stats.export_count > 0 },
                 ].map(({ label, done }) => (
                   <div key={label} className={cn("flex items-center gap-1.5 px-2 py-1 rounded-full", done ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
                     {done ? <Check className="size-3" /> : <div className="size-3 rounded-full border-2 border-current" />}
@@ -701,13 +695,13 @@ export function WorkspaceScreen({
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-2">
                     <BookOpen className="size-5 text-primary" />
-                    <div className="text-base font-semibold text-foreground">Book Information</div>
+                    <div className="text-base font-semibold text-foreground">{t("book.bookInformation")}</div>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="md:col-span-2"><Label>Title</Label><Input value={draft.title} onChange={(e) => updateDraft({ title: e.target.value })} placeholder="Enter book title" /></div>
-                    <div className="md:col-span-2"><Label>Subtitle</Label><Input value={draft.subtitle || ""} onChange={(e) => updateDraft({ subtitle: e.target.value })} placeholder="Optional subtitle" /></div>
-                    <div><Label>ISBN</Label><Input value={draft.isbn || ""} onChange={(e) => updateDraft({ isbn: e.target.value })} placeholder="978-0-0000-0000-0" /></div>
-                    <div><Label>Year</Label><Input value={draft.year || ""} onChange={(e) => updateDraft({ year: e.target.value })} placeholder="2026" /></div>
+                    <div className="md:col-span-2"><Label>{t("book.titleLabel")}</Label><Input value={draft.title} onChange={(e) => updateDraft({ title: e.target.value })} placeholder={t("book.titlePlaceholder")} /></div>
+                    <div className="md:col-span-2"><Label>{t("book.subtitleLabel")}</Label><Input value={draft.subtitle || ""} onChange={(e) => updateDraft({ subtitle: e.target.value })} placeholder={t("book.subtitlePlaceholder")} /></div>
+                    <div><Label>{t("book.isbnLabel")}</Label><Input value={draft.isbn || ""} onChange={(e) => updateDraft({ isbn: e.target.value })} placeholder={t("book.isbnPlaceholder")} /></div>
+                    <div><Label>{t("book.yearLabel")}</Label><Input value={draft.year || ""} onChange={(e) => updateDraft({ year: e.target.value })} placeholder={t("book.yearPlaceholder")} /></div>
                   </div>
                 </CardContent>
               </Card>
@@ -719,14 +713,14 @@ export function WorkspaceScreen({
                     <div className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <span className="text-xs font-bold">A</span>
                     </div>
-                    <div className="text-base font-semibold text-foreground">Author Information</div>
+                    <div className="text-base font-semibold text-foreground">{t("book.authorInformation")}</div>
                   </div>
                   <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    <div className="md:col-span-2"><Label>Author Name</Label><Input value={draft.author || ""} onChange={(e) => updateDraft({ author: e.target.value })} placeholder="Full author name" /></div>
-                    <div className="md:col-span-2"><Label>Publisher</Label><Input value={draft.publisher || ""} onChange={(e) => updateDraft({ publisher: e.target.value })} placeholder="Publisher name" /></div>
+                    <div className="md:col-span-2"><Label>{t("book.authorNameLabel")}</Label><Input value={draft.author || ""} onChange={(e) => updateDraft({ author: e.target.value })} placeholder={t("book.authorNamePlaceholder")} /></div>
+                    <div className="md:col-span-2"><Label>{t("book.publisherLabel")}</Label><Input value={draft.publisher || ""} onChange={(e) => updateDraft({ publisher: e.target.value })} placeholder={t("book.publisherPlaceholder")} /></div>
                     <div className="md:col-span-2">
-                      <Label>Author Biography</Label>
-                      <Textarea value={draft.author_bio || ""} onChange={(e) => updateDraft({ author_bio: e.target.value })} placeholder="Brief author biography for the book cover" rows={3} />
+                      <Label>{t("book.authorBioLabel")}</Label>
+                      <Textarea value={draft.author_bio || ""} onChange={(e) => updateDraft({ author_bio: e.target.value })} placeholder={t("book.authorBioPlaceholder")} rows={3} />
                     </div>
                   </div>
                 </CardContent>
@@ -737,18 +731,18 @@ export function WorkspaceScreen({
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Sparkles className="size-5 text-primary" />
-                    <div className="text-base font-semibold text-foreground">Branding & Cover</div>
+                    <div className="text-base font-semibold text-foreground">{t("book.brandingCover")}</div>
                   </div>
                   <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    <div><Label>Branding / Wordmark</Label><Input value={draft.branding_mark || ""} onChange={(e) => updateDraft({ branding_mark: e.target.value })} placeholder="Brand or series name" /></div>
-                    <div><Label>Logo URL</Label><Input value={draft.branding_logo_url || ""} onChange={(e) => updateDraft({ branding_logo_url: e.target.value })} placeholder="https://..." /></div>
-                    <div className="md:col-span-2"><Label>Cover Emphasis</Label><Input value={draft.cover_brief || ""} onChange={(e) => updateDraft({ cover_brief: e.target.value })} placeholder="Key visual elements for cover design" /></div>
+                    <div><Label>{t("book.brandingWordmarkLabel")}</Label><Input value={draft.branding_mark || ""} onChange={(e) => updateDraft({ branding_mark: e.target.value })} placeholder={t("book.brandingWordmarkPlaceholder")} /></div>
+                    <div><Label>{t("book.logoUrlLabel")}</Label><Input value={draft.branding_logo_url || ""} onChange={(e) => updateDraft({ branding_logo_url: e.target.value })} placeholder={t("book.logoUrlPlaceholder")} /></div>
+                    <div className="md:col-span-2"><Label>{t("book.coverEmphasisLabel")}</Label><Input value={draft.cover_brief || ""} onChange={(e) => updateDraft({ cover_brief: e.target.value })} placeholder={t("book.coverEmphasisPlaceholder")} /></div>
                   </div>
                   <div className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="text-sm">
-                        <div className="font-medium text-foreground">Upload Brand Logo</div>
-                        <div className="mt-1 text-muted-foreground">PNG, JPG or WebP up to 4MB</div>
+                        <div className="font-medium text-foreground">{t("book.uploadBrandLogo")}</div>
+                        <div className="mt-1 text-muted-foreground">{t("book.uploadLogoDesc")}</div>
                       </div>
                       <div className="flex gap-2">
                         <input
@@ -766,7 +760,7 @@ export function WorkspaceScreen({
                         />
                         <Button type="button" variant="outline" size="sm" onClick={() => logoInputRef.current?.click()}>
                           <ImagePlus className="mr-2 size-4" />
-                          Upload
+                          {t("book.uploadButton")}
                         </Button>
                         <Button
                           type="button"
@@ -777,11 +771,11 @@ export function WorkspaceScreen({
                               title: draft.title,
                               author: draft.author,
                               genre: "non-fiction",
-                            }).catch((error) => addToast(error instanceof Error ? error.message : "Cover generation failed.", "error"))
+                            }).catch((error) => addToast(error instanceof Error ? error.message : t("toast.coverFailed"), "error"))
                           }
                         >
                           <Sparkles className="mr-2 size-4" />
-                          Generate Cover
+                          {t("book.generateCoverButton")}
                         </Button>
                       </div>
                     </div>
@@ -793,7 +787,7 @@ export function WorkspaceScreen({
             {/* Cover Preview */}
             <Card>
               <CardContent className="space-y-4">
-                <div className="text-sm font-medium text-foreground">Cover Preview</div>
+                <div className="text-sm font-medium text-foreground">{t("book.coverPreview")}</div>
                 <BookMockup
                   title={draft.title}
                   subtitle={draft.subtitle || ""}
@@ -806,7 +800,7 @@ export function WorkspaceScreen({
                 />
                 {draft.branding_logo_url && (
                   <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Active Logo</div>
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{t("book.activeLogo")}</div>
                     <img
                       src={buildBookAssetUrl(slug, draft.branding_logo_url)}
                       alt={`${draft.branding_mark || draft.publisher || "Brand"} logo`}
@@ -823,13 +817,13 @@ export function WorkspaceScreen({
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium text-foreground">Chapters</div>
+                  <div className="text-sm font-medium text-foreground">{t("book.chapters")}</div>
                   <div className="mt-1 text-sm text-muted-foreground">
-                    {draft.chapters.length} {draft.chapters.length === 1 ? 'chapter' : 'chapters'} in this book
+                    {draft.chapters.length === 1 ? t("book.chapterCount", { count: draft.chapters.length }) : t("book.chapterCountPlural", { count: draft.chapters.length })}
                   </div>
                 </div>
                 <Button variant="outline" onClick={() => setActiveTab("writing")}>
-                  Go to Writing Tab →
+                  {t("book.goToWritingTab")}
                 </Button>
               </div>
             </CardContent>
@@ -842,9 +836,9 @@ export function WorkspaceScreen({
           <Tabs value={writingSubTab} onValueChange={(value) => setWritingSubTab(value as typeof writingSubTab)}>
             <div className="overflow-x-auto">
               <TabsList className="w-max min-w-full">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="editor">Editor</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                <TabsTrigger value="overview">{t("writing.overviewTab")}</TabsTrigger>
+                <TabsTrigger value="editor">{t("writing.editorTab")}</TabsTrigger>
+                <TabsTrigger value="analytics">{t("writing.analyticsTab")}</TabsTrigger>
               </TabsList>
             </div>
 
@@ -858,7 +852,7 @@ export function WorkspaceScreen({
                   chapterIndex={activeChapter}
                   chapterTitle={draft.chapters[activeChapter]?.title || `Chapter ${activeChapter + 1}`}
                   onSessionComplete={(session) => {
-                    addToast(`Session saved: ${Math.round(session.duration / 60)} minutes`, 'success');
+                    addToast(t("toast.sessionSaved", { minutes: Math.round(session.duration / 60) }), 'success');
                   }}
                 />
                 <GoalTracker slug={slug} chapters={draft.chapters} />
@@ -876,7 +870,7 @@ export function WorkspaceScreen({
                       content: template.content,
                     };
                     updateDraft({ chapters });
-                    addToast(`Template "${template.name}" applied.`, 'success');
+                    addToast(t("toast.templateApplied", { name: template.name }), 'success');
                   }
                 }}
               />
@@ -889,13 +883,13 @@ export function WorkspaceScreen({
                 onUpdate={(chapters) => updateDraft({ chapters })}
                 onChapterAction={(action, index) => {
                   if (action === "add") {
-                    addToast("Chapter added.", "success");
+                    addToast(t("toast.chapterAdded"), "success");
                   } else if (action === "duplicate") {
-                    addToast("Chapter duplicated.", "success");
+                    addToast(t("toast.chapterDuplicated"), "success");
                   } else if (action === "delete") {
-                    addToast("Chapter deleted.", "success");
+                    addToast(t("toast.chapterDeleted"), "success");
                   } else if (action === "move") {
-                    addToast("Chapter reordered.", "success");
+                    addToast(t("toast.chapterReordered"), "success");
                   }
                 }}
               />
@@ -906,8 +900,8 @@ export function WorkspaceScreen({
               <Card>
                 <CardContent className="pt-6">
                   <div className="mb-4">
-                    <h3 className="text-base font-semibold text-foreground">AI Workflows</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">Generate content and analyze your book with AI assistance</p>
+                    <h3 className="text-base font-semibold text-foreground">{t("writing.aiWorkflows")}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{t("writing.aiWorkflowsDesc")}</p>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <Button
@@ -937,7 +931,7 @@ export function WorkspaceScreen({
                       className={isGeneratingOutline ? "cursor-not-allowed opacity-70" : ""}
                     >
                       {isGeneratingOutline ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Sparkles className="mr-2 size-4" />}
-                      {isGeneratingOutline ? "Generating..." : "Generate Outline"}
+                      {isGeneratingOutline ? t("writing.generating") : t("writing.generateOutline")}
                     </Button>
                     <Button
                       variant="outline"
@@ -961,7 +955,7 @@ export function WorkspaceScreen({
                       className={isGeneratingChapter ? "cursor-not-allowed opacity-70" : ""}
                     >
                       {isGeneratingChapter ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                      {isGeneratingChapter ? "Generating..." : `Generate Ch. ${activeChapter + 1}`}
+                      {isGeneratingChapter ? t("writing.generating") : t("writing.generateChapter", { number: activeChapter + 1 })}
                     </Button>
                     <Button
                       variant="ghost"
@@ -980,7 +974,7 @@ export function WorkspaceScreen({
                       className={isReviewing ? "cursor-not-allowed opacity-70" : ""}
                     >
                       {isReviewing ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                      {isReviewing ? "Reviewing..." : "Review"}
+                      {isReviewing ? t("writing.reviewing") : t("writing.review")}
                     </Button>
                   </div>
                 </CardContent>
@@ -1004,9 +998,9 @@ export function WorkspaceScreen({
                   style: "clear and practical",
                   tone: "professional",
                   year: draft.year,
-                }).catch((error) => addToast(error instanceof Error ? error.message : "Outline generation failed.", "error"))}
+                }).catch((error) => addToast(error instanceof Error ? error.message : t("toast.outlineFailed"), "error"))}
                 onExport={() => {
-                  addToast("Outline export coming soon!", "info");
+                  addToast(t("toast.outlineExportSoon"), "info");
                 }}
               />
             </TabsContent>
@@ -1018,20 +1012,20 @@ export function WorkspaceScreen({
           <Card>
             <CardContent className="space-y-4 pt-6">
               <div>
-                <h3 className="text-base font-semibold text-foreground">Market Research Tools</h3>
-                <p className="mt-1 text-sm text-muted-foreground">Analyze your book's market potential and discover profitable opportunities</p>
+                <h3 className="text-base font-semibold text-foreground">{t("research.title")}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{t("research.description")}</p>
               </div>
               <div className="grid gap-4 md:grid-cols-[1fr_auto]">
                 <Input
                   value={researchTopic}
                   onChange={(event) => setResearchTopic(event.target.value)}
-                  placeholder="Enter your book topic or keywords..."
+                  placeholder={t("research.topicPlaceholder")}
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Button
                   variant="outline"
-                  onClick={() => triggerWorkflow({ action: "market_analyzer", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : "KDP Analysis failed.", "error"))}
+                  onClick={() => triggerWorkflow({ action: "market_analyzer", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : t("toast.kdpFailed"), "error"))}
                   className="justify-start"
                 >
                   <div className="flex items-center gap-3">
@@ -1039,14 +1033,14 @@ export function WorkspaceScreen({
                       <BarChart3 className="size-4 text-primary" />
                     </div>
                     <div className="text-left">
-                      <div className="font-medium text-foreground">KDP Analysis</div>
-                      <div className="text-xs text-muted-foreground">Analyze market competition</div>
+                      <div className="font-medium text-foreground">{t("research.kdpAnalysis")}</div>
+                      <div className="text-xs text-muted-foreground">{t("research.kdpAnalysisDesc")}</div>
                     </div>
                   </div>
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => triggerWorkflow({ action: "keyword_research", keywords: [researchTopic] }).catch((error) => addToast(error instanceof Error ? error.message : "Keywords failed.", "error"))}
+                  onClick={() => triggerWorkflow({ action: "keyword_research", keywords: [researchTopic] }).catch((error) => addToast(error instanceof Error ? error.message : t("toast.keywordsFailed"), "error"))}
                   className="justify-start"
                 >
                   <div className="flex items-center gap-3">
@@ -1054,14 +1048,14 @@ export function WorkspaceScreen({
                       <FlaskConical className="size-4 text-primary" />
                     </div>
                     <div className="text-left">
-                      <div className="font-medium text-foreground">Keywords</div>
-                      <div className="text-xs text-muted-foreground">Find high-value keywords</div>
+                      <div className="font-medium text-foreground">{t("research.keywords")}</div>
+                      <div className="text-xs text-muted-foreground">{t("research.keywordsDesc")}</div>
                     </div>
                   </div>
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => triggerWorkflow({ action: "topic_finder", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : "Topic Finder failed.", "error"))}
+                  onClick={() => triggerWorkflow({ action: "topic_finder", topic: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : t("toast.topicFailed"), "error"))}
                   className="justify-start"
                 >
                   <div className="flex items-center gap-3">
@@ -1069,13 +1063,13 @@ export function WorkspaceScreen({
                       <Layers className="size-4 text-primary" />
                     </div>
                     <div className="text-left">
-                      <div className="font-medium text-foreground">Topic Finder</div>
-                      <div className="text-xs text-muted-foreground">Discover trending topics</div>
+                      <div className="font-medium text-foreground">{t("research.topicFinder")}</div>
+                      <div className="text-xs text-muted-foreground">{t("research.topicFinderDesc")}</div>
                     </div>
                   </div>
                 </Button>
                 <Button
-                  onClick={() => triggerWorkflow({ action: "research_insights", focus: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : "AI Suggestion failed.", "error"))}
+                  onClick={() => triggerWorkflow({ action: "research_insights", focus: researchTopic }).catch((error) => addToast(error instanceof Error ? error.message : t("toast.aiSuggestionFailed"), "error"))}
                   className="justify-start"
                 >
                   <div className="flex items-center gap-3">
@@ -1083,8 +1077,8 @@ export function WorkspaceScreen({
                       <Sparkles className="size-4 text-primary" />
                     </div>
                     <div className="text-left">
-                      <div className="font-medium text-foreground">AI Suggestion</div>
-                      <div className="text-xs text-muted-foreground">Get AI-powered insights</div>
+                      <div className="font-medium text-foreground">{t("research.aiSuggestion")}</div>
+                      <div className="text-xs text-muted-foreground">{t("research.aiSuggestionDesc")}</div>
                     </div>
                   </div>
                 </Button>
@@ -1113,9 +1107,9 @@ export function WorkspaceScreen({
               <Card>
                 <CardContent className="space-y-4 pt-6">
                   <div>
-                    <h3 className="text-base font-semibold text-foreground">Export Your Book</h3>
+                    <h3 className="text-base font-semibold text-foreground">{t("publish.exportTitle")}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Generate publication-ready EPUB and PDF files, then review them inline without leaving the workspace.
+                      {t("publish.exportDesc")}
                     </p>
                   </div>
 
@@ -1124,45 +1118,45 @@ export function WorkspaceScreen({
                       variant="outline"
                       className="gap-2 border-warning/50 text-warning hover:bg-warning/10"
                       onClick={async () => {
-                        const toastId = addToast("Running pre-check...", "loading");
+                        const toastId = addToast(t("publish.runningPrecheck"), "loading");
                         try {
                           const response = await preflightBook(slug, { action: "build", format: "epub" });
                           const message = response.ok
-                            ? "Build path is ready."
-                            : String(response.reason || response.missing || "Build is not ready.");
+                            ? t("publish.buildReady")
+                            : String(response.reason || response.missing || t("publish.buildNotReady"));
                           updateToast(toastId, message, response.ok ? "success" : "error");
                         } catch (error) {
-                          updateToast(toastId, error instanceof Error ? error.message : "Pre-check failed.", "error");
+                          updateToast(toastId, error instanceof Error ? error.message : t("toast.precheckFailed"), "error");
                         }
                       }}
                     >
                       <Check className="size-4" />
                       <div className="text-left">
-                        <div className="font-medium">Pre-check</div>
-                        <div className="text-xs opacity-70">Validate covers, Vertex, and exporter</div>
+                        <div className="font-medium">{t("publish.precheck")}</div>
+                        <div className="text-xs opacity-70">{t("publish.precheckDesc")}</div>
                       </div>
                     </Button>
 
                     <Button
                       className="gap-2"
-                      onClick={() => triggerBuild("epub").catch((error) => addToast(error instanceof Error ? error.message : "EPUB generation failed.", "error"))}
+                      onClick={() => triggerBuild("epub").catch((error) => addToast(error instanceof Error ? error.message : t("toast.epubFailed"), "error"))}
                     >
                       <BookOpen className="size-4" />
                       <div className="text-left">
-                        <div className="font-medium">Get EPUB</div>
-                        <div className="text-xs opacity-70">Embedded e-book preview</div>
+                        <div className="font-medium">{t("publish.getEpub")}</div>
+                        <div className="text-xs opacity-70">{t("publish.getEpubDesc")}</div>
                       </div>
                     </Button>
 
                     <Button
                       variant="outline"
                       className="gap-2"
-                      onClick={() => triggerBuild("pdf").catch((error) => addToast(error instanceof Error ? error.message : "PDF generation failed.", "error"))}
+                      onClick={() => triggerBuild("pdf").catch((error) => addToast(error instanceof Error ? error.message : t("toast.pdfFailed"), "error"))}
                     >
                       <FileText className="size-4" />
                       <div className="text-left">
-                        <div className="font-medium">Get PDF</div>
-                        <div className="text-xs opacity-70">Print-ready preview</div>
+                        <div className="font-medium">{t("publish.getPdf")}</div>
+                        <div className="text-xs opacity-70">{t("publish.getPdfDesc")}</div>
                       </div>
                     </Button>
                   </div>
@@ -1180,7 +1174,7 @@ export function WorkspaceScreen({
                         </Badge>
                         {isFullGenerationWaiting ? (
                           <Badge className="border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-300">
-                            Waiting To Retry
+                            {t("publish.waitingToRetry")}
                           </Badge>
                         ) : null}
                       </div>
@@ -1189,28 +1183,28 @@ export function WorkspaceScreen({
                       </div>
                       <div className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
                         <div>
-                          Progress
+                          {t("publish.progress")}
                           <div className="mt-1 font-medium text-foreground">
-                            {readyChapterCount} / {targetChapterCount} chapters
+                            {t("publish.progressChapters", { ready: readyChapterCount, target: targetChapterCount })}
                           </div>
                         </div>
                         <div>
-                          Current segment
+                          {t("publish.currentSegment")}
                           <div className="mt-1 font-medium text-foreground">
-                            {fullGeneration.current_chapter ? `Chapter ${fullGeneration.current_chapter}` : "Idle"}
+                            {fullGeneration.current_chapter ? `Chapter ${fullGeneration.current_chapter}` : t("publish.idle")}
                             {fullGeneration.segment_count ? ` · ${fullGeneration.segment_index || 0}/${fullGeneration.segment_count}` : ""}
                           </div>
                         </div>
                         <div>
-                          Next retry
+                          {t("publish.nextRetry")}
                           <div className="mt-1 font-medium text-foreground">
-                            {nextRetryLabel || "Not scheduled"}
+                            {nextRetryLabel || t("publish.notScheduled")}
                           </div>
                         </div>
                       </div>
                       {fullGeneration.pause_reason ? (
                         <div className="mt-2 text-xs text-muted-foreground">
-                          Pause reason: <span className="font-medium text-foreground">{fullGeneration.pause_reason}</span>
+                          {t("publish.pauseReason")} <span className="font-medium text-foreground">{fullGeneration.pause_reason}</span>
                         </div>
                       ) : null}
                     </div>
@@ -1222,9 +1216,9 @@ export function WorkspaceScreen({
                 <CardContent className="space-y-4 pt-6">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h3 className="text-sm font-semibold text-foreground">Live Output Preview</h3>
+                      <h3 className="text-sm font-semibold text-foreground">{t("publish.liveOutputPreview")}</h3>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        The latest generated PDF or EPUB opens here automatically after each successful build.
+                        {t("publish.liveOutputDesc")}
                       </p>
                     </div>
                     {selectedExportFile ? (
@@ -1235,13 +1229,13 @@ export function WorkspaceScreen({
                         <a href={buildAssetUrl(selectedExportFile.url)} target="_blank" rel="noreferrer">
                           <Button variant="outline" size="sm">
                             <ExternalLink className="mr-1.5 size-3.5" />
-                            Open
+                            {t("publish.open")}
                           </Button>
                         </a>
                         <a href={buildAssetUrl(selectedExportFile.url)} download>
                           <Button size="sm">
                             <Download className="mr-1.5 size-3.5" />
-                            Download
+                            {t("publish.download")}
                           </Button>
                         </a>
                       </div>
@@ -1265,9 +1259,9 @@ export function WorkspaceScreen({
                       <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted">
                         <Upload className="size-5 text-muted-foreground" />
                       </div>
-                      <div className="mt-4 text-sm font-medium text-foreground">No preview selected yet</div>
+                      <div className="mt-4 text-sm font-medium text-foreground">{t("publish.noPreviewSelected")}</div>
                       <p className="mt-2 text-sm text-muted-foreground">
-                        Generate EPUB or PDF to open the newest output directly inside the workspace.
+                        {t("publish.noPreviewDesc")}
                       </p>
                     </div>
                   )}
@@ -1279,9 +1273,9 @@ export function WorkspaceScreen({
               <Card>
                 <CardContent className="space-y-4 pt-6">
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Selected Cover For Export</h3>
+                    <h3 className="text-sm font-semibold text-foreground">{t("publish.selectedCoverTitle")}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      The active variant below is the exact cover bundle that the build pipeline exports.
+                      {t("publish.selectedCoverDesc")}
                     </p>
                   </div>
 
@@ -1308,89 +1302,89 @@ export function WorkspaceScreen({
                             : "bg-muted text-muted-foreground"
                         )}>
                           {textSafeZoneStatus === "pass"
-                            ? "Safe Zone Passed"
+                            ? t("publish.coverDetails.safeZonePassed")
                             : textSafeZoneStatus === "fail"
-                            ? "Safe Zone Failed"
-                            : "Safe Zone Pending"}
+                            ? t("publish.coverDetails.safeZoneFailed")
+                            : t("publish.coverDetails.safeZonePending")}
                         </Badge>
                       </div>
                       <div className="space-y-1 text-sm text-muted-foreground">
-                        <div>Family: <span className="font-medium text-foreground">{selectedCoverVariant.family}</span></div>
-                        <div>Template: <span className="font-medium text-foreground">{selectedCoverVariant.template || "reference-classic"}</span></div>
-                        <div>Layout: <span className="font-medium text-foreground">{selectedCoverVariant.layout || "auto"}</span></div>
-                        <div>Wrap scope: <span className="font-medium text-foreground">{humanizeModeLabel(wrapScope, "Ai Front Only")}</span></div>
+                        <div>{t("publish.coverDetails.family")} <span className="font-medium text-foreground">{selectedCoverVariant.family}</span></div>
+                        <div>{t("publish.coverDetails.template")} <span className="font-medium text-foreground">{selectedCoverVariant.template || "reference-classic"}</span></div>
+                        <div>{t("publish.coverDetails.layout")} <span className="font-medium text-foreground">{selectedCoverVariant.layout || "auto"}</span></div>
+                        <div>{t("publish.coverDetails.wrapScope")} <span className="font-medium text-foreground">{humanizeModeLabel(wrapScope, "Ai Front Only")}</span></div>
                       </div>
                       <div className="grid gap-2 sm:grid-cols-2">
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Book length mode
+                          {t("publish.coverDetails.bookLengthMode")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
                             {humanizeModeLabel(currentDraft.book_length_mode, "25K Standard")}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Word target
+                          {t("publish.coverDetails.wordTarget")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
                             {formatWordCount(currentWordCount)} / {formatWordCount(targetWordCount)}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Chapter progress
+                          {t("publish.coverDetails.chapterProgress")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
                             {readyChapterCount} / {targetChapterCount}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Pair score
+                          {t("publish.coverDetails.pairScore")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
-                            {coverPairScore ? coverPairScore.toFixed(1) : "Pending"}
+                            {coverPairScore ? coverPairScore.toFixed(1) : t("publish.coverDetails.pending")}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Cover confidence
+                          {t("publish.coverDetails.coverConfidence")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
-                            {selectedCoverConfidence ? `${Math.round(selectedCoverConfidence * 100)}%` : "Pending"}
+                            {selectedCoverConfidence ? `${Math.round(selectedCoverConfidence * 100)}%` : t("publish.coverDetails.pending")}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Back-cover mode
+                          {t("publish.coverDetails.backCoverMode")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
                             {humanizeModeLabel(currentDraft.back_cover_mode, "Minimal Blurb")}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Quality gate
+                          {t("publish.coverDetails.qualityGate")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
                             {humanizeModeLabel(qualityGate, "Best Available")}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Generation mode
+                          {t("publish.coverDetails.generationMode")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
                             {humanizeModeLabel(currentDraft.chapter_generation_mode, "Three Pass Compact")}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Visual grade
+                          {t("publish.coverDetails.visualGrade")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
-                            {frontVisualGrade || "Pending"}
+                            {frontVisualGrade || t("publish.coverDetails.pending")}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Genre fit
+                          {t("publish.coverDetails.genreFit")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
-                            {frontGenreFitScore || "Pending"}
+                            {frontGenreFitScore || t("publish.coverDetails.pending")}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          Rejected variants
+                          {t("publish.coverDetails.rejectedVariants")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
                             {rejectedVariantCount}
                           </div>
                         </div>
                         <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                          PDF opening
+                          {t("publish.coverDetails.pdfOpening")}
                           <div className="mt-1 text-sm font-semibold text-foreground">
-                            {openingSequenceValid === true ? "Verified" : openingSequenceValid === false ? "Needs Fix" : "Pending"}
+                            {openingSequenceValid === true ? t("publish.coverDetails.verified") : openingSequenceValid === false ? t("publish.coverDetails.needsFix") : t("publish.coverDetails.pending")}
                           </div>
                         </div>
                       </div>
@@ -1398,7 +1392,7 @@ export function WorkspaceScreen({
                         <div className="grid gap-3 sm:grid-cols-2">
                           {selectedCoverFrontUrl ? (
                             <div className="overflow-hidden rounded-2xl border border-border/70 bg-background">
-                              <div className="border-b border-border/70 px-3 py-2 text-xs font-medium text-muted-foreground">Front cover</div>
+                              <div className="border-b border-border/70 px-3 py-2 text-xs font-medium text-muted-foreground">{t("publish.coverDetails.frontCover")}</div>
                               <img
                                 src={selectedCoverFrontUrl}
                                 alt={`${currentDraft.title} front cover`}
@@ -1408,7 +1402,7 @@ export function WorkspaceScreen({
                           ) : null}
                           {selectedCoverBackUrl ? (
                             <div className="overflow-hidden rounded-2xl border border-border/70 bg-background">
-                              <div className="border-b border-border/70 px-3 py-2 text-xs font-medium text-muted-foreground">Back cover</div>
+                              <div className="border-b border-border/70 px-3 py-2 text-xs font-medium text-muted-foreground">{t("publish.coverDetails.backCover")}</div>
                               <img
                                 src={selectedCoverBackUrl}
                                 alt={`${currentDraft.title} back cover`}
@@ -1421,31 +1415,31 @@ export function WorkspaceScreen({
                       {selectedCoverValidation && coverTextStrategy !== "local_overlay" ? (
                         <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
                           <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                            Title score
+                            {t("publish.coverDetails.titleScore")}
                             <div className="mt-1 text-sm font-semibold text-foreground">
                               {selectedCoverValidation.titleScore ?? 0}
                             </div>
                           </div>
                           <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                            Subtitle score
+                            {t("publish.coverDetails.subtitleScore")}
                             <div className="mt-1 text-sm font-semibold text-foreground">
                               {selectedCoverValidation.subtitleScore ?? 0}
                             </div>
                           </div>
                           <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                            Author score
+                            {t("publish.coverDetails.authorScore")}
                             <div className="mt-1 text-sm font-semibold text-foreground">
                               {selectedCoverValidation.authorScore ?? 0}
                             </div>
                           </div>
                           <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                            Text score
+                            {t("publish.coverDetails.textScore")}
                             <div className="mt-1 text-sm font-semibold text-foreground">
-                              {frontTextValidationScore ? frontTextValidationScore.toFixed(2) : "Pending"}
+                              {frontTextValidationScore ? frontTextValidationScore.toFixed(2) : t("publish.coverDetails.pending")}
                             </div>
                           </div>
                           <div className="rounded-xl bg-background px-3 py-2 text-xs text-muted-foreground">
-                            AI attempts
+                            {t("publish.coverDetails.aiAttempts")}
                             <div className="mt-1 text-sm font-semibold text-foreground">
                               {frontAiAttemptCount || "Pending"}
                             </div>
@@ -1465,7 +1459,7 @@ export function WorkspaceScreen({
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
-                      No cover variant has been selected yet.
+                      {t("publish.noCoverVariant")}
                     </div>
                   )}
                 </CardContent>
@@ -1474,8 +1468,8 @@ export function WorkspaceScreen({
               <Card>
                 <CardContent className="space-y-4 pt-6">
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Export History</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">Select an EPUB or PDF to preview it inline.</p>
+                    <h3 className="text-sm font-semibold text-foreground">{t("publish.exportHistory")}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">{t("publish.exportHistoryDesc")}</p>
                   </div>
 
                   <div className="space-y-3">
@@ -1508,13 +1502,13 @@ export function WorkspaceScreen({
                                 <a href={url} target="_blank" rel="noreferrer">
                                   <Button variant="outline" size="sm">
                                     <ExternalLink className="mr-1.5 size-3.5" />
-                                    Open
+                                    {t("publish.open")}
                                   </Button>
                                 </a>
                                 <a href={url} download>
                                   <Button size="sm">
                                     <Download className="mr-1.5 size-3.5" />
-                                    Save
+                                    {t("publish.save")}
                                   </Button>
                                 </a>
                               </div>
@@ -1524,9 +1518,9 @@ export function WorkspaceScreen({
                       })
                     ) : (
                       <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-8 text-center">
-                        <div className="text-sm font-medium text-foreground">No exports yet</div>
+                        <div className="text-sm font-medium text-foreground">{t("publish.noExportsYet")}</div>
                         <p className="mt-2 text-sm text-muted-foreground">
-                          Build EPUB or PDF to populate the embedded preview list.
+                          {t("publish.noExportsDesc")}
                         </p>
                       </div>
                     )}
@@ -1551,7 +1545,7 @@ export function WorkspaceScreen({
       <button
         onClick={() => setShowKeyboardHelp(true)}
         className="fixed bottom-6 right-6 z-40 flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors"
-        aria-label="Show keyboard shortcuts"
+        aria-label={t("shortcuts.showShortcutsAriaLabel")}
       >
         <Keyboard className="size-5" />
       </button>

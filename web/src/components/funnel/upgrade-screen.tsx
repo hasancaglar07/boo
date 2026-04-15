@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   ArrowRight,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
@@ -30,72 +31,73 @@ import { syncPreviewAuthState } from "@/lib/preview-auth";
 import { KDP_GUARANTEE_CLAIM, KDP_LIVE_BOOKS_CLAIM, NO_API_COST_CLAIM, REFUND_GUARANTEE_CLAIM } from "@/lib/site-claims";
 import { cn } from "@/lib/utils";
 
-const WHAT_YOU_GET = [
-  { icon: FileText, text: "All chapters — no locked content" },
-  { icon: Download, text: "Download PDF, ready for Amazon KDP" },
-  { icon: BookOpen, text: "EPUB output — for e-book stores" },
-  { icon: Zap, text: "Full workspace and editing tools" },
-  { icon: Shield, text: "Cover, back cover, and all assets" },
-  { icon: CheckCircle2, text: `${KDP_GUARANTEE_CLAIM} + ${REFUND_GUARANTEE_CLAIM}` },
-];
-
-const TRUST_ITEMS = [
-  { label: KDP_GUARANTEE_CLAIM, icon: Shield },
-  { label: "Instant access", icon: Zap },
-  { label: "No subscription", icon: CheckCircle2 },
-  { label: NO_API_COST_CLAIM, icon: BookOpen },
-];
-
-const PLAN_COMPARE = [
-  {
-    id: "premium",
-    name: "Single Book",
-    price: "$4",
-    originalPrice: "$29",
-    interval: "one-time",
-    badge: "Best start",
-    badgeColor: "bg-primary text-primary-foreground",
-    highlight: true,
-    description: "Full access for this book. Pay once, the files are yours.",
-    features: [
-      "1 book — full access",
-      "PDF + EPUB export",
-      "Cover and back cover",
-      "30-day refund",
-    ],
-    cta: "Unlock This Book for $4",
-    ctaVariant: "primary" as const,
-  },
-  {
-    id: "starter",
-    name: "Starter",
-    price: "$19",
-    originalPrice: null,
-    interval: "monthly",
-    badge: "10 books/month",
-    badgeColor: "bg-muted text-muted-foreground",
-    highlight: false,
-    description: "Produce books regularly every month, establish your own production rhythm.",
-    features: [
-      "10 books/month",
-      "EPUB + PDF export",
-      "Cover generation",
-      "Chapter editor",
-    ],
-    cta: "Continue Producing for $19/mo",
-    ctaVariant: "outline" as const,
-  },
-];
-
 const AUTOSTART_PLANS = new Set(["premium", "starter"]);
 
 export function UpgradeScreen({ slug }: { slug: string }) {
+  const t = useTranslations("UpgradeScreen");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [books, setBooks] = useState<Book[]>([]);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const autoStartHandledRef = useRef(false);
+
+  const WHAT_YOU_GET = [
+    { icon: FileText, text: t("whatYouGetItems.allChapters") },
+    { icon: Download, text: t("whatYouGetItems.downloadPdf") },
+    { icon: BookOpen, text: t("whatYouGetItems.epubOutput") },
+    { icon: Zap, text: t("whatYouGetItems.fullWorkspace") },
+    { icon: Shield, text: t("whatYouGetItems.coverAssets") },
+    { icon: CheckCircle2, text: t("whatYouGetItems.guarantee", { kdpGuarantee: KDP_GUARANTEE_CLAIM, refundGuarantee: REFUND_GUARANTEE_CLAIM }) },
+  ];
+
+  const TRUST_ITEMS = [
+    { label: KDP_GUARANTEE_CLAIM, icon: Shield },
+    { label: t("trustInstantAccess"), icon: Zap },
+    { label: t("trustNoSubscription"), icon: CheckCircle2 },
+    { label: NO_API_COST_CLAIM, icon: BookOpen },
+  ];
+
+  const PLAN_COMPARE = [
+    {
+      id: "premium",
+      name: t("plans.premium.name"),
+      price: t("plans.premium.price"),
+      originalPrice: t("plans.premium.originalPrice"),
+      interval: t("plans.premium.interval"),
+      badge: t("plans.premium.badge"),
+      badgeColor: "bg-primary text-primary-foreground",
+      highlight: true,
+      description: t("plans.premium.description"),
+      features: [
+        t("plans.premium.feature1"),
+        t("plans.premium.feature2"),
+        t("plans.premium.feature3"),
+        t("plans.premium.feature4"),
+      ],
+      cta: t("plans.premium.cta"),
+      ctaVariant: "primary" as const,
+    },
+    {
+      id: "starter",
+      name: t("plans.starter.name"),
+      price: t("plans.starter.price"),
+      originalPrice: null,
+      interval: t("plans.starter.interval"),
+      badge: t("plans.starter.badge"),
+      badgeColor: "bg-muted text-muted-foreground",
+      highlight: false,
+      description: t("plans.starter.description"),
+      features: [
+        t("plans.starter.feature1"),
+        t("plans.starter.feature2"),
+        t("plans.starter.feature3"),
+        t("plans.starter.feature4"),
+      ],
+      cta: t("plans.starter.cta"),
+      ctaVariant: "outline" as const,
+    },
+  ];
 
   async function hydrate() {
     try {
@@ -126,7 +128,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
   const currentBook = books.find((b) => b.slug === slug) ?? null;
   const mockupBrand =
     currentBook?.branding_mark || currentBook?.publisher || "Book Generator";
-  const mockupLabel = currentBook?.cover_brief || "Full product unlocks after payment";
+  const mockupLabel = currentBook?.cover_brief || t("mockupFallbackLabel");
 
   const handleBuy = useCallback(async (planId: string) => {
     trackEvent("paywall_full_unlock_clicked", { slug, plan: planId, source: "upgrade_screen" });
@@ -173,7 +175,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
         layout="book"
         current="billing"
         currentBookSlug={slug}
-        title="Premium"
+        title={t("title")}
         books={books}
       >
         <BackendUnavailableState onRetry={() => void hydrate()} />
@@ -186,7 +188,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
       layout="book"
       current="billing"
       currentBookSlug={slug}
-      title="Claim Your Book"
+      title={t("titleClaim")}
       books={books}
     >
       {/* ── Hero: value prop + book mockup ────────────────────────────────── */}
@@ -224,7 +226,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3">
                   <p className="text-xs font-semibold text-muted-foreground text-center">
-                    {NO_API_COST_CLAIM}. After seeing the cover and preview, make your <strong className="text-foreground">payment decision</strong>
+                    {NO_API_COST_CLAIM}. {t("paymentDecisionNotice", { paymentDecision: t("paymentDecision") })}
                   </p>
                 </div>
               </div>
@@ -236,20 +238,20 @@ export function UpgradeScreen({ slug }: { slug: string }) {
         <div className="space-y-8">
           {/* Hero copy */}
           <div>
-            <div className="editorial-eyebrow mb-3">Your book is ready</div>
+            <div className="editorial-eyebrow mb-3">{t("eyebrow")}</div>
             <h1 className="text-4xl font-bold leading-tight text-foreground md:text-5xl xl:text-6xl">
-              Unlock this book for $4 —<br className="hidden sm:block" />
-              <span className="text-primary">claim the full version now</span>
+              {t("heroHeading")}<br className="hidden sm:block" />
+              <span className="text-primary">{t("heroHeadingAccent")}</span>
             </h1>
             <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">
-              Preview is ready. Unlock remaining chapters, export as PDF and EPUB, upload to Amazon KDP. You've seen the value; now unlock the full version in a single step.
+              {t("heroBody")}
             </p>
           </div>
 
           {/* What you get */}
           <div className="rounded-2xl border border-border/70 bg-card p-6">
             <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.15em] text-muted-foreground">
-              What do you get?
+              {t("whatYouGet")}
             </h2>
             <div className="grid gap-2.5 sm:grid-cols-2">
               {WHAT_YOU_GET.map(({ icon: Icon, text }) => (
@@ -266,23 +268,23 @@ export function UpgradeScreen({ slug }: { slug: string }) {
           {/* Objection handling */}
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
             <p className="text-sm font-semibold text-foreground">
-              &quot;Isn't AI writing low quality?&quot;
+              {t("objectionQ")}
             </p>
             <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-              In the workspace, you can edit each chapter, regenerate it, and revise it in your own voice. The result is entirely yours.
+              {t("objectionA")}
             </p>
           </div>
 
           {/* Comparison: Biz vs Ajans */}
           <div className="rounded-2xl border border-border/70 bg-card p-5">
             <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.15em] text-muted-foreground">
-              Why $4?
+              {t("whyFourDollars")}
             </h2>
             <div className="space-y-2">
               {[
-                { label: "Freelance agency", price: "$500+", strikethrough: true },
-                { label: "Freelance editor", price: "$200+", strikethrough: true },
-                { label: "Book Generator", price: "$4", strikethrough: false, highlight: true },
+                { label: t("compare.freelanceAgency"), price: "$500+", strikethrough: true },
+                { label: t("compare.freelanceEditor"), price: "$200+", strikethrough: true },
+                { label: t("compare.bookGenerator"), price: "$4", strikethrough: false, highlight: true },
               ].map(({ label, price, strikethrough, highlight }) => (
                 <div
                   key={label}
@@ -307,7 +309,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
       {/* ── Pricing cards ───────────────────────────────────────────────────── */}
       <div className="mb-10">
         <h2 className="mb-6 text-center text-xl font-bold text-foreground">
-          Choose a plan, get your book
+          {t("choosePlan")}
         </h2>
         <div className="mx-auto grid max-w-2xl gap-4 sm:grid-cols-2">
           {PLAN_COMPARE.map((plan) => (
@@ -392,7 +394,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
           className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline transition-colors"
           onClick={() => router.push(`/app/book/${encodeURIComponent(slug)}/preview`)}
         >
-          ← Back to Preview
+          {t("backToPreview")}
         </button>
       </div>
 
@@ -400,8 +402,8 @@ export function UpgradeScreen({ slug }: { slug: string }) {
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/97 px-4 pb-safe pt-3 pb-3 backdrop-blur-md sm:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-foreground">$4 · Tek seferlik</p>
-            <p className="text-xs text-muted-foreground">30-day refund · Unlock full book</p>
+            <p className="text-sm font-bold text-foreground">{t("mobilePriceLabel")}</p>
+            <p className="text-xs text-muted-foreground">{t("mobileSubLabel")}</p>
           </div>
           <Button
             size="default"
@@ -409,7 +411,7 @@ export function UpgradeScreen({ slug }: { slug: string }) {
             onClick={() => handleBuy("premium")}
           >
             <Sparkles className="mr-1.5 size-3.5" aria-hidden="true" />
-            Unlock Book
+            {t("mobileUnlockBtn")}
           </Button>
         </div>
       </div>

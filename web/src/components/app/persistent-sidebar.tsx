@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAppContext } from "@/components/app/app-context";
 import { trackEvent } from "@/lib/analytics";
@@ -29,11 +30,11 @@ import { cn } from "@/lib/utils";
 /* ── Constants ─────────────────────────────────────────────── */
 
 const NAV_ITEMS = [
-  { key: "home", href: "/app/library", label: "My Books", icon: Library },
-  { key: "new", href: "/app/new/topic", label: "Start Book", icon: Plus },
-  { key: "account", href: "/app/settings/profile", label: "Settings", icon: User2 },
-  { key: "billing", href: "/app/settings/billing", label: "Plans", icon: CreditCard },
-  { key: "affiliate", href: "/app/affiliate", label: "Affiliate 30%", icon: DollarSign },
+  { key: "home", href: "/app/library", icon: Library },
+  { key: "new", href: "/app/new/topic", icon: Plus },
+  { key: "account", href: "/app/settings/profile", icon: User2 },
+  { key: "billing", href: "/app/settings/billing", icon: CreditCard },
+  { key: "affiliate", href: "/app/affiliate", icon: DollarSign },
 ] as const;
 
 type NavKey = (typeof NAV_ITEMS)[number]["key"];
@@ -97,10 +98,10 @@ function AppBrandLogo({ compact = false }: { compact?: boolean }) {
 
 /* ── Viewer helpers ─────────────────────────────────────────── */
 
-function displayNameForViewer(viewer?: PreviewViewer | null) {
-  if (!viewer) return "Your Account";
+function displayNameForViewer(viewer?: PreviewViewer | null, fallback = "Your Account") {
+  if (!viewer) return fallback;
   const name = viewer.name.trim();
-  if (!name || name === "Book Creator") return viewer.email.split("@")[0] || "Your Account";
+  if (!name || name === "Book Creator") return viewer.email.split("@")[0] || fallback;
   return name;
 }
 
@@ -133,6 +134,7 @@ function SidebarInner({
   verificationSending?: boolean;
   verificationMessage?: string;
 }) {
+  const t = useTranslations("PersistentSidebar");
   const router = useRouter();
   const pathname = usePathname();
   const { books, drawerOpen: _d, setDrawerOpen: _sd, refreshBooks: _rb } = useAppContext();
@@ -147,7 +149,7 @@ function SidebarInner({
       ? `/app/settings/billing?intent=start-book${viewer.usage.reason ? `&reason=${encodeURIComponent(viewer.usage.reason)}` : ""}`
       : "/app/new/topic";
 
-  const displayName = displayNameForViewer(viewer);
+  const displayName = displayNameForViewer(viewer, t("yourAccount"));
 
   const sortedBooks = useMemo(
     () =>
@@ -193,7 +195,7 @@ function SidebarInner({
       </Link>
 
       {/* Nav */}
-      <nav className="mt-5 shrink-0 space-y-1" aria-label="Main menu">
+      <nav className="mt-5 shrink-0 space-y-1" aria-label={t("mainMenu")}>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = current === item.key;
@@ -220,7 +222,7 @@ function SidebarInner({
               >
                 <Icon className="size-4 shrink-0" aria-hidden="true" />
               </span>
-              <span className="truncate">{item.label}</span>
+              <span className="truncate">{t(`navLabels.${item.key}`)}</span>
             </Link>
           );
         })}
@@ -233,7 +235,7 @@ function SidebarInner({
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="mb-2.5 shrink-0 flex items-center justify-between px-1">
           <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/38">
-            My Books
+            {t("myBooks")}
           </span>
           <div className="flex items-center gap-1.5">
             <span className="rounded-full border border-sidebar-border/55 bg-sidebar-accent/60 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-sidebar-foreground/48">
@@ -242,7 +244,7 @@ function SidebarInner({
             <Link
               href={newBookHref}
               onClick={onNavigate}
-              title="New book"
+              title={t("newBookTitle")}
               className="flex size-[22px] items-center justify-center rounded-full border border-sidebar-border/70 bg-sidebar-accent/70 text-sidebar-foreground/56 transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
             >
               <Plus className="size-3" aria-hidden="true" />
@@ -308,7 +310,7 @@ function SidebarInner({
                   {isGenerating && (
                     <span className="flex items-center gap-1 text-[10px] leading-[1.4] text-emerald-500 dark:text-emerald-400">
                       <Sparkles className="size-2.5" aria-hidden="true" />
-                      Writing...
+                      {t("writing")}
                     </span>
                   )}
                 </div>
@@ -324,13 +326,13 @@ function SidebarInner({
           {!books.length && (
             <div className="flex flex-col items-center gap-3 rounded-[18px] border border-dashed border-sidebar-border/60 bg-sidebar-accent/25 px-4 py-5 text-center">
               <BookOpen className="size-6 text-sidebar-foreground/28" aria-hidden="true" />
-              <p className="text-xs leading-5 text-sidebar-foreground/38">No books yet.</p>
+              <p className="text-xs leading-5 text-sidebar-foreground/38">{t("noBooksYet")}</p>
               <Link
                 href={newBookHref}
                 onClick={onNavigate}
                 className="rounded-full border border-primary/30 bg-primary/8 px-3 py-1 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/14"
               >
-                Create your first book
+                {t("createFirstBook")}
               </Link>
             </div>
           )}
@@ -358,14 +360,14 @@ function SidebarInner({
               className="rounded-full border border-sidebar-border bg-sidebar px-3 py-1 text-xs font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
               onClick={() => go("/app/settings/profile")}
             >
-              Profile
+              {t("profile")}
             </button>
             <button
               type="button"
               className="rounded-full border border-sidebar-border bg-sidebar px-3 py-1 text-xs font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
               onClick={() => go("/app/settings/billing")}
             >
-              Plans
+              {t("plans")}
             </button>
             {viewer.role !== "USER" && (
               <button
@@ -373,7 +375,7 @@ function SidebarInner({
                 className="rounded-full border border-sidebar-border bg-sidebar px-3 py-1 text-xs font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
                 onClick={() => go("/admin")}
               >
-                Admin
+                {t("admin")}
               </button>
             )}
             {!viewer.emailVerified && (
@@ -383,7 +385,7 @@ function SidebarInner({
                 onClick={() => void onResendVerification?.()}
                 disabled={verificationSending}
               >
-                {verificationSending ? "Sending..." : "Verify"}
+                {verificationSending ? t("sending") : t("verify")}
               </button>
             )}
           </div>
@@ -394,7 +396,7 @@ function SidebarInner({
             onClick={() => void onLogout?.()}
           >
             <LogOut className="size-4" />
-            Sign Out
+            {t("signOut")}
           </button>
 
           {verificationMessage && (
@@ -411,6 +413,7 @@ function SidebarInner({
 /* ── PersistentSidebar (desktop + mobile drawer) ────────────── */
 
 export function PersistentSidebar() {
+  const t = useTranslations("PersistentSidebar");
   const { drawerOpen, setDrawerOpen } = useAppContext();
   const { viewer, refreshViewer } = useAuthenticatedViewer(true);
   const router = useRouter();
@@ -443,12 +446,12 @@ export function PersistentSidebar() {
       : null;
 
     if (!response?.ok) {
-      setVerificationMessage(payload?.error || "Verification email could not be resent.");
+      setVerificationMessage(payload?.error || t("verificationResendFailed"));
       setVerificationSending(false);
       return;
     }
 
-    setVerificationMessage(payload?.message || "Verification email has been resent.");
+    setVerificationMessage(payload?.message || t("verificationResent"));
     setVerificationSending(false);
     await refreshViewer();
   }
@@ -484,18 +487,18 @@ export function PersistentSidebar() {
           "fixed inset-y-0 left-0 z-50 w-72 border-r border-sidebar-border bg-sidebar shadow-2xl transition-transform duration-300 lg:hidden",
           drawerOpen ? "translate-x-0" : "-translate-x-full",
         )}
-        aria-label="Mobile menu"
+        aria-label={t("mobileMenu")}
       >
         <div className="flex h-full flex-col px-3.5 py-4">
           <div className="mb-3 flex shrink-0 items-center justify-between">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
-              Menu
+              {t("menu")}
             </span>
             <button
               type="button"
               className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent transition hover:bg-sidebar-accent/80"
               onClick={() => setDrawerOpen(false)}
-              aria-label="Close menu"
+              aria-label={t("closeMenu")}
             >
               <X className="size-3.5" />
             </button>

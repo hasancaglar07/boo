@@ -4,6 +4,7 @@ import * as React from "react";
 import DottedMap from "dotted-map";
 import { Activity, BookAudio, Map as MapIcon, MessageCircle } from "lucide-react";
 import { Area, AreaChart, CartesianGrid } from "recharts";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -38,22 +39,22 @@ export interface Features9Props {
 
 const chartConfig = {
   writing: {
-    label: "Yazim",
+    label: "Writing",
     color: "#d97706",
   },
   review: {
-    label: "Duzenleme",
+    label: "Editing",
     color: "#f59e0b",
   },
 } satisfies ChartConfig;
 
 const defaultChartData: readonly ChartDatum[] = [
-  { label: "Hafta 1", writing: 18, review: 8 },
-  { label: "Hafta 2", writing: 26, review: 12 },
-  { label: "Hafta 3", writing: 38, review: 16 },
-  { label: "Hafta 4", writing: 44, review: 19 },
-  { label: "Hafta 5", writing: 56, review: 22 },
-  { label: "Hafta 6", writing: 72, review: 30 },
+  { label: "Week 1", writing: 18, review: 8 },
+  { label: "Week 2", writing: 26, review: 12 },
+  { label: "Week 3", writing: 38, review: 16 },
+  { label: "Week 4", writing: 44, review: 19 },
+  { label: "Week 5", writing: 56, review: 22 },
+  { label: "Week 6", writing: 72, review: 30 },
 ] as const;
 
 function MapGraphic() {
@@ -118,29 +119,40 @@ function MonitoringChart({ chartData = defaultChartData }: { chartData?: readonl
 }
 
 export function Features9({
-  badge = "Sinyaller",
-  title = "Production is not just writing, it is a tracked process.",
-  description = "Research, support, and output generation feed each other within the same flow.",
-  locationTitle = "Topic and market signals",
-  locationDescription = "Keywords, topic clusters, and reader directions visible at a glance.",
-  supportTitle = "Support and revision flow",
-  supportDescription = "Issue tracking and resolution progresses more controlled with email, panel, and notes system.",
-  uptimeLabel = "Output ready %99.99",
-  activityTitle = "Writing and editing rhythm",
-
-  activityDescription = "Outline, chapter writing, and quality editing can be tracked within the same timeline.",
+  badge,
+  title,
+  description,
+  locationTitle,
+  locationDescription,
+  supportTitle,
+  supportDescription,
+  uptimeLabel,
+  activityTitle,
+  activityDescription,
   chartData = defaultChartData,
 }: Features9Props) {
+  const t = useTranslations("Features9");
+  const resolvedBadge = badge ?? t("defaultBadge");
+  const resolvedTitle = title ?? t("defaultTitle");
+  const resolvedDescription = description ?? t("defaultDescription");
+  const resolvedLocationTitle = locationTitle ?? t("defaultLocationTitle");
+  const resolvedLocationDescription = locationDescription ?? t("defaultLocationDescription");
+  const resolvedSupportTitle = supportTitle ?? t("defaultSupportTitle");
+  const resolvedSupportDescription = supportDescription ?? t("defaultSupportDescription");
+  const resolvedUptimeLabel = uptimeLabel ?? t("defaultUptimeLabel");
+  const resolvedActivityTitle = activityTitle ?? t("defaultActivityTitle");
+  const resolvedActivityDescription = activityDescription ?? t("defaultActivityDescription");
+
   return (
     <section className="py-16 md:py-24">
       <div className="shell">
         <div className="mx-auto max-w-3xl text-center">
-          <Badge>{badge}</Badge>
+          <Badge>{resolvedBadge}</Badge>
           <h2 className="mt-4 text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-            {title}
+            {resolvedTitle}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-8 text-muted-foreground">
-            {description}
+            {resolvedDescription}
           </p>
         </div>
 
@@ -149,16 +161,16 @@ export function Features9({
             <div className="p-6 sm:p-10">
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
                 <MapIcon className="size-4" />
-                Pazar haritasi
+                {t("marketMapLabel")}
               </span>
-              <p className="mt-6 text-2xl font-semibold tracking-tight text-foreground">{locationTitle}</p>
-              <p className="mt-3 max-w-lg text-sm leading-7 text-muted-foreground">{locationDescription}</p>
+              <p className="mt-6 text-2xl font-semibold tracking-tight text-foreground">{resolvedLocationTitle}</p>
+              <p className="mt-3 max-w-lg text-sm leading-7 text-muted-foreground">{resolvedLocationDescription}</p>
             </div>
 
             <div aria-hidden className="relative px-4 pb-6 sm:px-8">
               <div className="absolute inset-0 z-10 m-auto size-fit">
                 <div className="relative z-10 flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium shadow-sm">
-                  <span className="text-base">🌍</span> US / UK / Canada demand cluster
+                  <span className="text-base">🌍</span> {t("demandClusterLabel")}
                 </div>
                 <div className="absolute inset-x-2 -bottom-2 h-9 rounded-full border border-border bg-background/80 blur-[1px]" />
               </div>
@@ -174,10 +186,10 @@ export function Features9({
             <div className="relative z-10">
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
                 <MessageCircle className="size-4" />
-                Yardim ve geri bildirim
+                {t("supportFeedbackLabel")}
               </span>
-              <p className="my-6 text-2xl font-semibold tracking-tight text-foreground">{supportTitle}</p>
-              <p className="max-w-lg text-sm leading-7 text-muted-foreground">{supportDescription}</p>
+              <p className="my-6 text-2xl font-semibold tracking-tight text-foreground">{resolvedSupportTitle}</p>
+              <p className="max-w-lg text-sm leading-7 text-muted-foreground">{resolvedSupportDescription}</p>
             </div>
 
             <div aria-hidden className="mt-8 flex flex-col gap-6">
@@ -186,18 +198,18 @@ export function Features9({
                   <span className="flex size-5 items-center justify-center rounded-full border border-border bg-background">
                     <span className="size-2.5 rounded-full bg-primary" />
                   </span>
-                  <span className="text-xs text-muted-foreground">Bugun</span>
+                  <span className="text-xs text-muted-foreground">{t("chatMessageToday")}</span>
                 </div>
                 <div className="mt-2 w-4/5 rounded-[20px] border border-border bg-background p-4 text-sm text-foreground">
-                  Outline is good but chapter 2 needs more examples.
+                  {t("chatFeedbackText")}
                 </div>
               </div>
 
               <div>
                 <div className="ml-auto w-4/5 rounded-[20px] bg-primary px-4 py-3 text-sm text-primary-foreground">
-                  Note taken. Expanding the chapter and preparing a new EPUB test.
+                  {t("chatReplyText")}
                 </div>
-                <span className="mt-2 block text-right text-xs text-muted-foreground">Simdi</span>
+                <span className="mt-2 block text-right text-xs text-muted-foreground">{t("chatMessageNow")}</span>
               </div>
             </div>
           </div>
@@ -205,19 +217,19 @@ export function Features9({
           <div className="col-span-full border-y border-border/80 px-6 py-10 text-center">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <BookAudio className="size-4" />
-              Yayin ritmi
+              {t("publishingRhythmLabel")}
             </div>
-            <p className="mt-3 text-4xl font-semibold tracking-tight text-foreground lg:text-6xl">{uptimeLabel}</p>
+            <p className="mt-3 text-4xl font-semibold tracking-tight text-foreground lg:text-6xl">{resolvedUptimeLabel}</p>
           </div>
 
           <div className="relative col-span-full overflow-hidden">
             <div className="absolute z-10 max-w-lg px-6 pt-6 md:px-10 md:pt-10">
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Activity className="size-4" />
-                Aktivite akisi
+                {t("activityFlowLabel")}
               </span>
-              <p className="my-6 text-2xl font-semibold tracking-tight text-foreground">{activityTitle}</p>
-              <p className="text-sm leading-7 text-muted-foreground">{activityDescription}</p>
+              <p className="my-6 text-2xl font-semibold tracking-tight text-foreground">{resolvedActivityTitle}</p>
+              <p className="text-sm leading-7 text-muted-foreground">{resolvedActivityDescription}</p>
             </div>
             <MonitoringChart chartData={chartData} />
           </div>

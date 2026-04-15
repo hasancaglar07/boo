@@ -1,17 +1,20 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { languageLabel, bookLengthLabel, type FunnelDraft } from "@/lib/funnel-draft";
 
 export function SummaryCards({ draft }: { draft: FunnelDraft }) {
+  const t = useTranslations("FunnelSummaryCards");
+
   const items = [
-    { label: "Topic", value: draft.topic || "Not yet selected" },
-    { label: "Title", value: draft.title || "Not yet selected" },
-    { label: "Author", value: draft.authorName || "Not yet entered" },
-    { label: "Branding", value: draft.logoText || draft.imprint || "Not yet entered" },
-    { label: "Reader", value: draft.audience || "Not yet selected" },
-    { label: "Dil", value: languageLabel(draft.language) },
-    { label: "Chapters", value: draft.outline.length ? `${draft.outline.length} chapters` : "Not yet generated" },
-    { label: "Stil", value: `${languageLabel(draft.language)} • ${bookLengthLabel(draft.bookLength, draft.language)}` },
+    { label: t("topic"), value: draft.topic || t("notSelected") },
+    { label: t("title"), value: draft.title || t("notSelected") },
+    { label: t("author"), value: draft.authorName || t("notEntered") },
+    { label: t("branding"), value: draft.logoText || draft.imprint || t("notEntered") },
+    { label: t("reader"), value: draft.audience || t("notSelected") },
+    { label: t("language"), value: languageLabel(draft.language) },
+    { label: t("chapters"), value: draft.outline.length ? t("chapterCount", { count: draft.outline.length }) : t("notGenerated") },
+    { label: t("style"), value: `${languageLabel(draft.language)} • ${bookLengthLabel(draft.bookLength, draft.language)}` },
   ];
 
   return (

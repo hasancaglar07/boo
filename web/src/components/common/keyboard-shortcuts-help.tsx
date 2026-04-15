@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Keyboard } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -13,13 +12,13 @@ import { Badge } from "@/components/ui/badge";
 
 interface Shortcut {
   key: string;
-  description: string;
+  descriptionKey: string;
 }
 
 const shortcuts: Shortcut[] = [
-  { key: "Ctrl + S", description: "Save book" },
-  { key: "Ctrl + N", description: "New chapter" },
-  { key: "Esc", description: "Close dialogs/modals" },
+  { key: "Ctrl + S", descriptionKey: "shortcutSave" },
+  { key: "Ctrl + N", descriptionKey: "shortcutNewChapter" },
+  { key: "Esc", descriptionKey: "shortcutClose" },
 ];
 
 interface KeyboardShortcutsHelpProps {
@@ -31,13 +30,14 @@ export function KeyboardShortcutsHelp({
   open,
   onOpenChange,
 }: KeyboardShortcutsHelpProps) {
+  const t = useTranslations("KeyboardShortcutsHelp");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Keyboard className="size-5" />
-            Keyboard Shortcuts
+            {t("dialogTitle")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
@@ -47,7 +47,7 @@ export function KeyboardShortcutsHelp({
               className="flex items-center justify-between"
             >
               <span className="text-sm text-muted-foreground">
-                {shortcut.description}
+                {t(shortcut.descriptionKey as Parameters<typeof t>[0])}
               </span>
               <Badge className="font-mono text-xs">
                 {shortcut.key}
@@ -56,7 +56,7 @@ export function KeyboardShortcutsHelp({
           ))}
           <div className="pt-3 border-t">
             <p className="text-xs text-muted-foreground">
-              Press <kbd className="font-mono">?</kbd> anytime to open this help
+              {t("openHelpHint", { key: "?" })}
             </p>
           </div>
         </div>

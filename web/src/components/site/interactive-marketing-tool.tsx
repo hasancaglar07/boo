@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { startTransition, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   ArrowRight,
   BookOpen,
@@ -134,6 +135,7 @@ function renderField(
 }
 
 export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolSlug }) {
+  const t = useTranslations("InteractiveMarketingTool");
   const tool = getGenericMarketingToolBySlug(slug);
   const [values, setValues] = useState<MarketingToolValues>(() => (tool ? defaultValues(tool.fields) : {}));
   const [analysisState, setAnalysisState] = useState<"idle" | "analyzing" | "done">("idle");
@@ -279,7 +281,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                     <p className="mt-1 text-sm text-muted-foreground">{activeTool.formIntro}</p>
                   </div>
                   <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                    MVP
+                    {t("mvpBadge")}
                   </div>
                 </div>
 
@@ -288,11 +290,11 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
 
                   <Button size="lg" className="w-full gap-2" onClick={handleAnalyze} isLoading={analysisState === "analyzing"}>
                     <Sparkles className="size-4" />
-                    Run Analysis
+                    {t("runAnalysis")}
                   </Button>
 
                   <p className="text-center text-xs leading-6 text-muted-foreground">
-                    First score instantly visible. Only email required for full report.
+                    {t("analyzeDisclaimer")}
                   </p>
                 </div>
               </CardContent>
@@ -305,10 +307,10 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
         <div className="shell">
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
-              <p className="editorial-eyebrow">Instant Report</p>
-              <h2 className="editorial-title mt-4 text-foreground">Don't just score. See why the angle works.</h2>
+              <p className="editorial-eyebrow">{t("instantReportEyebrow")}</p>
+              <h2 className="editorial-title mt-4 text-foreground">{t("instantReportTitle")}</h2>
               <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground">
-                This tool doesn't just give a numerical score. It clearly shows how clear your idea is, where it weakens, and which format works better.
+                {t("instantReportDesc")}
               </p>
             </div>
 
@@ -322,13 +324,13 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                   </div>
                 ) : analysisState === "analyzing" ? (
                   <div className="rounded-[24px] border border-primary/20 bg-primary/5 p-8">
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Analyzing</p>
-                    <h3 className="mt-4 font-serif text-3xl font-semibold text-foreground">Collecting tool signals...</h3>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">{t("analyzingLabel")}</p>
+                    <h3 className="mt-4 font-serif text-3xl font-semibold text-foreground">{t("analyzingHeading")}</h3>
                     <div className="mt-6 space-y-3">
-                      {["Calculating core score", "Preparing format suggestion", "Opening full report sections"].map((item, index) => (
-                        <div key={item} className="flex items-center gap-3 text-sm text-muted-foreground">
-                          <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary" style={{ animationDelay: `${index * 120}ms` }} />
-                          {item}
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary" style={{ animationDelay: `${i * 120}ms` }} />
+                          {t(`analyzingSteps.${i}`)}
                         </div>
                       ))}
                     </div>
@@ -337,7 +339,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                   <div className="space-y-6">
                     <div className="grid gap-4 md:grid-cols-[220px_1fr]">
                       <div className="rounded-[28px] border border-primary/20 bg-[linear-gradient(180deg,rgba(188,104,67,0.18),rgba(188,104,67,0.06))] p-6 text-center">
-                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Idea Score</p>
+                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">{t("ideaScoreLabel")}</p>
                         <p className="mt-4 font-serif text-6xl leading-none text-foreground">{result.overallScore}</p>
                         <p className="mt-3 text-sm text-muted-foreground">{result.verdict}</p>
                       </div>
@@ -345,12 +347,12 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                       <div className="rounded-[28px] border border-border/80 bg-card p-6">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge>{result.recommendedFormat}</Badge>
-                          <Badge className="border-primary/20 bg-primary/10 text-primary">Primary recommendation</Badge>
+                          <Badge className="border-primary/20 bg-primary/10 text-primary">{t("primaryRecommendation")}</Badge>
                         </div>
-                        <h3 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Suggested angle</h3>
+                        <h3 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">{t("suggestedAngle")}</h3>
                         <p className="mt-3 text-sm leading-7 text-muted-foreground">{result.recommendedAngle}</p>
                         <div className="mt-5 rounded-[20px] border border-border/70 bg-background/70 p-4">
-                          <p className="text-sm font-semibold text-foreground">Clear next step</p>
+                          <p className="text-sm font-semibold text-foreground">{t("clearNextStep")}</p>
                           <p className="mt-2 text-sm leading-7 text-muted-foreground">{result.nextStep}</p>
                         </div>
                       </div>
@@ -359,7 +361,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                     <div className="grid gap-4 md:grid-cols-2">
                       <Card className="border border-border/80 bg-background/70">
                         <CardContent className="p-6">
-                          <p className="text-sm font-semibold text-foreground">Why is it strong?</p>
+                          <p className="text-sm font-semibold text-foreground">{t("whyStrongTitle")}</p>
                           <ul className="mt-4 space-y-3">
                             {result.strongestPoints.map((point) => (
                               <li key={point} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">
@@ -373,7 +375,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
 
                       <Card className="border border-border/80 bg-background/70">
                         <CardContent className="p-6">
-                          <p className="text-sm font-semibold text-foreground">What needs tightening?</p>
+                          <p className="text-sm font-semibold text-foreground">{t("needsTighteningTitle")}</p>
                           <ul className="mt-4 space-y-3">
                             {result.risks.map((risk) => (
                               <li key={risk} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">
@@ -410,12 +412,12 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                           <div>
                             <div className="flex items-center gap-2 text-primary">
                               <Mail className="size-4" />
-                              <p className="text-sm font-semibold">Open full report</p>
+                              <p className="text-sm font-semibold">{t("openFullReport")}</p>
                             </div>
                             <h3 className="mt-3 font-serif text-3xl font-semibold text-foreground">{activeTool.gateTitle}</h3>
                             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">{activeTool.gateDescription}</p>
                           </div>
-                          <div className="text-sm text-muted-foreground">Email only</div>
+                          <div className="text-sm text-muted-foreground">{t("emailOnlyLabel")}</div>
                         </div>
                         <div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto]">
                           <Input
@@ -428,21 +430,21 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                               }
                             }}
                             onChange={(event) => setEmail(event.target.value)}
-                            placeholder="you@example.com"
+                            placeholder={t("emailPlaceholder")}
                             className="bg-background/90"
                           />
                           <Button onClick={handleUnlockReport} className="gap-2" isLoading={reportPending}>
-                            Open Full Report
+                            {t("openFullReportButton")}
                             <ArrowRight className="size-4" />
                           </Button>
                         </div>
-                        {showValidation && !emailValid ? <p className="mt-2 text-sm text-primary">Enter a valid email for the full report.</p> : null}
+                        {showValidation && !emailValid ? <p className="mt-2 text-sm text-primary">{t("emailValidation")}</p> : null}
                         {reportError ? <p className="mt-2 text-sm text-primary">{reportError}</p> : null}
                       </div>
                     ) : (
                       <div className="space-y-4">
                         <div className="rounded-[20px] border border-primary/20 bg-primary/8 px-4 py-3 text-sm text-foreground">
-                          Full report sent to <span className="font-semibold">{reportDeliveredTo}</span>.
+                          {t("fullReportSentTo", { email: reportDeliveredTo })}
                         </div>
                         <div className={`grid gap-4 ${result.reportSections.length > 2 ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}>
                           {result.reportSections.map((section) => (
@@ -506,7 +508,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
           <div className="rounded-[36px] border border-border/80 bg-[linear-gradient(135deg,#1f1510_0%,#2a1d16_50%,#191512_100%)] px-6 py-10 text-white shadow-[0_32px_80px_-20px_rgba(0,0,0,0.45)] md:px-10 md:py-12">
             <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">Next Step</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">{t("nextStepEyebrow")}</p>
                 <h2 className="mt-4 max-w-2xl font-serif text-3xl font-semibold tracking-tight md:text-4xl">{activeTool.nextStepTitle}</h2>
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-white/72">{activeTool.nextStepDescription}</p>
               </div>
@@ -530,7 +532,7 @@ export function InteractiveMarketingTool({ slug }: { slug: GenericMarketingToolS
                   className="min-w-[220px] border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                   onClick={() => trackEvent("tool_cta_clicked", { tool: activeTool.id, destination: "tools_hub" })}
                 >
-                  <Link href="/tools">See Other Tools</Link>
+                  <Link href="/tools">{t("seeOtherTools")}</Link>
                 </Button>
               </div>
             </div>

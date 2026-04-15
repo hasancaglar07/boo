@@ -121,10 +121,33 @@ try:
     AI_TEXT_MAX_ATTEMPTS = max(1, int(os.environ.get("SHOWCASE_AI_TEXT_MAX_ATTEMPTS", "5")))
 except ValueError:
     AI_TEXT_MAX_ATTEMPTS = 5
+try:
+    SHOWCASE_PROVIDER_LIMIT = max(0, int(os.environ.get("SHOWCASE_PROVIDER_LIMIT", "0")))
+except ValueError:
+    SHOWCASE_PROVIDER_LIMIT = 0
+try:
+    SHOWCASE_AI_TEXT_PROVIDER_LIMIT = max(
+        0, int(os.environ.get("SHOWCASE_AI_TEXT_PROVIDER_LIMIT", "0"))
+    )
+except ValueError:
+    SHOWCASE_AI_TEXT_PROVIDER_LIMIT = 0
+SHOWCASE_SINGLE_IMAGE_MODE = (
+    os.environ.get("SHOWCASE_SINGLE_IMAGE_MODE", "0").strip().lower() in {"1", "true", "yes", "on"}
+)
+SHOWCASE_DISABLE_AI_MINIMAL_FALLBACK = (
+    os.environ.get("SHOWCASE_DISABLE_AI_MINIMAL_FALLBACK", "0").strip().lower() in {"1", "true", "yes", "on"}
+) or SHOWCASE_SINGLE_IMAGE_MODE
+LOCK_SINGLE_FRONT_VARIANT = (
+    os.environ.get("BOOK_LOCK_SINGLE_FRONT_VARIANT", "1").strip().lower() in {"1", "true", "yes", "on"}
+)
+LOCKED_FRONT_FAMILY_ID = str(os.environ.get("BOOK_LOCKED_FRONT_FAMILY_ID", "signal-grid") or "signal-grid").strip().lower()
+LOCKED_FRONT_VARIANT_SUFFIX = str(
+    os.environ.get("BOOK_LOCKED_FRONT_VARIANT_SUFFIX", "reference") or "reference"
+).strip().lower()
 VARIANT_COUNT = 3
 POLL_ATTEMPTS = 24
 POLL_INTERVAL_SECONDS = 4
-COVER_LAB_VERSION = "genre-matrix-v5-full-ai-front"
+COVER_LAB_VERSION = "genre-matrix-v6-single-front-lock"
 try:
     MAX_ART_ATTEMPTS_PER_VARIANT = max(1, int(os.environ.get("SHOWCASE_MAX_ART_ATTEMPTS", "8")))
 except ValueError:
@@ -684,7 +707,7 @@ def normalized_cover_entry(entry: dict[str, Any]) -> dict[str, Any]:
     enriched["coverGenre"] = genre
     enriched["coverSubtopic"] = subtopic
     enriched["coverStyleMode"] = explicit_string(enriched, "coverStyleMode", "cover_style_mode") or "bookstore_bold"
-    enriched["backCoverMode"] = explicit_string(enriched, "backCoverMode", "back_cover_mode") or "minimal_blurb"
+    enriched["backCoverMode"] = "minimal_blurb"
     enriched["coverMode"] = explicit_string(enriched, "coverMode", "cover_mode") or DEFAULT_COVER_MODE
     enriched["styleDirection"] = explicit_string(enriched, "styleDirection", "style_direction") or DEFAULT_STYLE_DIRECTION
     enriched["wrapScope"] = explicit_string(enriched, "wrapScope", "wrap_scope") or DEFAULT_WRAP_SCOPE
@@ -697,7 +720,8 @@ def cover_style_mode_for_entry(entry: dict[str, Any]) -> str:
 
 
 def back_cover_mode_for_entry(entry: dict[str, Any]) -> str:
-    return str(normalized_cover_entry(entry).get("backCoverMode") or "minimal_blurb")
+    _ = entry
+    return "minimal_blurb"
 
 
 def cover_mode_for_entry(entry: dict[str, Any]) -> str:
@@ -909,6 +933,9 @@ def normalize_service(service: str, entry: dict[str, Any] | None = None) -> list
             providers.append("vertex-gemini-flash-image")
     if not is_vertex_only_policy():
         providers.extend(["nano-banana-pro", "nano-banana-2"])
+    provider_limit = SHOWCASE_PROVIDER_LIMIT or (1 if SHOWCASE_SINGLE_IMAGE_MODE else 0)
+    if provider_limit > 0:
+        providers = providers[:provider_limit]
     return providers
 
 
@@ -1056,10 +1083,23 @@ def has_prompt_leakage(fields: dict[str, str]) -> bool:
 
 def variant_specs_for_entry(entry: dict[str, Any]) -> list[dict[str, Any]]:
     entry = normalized_cover_entry(entry)
-    families = list(families_for_entry(entry))
     full_ai_front = cover_mode_for_entry(entry) == "full_ai_front"
     render_mode = "ai-signature" if full_ai_front else "studio-exact"
     text_strategy = "full_ai_front" if full_ai_front else "local_overlay"
+    if LOCK_SINGLE_FRONT_VARIANT:
+        family = dict(family_by_id(LOCKED_FRONT_FAMILY_ID))
+        family_id = str(family.get("id") or "signal-grid").strip() or "signal-grid"
+        suffix = LOCKED_FRONT_VARIANT_SUFFIX or "reference"
+        return [
+            {
+                "id": f"{family_id}-{suffix}",
+                "label": str(family.get("label") or family_id),
+                "family": family,
+                "render_mode": render_mode,
+                "text_strategy": text_strategy,
+            }
+        ]
+    families = list(families_for_entry(entry))
     suffixes = ("reference", "minimal", "classic")
     specs: list[dict[str, Any]] = []
     for index, family in enumerate(families[:3]):
@@ -1108,7 +1148,11 @@ def ai_text_providers_for_entry(service: str, entry: dict[str, Any]) -> list[str
     ]
     if is_vertex_only_policy():
         allowed = [provider for provider in allowed if provider.startswith("vertex-")]
-    return allowed or ordered
+    providers = allowed or ordered
+    provider_limit = SHOWCASE_AI_TEXT_PROVIDER_LIMIT or (1 if SHOWCASE_SINGLE_IMAGE_MODE else 0)
+    if provider_limit > 0:
+        providers = providers[:provider_limit]
+    return providers
 
 
 def extract_from_payload(payload: Any, *paths: tuple[Any, ...]) -> Any:
@@ -2664,6 +2708,33 @@ def promote_selected_variant(book_dir: Path, selected_variant: dict[str, Any]) -
     copy_or_remove(selected_art, assets_dir / "ai_front_cover.png")
 
 
+def prune_extra_front_assets(book_dir: Path) -> None:
+    assets_dir = book_dir / "assets"
+    if not assets_dir.is_dir():
+        return
+
+    keep_exact = {
+        "front_cover_final.png",
+        "front_cover_final.jpg",
+        "front_cover_final.jpeg",
+        "front_cover_final.webp",
+        "front_cover_final.svg",
+    }
+    for path in assets_dir.iterdir():
+        if not path.is_file():
+            continue
+        name = path.name
+        if name in keep_exact:
+            continue
+        if (
+            name.startswith("front_cover_")
+            or name.startswith("showcase_front_cover")
+            or name.startswith("ai_front_cover")
+            or name.startswith("cover_art_v")
+        ):
+            path.unlink(missing_ok=True)
+
+
 def build_cover_variants(
     entry: dict[str, Any],
     book_dir: Path,
@@ -2684,6 +2755,8 @@ def build_cover_variants(
         except (TypeError, ValueError):
             desired_variant_count = VARIANT_COUNT
     desired_variant_count = max(1, min(VARIANT_COUNT, desired_variant_count))
+    if LOCK_SINGLE_FRONT_VARIANT:
+        desired_variant_count = 1
 
     variant_specs = variant_specs_for_entry(entry)[:desired_variant_count]
     family_ids: set[str] = set()
@@ -2782,7 +2855,7 @@ def build_cover_variants(
         if render_mode in {"ai-signature", "ai-minimal"}:
             ai_front_path = assets_dir / f"front_cover_{variant_id}.png"
             candidate_modes = [render_mode]
-            if render_mode == "ai-signature":
+            if render_mode == "ai-signature" and not SHOWCASE_DISABLE_AI_MINIMAL_FALLBACK:
                 candidate_modes.append("ai-minimal")
             best_ai_mode = render_mode
             best_ai_score = -1.0
@@ -2863,6 +2936,7 @@ def build_cover_variants(
                 "quality_gate": quality_gate,
                 "cover_style_mode": cover_style_mode,
                 "back_cover_mode": back_cover_mode,
+                "back_layout_version": "stable-v1",
                 "pair_score": pair_quality["pairScore"],
                 "visual_flags": pair_quality["visualFlags"],
                 "rejection_reasons": list(pair_quality["rejectionReasons"]),
@@ -2906,6 +2980,13 @@ def build_cover_variants(
 
     selected_variant = next(item for item in cover_variants if str(item["id"]) == selected_id)
     promote_selected_variant(book_dir, selected_variant)
+    if LOCK_SINGLE_FRONT_VARIANT:
+        prune_extra_front_assets(book_dir)
+        final_front_svg = "assets/front_cover_final.svg" if (assets_dir / "front_cover_final.svg").exists() else ""
+        for item in cover_variants:
+            item["front_image"] = "assets/front_cover_final.png"
+            item["front_svg"] = final_front_svg
+            item["art_image"] = "assets/front_cover_final.png"
     (assets_dir / "cover_art_scores.json").write_text(
         json.dumps(art_scores, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -2928,6 +3009,7 @@ def build_cover_variants(
             "quality_gate": quality_gate,
             "cover_style_mode": cover_style_mode,
             "back_cover_mode": back_cover_mode,
+            "back_layout_version": "stable-v1",
             "text_safe_zone_status": str(selected_variant.get("text_safe_zone_status") or "unknown"),
             "cover_pair_score": float(selected_variant.get("pair_score") or 0.0),
             "cover_rejection_reasons": rejection_map,
@@ -2966,11 +3048,12 @@ def generate_cover_for_entry(entry: dict[str, Any], service: str, api_key: str, 
     assets_dir = book_dir / "assets"
     assets_dir.mkdir(parents=True, exist_ok=True)
     meta = read_dashboard_meta(book_dir)
+    required_variant_count = 1 if LOCK_SINGLE_FRONT_VARIANT else VARIANT_COUNT
     if (
         not force
         and meta.get("cover_composed") is True
-        and cover_variant_bundle_complete(book_dir, meta, minimum_variants=VARIANT_COUNT)
-        and int(meta.get("cover_variant_count") or 0) >= VARIANT_COUNT
+        and cover_variant_bundle_complete(book_dir, meta, minimum_variants=required_variant_count)
+        and int(meta.get("cover_variant_count") or 0) >= required_variant_count
         and str(meta.get("cover_lab_version") or "").strip() == COVER_LAB_VERSION
     ):
         return

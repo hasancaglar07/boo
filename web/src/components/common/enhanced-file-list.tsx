@@ -2,6 +2,7 @@
 
 import { Download, FileText, Trash2, Eye } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ export function EnhancedFileList({
   onDelete,
   onPreview,
 }: EnhancedFileListProps) {
+  const t = useTranslations("EnhancedFileList");
   const [previewFile, setPreviewFile] = useState<Artifact | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<Artifact | null>(null);
 
@@ -67,12 +69,12 @@ export function EnhancedFileList({
               <FileText className="mx-auto size-10 text-muted-foreground/40" />
               <div className="mt-4">
                 <div className="text-sm font-medium text-foreground">
-                  {fileType === 'research' ? 'No research files yet' : 'No exports yet'}
+                  {fileType === 'research' ? t("noResearchFiles") : t("noExports")}
                 </div>
                 <div className="mt-2 text-sm text-muted-foreground">
                   {fileType === 'research'
-                    ? 'Generate research files using the tools above to get started.'
-                    : 'Export your book to generate publication-ready files.'}
+                    ? t("noResearchFilesDesc")
+                    : t("noExportsDesc")}
                 </div>
               </div>
             </CardContent>
@@ -155,18 +157,18 @@ export function EnhancedFileList({
       <Dialog open={deleteConfirmation !== null} onOpenChange={() => setDeleteConfirmation(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete File</DialogTitle>
+            <DialogTitle>{t("deleteFileTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Are you sure you want to delete "{deleteConfirmation?.name}"? This action cannot be undone.
+              {t("deleteConfirmation", { name: deleteConfirmation?.name ?? "" })}
             </p>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setDeleteConfirmation(null)}>
-                Cancel
+                {t("cancel")}
               </Button>
               <Button variant="outline" onClick={confirmDelete}>
-                Delete
+                {t("delete")}
               </Button>
             </div>
           </div>
@@ -177,6 +179,7 @@ export function EnhancedFileList({
 }
 
 function FilePreview({ file }: { file: Artifact | null }) {
+  const t = useTranslations("EnhancedFileList");
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -188,7 +191,7 @@ function FilePreview({ file }: { file: Artifact | null }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-sm text-muted-foreground">Loading preview...</div>
+        <div className="text-sm text-muted-foreground">{t("loadingPreview")}</div>
       </div>
     );
   }
@@ -203,7 +206,7 @@ function FilePreview({ file }: { file: Artifact | null }) {
 
   return (
     <pre className="bg-muted/50 rounded-lg p-4 text-sm overflow-x-auto">
-      {content || <span className="text-muted-foreground">File content would appear here.</span>}
+      {content || <span className="text-muted-foreground">{t("fileContentPlaceholder")}</span>}
     </pre>
   );
 }

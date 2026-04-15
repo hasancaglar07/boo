@@ -2,6 +2,7 @@
 
 import { ImagePlus, Sparkles, Wand2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,11 +30,7 @@ const COVER_DIRECTIONS: FunnelCoverDirection[] = ["editorial", "tech", "minimal"
 
 type StyleTab = "identity" | "cover" | "advanced";
 
-const TAB_CONFIG: Array<{ key: StyleTab; label: string }> = [
-  { key: "identity", label: "Kimlik" },
-  { key: "cover", label: "Cover" },
-  { key: "advanced", label: "Settings" },
-];
+const TAB_KEYS: StyleTab[] = ["identity", "cover", "advanced"];
 
 function getProfileePublisherBrand() {
   const account = getAccount();
@@ -121,6 +118,12 @@ export function StyleStep({
   const logoInputRef = useRef<HTMLInputElement | null>(null);
   const profileBrand = getProfileePublisherBrand();
   const [activeTab, setActiveTab] = useState<StyleTab>("identity");
+  const t = useTranslations("FunnelStyleStep");
+
+  const TAB_CONFIG = TAB_KEYS.map((key) => ({
+    key,
+    label: t(`tabs.${key}`),
+  }));
 
   const selectedLogoPreset = useMemo(
     () => PUBLISHER_LOGO_PRESETS.find((preset) => preset.url === draft.logoUrl) || null,
@@ -129,18 +132,18 @@ export function StyleStep({
 
   async function handleLogoUpload(file: File) {
     if (!file.type.startsWith("image/")) {
-      onError("Only image files can be uploaded.");
+      onError(t("errorOnlyImages"));
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      onError("Logo file must be smaller than 2 MB.");
+      onError(t("errorLogoTooBig"));
       return;
     }
     try {
       const dataUrl = await readImageAsDataUrl(file);
       onUpdate({ logoUrl: dataUrl });
     } catch (cause) {
-      onError(cause instanceof Error ? cause.message : "Logo could not be uploaded.");
+      onError(cause instanceof Error ? cause.message : t("errorLogoFailed"));
     }
   }
 
@@ -178,7 +181,7 @@ export function StyleStep({
         disabled={aiLoading === "style"}
       >
         <Sparkles className="size-4" />
-        {aiLoading === "style" ? "AI generateuyor…" : "AI ile generate"}
+        {aiLoading === "style" ? t("generatingAi") : t("regenerateAi")}
       </Button>
 
       {/* ── Tab: Identity ── */}
@@ -187,13 +190,13 @@ export function StyleStep({
           {/* Author name */}
           <div className="space-y-2">
             <label htmlFor="author-name" className="text-base sm:text-lg font-bold">
-              Author Name
+              {t("authorName")}
             </label>
             <Input
               id="author-name"
               value={draft.authorName}
               onChange={(event) => onUpdate({ authorName: event.target.value })}
-              placeholder="e.g.: John Smith"
+              placeholder={t("authorNamePlaceholder")}
               className="h-14 text-base rounded-2xl px-5"
             />
           </div>
@@ -201,13 +204,13 @@ export function StyleStep({
           {/* Publisher name */}
           <div className="space-y-2">
             <label htmlFor="imprint" className="text-base sm:text-lg font-bold">
-              Publisher Name
+              {t("publisherName")}
             </label>
             <Input
               id="imprint"
               value={draft.imprint}
               onChange={(event) => onUpdate({ imprint: event.target.value })}
-              placeholder="e.g.: North Light Publishing"
+              placeholder={t("publisherNamePlaceholder")}
               className="h-14 text-base rounded-2xl px-5"
             />
           </div>
@@ -215,20 +218,20 @@ export function StyleStep({
           {/* Logo text */}
           <div className="space-y-2">
             <label htmlFor="logo-text" className="text-base sm:text-lg font-bold">
-              Logo metni
+              {t("logoText")}
             </label>
             <Input
               id="logo-text"
               value={draft.logoText}
               onChange={(event) => onUpdate({ logoText: event.target.value })}
-              placeholder="e.g.: JL Studio"
+              placeholder={t("logoTextPlaceholder")}
               className="h-14 text-base rounded-2xl px-5"
             />
           </div>
 
           {/* Logo upload */}
           <div className="space-y-2">
-            <div className="text-base sm:text-lg font-bold">Upload Logo</div>
+            <div className="text-base sm:text-lg font-bold">{t("uploadLogo")}</div>
             <input
               ref={logoInputRef}
               type="file"
@@ -247,8 +250,8 @@ export function StyleStep({
                     <img src={draft.logoUrl} alt="Uploaded logo" className="max-h-12 max-w-full object-contain" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-foreground">Logo uploaded ✓</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">Click to change</div>
+                    <div className="text-sm font-semibold text-foreground">{t("logoUploaded")}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{t("clickToChange")}</div>
                   </div>
                   <button
                     type="button"
@@ -268,22 +271,22 @@ export function StyleStep({
                 <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
                   <ImagePlus className="size-5 text-primary" />
                 </div>
-                <div className="text-sm font-semibold text-foreground">Click to upload logo</div>
-                <div className="text-xs text-muted-foreground">PNG, JPG, WebP veya SVG · Maks 2 MB</div>
+                <div className="text-sm font-semibold text-foreground">{t("clickToUploadLogo")}</div>
+                <div className="text-xs text-muted-foreground">{t("uploadLogoFormats")}</div>
               </button>
             )}
           </div>
           {/* Author bio */}
           <div className="space-y-2">
             <label htmlFor="author-bio" className="text-base sm:text-lg font-bold">
-              Short Bio
+              {t("shortBio")}
             </label>
             <Textarea
               id="author-bio"
               rows={4}
               value={draft.authorBio}
               onChange={(event) => onUpdate({ authorBio: event.target.value })}
-              placeholder="e.g.: Independent author working on game guides and AI-powered publishing."
+              placeholder={t("shortBioPlaceholder")}
               className="min-h-[140px] text-base rounded-2xl px-5 py-4 resize-none leading-7"
             />
           </div>
@@ -291,7 +294,7 @@ export function StyleStep({
           {/* Language selector */}
           <div className="space-y-2">
             <label htmlFor="language" className="text-base sm:text-lg font-bold">
-              Dil
+              {t("language")}
             </label>
             <select
               id="language"
@@ -318,13 +321,13 @@ export function StyleStep({
           {/* Cover brief */}
           <div className="space-y-2">
             <label htmlFor="cover-brief" className="text-base sm:text-lg font-bold">
-              Cover vurgusu
+              {t("coverEmphasis")}
             </label>
             <Input
               id="cover-brief"
               value={draft.coverBrief}
               onChange={(event) => onUpdate({ coverBrief: event.target.value })}
-              placeholder="e.g.: Build • Strengthen • Advance"
+              placeholder={t("coverEmphasisPlaceholder")}
               className="h-14 text-base rounded-2xl px-5"
             />
           </div>
@@ -341,7 +344,7 @@ export function StyleStep({
               }}
             >
               <Wand2 className="mr-1.5 size-4" />
-              Rastgele logo
+              {t("randomLogo")}
             </Button>
             {profileBrand ? (
               <Button
@@ -356,14 +359,14 @@ export function StyleStep({
                   })
                 }
               >
-                Profile logosu
+                {t("useProfileLogo")}
               </Button>
             ) : null}
           </div>
 
           {/* Logo preset grid */}
           <div className="space-y-3">
-            <div className="text-base sm:text-lg font-bold">Logo Library</div>
+            <div className="text-base sm:text-lg font-bold">{t("logoLibrary")}</div>
             <div className="max-h-[320px] overflow-y-auto overscroll-contain rounded-2xl border border-border/50 bg-background/40 p-2">
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {PUBLISHER_LOGO_PRESETS.map((preset) => {
@@ -395,7 +398,7 @@ export function StyleStep({
         <div className="space-y-7">
           {/* Tone */}
           <div className="space-y-3">
-            <div className="text-base sm:text-lg font-bold">Tone</div>
+            <div className="text-base sm:text-lg font-bold">{t("tone")}</div>
             <PillSelector
               options={TONES}
               selected={draft.tone}
@@ -406,7 +409,7 @@ export function StyleStep({
 
           {/* Depth */}
           <div className="space-y-3">
-            <div className="text-base sm:text-lg font-bold">Derinlik</div>
+            <div className="text-base sm:text-lg font-bold">{t("depth")}</div>
             <PillSelector
               options={DEPTHS}
               selected={draft.depth}
@@ -417,7 +420,7 @@ export function StyleStep({
 
           {/* Cover direction */}
           <div className="space-y-3">
-            <div className="text-base sm:text-lg font-bold">Cover Direction</div>
+            <div className="text-base sm:text-lg font-bold">{t("coverDirection")}</div>
             <PillSelector
               options={COVER_DIRECTIONS}
               selected={draft.coverDirection}
@@ -429,7 +432,7 @@ export function StyleStep({
           {/* Language selector (also in advanced for discoverability) */}
           <div className="space-y-2">
             <label htmlFor="language-advanced" className="text-base sm:text-lg font-bold">
-              Dil
+              {t("language")}
             </label>
             <select
               id="language-advanced"
@@ -458,4 +461,4 @@ export function StyleStep({
       ) : null}
     </form>
   );
-}
+}

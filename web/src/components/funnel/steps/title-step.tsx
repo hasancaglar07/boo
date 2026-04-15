@@ -1,6 +1,7 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,12 +39,14 @@ export function TitleStep({
   onDraftTouched: () => void;
   onSuggestionApplied: () => void;
 }) {
+  const t = useTranslations("FunnelTitleStep");
+
   const suggestionStatusLabel =
     suggestionSource === "glm_refined"
-      ? "AI refined"
+      ? t("aiRefined")
       : suggestionIsRefining
-        ? "AI is refining"
-        : "Fast suggestions ready";
+        ? t("aiIsRefining")
+        : t("fastSuggestionsReady");
 
   return (
     <form
@@ -61,7 +64,7 @@ export function TitleStep({
             htmlFor="title"
             className="text-base sm:text-lg font-bold text-foreground"
           >
-            Title
+            {t("titleLabel")}
           </label>
           <button
             type="button"
@@ -71,7 +74,7 @@ export function TitleStep({
           >
             ✨
             <Sparkles className="size-3.5" />
-            {aiLoading === "title" ? "Suggesting…" : "AI Suggest"}
+            {aiLoading === "title" ? t("suggesting") : t("aiSuggest")}
           </button>
         </div>
         <Input
@@ -81,7 +84,7 @@ export function TitleStep({
             onDraftTouched();
             onUpdate({ title: event.target.value });
           }}
-          placeholder="Write your book title..."
+          placeholder={t("titlePlaceholder")}
           className="h-14 sm:h-16 text-lg sm:text-xl font-semibold rounded-2xl px-5"
           autoFocus
         />
@@ -92,7 +95,7 @@ export function TitleStep({
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-medium text-muted-foreground">
-              AI Suggestions
+              {t("aiSuggestions")}
             </p>
             <span className="rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
               {suggestionStatusLabel}
@@ -109,7 +112,7 @@ export function TitleStep({
                   key={`${option.title}-${option.subtitle}`}
                   type="button"
                   aria-pressed={isSelected}
-                  title={isSelected ? "Selected suggestion" : "Apply this suggestion"}
+                  title={isSelected ? t("selectedSuggestion") : t("applySuggestion")}
                   className={`
                     group shrink-0 snap-start text-left
                     rounded-2xl border px-5 py-4 min-w-[200px]
@@ -134,7 +137,7 @@ export function TitleStep({
                     </div>
                   ) : null}
                   <div className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground/55">
-                    {isSelected ? "Selected" : "Tap to apply"}
+                    {isSelected ? t("selected") : t("tapToApply")}
                   </div>
                 </button>
               );
@@ -150,9 +153,9 @@ export function TitleStep({
             htmlFor="subtitle"
             className="text-base sm:text-lg font-bold text-foreground"
           >
-            Subtitle{" "}
+            {t("subtitleLabel")}{" "}
             <span className="font-normal text-muted-foreground/60">
-              (optional)
+              {t("subtitleOptional")}
             </span>
           </label>
           <button
@@ -163,7 +166,7 @@ export function TitleStep({
           >
             ✨
             <Sparkles className="size-3.5" />
-            Get Suggestions
+            {t("getSuggestions")}
           </button>
         </div>
         <Textarea
@@ -173,7 +176,7 @@ export function TitleStep({
             onDraftTouched();
             onUpdate({ subtitle: event.target.value });
           }}
-          placeholder="Add subtitle (optional)..."
+          placeholder={t("subtitlePlaceholder")}
           rows={3}
           className="min-h-[120px] text-base sm:text-lg font-medium rounded-2xl px-5 py-4 resize-none"
         />

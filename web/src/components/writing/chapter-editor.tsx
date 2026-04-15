@@ -2,6 +2,7 @@
 
 import { ChevronDown, ChevronUp, Copy, Trash2, Plus } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { ChapterComments } from "@/components/writing/chapter-comments";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ function formatWordCount(count: number): string {
 }
 
 export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author = "Author", onUpdate, onChapterAction }: ChapterEditorProps) {
+  const t = useTranslations("ChapterEditor");
   const [openIndexes, setOpenIndexes] = useState<number[]>(() => chapters.length > 0 ? [0] : []);
 
   function toggleChapter(index: number) {
@@ -55,7 +57,7 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
   function addChapter() {
     const nextIndex = chapters.length;
     const newChapter: Chapter = {
-      title: `Chapter ${nextIndex + 1}`,
+      title: t("chapterDefault", { number: nextIndex + 1 }),
       content: "",
       state: "draft",
       target_words: targetWords,
@@ -78,7 +80,7 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
   }
 
   function deleteChapter(index: number) {
-    if (!confirm("Are you sure you want to delete this chapter?")) return;
+    if (!confirm(t("confirmDelete"))) return;
     const next = chapters.filter((_, i) => i !== index);
     onUpdate(next);
     setOpenIndexes((current) => current.filter((item) => item !== index).map((item) => (item > index ? item - 1 : item)));
@@ -117,20 +119,20 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="text-sm font-medium text-foreground">
-          Chapters ({chapters.length})
+          {t("chaptersCount", { count: chapters.length })}
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={expandAll} className="gap-1.5">
             <ChevronDown className="size-3.5" />
-            Expand All
+            {t("expandAll")}
           </Button>
           <Button size="sm" variant="outline" onClick={collapseAll} className="gap-1.5">
             <ChevronUp className="size-3.5" />
-            Collapse All
+            {t("collapseAll")}
           </Button>
           <Button size="sm" onClick={addChapter} className="gap-1.5">
             <Plus className="size-3.5" />
-            Add Chapter
+            {t("addChapter")}
           </Button>
         </div>
       </div>
@@ -162,7 +164,7 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-semibold text-muted-foreground">
-                        Ch. {index + 1}
+                        {t("chapterAbbr", { number: index + 1 })}
                       </span>
                       <StatusBadge status={CHAPTER_STATE_OPTIONS.find((s) => s.value === state)?.status || "queued"} size="sm" />
                       {wordCount > 0 && (
@@ -173,7 +175,7 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
                     </div>
 
                     <div className="text-sm font-medium text-foreground">
-                      {chapter.title || "Untitled"}
+                      {chapter.title || t("untitled")}
                     </div>
 
                     {/* Progress Bar */}
@@ -201,7 +203,7 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
                     <ChapterComments
                       slug={slug}
                       chapterIndex={index}
-                      chapterTitle={chapter.title || `Chapter ${index + 1}`}
+                      chapterTitle={chapter.title || t("chapterDefault", { number: index + 1 })}
                       author={author}
                     />
                     <Button
@@ -209,7 +211,7 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
                       size="sm"
                       onClick={() => duplicateChapter(index)}
                       className="h-8 w-8 p-0"
-                      title="Duplicate chapter"
+                      title={t("duplicateTitle")}
                     >
                       <Copy className="size-3.5" />
                     </Button>
@@ -219,7 +221,7 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
                       onClick={() => moveChapter(index, "up")}
                       disabled={index === 0}
                       className="h-8 w-8 p-0"
-                      title="Move up"
+                      title={t("moveUpTitle")}
                     >
                       <ChevronUp className="size-3.5" />
                     </Button>
@@ -229,7 +231,7 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
                       onClick={() => moveChapter(index, "down")}
                       disabled={index === chapters.length - 1}
                       className="h-8 w-8 p-0"
-                      title="Move down"
+                      title={t("moveDownTitle")}
                     >
                       <ChevronDown className="size-3.5" />
                     </Button>
@@ -239,7 +241,7 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
                       onClick={() => deleteChapter(index)}
                       disabled={chapters.length === 1}
                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      title="Delete chapter"
+                      title={t("deleteTitle")}
                     >
                       <Trash2 className="size-3.5" />
                     </Button>
@@ -251,15 +253,15 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
                   <div className="mt-4 space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <Label>Chapter Title</Label>
+                        <Label>{t("chapterTitle")}</Label>
                         <Input
                           value={chapter.title}
                           onChange={(e) => updateChapter(index, { title: e.target.value })}
-                          placeholder="Chapter title"
+                          placeholder={t("chapterTitlePlaceholder")}
                         />
                       </div>
                       <div>
-                        <Label>State</Label>
+                        <Label>{t("state")}</Label>
                         <select
                           value={state}
                           onChange={(e) => updateChapter(index, { state: e.target.value as ChapterState })}
@@ -275,11 +277,11 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
                     </div>
 
                     <div>
-                      <Label>Content</Label>
+                      <Label>{t("content")}</Label>
                       <Textarea
                         value={chapter.content}
                         onChange={(e) => updateChapter(index, { content: e.target.value })}
-                        placeholder="Start writing your chapter..."
+                        placeholder={t("contentPlaceholder")}
                         rows={12}
                         className="resize-y"
                       />
@@ -298,7 +300,7 @@ export function ChapterEditor({ chapters, targetWords = 2000, slug = "", author 
       {chapters.length === 0 && (
         <Card>
           <CardContent className="p-8 text-center">
-            <div className="text-sm text-muted-foreground">No chapters yet. Add your first chapter to get started.</div>
+            <div className="text-sm text-muted-foreground">{t("noChapters")}</div>
           </CardContent>
         </Card>
       )}

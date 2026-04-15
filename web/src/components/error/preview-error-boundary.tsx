@@ -9,14 +9,25 @@
 
 import { Component, ReactNode } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trackEvent } from "@/lib/analytics";
 
-interface PreviewErrorBoundaryProps {
+interface PreviewErrorBoundaryI18n {
+  errorTitle: string;
+  errorDescription: string;
+  errorDetailsLabel: string;
+  retryButton: string;
+  backToLibraryButton: string;
+  persistentErrorNote: string;
+}
+
+interface PreviewErrorBoundaryInnerProps {
   children: ReactNode;
   slug: string;
   fallback?: ReactNode;
+  i18n: PreviewErrorBoundaryI18n;
 }
 
 interface PreviewErrorBoundaryState {
@@ -25,11 +36,11 @@ interface PreviewErrorBoundaryState {
   errorInfo: React.ErrorInfo | null;
 }
 
-export class PreviewErrorBoundary extends Component<
-  PreviewErrorBoundaryProps,
+class PreviewErrorBoundaryInner extends Component<
+  PreviewErrorBoundaryInnerProps,
   PreviewErrorBoundaryState
 > {
-  constructor(props: PreviewErrorBoundaryProps) {
+  constructor(props: PreviewErrorBoundaryInnerProps) {
     super(props);
     this.state = {
       hasError: false,
@@ -94,6 +105,8 @@ export class PreviewErrorBoundary extends Component<
   };
 
   render() {
+    const { i18n } = this.props;
+
     if (this.state.hasError) {
       // Use custom fallback if provided
       if (this.props.fallback) {
@@ -107,18 +120,18 @@ export class PreviewErrorBoundary extends Component<
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <AlertCircle className="size-5" />
-                Something went wrong
+                {i18n.errorTitle}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                We encountered an error while loading your book preview. Don't worry, your work is safe.
+                {i18n.errorDescription}
               </p>
 
               {process.env.NODE_ENV === "development" && this.state.error && (
                 <details className="mt-4">
                   <summary className="cursor-pointer text-sm font-semibold text-foreground">
-                    Error Details (Development Only)
+                    {i18n.errorDetailsLabel}
                   </summary>
                   <div className="mt-2 p-4 bg-muted rounded-lg text-xs font-mono overflow-auto max-h-64">
                     <div className="text-red-600 mb-2">
@@ -140,7 +153,7 @@ export class PreviewErrorBoundary extends Component<
                   size="lg"
                 >
                   <RefreshCw className="mr-2 size-4" />
-                  Try Again
+                  {i18n.retryButton}
                 </Button>
                 <Button
                   onClick={() => window.location.href = "/app/library"}
@@ -148,12 +161,12 @@ export class PreviewErrorBoundary extends Component<
                   className="flex-1"
                   size="lg"
                 >
-                  Back to Library
+                  {i18n.backToLibraryButton}
                 </Button>
               </div>
 
               <p className="text-xs text-muted-foreground text-center">
-                If this problem persists, please contact support
+                {i18n.persistentErrorNote}
               </p>
             </CardContent>
           </Card>
@@ -163,6 +176,29 @@ export class PreviewErrorBoundary extends Component<
 
     return this.props.children;
   }
+}
+
+interface PreviewErrorBoundaryProps {
+  children: ReactNode;
+  slug: string;
+  fallback?: ReactNode;
+}
+
+export function PreviewErrorBoundary({ children, slug, fallback }: PreviewErrorBoundaryProps) {
+  const t = useTranslations("PreviewErrorBoundary");
+  const i18n: PreviewErrorBoundaryI18n = {
+    errorTitle: t("errorTitle"),
+    errorDescription: t("errorDescription"),
+    errorDetailsLabel: t("errorDetailsLabel"),
+    retryButton: t("retryButton"),
+    backToLibraryButton: t("backToLibraryButton"),
+    persistentErrorNote: t("persistentErrorNote"),
+  };
+  return (
+    <PreviewErrorBoundaryInner slug={slug} fallback={fallback} i18n={i18n}>
+      {children}
+    </PreviewErrorBoundaryInner>
+  );
 }
 
 /**

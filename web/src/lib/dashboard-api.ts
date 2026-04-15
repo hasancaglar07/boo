@@ -255,6 +255,27 @@ export type Book = {
   selected_cover_confidence?: number;
   isbn?: string;
   year?: string;
+  edition_label?: string;
+  print_label?: string;
+  publication_city?: string;
+  publication_country?: string;
+  publisher_address?: string;
+  publisher_phone?: string;
+  publisher_email?: string;
+  publisher_website?: string;
+  publisher_certificate_no?: string;
+  isbn13?: string;
+  editor_name?: string;
+  proofreader_name?: string;
+  typesetter_name?: string;
+  cover_designer_name?: string;
+  printer_name?: string;
+  printer_address?: string;
+  printer_certificate_no?: string;
+  copyright_statement?: string;
+  imprint_block?: string;
+  regenerate_professional_details?: boolean;
+  details_generation_nonce?: string;
   fast?: boolean;
   book_length_mode?: string;
   book_length_tier?: string;
@@ -341,6 +362,25 @@ export type BookPreview = {
     | "branding_mark"
     | "branding_logo_url"
     | "cover_brief"
+    | "edition_label"
+    | "print_label"
+    | "publication_city"
+    | "publication_country"
+    | "publisher_address"
+    | "publisher_phone"
+    | "publisher_email"
+    | "publisher_website"
+    | "publisher_certificate_no"
+    | "isbn13"
+    | "editor_name"
+    | "proofreader_name"
+    | "typesetter_name"
+    | "cover_designer_name"
+    | "printer_name"
+    | "printer_address"
+    | "printer_certificate_no"
+    | "copyright_statement"
+    | "imprint_block"
     | "cover_image"
     | "back_cover_image"
     | "front_cover_source"
@@ -488,6 +528,9 @@ function timeoutForPath(path: string) {
   }
   if (/^\/api\/books\/[^/]+\/preview(?:-bootstrap)?$/.test(normalized)) {
     return API_BOOK_PREVIEW_TIMEOUT_MS;
+  }
+  if (/^\/api\/books\/[^/]+\/build$/.test(normalized)) {
+    return API_WORKFLOW_TIMEOUT_MS;
   }
   if (normalized === "/api/workflows") {
     return API_WORKFLOW_TIMEOUT_MS;

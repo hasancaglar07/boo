@@ -1,8 +1,9 @@
 "use client";
 
-import { CheckCircle2, FileText, Lock, Loader2, PenTool, List } from "lucide-react";
+import { CheckCircle2, ImagePlus, Lock, Loader2, PenTool, List, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,20 +44,17 @@ export function ChapterListSidebar({
   lockedSectionCount,
   isLoading = false,
 }: ChapterListSidebarProps) {
+  const t = useTranslations("ChapterListSidebar");
   const router = useRouter();
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
   const handleEditChapter = (chapterIndex: number, e: React.MouseEvent) => {
     e.stopPropagation();
     const chapter = chapters[chapterIndex];
-
-    // If locked, show upgrade prompt
     if (chapter.status === "locked") {
       router.push(`/app/book/${bookSlug}/upgrade`);
       return;
     }
-
-    // Navigate to workspace writing tab
     router.push(
       `/app/book/${bookSlug}/workspace?tab=writing&subtab=editor&chapter=${chapter.number || chapterIndex + 1}`
     );
@@ -72,62 +70,128 @@ export function ChapterListSidebar({
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onSelectChapter(chapterIndex);
-      if (closeSheet) {
-        setIsMobileSheetOpen(false);
-      }
+      if (closeSheet) setIsMobileSheetOpen(false);
     }
   };
 
   const getStatusIcon = (status?: ChapterItem["status"]) => {
     switch (status) {
       case "complete":
-        return <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />;
+        return <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />;
       case "writing":
-        return <Loader2 className="size-4 text-primary animate-spin shrink-0" />;
+        return <Loader2 className="size-4 shrink-0 animate-spin text-primary" />;
       case "locked":
-        return <Lock className="size-4 text-amber-600 shrink-0" />;
+        return <Lock className="size-4 shrink-0 text-amber-600" />;
       default:
-        return <FileText className="size-4 text-muted-foreground shrink-0" />;
+        return <FileText className="size-4 shrink-0 text-muted-foreground" />;
     }
   };
 
   const getStatusText = (status?: ChapterItem["status"]) => {
     switch (status) {
-      case "complete":
-        return "Ready";
-      case "writing":
-        return "Writing...";
-      case "locked":
-        return "Locked";
-      default:
-        return "Pending";
+      case "complete": return t("statusReady");
+      case "writing":  return t("statusWriting");
+      case "locked":   return t("statusLocked");
+      default:         return t("statusPending");
     }
   };
 
-  // Skeleton loader
+  // Shared chapter item renderer — same structure for desktop and mobile
+  const renderChapterItem = (
+    chapter: ChapterItem,
+    index: number,
+    opts: { mobile?: boolean; closeSheet?: boolean } = {}
+  ) => {
+    const isSelected = selectedChapterIndex === index;
+    const isLocked = chapter.status === "locked";
+    const editLabel = `${t("editFullBook")}: ${chapter.title}`;
+
+    return (
+      <div
+        key={chapter.number ?? index}
+        role="button"
+        tabIndex={isLocked ? -1 : 0}
+        aria-disabled={isLocked}
+        aria-pressed={isSelected}
+        aria-label={chapter.title}
+        onClick={() => {
+          if (!isLocked) {
+            onSelectChapter(index);
+            if (opts.closeSheet) setIsMobileSheetOpen(false);
+          }
+        }}
+        onKeyDown={(e) => handleChapterKeyDown(e, index, isLocked, opts.closeSheet)}
+        className={`
+          group w-full text-left rounded-xl border px-3 transition-all duration-150
+          ${opts.mobile ? "py-3.5" : "py-2.5"}
+          ${isSelected
+            ? "border-primary/30 bg-primary/10 shadow-sm"
+            : "border-transparent hover:border-border/50 hover:bg-accent/50"
+          }
+          ${isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
+          ${opts.mobile ? "active:scale-[0.99]" : ""}
+        `}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-1 items-start gap-2">
+            <div className="mt-0.5 shrink-0">{getStatusIcon(chapter.status)}</div>
+            <div className="min-w-0 flex-1">
+              <div className={`truncate font-medium text-foreground ${opts.mobile ? "text-sm" : "text-xs"}`}>
+                {chapter.number && (
+                  <span className="mr-1 text-muted-foreground">{chapter.number}.</span>
+                )}
+                {chapter.title}
+              </div>
+              <div className={`mt-0.5 flex items-center gap-1.5 text-muted-foreground ${opts.mobile ? "text-xs" : "text-[10px]"}`}>
+                <span>{getStatusText(chapter.status)}</span>
+                {chapter.wordCount ? (
+                  <>
+                    <span>·</span>
+                    <span>{chapter.wordCount.toLocaleString()} {t("words")}</span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          {/* Edit button — always has aria-label, visible on focus/hover on desktop, always visible on mobile */}
+          {premium && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => handleEditChapter(index, e)}
+              aria-label={editLabel}
+              className={`
+                shrink-0 text-muted-foreground hover:text-foreground
+                ${opts.mobile ? "h-9 w-9" : "h-7 w-7 opacity-0 focus:opacity-100 group-hover:opacity-100"}
+              `}
+            >
+              <PenTool className={opts.mobile ? "size-4" : "size-3"} />
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Loading skeleton
   if (isLoading) {
     return (
       <>
-        {/* Desktop Sidebar Skeleton */}
-        <Card className="border-border/50 bg-card hidden lg:block">
-          <CardContent className="p-4 space-y-3">
-            {/* Header skeleton */}
+        <Card className="hidden border-border/50 bg-card lg:block">
+          <CardContent className="space-y-3 p-4">
             <div className="flex items-center justify-between">
               <SkeletonCard className="h-4 w-16" />
               <SkeletonCard className="h-4 w-12" />
             </div>
-
-            {/* Chapter list skeleton */}
             <div className="space-y-1">
               {[...Array(5)].map((_, i) => (
-                <SkeletonCard key={i} className="h-14 w-full rounded-lg" />
+                <SkeletonCard key={i} className="h-12 w-full rounded-xl" />
               ))}
             </div>
           </CardContent>
         </Card>
-
-        {/* Mobile button skeleton */}
-        <div className="lg:hidden fixed bottom-20 right-4 z-50">
+        <div className="fixed bottom-6 right-4 z-50 lg:hidden">
           <SkeletonCard className="h-14 w-14 rounded-full" />
         </div>
       </>
@@ -136,240 +200,126 @@ export function ChapterListSidebar({
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <Card className="border-border/50 bg-card hidden lg:block">
-        <CardContent className="p-4 space-y-3">
+      {/* ── Desktop Sidebar ─────────────────────────────────── */}
+      <Card className="hidden border-border/50 bg-card lg:block">
+        <CardContent className="flex flex-col gap-3 p-4">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <div className="text-xs font-semibold text-foreground">Chapters</div>
-            <div className="text-xs text-muted-foreground">
-              {visibleSectionCount}/{chapters.length} visible
-            </div>
+            <div className="text-xs font-semibold text-foreground">{t("chaptersHeader")}</div>
+            {chapters.length > 0 && (
+              <div className="text-xs text-muted-foreground">
+                {t("visibleCount", { visible: visibleSectionCount, total: chapters.length })}
+              </div>
+            )}
           </div>
 
-          {/* Chapter list */}
-          <div className="space-y-1 max-h-[400px] overflow-y-auto">
-            {chapters.map((chapter, index) => {
-              const isSelected = selectedChapterIndex === index;
-              const isLocked = chapter.status === "locked";
-
-              return (
-                <div
-                  key={chapter.number || index}
-                  role="button"
-                  tabIndex={isLocked ? -1 : 0}
-                  aria-disabled={isLocked}
-                  onClick={() => !isLocked && onSelectChapter(index)}
-                  onKeyDown={(event) => handleChapterKeyDown(event, index, isLocked)}
-                  className={`
-                    group w-full text-left rounded-lg px-3 py-2.5 transition-all duration-150
-                    ${isSelected
-                      ? "bg-primary/10 border border-primary/30 shadow-sm"
-                      : "hover:bg-accent/50 border border-transparent"
-                    }
-                    ${isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
-                  `}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2 min-w-0 flex-1">
-                      {/* Status icon */}
-                      <div className="mt-0.5 shrink-0">{getStatusIcon(chapter.status)}</div>
-
-                      {/* Chapter info */}
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-medium text-foreground truncate">
-                          {chapter.number && <span className="mr-1 text-muted-foreground">{chapter.number}.</span>}
-                          {chapter.title}
-                        </div>
-
-                        {/* Status and word count */}
-                        <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
-                          <span>{getStatusText(chapter.status)}</span>
-                          {chapter.wordCount && (
-                            <>
-                              <span>·</span>
-                              <span>{chapter.wordCount} words</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Edit button */}
-                    {premium ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => handleEditChapter(index, e)}
-                        className="h-7 px-2 shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
-                      >
-                        <PenTool className="size-3" />
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              );
-            })}
+          {/* Chapter list — flex-col, no fixed max-height trap */}
+          <div className="space-y-1">
+            {chapters.map((chapter, index) => renderChapterItem(chapter, index))}
           </div>
 
-          {/* Locked chapters notice */}
+          {/* Locked notice + CTA together — no gap between them */}
           {!premium && lockedSectionCount > 0 && (
-            <div className="pt-3 border-t">
-              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 px-3 py-2">
-                <div className="flex items-start gap-2">
-                  <Lock className="size-3.5 text-amber-600 shrink-0 mt-0.5" />
-                  <div className="text-xs text-amber-900 dark:text-amber-200">
-                    <div className="font-medium">What unlock adds</div>
-                    <div className="mt-0.5 text-[10px] leading-tight">
-                      {lockedSectionCount} locked chapters, PDF + EPUB downloads, covers, and workspace editing.
-                    </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-900/50 dark:bg-amber-950/30">
+              <div className="flex items-start gap-2">
+                <Lock className="mt-0.5 size-3.5 shrink-0 text-amber-600" />
+                <div className="text-xs text-amber-900 dark:text-amber-200">
+                  <div className="font-medium">{t("whatUnlockAdds")}</div>
+                  <div className="mt-0.5 leading-tight text-[10px]">
+                    {t("lockedChaptersNotice", { count: lockedSectionCount })}
                   </div>
                 </div>
               </div>
+              <Button
+                size="sm"
+                className="mt-2 w-full h-8 text-xs"
+                onClick={() => router.push(`/app/book/${bookSlug}/upgrade`)}
+              >
+                <Lock className="mr-1.5 size-3" />
+                {t("unlockFullBook")}
+              </Button>
             </div>
           )}
 
           {/* Quick actions */}
-          <div className="pt-3 border-t space-y-2">
+          <div className="space-y-2 border-t pt-3">
             {premium ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start h-9"
-                onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=writing`)}
-              >
-                <PenTool className="mr-2 size-4" />
-                Edit Full Book
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 w-full justify-start"
+                  onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=writing`)}
+                >
+                  <PenTool className="mr-2 size-4" />
+                  {t("editFullBook")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 w-full justify-start"
+                  onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=book`)}
+                >
+                  {/* ImagePlus is semantically correct for cover/image operations */}
+                  <ImagePlus className="mr-2 size-4" />
+                  {t("customizeCovers")}
+                </Button>
+              </>
             ) : (
               <Button
                 size="sm"
-                className="w-full justify-start h-9"
+                className="h-9 w-full justify-start"
                 onClick={() => router.push(`/app/book/${bookSlug}/upgrade`)}
               >
                 <Lock className="mr-2 size-4" />
-                Unlock Full Book for $4
-              </Button>
-            )}
-            {premium && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start h-9"
-                onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=book`)}
-              >
-                <FileText className="mr-2 size-4" />
-                Customize Covers
+                {t("unlockFullBook")}
               </Button>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Mobile Bottom Sheet Dialog */}
+      {/* ── Mobile ──────────────────────────────────────────── */}
       <div className="lg:hidden">
+        {/* FAB — bottom-6 with safe-area, avoids browser toolbar collision */}
         <Button
           size="lg"
-          className="fixed bottom-20 right-4 z-50 h-14 w-14 rounded-full shadow-lg shadow-primary/30"
-          aria-label="View chapters"
+          className="fixed bottom-6 right-4 z-50 h-14 w-14 rounded-full shadow-lg shadow-primary/30 pb-safe"
+          aria-label={t("viewChaptersAriaLabel")}
           onClick={() => setIsMobileSheetOpen(true)}
+          style={{ bottom: "max(1.5rem, env(safe-area-inset-bottom, 1.5rem))" }}
         >
           <List className="size-6" />
         </Button>
 
+        {/* Sheet — using Dialog but with proper sheet styling */}
         <Dialog open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
-          <DialogContent className="max-h-[80vh] overflow-y-auto rounded-t-3xl border-t-0 bottom-0 mt-auto translate-y-0 max-w-full">
+          <DialogContent className="bottom-0 mt-auto max-h-[85dvh] max-w-full overflow-y-auto rounded-b-none rounded-t-3xl border-b-0">
             <DialogHeader>
-              <DialogTitle>Chapters</DialogTitle>
+              <DialogTitle>{t("dialogTitle")}</DialogTitle>
               <DialogDescription>
-                {visibleSectionCount} of {chapters.length} chapters visible
+                {t("dialogDescription", { visible: visibleSectionCount, total: chapters.length })}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="mt-6 space-y-4 pb-20">
+            <div className="space-y-4 pb-8">
               {/* Chapter list */}
               <div className="space-y-2">
-                {chapters.map((chapter, index) => {
-                  const isSelected = selectedChapterIndex === index;
-                  const isLocked = chapter.status === "locked";
-
-                  return (
-                    <div
-                      key={chapter.number || index}
-                      role="button"
-                      tabIndex={isLocked ? -1 : 0}
-                      aria-disabled={isLocked}
-                      onClick={() => {
-                        if (!isLocked) {
-                          onSelectChapter(index);
-                          setIsMobileSheetOpen(false);
-                        }
-                      }}
-                      onKeyDown={(event) => handleChapterKeyDown(event, index, isLocked, true)}
-                      className={`
-                        w-full text-left rounded-xl px-4 py-4 transition-all duration-150
-                        ${isSelected
-                          ? "bg-primary/10 border-2 border-primary/30 shadow-md"
-                          : "bg-card border-2 border-border hover:border-primary/20"
-                        }
-                        ${isLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer active:scale-[0.98]"}
-                      `}
-                      style={{ minHeight: "64px" }}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3 min-w-0 flex-1">
-                          {/* Status icon */}
-                          <div className="mt-0.5 shrink-0">{getStatusIcon(chapter.status)}</div>
-
-                          {/* Chapter info */}
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-semibold text-foreground">
-                              {chapter.number && <span className="mr-1 text-muted-foreground">{chapter.number}.</span>}
-                              {chapter.title}
-                            </div>
-
-                            {/* Status and word count */}
-                            <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                              <span>{getStatusText(chapter.status)}</span>
-                              {chapter.wordCount && (
-                                <>
-                                  <span>·</span>
-                                  <span>{chapter.wordCount} words</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Edit button */}
-                        {premium ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditChapter(index, e);
-                            }}
-                            className="h-10 w-10 shrink-0"
-                          >
-                            <PenTool className="size-4" />
-                          </Button>
-                        ) : null}
-                      </div>
-                    </div>
-                  );
-                })}
+                {chapters.map((chapter, index) =>
+                  renderChapterItem(chapter, index, { mobile: true, closeSheet: true })
+                )}
               </div>
 
-              {/* Locked chapters notice */}
+              {/* Locked notice */}
               {!premium && lockedSectionCount > 0 && (
-                <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 px-4 py-3">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900/50 dark:bg-amber-950/30">
                   <div className="flex items-start gap-3">
-                    <Lock className="size-5 text-amber-600 shrink-0 mt-0.5" />
+                    <Lock className="mt-0.5 size-5 shrink-0 text-amber-600" />
                     <div className="text-sm text-amber-900 dark:text-amber-200">
-                      <div className="font-semibold">Unlock the full package</div>
+                      {/* Same translation key as desktop — no duplicated i18n */}
+                      <div className="font-medium">{t("whatUnlockAdds")}</div>
                       <div className="mt-1 text-xs leading-tight">
-                        {lockedSectionCount} locked chapters plus exports, cover files, and the editing workspace.
+                        {t("lockedChaptersNotice", { count: lockedSectionCount })}
                       </div>
                     </div>
                   </div>
@@ -377,36 +327,36 @@ export function ChapterListSidebar({
               )}
 
               {/* Quick actions */}
-              <div className="pt-4 border-t space-y-3">
+              <div className="space-y-3 border-t pt-4">
                 {premium ? (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="w-full justify-start h-12"
-                    onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=writing`)}
-                  >
-                    <PenTool className="mr-3 size-5" />
-                    <span className="text-sm font-medium">Edit Full Book</span>
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="h-12 w-full justify-start"
+                      onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=writing`)}
+                    >
+                      <PenTool className="mr-3 size-5" />
+                      <span className="text-sm font-medium">{t("editFullBook")}</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="h-12 w-full justify-start"
+                      onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=book`)}
+                    >
+                      <ImagePlus className="mr-3 size-5" />
+                      <span className="text-sm font-medium">{t("customizeCovers")}</span>
+                    </Button>
+                  </>
                 ) : (
                   <Button
                     size="lg"
-                    className="w-full justify-start h-12"
+                    className="h-12 w-full justify-start"
                     onClick={() => router.push(`/app/book/${bookSlug}/upgrade`)}
                   >
                     <Lock className="mr-3 size-5" />
-                    <span className="text-sm font-medium">Unlock Full Book for $4</span>
-                  </Button>
-                )}
-                {premium && (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="w-full justify-start h-12"
-                    onClick={() => router.push(`/app/book/${bookSlug}/workspace?tab=book`)}
-                  >
-                    <FileText className="mr-3 size-5" />
-                    <span className="text-sm font-medium">Customize Covers</span>
+                    <span className="text-sm font-medium">{t("unlockFullBook")}</span>
                   </Button>
                 )}
               </div>

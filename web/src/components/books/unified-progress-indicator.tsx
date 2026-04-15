@@ -7,6 +7,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn, formatEta } from "@/lib/utils";
 
@@ -40,6 +41,7 @@ export function UnifiedProgressIndicator({
   compact = false,
   className,
 }: UnifiedProgressIndicatorProps) {
+  const t = useTranslations("UnifiedProgressIndicator");
   const isProductReady = Boolean(generation.product_ready);
   const isPreviewReady = Boolean(generation.preview_ready);
   const isCoverReady = Boolean(generation.cover_ready || coverUrl);
@@ -73,23 +75,23 @@ export function UnifiedProgressIndicator({
   const stages = useMemo(() => [
     {
       id: "cover" as const,
-      label: "Cover",
+      label: t("stageLabels.cover"),
       done: isCoverReady,
       icon: isCoverReady ? CheckCircle2 : Loader2,
     },
     {
       id: "preview" as const,
-      label: "First chapter",
+      label: t("stageLabels.preview"),
       done: isPreviewReady,
       icon: isPreviewReady ? CheckCircle2 : Loader2,
     },
     {
       id: "full" as const,
-      label: "Full book",
+      label: t("stageLabels.full"),
       done: isProductReady,
       icon: isProductReady ? CheckCircle2 : Loader2,
     },
-  ], [isCoverReady, isPreviewReady, isProductReady]);
+  ], [isCoverReady, isPreviewReady, isProductReady, t]);
 
   // Determine overall status
   const overallStatus = useMemo(() => {
@@ -117,7 +119,7 @@ export function UnifiedProgressIndicator({
         className,
       )}
       role="status"
-      aria-label={overallStatus === "error" ? "Error generating book" : "Book generation progress"}
+      aria-label={overallStatus === "error" ? t("ariaError") : t("ariaProgress")}
     >
       {/* Error State */}
       {hasError && (
@@ -125,7 +127,7 @@ export function UnifiedProgressIndicator({
           <XCircle className="mt-0.5 shrink-0 size-5 text-destructive" aria-hidden="true" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-destructive">
-              Generation encountered an issue
+              {t("errorTitle")}
             </p>
             {generationError && (
               <p className="mt-1 text-xs leading-5 text-destructive/90">
@@ -159,10 +161,10 @@ export function UnifiedProgressIndicator({
             )}
             <span>
               {overallStatus === "complete"
-                ? "Book ready!"
+                ? t("bookReady")
                 : overallStatus === "in_progress"
-                  ? "Book is being prepared"
-                  : "Waiting to start"}
+                  ? t("bookInProgress")
+                  : t("bookWaiting")}
             </span>
           </div>
           <div className="shrink-0 text-sm font-bold tabular-nums text-primary">
@@ -205,13 +207,13 @@ export function UnifiedProgressIndicator({
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
           {chapterTargetCount > 0 && (
             <span className="font-medium">
-              Chapters: {chapterReadyCount}/{chapterTargetCount}
+              {t("chaptersProgress", { ready: chapterReadyCount, total: chapterTargetCount })}
             </span>
           )}
           {remainingChapters > 0 && (
-            <span>{remainingChapters} remaining</span>
+            <span>{t("remaining", { count: remainingChapters })}</span>
           )}
-          {eta && <span>ETA {eta}</span>}
+          {eta && <span>{t("eta", { eta })}</span>}
         </div>
       )}
 
@@ -269,10 +271,10 @@ export function UnifiedProgressIndicator({
           <div className="flex flex-col gap-1">
             <p className="text-xs font-medium text-foreground">
               {remainingChapters > 0
-                ? `${remainingChapters} chapters remaining`
-                : "Finalizing..."}
+                ? t("chaptersRemaining", { count: remainingChapters })
+                : t("finalizing")}
             </p>
-            {eta && <p className="text-xs text-muted-foreground">ETA {eta}</p>}
+            {eta && <p className="text-xs text-muted-foreground">{t("eta", { eta })}</p>}
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Trash2, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +19,7 @@ interface ChapterTemplatesProps {
 }
 
 export function ChapterTemplates({ onApplyTemplate }: ChapterTemplatesProps) {
+  const t = useTranslations("ChapterTemplates");
   const [templates, setTemplates] = useState<ChapterTemplate[]>([...PREDEFINED_TEMPLATES]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [showCustomForm, setShowCustomForm] = useState(false);
@@ -45,7 +47,7 @@ export function ChapterTemplates({ onApplyTemplate }: ChapterTemplatesProps) {
       localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(customTemplates));
     } catch (error) {
       console.error('Failed to save custom templates:', error);
-      alert('Failed to save template. Storage limit may be exceeded.');
+      alert(t("alertStorageLimit"));
     }
   }
 
@@ -59,7 +61,7 @@ export function ChapterTemplates({ onApplyTemplate }: ChapterTemplatesProps) {
 
   function handleCreateCustomTemplate() {
     if (!customTemplate.name || !customTemplate.content) {
-      alert('Please provide a name and content for the template.');
+      alert(t("alertNameContent"));
       return;
     }
 
@@ -86,7 +88,7 @@ export function ChapterTemplates({ onApplyTemplate }: ChapterTemplatesProps) {
   }
 
   function handleDeleteTemplate(id: string) {
-    if (!confirm('Are you sure you want to delete this template?')) return;
+    if (!confirm(t("confirmDeleteTemplate"))) return;
 
     const customTemplates = templates.filter(t => t.category === 'custom' && t.id !== id);
     saveCustomTemplates(customTemplates);
@@ -105,9 +107,9 @@ export function ChapterTemplates({ onApplyTemplate }: ChapterTemplatesProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <div className="flex-1">
-          <Label>Apply Template</Label>
+          <Label>{t("applyTemplateLabel")}</Label>
           <Select value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)}>
-            <option value="">Select a template...</option>
+            <option value="">{t("selectTemplatePlaceholder")}</option>
             {templates.map((template) => (
               <option key={template.id} value={template.id}>
                 {template.name} - {template.description}
@@ -120,7 +122,7 @@ export function ChapterTemplates({ onApplyTemplate }: ChapterTemplatesProps) {
           disabled={!selectedTemplateId}
           className="mt-6"
         >
-          Apply Template
+          {t("applyTemplateButton")}
         </Button>
         <Button
           variant="outline"
@@ -128,7 +130,7 @@ export function ChapterTemplates({ onApplyTemplate }: ChapterTemplatesProps) {
           className="mt-6 gap-1.5"
         >
           <Plus className="size-3.5" />
-          Custom
+          {t("customButton")}
         </Button>
       </div>
 
@@ -136,37 +138,37 @@ export function ChapterTemplates({ onApplyTemplate }: ChapterTemplatesProps) {
         <Card>
           <CardContent className="space-y-4 p-4">
             <div>
-              <Label>Template Name</Label>
+              <Label>{t("templateNameLabel")}</Label>
               <Input
                 value={customTemplate.name}
                 onChange={(e) => setCustomTemplate(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g., Technical Chapter"
+                placeholder={t("templateNamePlaceholder")}
               />
             </div>
             <div>
-              <Label>Description</Label>
+              <Label>{t("descriptionLabel")}</Label>
               <Input
                 value={customTemplate.description}
                 onChange={(e) => setCustomTemplate(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Brief description of this template"
+                placeholder={t("descriptionPlaceholder")}
               />
             </div>
             <div>
-              <Label>Template Content</Label>
+              <Label>{t("templateContentLabel")}</Label>
               <Textarea
                 value={customTemplate.content}
                 onChange={(e) => setCustomTemplate(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="Enter your template structure..."
+                placeholder={t("templateContentPlaceholder")}
                 rows={8}
                 className="font-mono text-sm"
               />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowCustomForm(false)}>
-                Cancel
+                {t("cancelButton")}
               </Button>
               <Button onClick={handleCreateCustomTemplate}>
-                Save Template
+                {t("saveTemplateButton")}
               </Button>
             </div>
           </CardContent>

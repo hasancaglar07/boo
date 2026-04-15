@@ -25,7 +25,7 @@ class TranslationApiError extends Error {
   }
 }
 
-const API_BASE_URL = 'https://claudecode2.codefast.app';
+const API_BASE_URL = 'https://claudecode.codefast.app';
 const API_KEY = process.env.CODEFAST_TRANSLATE_API_KEY || 'sk-aa9118949569889b72e4bb5123618ef9a36449952e379a98';
 const SOURCE_FILE = path.resolve(process.cwd(), 'messages/en.json');
 const MESSAGES_DIR = path.resolve(process.cwd(), 'messages');

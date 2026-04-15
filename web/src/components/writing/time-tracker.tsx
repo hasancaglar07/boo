@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Play, Pause, RotateCcw, Clock, Flame } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ interface TimeTrackerProps {
 }
 
 export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplete }: TimeTrackerProps) {
+  const t = useTranslations("TimeTracker");
   const [isRunning, setIsRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
@@ -174,9 +176,9 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
     <Card>
       <CardContent className="space-y-4 p-6">
         <div>
-          <h3 className="text-base font-semibold text-foreground">Time Tracker</h3>
+          <h3 className="text-base font-semibold text-foreground">{t("title")}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Track your writing sessions and productivity
+            {t("subtitle")}
           </p>
         </div>
 
@@ -184,11 +186,11 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
         <div className="rounded-xl border border-border/60 bg-background/50 p-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <div className="text-sm font-medium text-foreground">Session Timer</div>
-              <div className="text-xs text-muted-foreground">Ch. {chapterIndex + 1}: {chapterTitle}</div>
+              <div className="text-sm font-medium text-foreground">{t("sessionTimer")}</div>
+              <div className="text-xs text-muted-foreground">{t("chapterLabel", { number: chapterIndex + 1, title: chapterTitle })}</div>
             </div>
             <Badge className={isRunning ? "bg-default text-default-foreground" : "bg-secondary text-secondary-foreground"}>
-              {isRunning ? "Active" : "Stopped"}
+              {isRunning ? t("statusActive") : t("statusStopped")}
             </Badge>
           </div>
 
@@ -200,13 +202,13 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
             {!isRunning ? (
               <Button onClick={startTimer} className="flex-1 gap-1.5">
                 <Play className="size-4" />
-                Start
+                {t("startButton")}
               </Button>
             ) : (
               <>
                 <Button onClick={stopTimer} variant="outline" className="flex-1 gap-1.5">
                   <Pause className="size-4" />
-                  Stop
+                  {t("stopButton")}
                 </Button>
                 <Button onClick={resetTimer} variant="ghost" size="icon">
                   <RotateCcw className="size-4" />
@@ -221,10 +223,10 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Flame className={cn("size-4", pomodoro.isActive && "text-orange-500")} />
-              <div className="text-sm font-medium text-foreground">Pomodoro</div>
+              <div className="text-sm font-medium text-foreground">{t("pomodoroTitle")}</div>
             </div>
             <Badge className={pomodoro.isBreak ? "bg-secondary text-secondary-foreground" : "bg-default text-default-foreground"}>
-              {pomodoro.isBreak ? "Break" : "Focus"}
+              {pomodoro.isBreak ? t("statusBreak") : t("statusFocus")}
             </Badge>
           </div>
 
@@ -238,7 +240,7 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
               variant={pomodoro.isActive ? "outline" : "primary"}
               className="flex-1"
             >
-              {pomodoro.isActive ? "Pause" : "Start"}
+              {pomodoro.isActive ? t("pauseButton") : t("startButton")}
             </Button>
             <Button onClick={resetPomodoro} variant="ghost" size="icon">
               <RotateCcw className="size-4" />
@@ -248,11 +250,11 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
           <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Clock className="size-3" />
-              <span>{pomodoro.workDuration}m work</span>
+              <span>{t("workDuration", { minutes: pomodoro.workDuration })}</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock className="size-3" />
-              <span>{pomodoro.breakDuration}m break</span>
+              <span>{t("breakDuration", { minutes: pomodoro.breakDuration })}</span>
             </div>
           </div>
         </div>
@@ -260,19 +262,19 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg border border-border/60 bg-background/50 p-3">
-            <div className="text-xs text-muted-foreground">Total Time</div>
+            <div className="text-xs text-muted-foreground">{t("totalTime")}</div>
             <div className="text-lg font-semibold text-foreground">{stats.totalHours}h</div>
           </div>
           <div className="rounded-lg border border-border/60 bg-background/50 p-3">
-            <div className="text-xs text-muted-foreground">Avg Session</div>
+            <div className="text-xs text-muted-foreground">{t("avgSession")}</div>
             <div className="text-lg font-semibold text-foreground">{formatDuration(stats.averageSessionDuration)}</div>
           </div>
           <div className="rounded-lg border border-border/60 bg-background/50 p-3">
-            <div className="text-xs text-muted-foreground">Words/Hour</div>
+            <div className="text-xs text-muted-foreground">{t("wordsPerHour")}</div>
             <div className="text-lg font-semibold text-foreground">{stats.wordsPerHour}</div>
           </div>
           <div className="rounded-lg border border-border/60 bg-background/50 p-3">
-            <div className="text-xs text-muted-foreground">This Chapter</div>
+            <div className="text-xs text-muted-foreground">{t("thisChapter")}</div>
             <div className="text-lg font-semibold text-foreground">{currentChapterStats.totalHours}h</div>
           </div>
         </div>
@@ -280,12 +282,12 @@ export function TimeTracker({ slug, chapterIndex, chapterTitle, onSessionComplet
         {/* Recent Sessions */}
         {sessions.length > 0 && (
           <div>
-            <div className="text-sm font-medium text-foreground mb-2">Recent Sessions</div>
+            <div className="text-sm font-medium text-foreground mb-2">{t("recentSessions")}</div>
             <div className="space-y-1">
               {sessions.slice(-5).reverse().map((session) => (
                 <div key={session.id} className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">
-                    Ch. {session.chapterIndex + 1} · {new Date(session.startTime).toLocaleDateString()}
+                    {t("sessionDetail", { number: session.chapterIndex + 1, date: new Date(session.startTime).toLocaleDateString() })}
                   </span>
                   <span className="font-medium text-foreground">{formatDuration(session.duration)}</span>
                 </div>

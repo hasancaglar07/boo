@@ -6,6 +6,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,7 +61,7 @@ async function completeClientAuth(account?: {
   await syncPreviewAuthState();
 }
 
-function normalizeAuthError(error: string) {
+function normalizeAuthError(error: string, t: ReturnType<typeof useTranslations<"AuthForm">>) {
   const value = error.toLowerCase();
 
   if (
@@ -70,20 +71,20 @@ function normalizeAuthError(error: string) {
     value.includes("wrong")
   ) {
     return {
-      title: "Incorrect credentials",
-      description: "Email or password does not match.",
+      title: t("errors.incorrectCredentials.title"),
+      description: t("errors.incorrectCredentials.description"),
     };
   }
 
   if (value.includes("verify") || value.includes("verification")) {
     return {
-      title: "Verification required",
-      description: "You need to verify your email address.",
+      title: t("errors.verificationRequired.title"),
+      description: t("errors.verificationRequired.description"),
     };
   }
 
   return {
-    title: "Login failed",
+    title: t("errors.loginFailed.title"),
     description: error,
   };
 }
@@ -99,6 +100,7 @@ export function AuthForm({
   onBusyChange,
   onMethodSelected,
 }: AuthFormProps) {
+  const t = useTranslations("AuthForm");
   const router = useRouter();
   const searchParams = useSearchParams();
   const storedAccount = useMemo(() => getAccount(), []);
@@ -125,26 +127,26 @@ export function AuthForm({
     if (checkEmail === "1") {
       setFeedback({
         variant: "success",
-        title: "Link sent",
-        description: "Check your email.",
+        title: t("feedback.linkSent.title"),
+        description: t("feedback.linkSent.description"),
       });
-      toast.success("Link sent");
+      toast.success(t("feedback.linkSent.title"));
     } else if (verified === "1") {
       setFeedback({
         variant: "success",
-        title: "Verified",
-        description: "Your account is ready.",
+        title: t("feedback.verified.title"),
+        description: t("feedback.verified.description"),
       });
-      toast.success("Verified");
+      toast.success(t("feedback.verified.title"));
     } else if (verified === "0") {
       setFeedback({
         variant: "error",
-        title: "Invalid link",
-        description: "It may have expired.",
+        title: t("feedback.invalidLink.title"),
+        description: t("feedback.invalidLink.description"),
       });
-      toast.error("Invalid link");
+      toast.error(t("feedback.invalidLink.title"));
     }
-  }, [checkEmail, verified]);
+  }, [checkEmail, t, verified]);
 
   useEffect(() => {
     let active = true;
@@ -190,10 +192,10 @@ export function AuthForm({
     if (!emailTrimmed) {
       setFeedback({
         variant: "error",
-        title: "Email required",
-        description: "Please enter your email address.",
+        title: t("errors.emailRequired.title"),
+        description: t("errors.emailRequired.description"),
       });
-      toast.error("Email required");
+      toast.error(t("errors.emailRequired.title"));
       return;
     }
 
@@ -210,10 +212,10 @@ export function AuthForm({
     if (result?.error) {
       setFeedback({
         variant: "error",
-        title: "Could not be sent",
-        description: "Please try again.",
+        title: t("errors.couldNotSend.title"),
+        description: t("errors.couldNotSend.description"),
       });
-      toast.error("Could not be sent");
+      toast.error(t("errors.couldNotSend.title"));
       setBusyMethod(null);
       return;
     }
@@ -233,10 +235,10 @@ export function AuthForm({
 
     setFeedback({
       variant: "success",
-      title: "Link sent",
-      description: "Click the link in your email.",
+      title: t("feedback.magicLinkSent.title"),
+      description: t("feedback.magicLinkSent.description"),
     });
-    toast.success("Link sent");
+    toast.success(t("feedback.magicLinkSent.title"));
     setBusyMethod(null);
   }
 
@@ -247,28 +249,28 @@ export function AuthForm({
     if (!emailTrimmed) {
       setFeedback({
         variant: "error",
-        title: "Email required",
-        description: "Please enter your email address.",
+        title: t("errors.emailRequired.title"),
+        description: t("errors.emailRequired.description"),
       });
-      toast.error("Email required");
+      toast.error(t("errors.emailRequired.title"));
       return;
     }
     if (!passwordTrimmed) {
       setFeedback({
         variant: "error",
-        title: "Password is required",
-        description: "Please enter your password.",
+        title: t("errors.passwordRequired.title"),
+        description: t("errors.passwordRequired.description"),
       });
-      toast.error("Password is required");
+      toast.error(t("errors.passwordRequired.title"));
       return;
     }
     if (mode === "register" && !nameTrimmed) {
       setFeedback({
         variant: "error",
-        title: "Name required",
-        description: "Please enter your name.",
+        title: t("errors.nameRequired.title"),
+        description: t("errors.nameRequired.description"),
       });
-      toast.error("Name required");
+      toast.error(t("errors.nameRequired.title"));
       return;
     }
 
@@ -297,10 +299,10 @@ export function AuthForm({
         if (!registerResponse.ok) {
           setFeedback({
             variant: "error",
-            title: "Registration failed",
-            description: registerPayload?.error || "Please try again.",
+            title: t("errors.registrationFailed.title"),
+            description: registerPayload?.error || t("errors.registrationFailed.description"),
           });
-          toast.error("Registration failed");
+          toast.error(t("errors.registrationFailed.title"));
           setBusyMethod(null);
           return;
         }
@@ -319,7 +321,7 @@ export function AuthForm({
       });
 
       if (result?.error) {
-        const normalized = normalizeAuthError(result.error);
+        const normalized = normalizeAuthError(result.error, t);
         setFeedback({
           variant: "error",
           ...normalized,
@@ -348,10 +350,10 @@ export function AuthForm({
     } catch {
       setFeedback({
         variant: "error",
-        title: "An error occurred",
-        description: "Please try again.",
+        title: t("errors.generic.title"),
+        description: t("errors.generic.description"),
       });
-      toast.error("An error occurred");
+      toast.error(t("errors.generic.title"));
     } finally {
       setBusyMethod(null);
     }
@@ -385,7 +387,7 @@ export function AuthForm({
           {busyMethod === "google" ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : null}
-          {mode === "login" ? "Sign in with Google" : "Sign up with Google"}
+          {mode === "login" ? t("google.signIn") : t("google.signUp")}
         </Button>
 
         <div className="relative">
@@ -393,7 +395,7 @@ export function AuthForm({
             <span className="w-full border-t border-border/40" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">or</span>
+            <span className="bg-card px-2 text-muted-foreground">{t("divider")}</span>
           </div>
         </div>
       </div>
@@ -403,12 +405,12 @@ export function AuthForm({
         {/* Name Field - Only for Register */}
         {mode === "register" && (
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
+            <Label htmlFor="name" className="text-sm font-medium">{t("fields.fullName.label")}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
+              placeholder={t("fields.fullName.placeholder")}
               required
               autoComplete="name"
               className="h-11"
@@ -418,13 +420,13 @@ export function AuthForm({
 
         {/* Email Field */}
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+          <Label htmlFor="email" className="text-sm font-medium">{t("fields.email.label")}</Label>
           <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="example@mail.com"
+            placeholder={t("fields.email.placeholder")}
             required
             autoComplete="email"
             className="h-11"
@@ -434,13 +436,13 @@ export function AuthForm({
         {/* Password Field */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+            <Label htmlFor="password" className="text-sm font-medium">{t("fields.password.label")}</Label>
             {mode === "login" && (
-              <Link 
-                href="/reset-password" 
+              <Link
+                href="/reset-password"
                 className="text-xs font-medium text-primary hover:underline"
               >
-                Forgot?
+                {t("links.forgotPassword")}
               </Link>
             )}
           </div>
@@ -450,7 +452,7 @@ export function AuthForm({
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === "register" ? "At least 8 characters" : "Your password"}
+              placeholder={mode === "register" ? t("fields.password.placeholderRegister") : t("fields.password.placeholderLogin")}
               required
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               className="h-11 pr-10"
@@ -459,7 +461,7 @@ export function AuthForm({
               type="button"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? t("aria.hidePassword") : t("aria.showPassword")}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -475,12 +477,12 @@ export function AuthForm({
           {busyMethod === "credentials" ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
+              {t("buttons.processing")}
             </>
           ) : mode === "login" ? (
-            "Sign In"
+            t("buttons.login")
           ) : (
-            "Sign Up"
+            t("buttons.register")
           )}
         </Button>
       </form>
@@ -496,10 +498,10 @@ export function AuthForm({
           {busyMethod === "magic" ? (
             <span className="flex items-center justify-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Sending...
+              {t("buttons.magicLinkSending")}
             </span>
           ) : (
-            "Don't want to enter password • Send email link"
+            t("buttons.magicLink")
           )}
         </button>
       </div>

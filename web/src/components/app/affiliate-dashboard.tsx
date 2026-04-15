@@ -19,11 +19,13 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+
 import { trackEvent } from "@/lib/analytics";
 import { useAuthenticatedViewer } from "@/lib/use-authenticated-viewer";
 import { useSessionGuard } from "@/lib/use-session-guard";
@@ -70,14 +72,14 @@ type AffiliateData = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function displayName(name?: string | null, email?: string | null) {
+function displayName(name?: string | null, email?: string | null, fallback = "Book Creator") {
   const n = String(name || "").trim();
-  if (n && n !== "Book Creator") return n;
+  if (n && n !== "Book Creator" && n !== fallback) return n;
   return (
     String(email || "")
       .split("@")[0]
       .replace(/[._-]+/g, " ")
-      .trim() || "Book Creator"
+      .trim() || fallback
   );
 }
 
@@ -102,6 +104,7 @@ function PayoutModal({
   onClose: () => void;
   onSuccess: (amount: number) => void;
 }) {
+  const t = useTranslations("AffiliateDashboard");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -114,7 +117,7 @@ function PayoutModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !email.includes("@")) {
-      setError("Please enter a valid PayPal email address.");
+      setError(t("payout.paypalInvalidError"));
       return;
     }
     setLoading(true);
@@ -129,10 +132,10 @@ function PayoutModal({
       if (json.ok) {
         onSuccess(json.payout.amount);
       } else {
-        setError(json.error || "Something went wrong. Please try again.");
+        setError(json.error || t("payout.genericError"));
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("payout.networkError"));
     } finally {
       setLoading(false);
     }
@@ -150,7 +153,7 @@ function PayoutModal({
       <div className="relative z-10 w-full max-w-md rounded-3xl border border-border/60 bg-card shadow-2xl">
         <div className="flex items-center justify-between border-b border-border/60 px-6 py-4">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Request Payout</h2>
+            <h2 className="text-base font-semibold text-foreground">{t("payout.modalTitle")}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
               ${available.toFixed(2)} available
             </p>
@@ -166,14 +169,14 @@ function PayoutModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              PayPal Email Address
+              {t("payout.paypalEmailLabel")}
             </label>
             <input
               ref={inputRef}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@paypal.com"
+              placeholder={t("payout.paypalPlaceholder")}
               className="w-full rounded-xl border border-border/60 bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
             />
             {error && (
@@ -185,10 +188,7 @@ function PayoutModal({
           </div>
 
           <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-xs text-muted-foreground leading-5">
-            <strong className="text-emerald-700 dark:text-emerald-400">
-              ${available.toFixed(2)}
-            </strong>{" "}
-            will be sent to your PayPal within 3–5 business days after processing.
+            {t("payout.payoutDescription", { amount: `$${available.toFixed(2)}` })}
           </div>
 
           <div className="flex gap-2 pt-1">
@@ -199,18 +199,18 @@ function PayoutModal({
               onClick={onClose}
               disabled={loading}
             >
-              Cancel
+              {t("payout.cancel")}
             </Button>
             <Button type="submit" className="flex-1" disabled={loading}>
               {loading ? (
                 <span className="flex items-center gap-2">
                   <span className="size-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  Processing…
+                  {t("payout.processing")}
                 </span>
               ) : (
                 <>
                   <BadgeDollarSign className="mr-1.5 size-4" />
-                  Confirm Payout
+                  {t("payout.confirmPayout")}
                 </>
               )}
             </Button>
@@ -316,6 +316,7 @@ function StatCard({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function AffiliateDashboard() {
+  const t = useTranslations("AffiliateDashboard");
   const ready = useSessionGuard();
   const { viewer } = useAuthenticatedViewer(ready);
   const [data, setData] = useState<AffiliateData | null>(null);
@@ -346,14 +347,14 @@ export function AffiliateDashboard() {
   function handleWhatsApp() {
     if (!data) return;
     trackEvent("affiliate_whatsapp_clicked", { source: "affiliate_dashboard" });
-    const text = `Write professional books in minutes with BookGenerator.net! ${data.referralUrl}`;
+    const text = t("whatsAppShareText", { url: data.referralUrl });
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }
 
   function handleTwitter() {
     if (!data) return;
     trackEvent("affiliate_twitter_clicked", { source: "affiliate_dashboard" });
-    const text = `I wrote a book in minutes with AI 🚀 Try BookGenerator.net:`;
+    const text = t("twitterShareText");
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(data.referralUrl)}`,
       "_blank"
@@ -363,17 +364,15 @@ export function AffiliateDashboard() {
   function handleEmail() {
     if (!data) return;
     trackEvent("affiliate_email_clicked", { source: "affiliate_dashboard" });
-    const subject = encodeURIComponent("Writing a book has never been this easy!");
-    const body = encodeURIComponent(
-      `Hello!\n\nYou can write professional books in minutes with AI at BookGenerator.net.\n\nTry it for free: ${data.referralUrl}\n\nHappy writing!`
-    );
+    const subject = encodeURIComponent(t("emailSubject"));
+    const body = encodeURIComponent(t("emailBody", { url: data.referralUrl }));
     window.open(`mailto:?subject=${subject}&body=${body}`);
   }
 
   function handlePayoutSuccess(amount: number) {
     setShowPayoutModal(false);
     setToast({
-      message: `Payout request of $${amount.toFixed(2)} submitted! You'll receive it within 3–5 business days.`,
+      message: t("payout.successToast", { amount: amount.toFixed(2) }),
       type: "success",
     });
     setTimeout(() => window.location.reload(), 4500);
@@ -381,12 +380,12 @@ export function AffiliateDashboard() {
 
   if (!ready || !viewer) return null;
 
-  const readableName = displayName(viewer.name, viewer.email);
+  const readableName = displayName(viewer.name, viewer.email, t("bookCreator"));
   const canRequestPayout = data && data.availableBalance >= 50;
   const remainingForPayout = data ? Math.max(0, 50 - data.availableBalance) : 50;
 
   return (
-    <AppFrame current="affiliate" title="Affiliate" viewer={viewer}>
+    <AppFrame current="affiliate" title={t("title")} viewer={viewer}>
       <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
 
         {/* ── LEFT: Main hero card ── */}
@@ -397,27 +396,29 @@ export function AffiliateDashboard() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">
                 <Zap className="size-3" />
-                Affiliate Panel
+                {t("affiliatePanel")}
               </Badge>
               <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 gap-1">
                 <CheckCircle2 className="size-3" />
-                Active
+                {t("active")}
               </Badge>
               <Badge className="border-border/40 text-muted-foreground">
-                30% Commission
+                {t("commissionBadge")}
               </Badge>
             </div>
 
             {/* Heading */}
             <h2 className="mt-5 text-balance text-3xl font-bold leading-tight text-foreground md:text-4xl lg:text-[2.6rem]">
-              Welcome back,{" "}
+              {t("welcomeBack")}{" "}
               <span className="text-primary">{readableName}</span>
             </h2>
 
             <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">
-              Share your unique link and earn{" "}
-              <strong className="text-foreground font-semibold">30% recurring commission</strong>{" "}
-              every month for every user you refer.
+              {t.rich("heroDescription", {
+                highlight: (chunks) => (
+                  <strong className="text-foreground font-semibold">{chunks}</strong>
+                ),
+              })}
             </p>
 
             {/* ── Affiliate link box ── */}
@@ -431,11 +432,11 @@ export function AffiliateDashboard() {
                   type="button"
                   onClick={handleCopy}
                   className="group flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-muted/30 px-4 py-3.5 text-left transition-all hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                  aria-label="Click to copy affiliate link"
+                  aria-label={t("clickToCopyLabel")}
                 >
                   <LinkIcon className="size-4 shrink-0 text-primary/60" />
                   <span className="min-w-0 flex-1 truncate font-mono text-sm text-foreground select-all">
-                    {data?.referralUrl ?? "Loading…"}
+                    {data?.referralUrl ?? t("loading")}
                   </span>
                   <span
                     className={`shrink-0 flex items-center gap-1.5 text-xs font-medium transition-colors ${
@@ -445,12 +446,12 @@ export function AffiliateDashboard() {
                     {copied ? (
                       <>
                         <CheckCircle2 className="size-3.5" />
-                        Copied!
+                        {t("copied")}
                       </>
                     ) : (
                       <>
                         <Copy className="size-3.5" />
-                        Copy
+                        {t("copy")}
                       </>
                     )}
                   </span>
@@ -468,12 +469,12 @@ export function AffiliateDashboard() {
                   {copied ? (
                     <>
                       <CheckCircle2 className="size-4" />
-                      Copied!
+                      {t("copied")}
                     </>
                   ) : (
                     <>
                       <Copy className="size-4" />
-                      Copy Link
+                      {t("copyLink")}
                     </>
                   )}
                 </Button>
@@ -488,7 +489,7 @@ export function AffiliateDashboard() {
                   <svg viewBox="0 0 24 24" className="size-4 fill-current" aria-hidden="true">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                   </svg>
-                  WhatsApp
+                  {t("whatsApp")}
                 </Button>
 
                 <Button
@@ -501,7 +502,7 @@ export function AffiliateDashboard() {
                   <svg viewBox="0 0 24 24" className="size-4 fill-current" aria-hidden="true">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                   </svg>
-                  X / Twitter
+                  {t("xTwitter")}
                 </Button>
 
                 <Button
@@ -512,7 +513,7 @@ export function AffiliateDashboard() {
                   disabled={!data}
                 >
                   <Mail className="size-4" />
-                  Email
+                  {t("email")}
                 </Button>
               </div>
 
@@ -520,8 +521,7 @@ export function AffiliateDashboard() {
               {data && data.clicks > 0 && (
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Users className="size-3.5 text-primary/60" />
-                  <strong className="text-foreground">{data.clicks.toLocaleString()}</strong>{" "}
-                  people have clicked your link
+                  {t("clickCount", { count: data.clicks.toLocaleString() })}
                 </p>
               )}
             </div>
@@ -529,10 +529,10 @@ export function AffiliateDashboard() {
             {/* Program terms pills */}
             <div className="mt-5 flex flex-wrap gap-2">
               {[
-                "30% commission",
-                "Min. $50 payout",
-                "Monthly payments",
-                "No referral limit",
+                t("programTerms.commission"),
+                t("programTerms.minPayout"),
+                t("programTerms.monthlyPayments"),
+                t("programTerms.noLimit"),
               ].map((term) => (
                 <div
                   key={term}
@@ -551,8 +551,8 @@ export function AffiliateDashboard() {
                     <BadgeDollarSign className="size-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Earnings & Payout</h3>
-                    <p className="text-xs text-muted-foreground">PayPal payouts processed monthly</p>
+                    <h3 className="text-sm font-semibold text-foreground">{t("earnings.heading")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("earnings.subheading")}</p>
                   </div>
                 </div>
 
@@ -560,17 +560,17 @@ export function AffiliateDashboard() {
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   {[
                     {
-                      label: "Available",
+                      label: t("earnings.available"),
                       value: `$${data.availableBalance.toFixed(2)}`,
                       className: "text-emerald-700 dark:text-emerald-400 font-bold",
                     },
                     {
-                      label: "Paid Out",
+                      label: t("earnings.paidOut"),
                       value: `$${data.paidOut.toFixed(2)}`,
                       className: "text-foreground font-semibold",
                     },
                     {
-                      label: "Pending",
+                      label: t("earnings.pending"),
                       value: `$${data.pendingPayout.toFixed(2)}`,
                       className: "text-amber-600 dark:text-amber-400 font-semibold",
                     },
@@ -593,13 +593,13 @@ export function AffiliateDashboard() {
                 >
                   <BadgeDollarSign className="mr-2 size-4" />
                   {canRequestPayout
-                    ? `Request Payout ($${data.availableBalance.toFixed(2)})`
-                    : `$${remainingForPayout.toFixed(2)} more needed to reach $50 minimum`}
+                    ? t("earnings.requestPayout", { amount: data.availableBalance.toFixed(2) })
+                    : t("earnings.moreNeeded", { remaining: remainingForPayout.toFixed(2) })}
                 </Button>
 
                 {!canRequestPayout && data.availableBalance > 0 && (
                   <div className="mt-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground text-center">
-                    Minimum payout threshold: $50 — keep sharing to reach it!
+                    {t("earnings.minThreshold")}
                   </div>
                 )}
               </div>
@@ -613,26 +613,26 @@ export function AffiliateDashboard() {
           {/* Stat grid */}
           <div className="grid gap-3 sm:grid-cols-2">
             <StatCard
-              label="Link Clicks"
+              label={t("stats.linkClicks")}
               value={data?.clicks.toLocaleString() ?? 0}
               icon={Users}
               loading={loading}
             />
             <StatCard
-              label="Total Earned"
+              label={t("stats.totalEarned")}
               value={`$${(data?.totalEarned ?? 0).toFixed(2)}`}
               icon={TrendingUp}
               loading={loading}
             />
             <StatCard
-              label="Available"
+              label={t("stats.available")}
               value={`$${(data?.availableBalance ?? 0).toFixed(2)}`}
               icon={BadgeDollarSign}
               highlight
               loading={loading}
             />
             <StatCard
-              label="Conversions"
+              label={t("stats.conversions")}
               value={
                 loading
                   ? "—"
@@ -651,15 +651,15 @@ export function AffiliateDashboard() {
                   <DollarSign className="size-3.5 text-muted-foreground" />
                 </div>
                 <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                  Commission Rates
+                  {t("commissionRates.heading")}
                 </span>
               </div>
 
               <div className="space-y-2">
                 {[
-                  { plan: "Starter", price: "$19/mo", commission: "$5.70/mo", pct: "30%" },
-                  { plan: "Creator", price: "$39/mo", commission: "$11.70/mo", pct: "30%" },
-                  { plan: "Pro", price: "$79/mo", commission: "$23.70/mo", pct: "30%" },
+                  { plan: t("commissionRates.starter"), price: "$19/mo", commission: "$5.70/mo", pct: "30%" },
+                  { plan: t("commissionRates.creator"), price: "$39/mo", commission: "$11.70/mo", pct: "30%" },
+                  { plan: t("commissionRates.pro"), price: "$79/mo", commission: "$23.70/mo", pct: "30%" },
                 ].map((row) => (
                   <div
                     key={row.plan}
@@ -678,7 +678,7 @@ export function AffiliateDashboard() {
               </div>
 
               <div className="mt-3 rounded-xl border border-primary/15 bg-primary/5 px-4 py-2.5 text-[11px] leading-5 text-muted-foreground">
-                You earn commission every month as long as the referred user keeps their subscription.
+                {t("recurringNote")}
               </div>
             </CardContent>
           </Card>
@@ -687,26 +687,26 @@ export function AffiliateDashboard() {
           <Card className="border-border/60 bg-card/50">
             <CardContent className="p-5">
               <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                How It Works
+                {t("howItWorks.heading")}
               </div>
               <div className="space-y-2">
                 {[
                   {
                     icon: LinkIcon,
-                    label: "Copy your link",
-                    description: "Your unique affiliate URL is ready above.",
+                    label: t("howItWorks.step1Label"),
+                    description: t("howItWorks.step1Desc"),
                     step: "1",
                   },
                   {
                     icon: Share2,
-                    label: "Share it anywhere",
-                    description: "Social media, blog, email, WhatsApp — anywhere works.",
+                    label: t("howItWorks.step2Label"),
+                    description: t("howItWorks.step2Desc"),
                     step: "2",
                   },
                   {
                     icon: Gift,
-                    label: "Earn every month",
-                    description: "30% commission recurring for every subscriber you refer.",
+                    label: t("howItWorks.step3Label"),
+                    description: t("howItWorks.step3Desc"),
                     step: "3",
                   },
                 ].map(({ icon: Icon, label, description, step }) => (
@@ -741,7 +741,7 @@ export function AffiliateDashboard() {
                     <Users className="size-3.5 text-muted-foreground" />
                   </div>
                   <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                    Recent Conversions
+                    {t("recentConversions.heading")}
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -752,7 +752,7 @@ export function AffiliateDashboard() {
                     >
                       <div>
                         <div className="text-sm font-medium text-foreground">
-                          {c.newUserName || c.newUserEmail || "Anonymous User"}
+                          {c.newUserName || c.newUserEmail || t("recentConversions.anonymousUser")}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {new Date(c.convertedAt).toLocaleDateString("en-US", {
@@ -765,12 +765,12 @@ export function AffiliateDashboard() {
                       {c.rewardGranted ? (
                         <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                           <CheckCircle2 className="size-3" />
-                          Rewarded
+                          {t("recentConversions.rewarded")}
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
                           <Clock className="size-3" />
-                          Pending
+                          {t("recentConversions.pending")}
                         </span>
                       )}
                     </div>
@@ -789,7 +789,7 @@ export function AffiliateDashboard() {
                     <BadgeDollarSign className="size-3.5 text-muted-foreground" />
                   </div>
                   <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                    Payment History
+                    {t("paymentHistory.heading")}
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -813,12 +813,12 @@ export function AffiliateDashboard() {
                       {p.status === "paid" ? (
                         <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                           <CheckCircle2 className="size-3" />
-                          Paid
+                          {t("paymentHistory.paid")}
                         </span>
                       ) : p.status === "open" || p.status === "draft" ? (
                         <span className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
                           <Clock className="size-3" />
-                          Processing
+                          {t("paymentHistory.processing")}
                         </span>
                       ) : (
                         <span className="rounded-full bg-muted/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground capitalize">
@@ -836,7 +836,7 @@ export function AffiliateDashboard() {
           <Card className="border-border/60 bg-card/50">
             <CardContent className="p-5">
               <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                Quick Actions
+                {t("quickActions.heading")}
               </div>
               <div className="space-y-2">
                 <Link
@@ -847,8 +847,8 @@ export function AffiliateDashboard() {
                     <BookOpen className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-foreground">Back to My Books</div>
-                    <div className="text-xs text-muted-foreground">Return to your library</div>
+                    <div className="text-sm font-semibold text-foreground">{t("quickActions.backToBooks")}</div>
+                    <div className="text-xs text-muted-foreground">{t("quickActions.backToBooksDesc")}</div>
                   </div>
                   <ArrowRight className="size-4 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
                 </Link>
@@ -861,9 +861,9 @@ export function AffiliateDashboard() {
                     <Mail className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-foreground">Contact Support</div>
+                    <div className="text-sm font-semibold text-foreground">{t("quickActions.contactSupport")}</div>
                     <div className="text-xs text-muted-foreground">
-                      affiliate@bookgenerator.net
+                      {t("quickActions.contactSupportEmail")}
                     </div>
                   </div>
                   <ArrowRight className="size-4 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { trackEvent, trackEventOnce } from "@/lib/analytics";
 import type { LeadMagnetDefinition } from "@/lib/lead-magnets";
 
 export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDefinition }) {
+  const t = useTranslations("LeadMagnetSignupCard");
   const [email, setEmail] = useState("");
   const [showValidation, setShowValidation] = useState(false);
   const [pending, setPending] = useState(false);
@@ -62,12 +64,12 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
 
       const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error || "The package could not be sent right now.");
+        throw new Error(payload?.error || t("sendError"));
       }
 
       setDeliveredTo(email.trim());
     } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : "The package could not be sent right now.");
+      setError(submissionError instanceof Error ? submissionError.message : t("sendError"));
     } finally {
       setPending(false);
     }
@@ -85,7 +87,7 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
           <p className="mt-4 text-base leading-8 text-muted-foreground">{leadMagnet.description}</p>
 
           <div className="mt-8 rounded-[28px] border border-border/80 bg-background/80 p-5">
-            <p className="text-sm font-semibold text-foreground">In this package:</p>
+            <p className="text-sm font-semibold text-foreground">{t("inPackageLabel")}</p>
             <ul className="mt-4 space-y-3">
               {leadMagnet.previewHighlights.map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">
@@ -122,7 +124,7 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
                 <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
                   <div className="space-y-2">
                     <label htmlFor="lead-magnet-email" className="text-sm font-medium text-foreground">
-                      Email
+                      {t("emailLabel")}
                     </label>
                     <Input
                       id="lead-magnet-email"
@@ -130,24 +132,24 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
                       value={email}
                       onFocus={trackCaptureViewed}
                       onChange={(event) => setEmail(event.target.value)}
-                      placeholder="you@example.com"
+                      placeholder={t("emailPlaceholder")}
                       autoComplete="email"
                     />
                     {showValidation && !emailValid ? (
-                      <p className="text-sm text-primary">Please enter a valid email address.</p>
+                      <p className="text-sm text-primary">{t("emailValidationError")}</p>
                     ) : null}
                   </div>
 
                   <Button type="submit" size="lg" className="w-full gap-2" isLoading={pending}>
                     <Sparkles className="size-4" />
-                    Send Package
+                    {t("sendPackageButton")}
                   </Button>
 
                   <div className="rounded-[22px] border border-border/70 bg-muted/35 px-4 py-4">
                     <div className="flex items-start gap-3">
                       <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
                       <p className="text-sm leading-6 text-muted-foreground">
-                        Email only. A copy of the resource goes to your inbox; this step exists to connect you directly to the wizard and tool flow.
+                        {t("privacyNote")}
                       </p>
                     </div>
                   </div>
@@ -158,7 +160,7 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
             ) : (
               <div className="space-y-5">
                 <div className="rounded-[24px] border border-primary/20 bg-primary/10 p-5">
-                  <p className="text-sm font-semibold text-primary">Teslim edildi</p>
+                  <p className="text-sm font-semibold text-primary">{t("deliveredLabel")}</p>
                   <h3 className="mt-2 text-xl font-semibold tracking-tight text-foreground">{leadMagnet.successTitle}</h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
                     {leadMagnet.successDescription} <span className="font-medium text-foreground">{deliveredTo}</span>
@@ -166,7 +168,7 @@ export function LeadMagnetSignupCard({ leadMagnet }: { leadMagnet: LeadMagnetDef
                 </div>
 
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Quick steps you can apply right away</p>
+                  <p className="text-sm font-semibold text-foreground">{t("quickStepsLabel")}</p>
                   <ul className="mt-4 space-y-3">
                     {leadMagnet.instantAccessItems.map((item) => (
                       <li key={item} className="flex items-start gap-2.5 text-sm leading-7 text-muted-foreground">

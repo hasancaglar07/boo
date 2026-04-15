@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import {
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { BackendUnavailableState } from "@/components/app/backend-unavailable-state";
@@ -57,8 +58,7 @@ type CheckoutConfirmPayload = {
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const KDP_GUARANTEE_CLAIM = "KDP Compatible Format";
-const REFUND_GUARANTEE_CLAIM = "14-Day Money-Back Guarantee";
+// these strings are rendered via t() below
 
 const ANNUAL_DISCOUNT = 0.2; // 20% discount for annual
 
@@ -81,6 +81,7 @@ const COMPARISON_FEATURES = [
 /* ------------------------------------------------------------------ */
 
 export function BillingScreen() {
+  const t = useTranslations("BillingScreen");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -174,7 +175,7 @@ export function BillingScreen() {
       : null;
 
     if (!response?.ok || !payload?.url) {
-      setCheckoutError(payload?.error || "Payment could not be initiated. Please try again.");
+      setCheckoutError(payload?.error || t("paymentFailed"));
       autoStartHandledRef.current = false;
       setSubmitting(false);
       return;
@@ -182,7 +183,7 @@ export function BillingScreen() {
 
     trackEvent("checkout_started", { plan: pendingPlanId, book_slug: returnBook || null });
     window.location.assign(payload.url);
-  }, [pendingPlanId, returnBook]);
+  }, [pendingPlanId, returnBook, t]);
 
   /* effects -------------------------------------------------------- */
 
@@ -221,7 +222,7 @@ export function BillingScreen() {
     checkoutHandledRef.current = queryKey;
 
     if (checkoutStatus === "cancelled") {
-      setCheckoutNotice("Payment cancelled.");
+      setCheckoutNotice(t("checkoutCancelled"));
       setCheckoutNoticeTone("warning");
       setPendingPlanId(null);
       setSubmitting(false);
@@ -236,7 +237,7 @@ export function BillingScreen() {
       return;
     }
 
-    setCheckoutNotice("Verifying payment...");
+    setCheckoutNotice(t("verifyingPayment"));
     setCheckoutNoticeTone("info");
     setSubmitting(true);
 
@@ -252,7 +253,7 @@ export function BillingScreen() {
         : null;
 
       if (payload?.alreadyFulfilled) {
-        setCheckoutNotice("This plan is already active.");
+        setCheckoutNotice(t("alreadyActive"));
         setCheckoutNoticeTone("success");
         setSubmitting(false);
         await refreshAuthState();
@@ -261,7 +262,7 @@ export function BillingScreen() {
       }
 
       if (!payload?.ok) {
-        setCheckoutNotice(payload?.error || "Payment could not be verified.");
+        setCheckoutNotice(payload?.error || t("paymentVerifyFailed"));
         setCheckoutNoticeTone("warning");
         setSubmitting(false);
         clearCheckoutQueryParams();
@@ -269,7 +270,7 @@ export function BillingScreen() {
       }
 
       trackEvent("checkout_completed", { plan: payload.planId || null });
-      setCheckoutNotice("Your plan has been successfully activated!");
+      setCheckoutNotice(t("planActivated"));
       setCheckoutNoticeTone("success");
       setSubmitting(false);
       await refreshAuthState();
@@ -281,6 +282,7 @@ export function BillingScreen() {
     clearCheckoutQueryParams,
     refreshAuthState,
     searchParams,
+    t,
   ]);
 
   /* helpers -------------------------------------------------------- */
@@ -302,7 +304,7 @@ export function BillingScreen() {
   /* ---- render ---- */
   if (backendUnavailable) {
     return (
-      <AppFrame current="billing" title="Plans" books={[]}>
+      <AppFrame current="billing" title={t("title")} books={[]}>
         <BackendUnavailableState />
       </AppFrame>
     );
@@ -314,16 +316,16 @@ export function BillingScreen() {
       : null;
 
   return (
-    <AppFrame current="billing" title="Plans" books={books}>
+    <AppFrame current="billing" title={t("title")} books={books}>
       <div className="mx-auto max-w-5xl space-y-8 px-4 py-6 md:py-10">
 
         {/* ── Compact Hero ────────────────────────────────────────── */}
         <div className="billing-animate-in-1">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="editorial-eyebrow mb-1">Billing</p>
+              <p className="editorial-eyebrow mb-1">{t("eyebrow")}</p>
               <h1 className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
-                Manage Your Plan
+                {t("heading")}
               </h1>
             </div>
             {activePlan && (
@@ -360,7 +362,7 @@ export function BillingScreen() {
             <div className="flex items-center gap-2">
               <Sparkles className="size-4 text-primary" />
               <span>
-                <strong>{returnBook}</strong> you are purchasing premium access for.
+                <strong>{returnBook}</strong> {t("returnBookNotice", { bookName: returnBook })}
               </span>
             </div>
           </div>
@@ -373,11 +375,11 @@ export function BillingScreen() {
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="size-4 text-primary" />
-                  <span className="text-sm font-medium">Your Usage</span>
+                  <span className="text-sm font-medium">{t("yourUsage")}</span>
                 </div>
                 <span className="text-sm text-muted-foreground">
                   {usage.usedBooks} / {usage.limit === null ? "∞" : usage.limit}{" "}
-                  {usage.limit !== null && "books"}
+                  {usage.limit !== null && t("books")}
                 </span>
               </div>
 
@@ -402,8 +404,8 @@ export function BillingScreen() {
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">
                     {usagePercent >= 90
-                      ? "You're approaching your limit! Upgrade your plan."
-                      : "Upgrade your plan to produce more books."}
+                      ? t("approachingLimit")
+                      : t("upgradePlanMore")}
                   </p>
                   <button
                     type="button"
@@ -413,7 +415,7 @@ export function BillingScreen() {
                       el?.scrollIntoView({ behavior: "smooth" });
                     }}
                   >
-                    See Plans
+                    {t("seePlans")}
                     <ArrowRight className="ml-1 size-3" />
                   </button>
                 </div>
@@ -426,10 +428,10 @@ export function BillingScreen() {
         <div id="pricing-section" className="billing-animate-in-4">
           <div className="mb-6 text-center">
             <h2 className="font-serif text-2xl font-semibold tracking-tight">
-              Select the Best Plan for You
+              {t("selectBestPlan")}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              All plans come in KDP-compatible format. Cancel anytime.
+              {t("allPlansKdp")}
             </p>
           </div>
 
@@ -445,7 +447,7 @@ export function BillingScreen() {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              Monthly
+              {t("monthly")}
             </button>
             <button
               type="button"
@@ -457,9 +459,9 @@ export function BillingScreen() {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              Annual
+              {t("annual")}
               <span className="ml-1.5 inline-flex rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                20% Off
+                {t("annualDiscount")}
               </span>
             </button>
           </div>
@@ -491,7 +493,7 @@ export function BillingScreen() {
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md">
                         <Star className="size-3" />
-                        Most Popular
+                        {t("mostPopular")}
                       </span>
                     </div>
                   )}
@@ -511,7 +513,7 @@ export function BillingScreen() {
                         </span>
                         {plan.interval && (
                           <span className="text-sm text-muted-foreground">
-                            /{billingPeriod === "annual" ? "/mo (annual)" : plan.interval}
+                            /{billingPeriod === "annual" ? t("annualInterval") : plan.interval}
                           </span>
                         )}
                       </div>
@@ -538,7 +540,7 @@ export function BillingScreen() {
                     {isActive ? (
                       <Button variant="outline" className="w-full" disabled>
                         <Check className="mr-2 size-4" />
-                        Your Active Plan
+                        {t("yourActivePlan")}
                       </Button>
                     ) : (
                       <Button
@@ -549,7 +551,7 @@ export function BillingScreen() {
                         )}
                         onClick={() => handleSelectPlan(plan.id)}
                       >
-                        {planId === "premium" ? "Upgrade" : "Select Plan"}
+                        {planId === "premium" ? t("upgrade") : t("selectPlan")}
                         <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-0.5" />
                       </Button>
                     )}
@@ -569,7 +571,7 @@ export function BillingScreen() {
           >
             <div className="flex items-center gap-2">
               <Zap className="size-4 text-primary" />
-              <span className="font-serif text-lg font-semibold">Plan Comparison</span>
+              <span className="font-serif text-lg font-semibold">{t("planComparison")}</span>
             </div>
             {comparisonOpen ? (
               <ChevronUp className="size-5 text-muted-foreground" />
@@ -583,10 +585,10 @@ export function BillingScreen() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/60 bg-muted/30">
-                    <th className="p-3 text-left font-medium text-muted-foreground">Feature</th>
-                    <th className="p-3 text-center font-medium">Basic</th>
-                    <th className="p-3 text-center font-medium text-primary">Author</th>
-                    <th className="p-3 text-center font-medium">Studio</th>
+                    <th className="p-3 text-left font-medium text-muted-foreground">{t("comparisonFeature")}</th>
+                    <th className="p-3 text-center font-medium">{t("comparisonBasic")}</th>
+                    <th className="p-3 text-center font-medium text-primary">{t("comparisonAuthor")}</th>
+                    <th className="p-3 text-center font-medium">{t("comparisonStudio")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -639,15 +641,15 @@ export function BillingScreen() {
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Shield className="size-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{REFUND_GUARANTEE_CLAIM}</span>
+              <span>{t("refundGuarantee")}</span>
             </div>
             <div className="flex items-center gap-2">
               <Lock className="size-4 text-primary" />
-              <span>Secure Payment with SSL</span>
+              <span>{t("securePaymentSsl")}</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="size-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{KDP_GUARANTEE_CLAIM}</span>
+              <span>{t("kdpCompatible")}</span>
             </div>
           </div>
         </div>
@@ -669,10 +671,10 @@ export function BillingScreen() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-serif text-xl">
-              {pendingPlan ? pendingPlan.name : "Plan"} Confirmation
+              {pendingPlan ? pendingPlan.name : t("dialog.planLabel")} {t("dialog.titleSuffix")}
             </DialogTitle>
             <DialogDescription>
-              <span className="sr-only">Confirm plan change</span>
+              <span className="sr-only">{t("dialog.confirmPlanChange")}</span>
             </DialogDescription>
           </DialogHeader>
 
@@ -692,7 +694,7 @@ export function BillingScreen() {
                         : pendingPlan.price}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      /{billingPeriod === "annual" ? "/mo (annual)" : pendingPlan.interval}
+                      /{billingPeriod === "annual" ? t("annualInterval") : pendingPlan.interval}
                     </p>
                   </div>
                 </div>
@@ -715,9 +717,9 @@ export function BillingScreen() {
                 <div className="flex items-start gap-2.5">
                   <Shield className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                   <div className="text-xs">
-                    <p className="font-semibold text-foreground">Secure Payment</p>
+                    <p className="font-semibold text-foreground">{t("dialog.securePayment")}</p>
                     <p className="text-muted-foreground">
-                      SSL-protected payment. Full refund within 14 days if you're not satisfied.
+                      {t("dialog.securePaymentDesc")}
                     </p>
                   </div>
                 </div>
@@ -743,7 +745,7 @@ export function BillingScreen() {
                 autoStartHandledRef.current = false;
               }}
             >
-              Cancel
+              {t("dialog.cancel")}
             </Button>
             <Button
               variant="primary"
@@ -754,12 +756,12 @@ export function BillingScreen() {
               {submitting ? (
                 <>
                   <Clock className="mr-2 size-4 animate-spin" />
-                  Processing...
+                  {t("dialog.processing")}
                 </>
               ) : (
                 <>
                   <Lock className="mr-2 size-4" />
-                  Proceed to Payment
+                  {t("dialog.proceedToPayment")}
                 </>
               )}
             </Button>

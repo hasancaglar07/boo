@@ -10,6 +10,7 @@ import {
   Loader2,
   AlertCircle
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import { trackEvent, trackEventOnce } from "@/lib/analytics";
 type FormState = "idle" | "loading" | "success" | "error";
 
 export function ContactForm() {
+  const t = useTranslations("ContactForm");
   const [formState, setFormState] = React.useState<FormState>("idle");
   const [feedbackMessage, setFeedbackMessage] = React.useState("");
   const [formData, setFormData] = React.useState({
@@ -52,12 +54,12 @@ export function ContactForm() {
 
       setFormState("success");
       setFeedbackMessage(
-        `Message received. We will get back to you via email regarding ${contactSubjectLabel((formData.subject || "other") as ContactSubject)}.`,
+        t("successMessage", { subject: contactSubjectLabel((formData.subject || "other") as ContactSubject) }),
       );
       setFormData({ name: "", email: "", subject: "", message: "", website: "" });
     } catch (error) {
       setFormState("error");
-      const message = error instanceof Error ? error.message : "An error occurred. Please try again.";
+      const message = error instanceof Error ? error.message : t("errorDefault");
       setFeedbackMessage(message);
       trackEvent("contact_form_failed", { reason: message });
     }
@@ -81,9 +83,9 @@ export function ContactForm() {
       {/* Contact Info */}
       <div className="space-y-6">
         <div>
-          <h3 className="text-2xl font-semibold text-foreground">Contact Information</h3>
+          <h3 className="text-2xl font-semibold text-foreground">{t("infoTitle")}</h3>
           <p className="mt-2 text-muted-foreground">
-            Have questions? Contact us and we'll help you as soon as possible.
+            {t("infoDescription")}
           </p>
         </div>
 
@@ -93,7 +95,7 @@ export function ContactForm() {
               <Mail className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground">Email</h4>
+              <h4 className="font-semibold text-foreground">{t("emailLabel")}</h4>
               <p className="mt-1 text-sm text-muted-foreground">{PUBLIC_SUPPORT_EMAIL}</p>
             </div>
           </div>
@@ -103,20 +105,20 @@ export function ContactForm() {
               <MessageSquare className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground">Response time</h4>
-              <p className="mt-1 text-sm text-muted-foreground">Most messages are answered within the same business day</p>
+              <h4 className="font-semibold text-foreground">{t("responseTimeLabel")}</h4>
+              <p className="mt-1 text-sm text-muted-foreground">{t("responseTimeValue")}</p>
             </div>
           </div>
         </div>
 
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-6">
-            <h4 className="mb-2 font-semibold text-foreground">Quick notes</h4>
+            <h4 className="mb-2 font-semibold text-foreground">{t("quickNotesTitle")}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• Keep the subject clear</li>
-              <li>• Select the correct billing / access / technical support</li>
-              <li>• Include the book slug or preview link</li>
-              <li>• Share a screenshot if needed</li>
+              <li>• {t("quickNote1")}</li>
+              <li>• {t("quickNote2")}</li>
+              <li>• {t("quickNote3")}</li>
+              <li>• {t("quickNote4")}</li>
             </ul>
           </CardContent>
         </Card>
@@ -140,7 +142,7 @@ export function ContactForm() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium text-foreground">
-                  Full Name *
+                  {t("fullNameLabel")}
                 </label>
                 <input
                   type="text"
@@ -151,13 +153,13 @@ export function ContactForm() {
                   autoComplete="name"
                   required
                   className="w-full rounded-xl border border-border/80 bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                  placeholder="Your Full Name"
+                  placeholder={t("fullNamePlaceholder")}
                 />
               </div>
 
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-foreground">
-                  Email *
+                  {t("emailFieldLabel")}
                 </label>
                 <input
                   type="email"
@@ -168,14 +170,14 @@ export function ContactForm() {
                   autoComplete="email"
                   required
                   className="w-full rounded-xl border border-border/80 bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                  placeholder="ornek@email.com"
+                  placeholder={t("emailFieldPlaceholder")}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <label htmlFor="subject" className="text-sm font-medium text-foreground">
-                Subject *
+                {t("subjectLabel")}
               </label>
               <select
                 id="subject"
@@ -185,7 +187,7 @@ export function ContactForm() {
                 required
                 className="w-full rounded-xl border border-border/80 bg-background px-4 py-3 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
               >
-                <option value="">Select a subject</option>
+                <option value="">{t("subjectPlaceholder")}</option>
                 {CONTACT_SUBJECT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -196,7 +198,7 @@ export function ContactForm() {
 
             <div className="space-y-2">
               <label htmlFor="message" className="text-sm font-medium text-foreground">
-                Message *
+                {t("messageLabel")}
               </label>
               <textarea
                 id="message"
@@ -207,7 +209,7 @@ export function ContactForm() {
                 rows={5}
                 minLength={10}
                 className="w-full rounded-xl border border-border/80 bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-                placeholder="Write your message here..."
+                placeholder={t("messagePlaceholder")}
               />
             </div>
 
@@ -220,25 +222,25 @@ export function ContactForm() {
               {formState === "loading" && (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
+                  {t("btnSending")}
                 </>
               )}
               {formState === "success" && (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Sent!
+                  {t("btnSent")}
                 </>
               )}
               {formState === "idle" && (
                 <>
                   <Send className="mr-2 h-4 w-4" />
-                  Send Message
+                  {t("btnSend")}
                 </>
               )}
             </Button>
 
             <p className="text-xs leading-6 text-muted-foreground">
-              A copy of your message will be sent to your email. You can share additional context with the support team if needed.
+              {t("formNote")}
             </p>
 
             {formState === "success" && feedbackMessage ? (

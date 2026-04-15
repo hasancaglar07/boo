@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/preview-auth";
@@ -11,25 +12,25 @@ import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "book_generator_onboarding_checklist";
 
-const DEFAULT_CHECKLIST_ITEMS = [
-  { id: 1, text: "Set your first book topic", completed: false },
-  { id: 2, text: "Generate outline with AI", completed: false },
-  { id: 3, text: "Select cover style", completed: false },
-  { id: 4, text: "See preview", completed: false },
-  { id: 5, text: "Link to your account", completed: false },
-];
+type ChecklistItem = {
+  id: number;
+  text: string;
+  completed: boolean;
+};
 
-function loadChecklistState() {
-  if (typeof window === "undefined") return DEFAULT_CHECKLIST_ITEMS;
+function loadChecklistState(items: ChecklistItem[]): ChecklistItem[] {
+  if (typeof window === "undefined") return items;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : DEFAULT_CHECKLIST_ITEMS;
+    if (!stored) return items;
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? (parsed as ChecklistItem[]) : items;
   } catch {
-    return DEFAULT_CHECKLIST_ITEMS;
+    return items;
   }
 }
 
-function saveChecklistState(items: typeof DEFAULT_CHECKLIST_ITEMS) {
+function saveChecklistState(items: ChecklistItem[]) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
@@ -39,8 +40,18 @@ function saveChecklistState(items: typeof DEFAULT_CHECKLIST_ITEMS) {
 }
 
 export function OnboardingChecklist() {
+  const t = useTranslations("OnboardingChecklist");
   const router = useRouter();
-  const [items, setItems] = useState<typeof DEFAULT_CHECKLIST_ITEMS>(() => loadChecklistState());
+
+  const DEFAULT_CHECKLIST_ITEMS: ChecklistItem[] = [
+    { id: 1, text: t("item1"), completed: false },
+    { id: 2, text: t("item2"), completed: false },
+    { id: 3, text: t("item3"), completed: false },
+    { id: 4, text: t("item4"), completed: false },
+    { id: 5, text: t("item5"), completed: false },
+  ];
+
+  const [items, setItems] = useState<ChecklistItem[]>(() => loadChecklistState(DEFAULT_CHECKLIST_ITEMS));
   const [isLoggedIn] = useState(() => getSession() !== null);
 
   const completedCount = items.filter((i) => i.completed).length;
@@ -69,7 +80,7 @@ export function OnboardingChecklist() {
     <div className="checklist-card rounded-[28px] border border-border/80 bg-card/80 p-6">
       <div className="mb-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-foreground">🎯 Your First Book</h3>
+          <h3 className="text-lg font-bold text-foreground">{t("title")}</h3>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-foreground">
               {completedCount}/{items.length}
@@ -84,10 +95,10 @@ export function OnboardingChecklist() {
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
           {isComplete
-            ? "Congratulations! Your first book is ready!"
+            ? t("completeMessage")
             : isLoggedIn
-              ? "Track your progress"
-              : "Track your progress and link to your account"}
+              ? t("trackProgressLoggedIn")
+              : t("trackProgressGuest")}
         </p>
       </div>
 
@@ -136,12 +147,12 @@ export function OnboardingChecklist() {
           <div className="flex items-start gap-3">
             <div className="text-2xl">🎉</div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">Congratulations! Your first book is ready!</p>
+              <p className="text-sm font-semibold text-foreground">{t("congratsTitle")}</p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Now continue with the full book and export features.
+                {t("congratsDesc")}
               </p>
               <Button size="sm" className="mt-3" onClick={handleGetStarted}>
-                Upgrade to Premium
+                {t("upgradeToPremium")}
               </Button>
             </div>
           </div>
@@ -150,9 +161,9 @@ export function OnboardingChecklist() {
         <div className="mt-4 rounded-[16px] border border-border/60 bg-background/40 px-3 py-2">
           <p className="text-xs text-muted-foreground">
             {completedCount > 0 ? (
-              <>Great! You completed {completedCount} steps. Keep going!</>
+              t("greatProgress", { count: completedCount })
             ) : (
-              <>Start the wizard to take your first step.</>
+              t("startWizard")
             )}
           </p>
         </div>
@@ -165,7 +176,7 @@ export function OnboardingChecklist() {
         }}
         className="mt-3 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        Reset
+        {t("reset")}
       </button>
     </div>
   );

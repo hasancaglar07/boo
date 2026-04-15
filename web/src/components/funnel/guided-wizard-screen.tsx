@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { AppFrame } from "@/components/app/app-frame";
 import { FunnelShell } from "@/components/funnel/funnel-shell";
@@ -40,12 +41,7 @@ import { formatChapterReference } from "@/lib/book-language";
 import { getAccount, getSession, getViewer, syncPreviewAuthState } from "@/lib/preview-auth";
 import { pickRandomPublisherLogo } from "@/lib/publisher-logo-library";
 
-const GENERATION_STAGES = [
-  "Book showcase is being prepared",
-  "Cover direction is being processed",
-  "First readable chapter is being written",
-  "Preview is being linked to library",
-] as const;
+const GENERATION_STAGES_COUNT = 4;
 
 type OutlineSuggestionState = "idle" | "local_fast" | "glm_refined" | "failed";
 
@@ -190,6 +186,7 @@ export function GuidedWizardScreen({
   routeBase?: string;
   shellMode?: "funnel" | "app";
 }) {
+  const t = useTranslations("GuidedWizard");
   const appShellEnabled = shellMode === "app";
   const normalizedRouteBase = normalizeRouteBase(routeBase);
   const {
@@ -326,7 +323,7 @@ export function GuidedWizardScreen({
 
     setGenerationStageIndex(0);
     const timer = window.setInterval(() => {
-      setGenerationStageIndex((current) => Math.min(GENERATION_STAGES.length - 1, current + 1));
+      setGenerationStageIndex((current) => Math.min(GENERATION_STAGES_COUNT - 1, current + 1));
     }, 1400);
     return () => window.clearInterval(timer);
   }, [aiLoading]);
@@ -390,7 +387,7 @@ export function GuidedWizardScreen({
 
   async function handleOutlineAi() {
     if (!draft.topic.trim()) {
-      setError("Please specify the topic first.");
+      setError(t("errorSpecifyTopic"));
       router.push(stepHref("topic"));
       return;
     }
@@ -402,6 +399,10 @@ export function GuidedWizardScreen({
       subtitle: draftRef.current.subtitle.trim(),
       outline: JSON.stringify(draftRef.current.outline),
     };
+    // Accept both the pre-request outline and this request's own local-fast outline
+    // as valid baseline states. This avoids racey "2nd/3rd click works" behavior
+    // when local preview suggestions land before refined AI output.
+    const acceptedOutlineSnapshots = new Set<string>([requestSnapshot.outline]);
 
     setAiLoading("outline");
     try {
@@ -410,7 +411,9 @@ export function GuidedWizardScreen({
       let maybeSubtitle = draftRef.current.subtitle;
       setOutlineSuggestionState("local_fast");
       trackEvent("outline_suggestions_fallback_shown", { language: draft.language, count: chapters.length });
-      if (!outlineSelectionLockedRef.current || !draftRef.current.outline.length) {
+      const canApplyLocalOutline = !outlineSelectionLockedRef.current || !draftRef.current.outline.length;
+      if (canApplyLocalOutline) {
+        acceptedOutlineSnapshots.add(JSON.stringify(chapters));
         updateDraft({
           title: maybeTitle || localTitleSuggestions(draftRef.current)[0]?.title || "",
           subtitle: maybeSubtitle || localTitleSuggestions(draftRef.current)[0]?.subtitle || "",
@@ -429,14 +432,14 @@ export function GuidedWizardScreen({
         style: workflowStyleLabel(draft.depth),
         tone: workflowToneLabel(draft.tone),
       }, {
-        timeoutMs: 11_000,
-        retryDelaysMs: [250],
+        timeoutMs: 90_000,
+        retryDelaysMs: [],
       });
 
       if (response.ok === false) {
         const message =
           (typeof response.output === "string" && response.output.trim()) ||
-          "Outline suggestions failed.";
+          t("errorOutlineFailed");
         throw new Error(message.split("\n").find(Boolean) || message);
       }
 
@@ -445,8 +448,13 @@ export function GuidedWizardScreen({
             title?: string;
             subtitle?: string;
             chapters?: Array<{ title?: string; summary?: string }>;
+            fallback?: boolean;
+            source?: string;
           }
         | undefined;
+      const usedTemplateFallback =
+        Boolean(generated?.fallback) ||
+        String(generated?.source || "").trim() === "local_template";
 
       if (generated?.chapters?.length) {
         chapters = enrichOutlineItems(
@@ -465,19 +473,26 @@ export function GuidedWizardScreen({
       }
 
       const currentDraft = draftRef.current;
-      const outlineChanged =
-        outlineSelectionLockedRef.current || JSON.stringify(currentDraft.outline) !== requestSnapshot.outline;
+      const outlineChangedByUser =
+        outlineSelectionLockedRef.current ||
+        !acceptedOutlineSnapshots.has(JSON.stringify(currentDraft.outline));
 
-      if (!outlineChanged || !currentDraft.outline.length) {
+      if (!outlineChangedByUser || !currentDraft.outline.length) {
         updateDraft({
           title: maybeTitle || currentDraft.title || localTitleSuggestions(currentDraft)[0]?.title || "",
           subtitle: maybeSubtitle || currentDraft.subtitle || localTitleSuggestions(currentDraft)[0]?.subtitle || "",
           outline: chapters,
         });
       }
-      setOutlineSuggestionState("glm_refined");
-      trackEvent("outline_suggestions_refined", { language: draft.language, count: chapters.length });
-      trackEvent("outline_ai_used", { language: draft.language, count: chapters.length });
+      setOutlineSuggestionState(usedTemplateFallback ? "local_fast" : "glm_refined");
+      if (!usedTemplateFallback) {
+        trackEvent("outline_suggestions_refined", { language: draft.language, count: chapters.length });
+      }
+      trackEvent("outline_ai_used", {
+        language: draft.language,
+        count: chapters.length,
+        fallback: usedTemplateFallback,
+      });
     } catch (error) {
       const fallback = localOutlineSuggestions(draft);
       if (requestId !== outlineRequestIdRef.current) {
@@ -492,7 +507,7 @@ export function GuidedWizardScreen({
         });
       }
       if (!isBackendUnavailableError(error)) {
-        setError(error instanceof Error ? error.message : "AI outline suggestions could not be retrieved.");
+        setError(error instanceof Error ? error.message : t("errorOutlineNotRetrieved"));
       } else {
         setError("");
       }
@@ -535,14 +550,14 @@ export function GuidedWizardScreen({
         depth: draftRef.current.depth,
         cover_direction: draftRef.current.coverDirection,
       }, {
-        timeoutMs: 9_000,
-        retryDelaysMs: [250],
+        timeoutMs: 30_000,
+        retryDelaysMs: [400, 900],
       });
 
       if (response.ok === false) {
         const message =
           (typeof response.output === "string" && response.output.trim()) ||
-          "Style suggestions failed.";
+          t("errorStyleFailed");
         throw new Error(message.split("\n").find(Boolean) || message);
       }
 
@@ -607,7 +622,7 @@ export function GuidedWizardScreen({
       const account = getAccount();
       const payload = buildGuidedBookPayload(draft, account.name);
       const book = await saveBook(payload);
-      if (!book) throw new Error("Book could not be saved: server returned invalid response.");
+      if (!book) throw new Error(t("errorBookSaveFailed"));
 
       const nextDraft = {
         ...draft,
@@ -623,9 +638,9 @@ export function GuidedWizardScreen({
       setPendingRedirect(`/app/book/${encodeURIComponent(book.slug)}/preview`);
     } catch (cause) {
       if (isBackendUnavailableError(cause)) {
-        setError("Preview service is starting. Please wait a few seconds and press Generate again.");
+        setError(t("errorPreviewStarting"));
       } else {
-        setError(cause instanceof Error ? cause.message : "Book could not be created. Please try again.");
+        setError(cause instanceof Error ? cause.message : t("errorBookCreationFailed"));
       }
       setAiLoading("");
     } finally {
@@ -680,7 +695,7 @@ export function GuidedWizardScreen({
     if (!appShellEnabled) return shell;
 
     return (
-      <AppFrame current="new" title="New Book" books={[]} showBookShelf={false} hideHeader>
+      <AppFrame current="new" title={t("appFrameTitle")} books={[]} showBookShelf={false} hideHeader>
         {shell}
       </AppFrame>
     );
@@ -688,16 +703,16 @@ export function GuidedWizardScreen({
 
   if (step === "topic") {
     return wrapInShell({
-      title: "What is your book topic?",
-      description: "1/5. First select the book language, then write the topic. This selection produces all AI suggestions in the same language.",
+      title: t("topicTitle"),
+      description: t("topicDescription"),
       children: <TopicStep draft={draft} onUpdate={updateDraft} onNext={goNext} error={error} onError={setError} />,
     });
   }
 
   if (step === "title") {
     return wrapInShell({
-      title: "Title and subtitle",
-      description: "2/5. Write it yourself or get AI suggestions. When this step is done, the book title and positioning become clear.",
+      title: t("titleTitle"),
+      description: t("titleDescription"),
       children: (
         <TitleStep
           draft={draft}
@@ -721,8 +736,8 @@ export function GuidedWizardScreen({
 
   if (step === "outline") {
     return wrapInShell({
-      title: "Chapter plan",
-      description: "3/5. Auto-generate with AI or edit manually. When this step is done, your book's skeleton becomes visible.",
+      title: t("outlineTitle"),
+      description: t("outlineDescription"),
       children: (
         <OutlineStep
           draft={draft}
@@ -746,8 +761,8 @@ export function GuidedWizardScreen({
 
   if (step === "style") {
     return wrapInShell({
-      title: "Language and style",
-      description: "4/5. This screen auto-filled. Select the language, brand, and overall feel of the cover; preview generation starts in the next step.",
+      title: t("styleTitle"),
+      description: t("styleDescription"),
       children: (
         <StyleStep
           draft={draft}
@@ -764,11 +779,18 @@ export function GuidedWizardScreen({
     });
   }
 
+  const generationStages = [
+    t("stages.0"),
+    t("stages.1"),
+    t("stages.2"),
+    t("stages.3"),
+  ] as const;
+
   return wrapInShell({
-    title: "Start Preview",
+    title: t("generateTitle"),
     description: appShellEnabled
-      ? "5/5. Book showcase is prepared in a single flow. Cover and first readable chapter enter live production in the background."
-      : "5/5. Start as guest, see the real cover and first pages first, then save the preview to your account whenever you want.",
+      ? t("generateDescriptionApp")
+      : t("generateDescriptionFunnel"),
     children: (
       <GenerateStep
         draft={draft}
@@ -785,7 +807,7 @@ export function GuidedWizardScreen({
         onAuthenticated={() => void requestGenerate("inline_auth")}
         onOpenSavePrompt={openGenerateAuthGate}
         onStartGenerate={() => void requestGenerate()}
-        generationStages={GENERATION_STAGES}
+        generationStages={generationStages}
         generationStageIndex={generationStageIndex}
       />
     ),

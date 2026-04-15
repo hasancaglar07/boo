@@ -1,38 +1,40 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
 
-const QUICK_START_STEPS = [
-  {
-    icon: "✍️",
-    title: "Write Your Topic",
-    description: "Generate your book topic in 10 seconds",
-    time: "10 sec",
-  },
-  {
-    icon: "🤖",
-    title: "AI Outline",
-    description: "Generate automatic chapter plan",
-    time: "30 sec",
-  },
-  {
-    icon: "🎨",
-    title: "Choose Cover",
-    description: "Choose one of the AI cover drafts",
-    time: "15 sec",
-  },
-  {
-    icon: "📖",
-    title: "Preview & Read",
-    description: "Read the first chapter right away",
-    time: "5 sec",
-  },
-];
-
 export function QuickStartGuide() {
+  const t = useTranslations("QuickStartGuide");
   const router = useRouter();
+
+  const QUICK_START_STEPS = [
+    {
+      icon: "✍️",
+      title: t("step1Title"),
+      description: t("step1Desc"),
+      time: t("step1Time"),
+    },
+    {
+      icon: "🤖",
+      title: t("step2Title"),
+      description: t("step2Desc"),
+      time: t("step2Time"),
+    },
+    {
+      icon: "🎨",
+      title: t("step3Title"),
+      description: t("step3Desc"),
+      time: t("step3Time"),
+    },
+    {
+      icon: "📖",
+      title: t("step4Title"),
+      description: t("step4Desc"),
+      time: t("step4Time"),
+    },
+  ];
 
   const handleGetStarted = () => {
     trackEvent("quick_start_clicked", { location: "homepage_guide" });
@@ -42,9 +44,9 @@ export function QuickStartGuide() {
   return (
     <div className="quick-start-card rounded-[28px] border border-border/80 bg-card/80 p-6 md:p-8">
       <div className="mb-6">
-        <h3 className="text-2xl font-bold text-foreground">⚡ Your First Book in 60 Seconds</h3>
+        <h3 className="text-2xl font-bold text-foreground">{t("title")}</h3>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Transform your idea into a publish-ready book in just 4 steps
+          {t("subtitle")}
         </p>
       </div>
 
@@ -78,12 +80,12 @@ export function QuickStartGuide() {
 
       <div className="mt-6">
         <Button size="lg" className="w-full" onClick={handleGetStarted}>
-          Get Started Now
+          {t("getStartedButton")}
         </Button>
         <p className="mt-3 text-center text-xs text-muted-foreground">
-          No sign-up required · Free trial · Cancel anytime
+          {t("noSignup")}
         </p>
       </div>
     </div>
   );
-}
+}

@@ -294,7 +294,7 @@ def load_entry(book_dir: Path) -> dict[str, Any]:
         "titleTone": str(meta.get("title_tone") or "").strip(),
         "coverHierarchy": str(meta.get("cover_hierarchy") or "").strip(),
         "coverStyleMode": str(meta.get("cover_style_mode") or "").strip() or "bookstore_bold",
-        "backCoverMode": str(meta.get("back_cover_mode") or "").strip() or "minimal_blurb",
+        "backCoverMode": "minimal_blurb",
         "coverMode": str(meta.get("cover_mode") or "").strip() or "full_ai_front",
         "styleDirection": str(meta.get("style_direction") or "").strip() or "genre_split",
         "wrapScope": str(meta.get("wrap_scope") or "").strip() or "ai_front_only",

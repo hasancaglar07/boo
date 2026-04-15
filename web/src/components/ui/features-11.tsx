@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { ArrowUpRight, BookOpenText, FileArchive, SearchCode, SquareStack } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -42,15 +45,17 @@ function MockWindow({
   );
 }
 
-function renderVisual(visual: FeatureVisual) {
+type Features11T = ReturnType<typeof useTranslations<"Features11">>;
+
+function renderVisual(visual: FeatureVisual, t: Features11T) {
   if (visual === "editor") {
     return (
-      <MockWindow title="Chapter Plan + Outline">
+      <MockWindow title={t("editorWindowTitle")}>
         <div className="space-y-3">
           {[
-            ["01", "Reader promise", "Clear outcome for a specific reader."],
-            ["02", "Chapter structure", "Six clean chapters strengthened with examples."],
-            ["03", "Export-ready", "Front matter, cover, and EPUB pipeline."],
+            [t("editorItem1Label"), t("editorItem1Title"), t("editorItem1Text")],
+            [t("editorItem2Label"), t("editorItem2Title"), t("editorItem2Text")],
+            [t("editorItem3Label"), t("editorItem3Title"), t("editorItem3Text")],
           ].map(([label, title, text]) => (
             <div key={title} className="rounded-2xl border border-border/80 bg-card px-4 py-3">
               <div className="flex items-center gap-3">
@@ -85,7 +90,7 @@ function renderVisual(visual: FeatureVisual) {
               index === 2 && "translate-y-6 rotate-[8deg]",
             )}
           >
-            <div className="text-[10px] uppercase tracking-[0.18em] text-white/70">Book</div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-white/70">{t("libraryBookLabel")}</div>
             <div>
               <div className="text-sm font-semibold leading-5">{title}</div>
               <div className="mt-2 text-xs text-white/70">{author}</div>
@@ -98,15 +103,15 @@ function renderVisual(visual: FeatureVisual) {
 
   if (visual === "outline") {
     return (
-      <MockWindow title="Research + Positioning">
+      <MockWindow title={t("outlineWindowTitle")}>
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-2xl border border-border/80 bg-card p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <SearchCode className="size-4 text-primary" />
-              Keyword clusters
+              {t("outlineKeywordClustersLabel")}
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {["Reader pain point", "Low competition", "KDP compliance", "Fast promise"].map((chip) => (
+              {[t("outlineKeywordChip1"), t("outlineKeywordChip2"), t("outlineKeywordChip3"), t("outlineKeywordChip4")].map((chip) => (
                 <span key={chip} className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">
                   {chip}
                 </span>
@@ -116,12 +121,12 @@ function renderVisual(visual: FeatureVisual) {
           <div className="rounded-2xl border border-border/80 bg-card p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <BookOpenText className="size-4 text-primary" />
-              Book plan
+              {t("outlineBookPlanLabel")}
             </div>
             <div className="mt-3 space-y-2 text-xs text-muted-foreground">
-              <div className="rounded-xl bg-background px-3 py-2">Hook the reader instantly</div>
-              <div className="rounded-xl bg-background px-3 py-2">Present the system clearly</div>
-              <div className="rounded-xl bg-background px-3 py-2">Prepare the final output for publication</div>
+              <div className="rounded-xl bg-background px-3 py-2">{t("outlineBookPlanItem1")}</div>
+              <div className="rounded-xl bg-background px-3 py-2">{t("outlineBookPlanItem2")}</div>
+              <div className="rounded-xl bg-background px-3 py-2">{t("outlineBookPlanItem3")}</div>
             </div>
           </div>
         </div>
@@ -130,19 +135,19 @@ function renderVisual(visual: FeatureVisual) {
   }
 
   return (
-    <MockWindow title="Output Pipeline">
+    <MockWindow title={t("exportsWindowTitle")}>
       <div className="grid gap-3 sm:grid-cols-2">
         {[
-          ["EPUB", "Primary delivery format"],
-          ["PDF", "Fixed layout"],
-          ["Book details", "Author, ISBN, publisher"],
-          ["Archive", "Timestamped output folder"],
+          [t("exportsFormat1Title"), t("exportsFormat1Text")],
+          [t("exportsFormat2Title"), t("exportsFormat2Text")],
+          [t("exportsFormat3Title"), t("exportsFormat3Text")],
+          [t("exportsFormat4Title"), t("exportsFormat4Text")],
         ].map(([title, text]) => (
           <div key={title} className="rounded-2xl border border-border/80 bg-card p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              {title === "Archive" ? (
+              {title === t("exportsFormat4Title") ? (
                 <FileArchive className="size-4 text-primary" />
-              ) : title === "Book information" ? (
+              ) : title === t("exportsFormat3Title") ? (
                 <SquareStack className="size-4 text-primary" />
               ) : (
                 <ArrowUpRight className="size-4 text-primary" />
@@ -159,11 +164,14 @@ function renderVisual(visual: FeatureVisual) {
 
 export function Features11({
   badge,
-  title = "Not a single chapter, but an interconnected production system.",
-  description = "Book production, research, editing, and export work like a single control pipeline.",
+  title,
+  description,
   cards,
   className,
 }: Features11Props) {
+  const t = useTranslations("Features11");
+  const resolvedTitle = title ?? t("defaultTitle");
+  const resolvedDescription = description ?? t("defaultDescription");
   const [first, second, third, fourth] = cards;
 
   return (
@@ -172,10 +180,10 @@ export function Features11({
         <div className="mx-auto max-w-3xl text-center">
           {badge ? <Badge>{badge}</Badge> : null}
           <h2 className="mt-4 text-balance font-serif text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-            {title}
+            {resolvedTitle}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-8 text-muted-foreground">
-            {description}
+            {resolvedDescription}
           </p>
         </div>
 
@@ -187,7 +195,7 @@ export function Features11({
                 <p className="text-2xl font-semibold text-foreground">{first.title}</p>
                 <p className="max-w-sm text-sm leading-7 text-muted-foreground">{first.description}</p>
               </CardHeader>
-              <CardContent className="pt-0">{renderVisual(first.visual)}</CardContent>
+              <CardContent className="pt-0">{renderVisual(first.visual, t)}</CardContent>
             </Card>
           ) : null}
 
@@ -198,7 +206,7 @@ export function Features11({
                 <p className="text-2xl font-semibold text-foreground">{second.title}</p>
                 <p className="text-sm leading-7 text-muted-foreground">{second.description}</p>
               </CardHeader>
-              <CardContent className="pt-0">{renderVisual(second.visual)}</CardContent>
+              <CardContent className="pt-0">{renderVisual(second.visual, t)}</CardContent>
             </Card>
           ) : null}
 
@@ -209,7 +217,7 @@ export function Features11({
                 <p className="text-2xl font-semibold text-foreground">{third.title}</p>
                 <p className="text-sm leading-7 text-muted-foreground">{third.description}</p>
               </CardHeader>
-              <CardContent className="pt-0">{renderVisual(third.visual)}</CardContent>
+              <CardContent className="pt-0">{renderVisual(third.visual, t)}</CardContent>
             </Card>
           ) : null}
 
@@ -220,7 +228,7 @@ export function Features11({
                 <p className="text-2xl font-semibold text-foreground">{fourth.title}</p>
                 <p className="max-w-xl text-sm leading-7 text-muted-foreground">{fourth.description}</p>
               </CardHeader>
-              <CardContent className="pt-0">{renderVisual(fourth.visual)}</CardContent>
+              <CardContent className="pt-0">{renderVisual(fourth.visual, t)}</CardContent>
             </Card>
           ) : null}
         </div>

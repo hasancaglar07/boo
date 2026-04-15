@@ -343,6 +343,66 @@ function fitTextBlock(text, width, languageCode, options) {
   return { fontSize, lines };
 }
 
+function sanitizeBackCoverText(value, { maxLength = 0 } = {}) {
+  let text = String(value || "")
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/([,.;:!?]){2,}/g, "$1")
+    .trim();
+  if (maxLength > 0 && text.length > maxLength) {
+    text = text.slice(0, maxLength).trim();
+  }
+  return text;
+}
+
+function ellipsizeLineToWidth(text, width, fontSize, languageCode, kind = "body", tone = "classic") {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+  const ellipsis = "...";
+  if (estimateLineWidth(raw, fontSize, languageCode, kind, tone) <= width * 0.95) {
+    return raw;
+  }
+  let output = "";
+  for (const character of Array.from(raw)) {
+    const candidate = `${output}${character}`.trimStart();
+    const candidateWithDots = `${candidate}${ellipsis}`;
+    if (estimateLineWidth(candidateWithDots, fontSize, languageCode, kind, tone) > width * 0.95) {
+      break;
+    }
+    output = candidate;
+  }
+  return output ? `${output}${ellipsis}` : ellipsis;
+}
+
+function fitTextBlockStrict(text, width, languageCode, options) {
+  const tone = String(options.tone || "classic");
+  const value = sanitizeBackCoverText(text, { maxLength: options.maxChars || 0 });
+  const block = fitTextBlock(value, width, languageCode, options);
+  const rawLines = wrapTextRaw(value, width, block.fontSize, languageCode, options.kind);
+  const overflowByLineCount = rawLines.length > options.maxLines;
+  const maxWidth = width * widthThreshold(options.kind, tone);
+  const lines = (block.lines || []).slice(0, options.maxLines);
+  let widthOverflow = false;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = String(lines[i] || "");
+    if (estimateLineWidth(line, block.fontSize, languageCode, options.kind, tone) > maxWidth) {
+      lines[i] = ellipsizeLineToWidth(line, width, block.fontSize, languageCode, options.kind, tone);
+      widthOverflow = true;
+    }
+  }
+  if ((overflowByLineCount || widthOverflow) && lines.length) {
+    lines[lines.length - 1] = ellipsizeLineToWidth(
+      lines[lines.length - 1],
+      width,
+      block.fontSize,
+      languageCode,
+      options.kind,
+      tone,
+    );
+  }
+  return { fontSize: block.fontSize, lines };
+}
+
 function templateConfig(templateName, preferredZone) {
   const base = {
     "business-playbook": {
@@ -1806,6 +1866,116 @@ ${motifMarkup}
 </svg>`;
 }
 
+function renderStableBackCover(config, artUri, logoUri) {
+  const [gradA, gradB, gradC] = gradientColors(config.coverGradient);
+  const bodyFamily = coverBodyFamily(config);
+  const titleFamily = titleFontFamily(config.languageCode, deriveTitleTone(config, deriveTemplateName(config)));
+  const textAccent = config.textAccent || "#f7efe2";
+  const accent = config.accentColor || "#d99a4e";
+  const directionAttrs = isRtl(config.languageCode) ? 'direction="rtl" unicode-bidi="plaintext"' : "";
+  const anchor = isRtl(config.languageCode) ? "end" : "start";
+  const titleX = isRtl(config.languageCode) ? WIDTH - 124 : 124;
+  const titleWidth = 760;
+  const textWidth = 770;
+  const dividerY = 1030;
+  const authorY = 1120;
+  const bioStartY = 1178;
+  const hasLogo = Boolean(logoUri);
+  const logoSize = 142;
+  const logoX = WIDTH - 110 - logoSize;
+  const logoY = HEIGHT - 116 - logoSize;
+  const summaryMaxLines = String(config.backCoverMode || "").trim().toLowerCase() === "minimal_blurb" ? 6 : 8;
+  const summaryRaw = sanitizeBackCoverText(config.summary || "", { maxLength: 1800 });
+  const bioRaw = sanitizeBackCoverText(config.authorBio || "", { maxLength: 800 });
+  const summary = fitTextBlockStrict(summaryRaw, textWidth, config.languageCode, {
+    maxSize: 30,
+    minSize: 19,
+    step: 1,
+    maxLines: summaryMaxLines,
+    kind: "body",
+    tone: "classic",
+  });
+  const author = sanitizeBackCoverText(visibleAuthorName(config) || config.author || "", { maxLength: 120 });
+  const bioLineBudget = hasLogo ? 3 : 4;
+  const bio = fitTextBlockStrict(bioRaw, textWidth - (hasLogo ? 84 : 0), config.languageCode, {
+    maxSize: 21,
+    minSize: 16,
+    step: 1,
+    maxLines: bioLineBudget,
+    kind: "body",
+    tone: "classic",
+  });
+  const summaryLineHeight = summary.fontSize * 1.42;
+  const bioLineHeight = bio.fontSize * 1.44;
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" fill="none">
+  <defs>
+    <linearGradient id="stable-back-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${gradC}" />
+      <stop offset="55%" stop-color="${gradB}" />
+      <stop offset="100%" stop-color="${gradA}" />
+    </linearGradient>
+    <linearGradient id="stable-back-overlay" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0a0f18" stop-opacity="0.34" />
+      <stop offset="100%" stop-color="#060912" stop-opacity="0.74" />
+    </linearGradient>
+    <clipPath id="stable-back-mark">
+      <circle cx="${WIDTH - 162}" cy="${HEIGHT - 180}" r="142" />
+    </clipPath>
+    <filter id="stable-back-art-soften" x="-8%" y="-8%" width="116%" height="116%">
+      <feGaussianBlur stdDeviation="2.4" />
+      <feColorMatrix type="saturate" values="0.8" />
+    </filter>
+  </defs>
+  <rect width="${WIDTH}" height="${HEIGHT}" rx="52" fill="url(#stable-back-bg)" />
+  <image href="${artUri}" x="0" y="0" width="${WIDTH}" height="${HEIGHT}" preserveAspectRatio="xMidYMid slice" opacity="0.15" filter="url(#stable-back-art-soften)" />
+  <rect width="${WIDTH}" height="${HEIGHT}" rx="52" fill="url(#stable-back-overlay)" />
+  <rect x="72" y="72" width="${WIDTH - 144}" height="${HEIGHT - 144}" rx="42" fill="rgba(255,255,255,0.06)" stroke="${rgba(textAccent, 0.16)}" />
+  <rect x="112" y="120" width="154" height="10" rx="5" fill="${rgba(accent, 0.92)}" />
+  <text x="${titleX}" y="206" fill="${textAccent}" font-family="${titleFamily}" font-size="54" font-weight="700" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
+    sanitizeBackCoverText(config.title || "", { maxLength: 180 }),
+  )}</text>
+  ${
+    visiblePublisherLabel(config)
+      ? `<text x="${titleX}" y="256" fill="${rgba(textAccent, 0.74)}" font-family="${bodyFamily}" font-size="18" font-weight="700" letter-spacing="1.8" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
+          visiblePublisherLabel(config),
+        )}</text>`
+      : ""
+  }
+  <text x="${titleX}" y="340" fill="${textAccent}" font-family="${bodyFamily}" font-size="${summary.fontSize}" font-weight="500" text-anchor="${anchor}" ${directionAttrs}>
+    ${buildTspanLines(summary.lines, titleX, 340, summaryLineHeight, directionAttrs)}
+  </text>
+  <rect x="112" y="${dividerY}" width="${WIDTH - 224}" height="2" fill="${rgba(accent, 0.5)}" />
+  <text x="${titleX}" y="${authorY}" fill="${rgba(textAccent, 0.92)}" font-family="${bodyFamily}" font-size="22" font-weight="700" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
+    author || "",
+  )}</text>
+  ${
+    bio.lines.length
+      ? `<text x="${titleX}" y="${bioStartY}" fill="${rgba(textAccent, 0.82)}" font-family="${bodyFamily}" font-size="${bio.fontSize}" font-weight="500" text-anchor="${anchor}" ${directionAttrs}>${buildTspanLines(
+          bio.lines,
+          titleX,
+          bioStartY,
+          bioLineHeight,
+          directionAttrs,
+        )}</text>`
+      : ""
+  }
+  <circle cx="${WIDTH - 162}" cy="${HEIGHT - 180}" r="142" fill="${rgba("#ffffff", 0.08)}" />
+  <g clip-path="url(#stable-back-mark)">
+    <image href="${artUri}" x="${WIDTH - 304}" y="${HEIGHT - 322}" width="284" height="284" preserveAspectRatio="xMidYMid slice" opacity="0.16" />
+  </g>
+  ${
+    hasLogo
+      ? `<g transform="translate(${logoX} ${logoY})">
+           <rect width="${logoSize}" height="${logoSize}" rx="34" fill="rgba(8,12,20,0.36)" stroke="${rgba(textAccent, 0.16)}" />
+           <image href="${logoUri}" x="19" y="19" width="${logoSize - 38}" height="${logoSize - 38}" preserveAspectRatio="xMidYMid meet" />
+         </g>`
+      : ""
+  }
+</svg>`;
+}
+
 function createFrontSvg(config, artUri, logoUri) {
   if (isBookstoreBoldMode(config)) {
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -1869,86 +2039,7 @@ function createFrontSvg(config, artUri, logoUri) {
 }
 
 function createBackSvg(config, artUri, logoUri) {
-  if (isBookstoreBoldMode(config)) {
-    return renderBookstoreBoldBack(config, artUri);
-  }
-  if (isBookstoreFlatMode(config)) {
-    return renderBookstoreFlatBack(config, artUri);
-  }
-  const [gradA, gradB, gradC] = gradientColors(config.coverGradient);
-  const templateName = deriveTemplateName(config);
-  const template = templateConfig(templateName, String(config.preferredZone || "").trim());
-  const bodyFamily = coverBodyFamily(config);
-  const titleFamily = titleFontFamily(config.languageCode, deriveTitleTone(config, templateName));
-  const summary = fitTextBlock(config.summary || "", 740, config.languageCode, {
-    maxSize: 28,
-    minSize: 20,
-    step: 2,
-    maxLines: 7,
-    kind: "body",
-  });
-  const bio = fitTextBlock(config.authorBio || "", 740, config.languageCode, {
-    maxSize: 22,
-    minSize: 18,
-    step: 1,
-    maxLines: 6,
-    kind: "body",
-  });
-  const directionAttrs = isRtl(config.languageCode) ? 'direction="rtl" unicode-bidi="plaintext"' : "";
-  const anchor = isRtl(config.languageCode) ? "end" : "start";
-  const x = isRtl(config.languageCode) ? 1040 : 120;
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" fill="none">
-  <defs>
-    <linearGradient id="back-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="${gradC}" />
-      <stop offset="55%" stop-color="${gradB}" />
-      <stop offset="100%" stop-color="${gradA}" />
-    </linearGradient>
-    <linearGradient id="back-overlay" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#04070b" stop-opacity="0.34" />
-      <stop offset="100%" stop-color="#030408" stop-opacity="0.74" />
-    </linearGradient>
-    <filter id="back-art-soften" x="-8%" y="-8%" width="116%" height="116%">
-      <feGaussianBlur stdDeviation="2.4" />
-      <feColorMatrix type="saturate" values="0.8" />
-    </filter>
-  </defs>
-  <rect width="${WIDTH}" height="${HEIGHT}" rx="52" fill="url(#back-bg)" />
-  <image href="${artUri}" x="0" y="0" width="${WIDTH}" height="${HEIGHT}" preserveAspectRatio="xMidYMid slice" opacity="0.16" filter="url(#back-art-soften)" />
-  <rect width="${WIDTH}" height="${HEIGHT}" rx="52" fill="url(#back-overlay)" />
-  ${frameMarkup(config, template)}
-  <rect x="72" y="72" width="${WIDTH - 144}" height="${HEIGHT - 144}" rx="42" fill="rgba(255,255,255,0.06)" stroke="${rgba(config.textAccent || "#fff8ef", 0.16)}" />
-  <text x="${x}" y="194" fill="${config.textAccent || "#fff8ef"}" font-family="${titleFamily}" font-size="54" font-weight="700" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
-    config.title,
-  )}</text>
-  ${
-    visiblePublisherLabel(config)
-      ? `<text x="${x}" y="246" fill="${rgba(config.textAccent || "#fff8ef", 0.72)}" font-family="${bodyFamily}" font-size="18" font-weight="700" letter-spacing="2" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
-          visiblePublisherLabel(config),
-        )}</text>`
-      : ""
-  }
-  <text x="${x}" y="368" fill="${config.textAccent || "#fff8ef"}" font-family="${bodyFamily}" font-size="${summary.fontSize}" font-weight="500" text-anchor="${anchor}" ${directionAttrs}>
-    ${buildTspanLines(summary.lines, x, 368, summary.fontSize * 1.42, directionAttrs)}
-  </text>
-  <rect x="120" y="980" width="${WIDTH - 240}" height="2" fill="${rgba(config.accentColor || "#caa15b", 0.44)}" />
-  <text x="${x}" y="1088" fill="${rgba(config.textAccent || "#fff8ef", 0.84)}" font-family="${bodyFamily}" font-size="20" font-weight="700" letter-spacing="1.6" text-anchor="${anchor}" ${directionAttrs}>${safeXml(
-    config.author,
-  )}</text>
-  <text x="${x}" y="1140" fill="${rgba(config.textAccent || "#fff8ef", 0.82)}" font-family="${bodyFamily}" font-size="${bio.fontSize}" font-weight="500" text-anchor="${anchor}" ${directionAttrs}>
-    ${buildTspanLines(bio.lines, x, 1140, bio.fontSize * 1.48, directionAttrs)}
-  </text>
-  ${
-    logoUri
-      ? `<g transform="translate(${isRtl(config.languageCode) ? 936 : 120} 1642)">
-           <rect width="132" height="132" rx="34" fill="rgba(7,10,18,0.36)" stroke="${rgba(config.textAccent || "#fff8ef", 0.14)}" />
-           <image href="${logoUri}" x="18" y="18" width="96" height="96" preserveAspectRatio="xMidYMid meet" />
-         </g>`
-      : ""
-  }
-</svg>`;
+  return renderStableBackCover(config, artUri, logoUri);
 }
 
 function render(svg, outputPath) {

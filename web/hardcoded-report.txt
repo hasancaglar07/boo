@@ -1,0 +1,465 @@
+================================================================================
+HARDCODED STRINGS REPORT
+Scanned: src/components
+Date: 2026-04-14
+================================================================================
+Total components scanned: 146
+Components with hardcoded strings: 115
+Total hardcoded strings found: 1370
+
+Already using translations: 21 files
+
+────────────────────────────────────────────────────────────────────────────────
+TOP PRIORITY COMPONENTS (most hardcoded strings):
+────────────────────────────────────────────────────────────────────────────────
+
+[149 strings] src/components/app/workspace-screen.tsx [no i18n]
+  L630: "Next Recommended Step"
+  L667: "Book Progress"
+  L668: "Overall completion status"
+  L704: "Book Information"
+  L707: "Title"
+  L708: "Subtitle"
+  L710: "Year"
+  L722: "Author Information"
+  ... and 141 more
+
+[72 strings] src/components/funnel/book-preview-screen.tsx [partial t()]
+  L1632: "Generating..."
+  L1635: "Preview ready"
+  L1745: "Status"
+  L1750: "Access"
+  L1778: "Current production step"
+  L1815: "Unlock"
+  L1824: "One-time unlock"
+  L1877: "Don’t lose this preview"
+  ... and 64 more
+
+[72 strings] src/components/site/book-idea-validator-tool.tsx [no i18n]
+  L220: "Free Tool"
+  L246: "Audience clarity"
+  L247: "See at a glance how clear your target reader is."
+  L253: "Positioning angle"
+  L254: "Find a stronger book angle instead of a generic topic."
+  L260: "Commercial fit"
+  L261: "Measure lead, authority, or sales contribution."
+  L271: "Book Idea Validator"
+  ... and 64 more
+
+[43 strings] src/components/app/account-screen.tsx [no i18n]
+  L127: "Profile completion"
+  L166: "Profilin %100 completed!"
+  L193: "Next steps"
+  L378: "Name"
+  L390: "Email"
+  L396: "Plan"
+  L429: "Goal"
+  L444: "Profile Completion"
+  ... and 35 more
+
+[40 strings] src/components/site/home-visual-story-section.tsx [no i18n]
+  L311: "3 steps"
+  L75: "New book"
+  L144: "Chapter plan + research"
+  L226: "Prepare for Publishing"
+  L22: "Topic Brief"
+  L23: "Enter your idea. Let the system build the book direction."
+  L26: "Localized interface"
+  L26: "English output"
+  ... and 32 more
+
+[38 strings] src/components/forms/auth-form.tsx [no i18n]
+  L41: "Promise"
+  L406: "Full Name"
+  L421: "Email"
+  L437: "Password"
+  L411: "Your name"
+  L22: "I want to prepare my first book quickly and in an organized way."
+  L73: "Incorrect credentials"
+  L74: "Email or password does not match."
+  ... and 30 more
+
+[36 strings] src/components/app/billing-screen.tsx [no i18n]
+  L324: "Billing"
+  L376: "Your Usage"
+  L572: "Plan Comparison"
+  L586: "Feature"
+  L587: "Basic"
+  L588: "Author"
+  L589: "Studio"
+  L646: "Secure Payment with SSL"
+  ... and 28 more
+
+[36 strings] src/components/site/examples-showcase.tsx [no i18n]
+  L479: "Real first chapter preview"
+  L488: "Delivery Formats"
+  L758: "No examples for this filter"
+  L759: "Try a different category or language."
+  L793: "Free preview · No sign-up required"
+  L497: "Real output for e-reader"
+  L504: "Output for print or sharing"
+  L511: "Output for web preview"
+  ... and 28 more
+
+[33 strings] src/components/app/affiliate-dashboard.tsx [no i18n]
+  L153: "Request Payout"
+  L419: "30% recurring commission"
+  L554: "Earnings & Payout"
+  L555: "PayPal payouts processed monthly"
+  L850: "Back to My Books"
+  L851: "Return to your library"
+  L864: "Contact Support"
+  L389: "Affiliate"
+  ... and 25 more
+
+[33 strings] src/components/funnel/continue-auth-screen.tsx [no i18n]
+  L270: "This is a book link, not a signup wall"
+  L380: "Continue with password"
+  L313: "Full Name"
+  L23: "I want to quickly preview my first book."
+  L32: "Book Owner"
+  L95: "Book Generator"
+  L121: "Email address is required for the email link."
+  L138: "Email link could not be sent. Please try again."
+  ... and 25 more
+
+[33 strings] src/components/site/affiliate-page.tsx [no i18n]
+  L121: "Your Affiliate Link"
+  L122: "Copy, share — earn 30% from every payment"
+  L143: "Copied!"
+  L145: "Copy Link"
+  L256: "Back to My Books"
+  L268: "How It Works?"
+  L328: "Plan"
+  L329: "Monthly"
+  ... and 25 more
+
+[32 strings] src/components/funnel/upgrade-screen.tsx [no i18n]
+  L227: "payment decision"
+  L239: "Your book is ready"
+  L242: "claim the full version now"
+  L403: "$4 · Tek seferlik"
+  L404: "30-day refund · Unlock full book"
+  L176: "Premium"
+  L189: "Claim Your Book"
+  L34: "All chapters — no locked content"
+  ... and 24 more
+
+[31 strings] src/components/ui/features-11.tsx [no i18n]
+  L88: "Book"
+  L122: "Hook the reader instantly"
+  L123: "Present the system clearly"
+  L124: "Prepare the final output for publication"
+  L48: "Chapter Plan + Outline"
+  L101: "Research + Positioning"
+  L133: "Output Pipeline"
+  L51: "Reader promise"
+  ... and 23 more
+
+[30 strings] src/components/site/pricing-comparison-table.tsx [no i18n]
+  L134: "Most Popular"
+  L20: "Monthly book production"
+  L21: "Monthly cover allowance"
+  L25: "AI chapter outline generation"
+  L26: "Chapter writing + regeneration"
+  L27: "Chapter editor"
+  L28: "Tone and target audience setting"
+  L31: "AI cover generation"
+  ... and 22 more
+
+[29 strings] src/components/app/wizard-screen.tsx [no i18n]
+  L123: "Start Your First Book"
+  L123: "Connection error occurred."
+  L187: "New Book"
+  L187: "Start with 5 quick questions."
+  L28: "What kind of book do you want to write?"
+  L29: "Genre"
+  L31: "Guide"
+  L32: "Business"
+  ... and 21 more
+
+[26 strings] src/components/funnel/steps/style-step.tsx [no i18n]
+  L231: "Upload Logo"
+  L250: "Logo uploaded ✓"
+  L251: "Click to change"
+  L271: "Click to upload logo"
+  L272: "PNG, JPG, WebP veya SVG · Maks 2 MB"
+  L366: "Logo Library"
+  L398: "Tone"
+  L409: "Derinlik"
+  ... and 18 more
+
+[25 strings] src/components/app/app-frame.tsx [no i18n]
+  L42: "void | Promise"
+  L308: "0 ?"
+  L97: "Book Generator"
+  L256: "Mobile menu"
+  L267: "Close menu"
+  L287: "Open menu"
+  L371: "Profile Settings"
+  L372: "Manage your name, writing goal, and account status."
+  ... and 17 more
+
+[25 strings] src/components/forms/reset-password-form.tsx [no i18n]
+  L147: "Reset Password"
+  L173: "New password"
+  L185: "Confirm new password"
+  L199: "Email"
+  L181: "At least 8 characters"
+  L193: "Re-enter your new password"
+  L44: "Content-Type"
+  L53: "Reset request could not be sent"
+  ... and 17 more
+
+[25 strings] src/components/funnel/guided-wizard-screen.tsx [partial t()]
+  L49: "Build • Launch • Grow"
+  L50: "Think • Design • Ship"
+  L51: "Guide • Practice • Improve"
+  L52: "Plan • Create • Publish"
+  L57: "John Smith"
+  L57: "Emily Carter"
+  L57: "David Brooks"
+  L57: "Sarah Mitchell"
+  ... and 17 more
+
+[24 strings] src/components/app/home-screen.tsx [no i18n]
+  L238: "Your Books"
+  L300: "Create your first book"
+  L72: "Production Center"
+  L80: "My Books"
+  L105: "Create new book"
+  L105: "Open registration wizard"
+  L107: "Open latest preview"
+  L108: "Go to your latest book preview"
+  ... and 16 more
+
+[22 strings] src/components/site/home-product-overview-section.tsx [no i18n]
+  L119: "Topic"
+  L120: "Draft"
+  L121: "Publish"
+  L224: "Start your first book"
+  L17: "No more staring at a blank page"
+  L23: "No scattered toolchain"
+  L29: "Your ready-to-publish file is in hand"
+  L31: "The goal isn"
+  ... and 14 more
+
+[20 strings] src/components/site/home-workspace-showcase-section.tsx [no i18n]
+  L77: "Start your first book"
+  L80: "See how it works"
+  L26: "From topic decision to KDP-ready outline in minutes"
+  L31: "KDP score and keyword research feed into your chapter plan"
+  L36: "From first draft to EPUB and PDF publishing in one workspace"
+  L114: "Title and subtitle"
+  L115: "Book description"
+  L116: "Chapter plan editing"
+  ... and 12 more
+
+[20 strings] src/components/site/interactive-marketing-tool.tsx [no i18n]
+  L308: "Instant Report"
+  L309: "Don't just score. See why the angle works."
+  L325: "Analyzing"
+  L326: "Collecting tool signals..."
+  L340: "Idea Score"
+  L348: "Primary recommendation"
+  L350: "Suggested angle"
+  L353: "Clear next step"
+  ... and 12 more
+
+[18 strings] src/components/app/persistent-sidebar.tsx [no i18n]
+  L130: "void | Promise"
+  L327: "No books yet."
+  L80: "Book Generator"
+  L196: "Main menu"
+  L245: "New book"
+  L487: "Mobile menu"
+  L498: "Close menu"
+  L32: "My Books"
+  ... and 10 more
+
+[18 strings] src/components/ui/features-9.tsx [no i18n]
+  L189: "Bugun"
+  L200: "Simdi"
+  L41: "Yazim"
+  L45: "Duzenleme"
+  L51: "Hafta 1"
+  L52: "Hafta 2"
+  L53: "Hafta 3"
+  L54: "Hafta 4"
+  ... and 10 more
+
+[17 strings] src/components/writing/chapter-editor.tsx [no i18n]
+  L254: "Chapter Title"
+  L262: "State"
+  L278: "Content"
+  L301: "No chapters yet. Add your first chapter to get started."
+  L212: "Duplicate chapter"
+  L222: "Move up"
+  L232: "Move down"
+  L242: "Delete chapter"
+  ... and 9 more
+
+[15 strings] src/components/books/progressive-cta.tsx [no i18n]
+  L49: "Unlock this book"
+  L50: "Get full access, PDF, EPUB, and editing workspace"
+  L52: "Publish for $4"
+  L61: "Continue reading"
+  L64: "Unlock Full Book"
+  L69: "Download PDF"
+  L70: "Download EPUB"
+  L80: "Get Full Access"
+  ... and 7 more
+
+[15 strings] src/components/site/contact-form.tsx [no i18n]
+  L84: "Contact Information"
+  L96: "Email"
+  L106: "Response time"
+  L107: "Most messages are answered within the same business day"
+  L114: "Quick notes"
+  L116: "• Keep the subject clear"
+  L117: "• Select the correct billing / access / technical support"
+  L118: "• Include the book slug or preview link"
+  ... and 7 more
+
+[15 strings] src/components/writing/chapter-comments.tsx [no i18n]
+  L161: "Add Comment"
+  L190: "All"
+  L191: "Unresolved"
+  L192: "Resolved"
+  L165: "Add a comment about this chapter..."
+  L179: "Search comments..."
+  L246: "Write a reply..."
+  L299: "Delete comment"
+  ... and 7 more
+
+[14 strings] src/components/site/home-logo-cloud-section.tsx [no i18n]
+  L9: "OpenAI"
+  L10: "Claude"
+  L11: "Notion"
+  L12: "Microsoft Word"
+  L13: "Canva"
+  L14: "Adobe"
+  L15: "Apple Books"
+  L16: "Google Play Books"
+  ... and 6 more
+
+... and 85 more components with hardcoded strings
+
+────────────────────────────────────────────────────────────────────────────────
+ALL AFFECTED FILES (sorted by impact):
+────────────────────────────────────────────────────────────────────────────────
+149 strings  components/app/workspace-screen.tsx
+ 72 strings  components/funnel/book-preview-screen.tsx
+ 72 strings  components/site/book-idea-validator-tool.tsx
+ 43 strings  components/app/account-screen.tsx
+ 40 strings  components/site/home-visual-story-section.tsx
+ 38 strings  components/forms/auth-form.tsx
+ 36 strings  components/app/billing-screen.tsx
+ 36 strings  components/site/examples-showcase.tsx
+ 33 strings  components/app/affiliate-dashboard.tsx
+ 33 strings  components/funnel/continue-auth-screen.tsx
+ 33 strings  components/site/affiliate-page.tsx
+ 32 strings  components/funnel/upgrade-screen.tsx
+ 31 strings  components/ui/features-11.tsx
+ 30 strings  components/site/pricing-comparison-table.tsx
+ 29 strings  components/app/wizard-screen.tsx
+ 26 strings  components/funnel/steps/style-step.tsx
+ 25 strings  components/app/app-frame.tsx
+ 25 strings  components/forms/reset-password-form.tsx
+ 25 strings  components/funnel/guided-wizard-screen.tsx
+ 24 strings  components/app/home-screen.tsx
+ 22 strings  components/site/home-product-overview-section.tsx
+ 20 strings  components/site/home-workspace-showcase-section.tsx
+ 20 strings  components/site/interactive-marketing-tool.tsx
+ 18 strings  components/app/persistent-sidebar.tsx
+ 18 strings  components/ui/features-9.tsx
+ 17 strings  components/writing/chapter-editor.tsx
+ 15 strings  components/books/progressive-cta.tsx
+ 15 strings  components/site/contact-form.tsx
+ 15 strings  components/writing/chapter-comments.tsx
+ 14 strings  components/site/home-logo-cloud-section.tsx
+ 14 strings  components/writing/chapter-templates.tsx
+ 14 strings  components/writing/time-tracker.tsx
+ 13 strings  components/funnel/steps/outline-step.tsx
+ 13 strings  components/writing/goal-tracker.tsx
+ 12 strings  components/funnel/hooks/use-funnel-draft.ts
+ 12 strings  components/funnel/steps/title-step.tsx
+ 11 strings  components/site/page-heroes.tsx
+ 11 strings  components/ui/demo.tsx
+ 10 strings  components/common/enhanced-file-list.tsx
+ 10 strings  components/funnel/shared/summary-cards.tsx
+ 10 strings  components/onboarding/onboarding-checklist.tsx
+  9 strings  components/books/compact-progress-card.tsx
+  9 strings  components/books/unified-progress-indicator.tsx
+  9 strings  components/funnel/funnel-shell.tsx
+  9 strings  components/onboarding/quick-start-guide.tsx
+  9 strings  components/site/example-reader.tsx
+  8 strings  components/app/epub-reader-preview.tsx
+  7 strings  components/ui/cta-4.tsx
+  7 strings  components/writing/writing-dashboard.tsx
+  6 strings  components/books/collapsible-book-details.tsx
+  6 strings  components/error/preview-error-boundary.tsx
+  6 strings  components/site/lead-magnet-signup-card.tsx
+  6 strings  components/site/start-option-cards.tsx
+  6 strings  components/ui/card.tsx
+  6 strings  components/ui/faq-5.tsx
+  5 strings  components/app/chunk-load-recovery.tsx
+  5 strings  components/books/mobile-content-sheet.tsx
+  5 strings  components/common/keyboard-shortcuts-help.tsx
+  5 strings  components/funnel/steps/topic-step.tsx
+  4 strings  components/books/chapter-preview-card.tsx
+  4 strings  components/books/editable-book-details.tsx
+  4 strings  components/funnel/steps/generate-step.tsx
+  4 strings  components/site/mobile-nav.tsx
+  4 strings  components/ui/alert.tsx
+  4 strings  components/ui/creative-pricing.tsx
+  3 strings  components/app/backend-unavailable-state.tsx
+  3 strings  components/books/book-mockup.tsx
+  3 strings  components/common/keyboard-shortcuts.tsx
+  3 strings  components/funnel/generate-auth-gate-dialog.tsx
+  3 strings  components/funnel/shared/live-book-card.tsx
+  3 strings  components/site/home-faq-section.tsx
+  3 strings  components/site/interactive-book-showcase.tsx
+  3 strings  components/site/language-switcher.tsx
+  3 strings  components/site/premium-book-hero.tsx
+  3 strings  components/ui/chart.tsx
+  3 strings  components/writing/outline-preview.tsx
+  2 strings  components/app/command-palette.tsx
+  2 strings  components/app/referral-share-dialog.tsx
+  2 strings  components/books/chapter-list-sidebar.tsx
+  2 strings  components/common/auto-save-indicator.tsx
+  2 strings  components/forms/login-logo.tsx
+  2 strings  components/site/breadcrumb-nav.tsx
+  2 strings  components/site/direct-answer.tsx
+  2 strings  components/site/site-header.tsx
+  2 strings  components/site/start-entry-actions.tsx
+  2 strings  components/theme-toggle.tsx
+  2 strings  components/ui/circular-gallery.tsx
+  2 strings  components/ui/cybernetic-bento-grid.tsx
+  2 strings  components/ui/floating-icons-hero-section.tsx
+  2 strings  components/ui/loading/eta-indicator.tsx
+  2 strings  components/ui/loading/overlay.tsx
+  1 strings  components/app/app-context.tsx
+  1 strings  components/app/ref-code-detector.tsx
+  1 strings  components/error/global-error-boundary.tsx
+  1 strings  components/funnel/generate-loading-screen.tsx
+  1 strings  components/funnel/hooks/use-title-ai.ts
+  1 strings  components/site/blog-reading-progress.tsx
+  1 strings  components/site/blog-toc.tsx
+  1 strings  components/site/home-blog-preview-section.tsx
+  1 strings  components/site/home-book-gallery-section.tsx
+  1 strings  components/site/home-floating-icons-hero.tsx
+  1 strings  components/site/home-how-it-works-section.tsx
+  1 strings  components/site/home-pricing-testimonials.tsx
+  1 strings  components/site/home-testimonials-section.tsx
+  1 strings  components/site/last-updated.tsx
+  1 strings  components/site/marketing-cta-section.tsx
+  1 strings  components/site/pricing-creative-section.tsx
+  1 strings  components/ui/button.tsx
+  1 strings  components/ui/dialog.tsx
+  1 strings  components/ui/features-4.tsx
+  1 strings  components/ui/input.tsx
+  1 strings  components/ui/progress.tsx
+  1 strings  components/ui/select.tsx
+  1 strings  components/ui/testimonials-columns-1.tsx
+  1 strings  components/ui/textarea.tsx

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { GradientBackground } from "@/components/ui/loading/particle-effect";
@@ -38,6 +39,7 @@ export function GenerateLoadingScreen({
   onComplete?: () => void;
   redirectPath?: string;
 }) {
+  const t = useTranslations("GenerateLoadingScreen");
   const router = useRouter();
   const slug = useMemo(() => parseSlugFromRedirectPath(redirectPath), [redirectPath]);
   const redirectedRef = useRef(false);
@@ -46,7 +48,7 @@ export function GenerateLoadingScreen({
   const [remainingMs, setRemainingMs] = useState(AUTO_REDIRECT_MS);
   const [preview, setPreview] = useState<BookPreview | null>(null);
   const [coverGateTimedOut, setCoverGateTimedOut] = useState(false);
-  const [statusLabel, setStatusLabel] = useState("Creating your real book cover");
+  const [statusLabel, setStatusLabel] = useState(t("coverStatusInitial"));
 
   const previewPath = useMemo(() => {
     if (redirectPath) return redirectPath;
@@ -121,10 +123,10 @@ export function GenerateLoadingScreen({
         const nextLabel =
           String(generation.current_step_label || "").trim() ||
           (!generation.cover_ready
-            ? "Creating your real book cover"
+            ? t("coverStatusInitial")
             : !generation.preview_ready
-              ? "Writing the first readable chapter"
-              : "Opening your live preview");
+              ? t("statusWritingChapter")
+              : t("statusOpeningPreview"));
         setStatusLabel(nextLabel);
 
         if (generation.cover_ready || generation.preview_ready) {
@@ -139,10 +141,10 @@ export function GenerateLoadingScreen({
       } catch (error) {
         if (cancelled) return;
         if (isBackendUnavailableError(error)) {
-          setStatusLabel("Preview service is waking up");
+          setStatusLabel(t("statusWakingUp"));
           return;
         }
-        setStatusLabel("Preparing your live preview");
+        setStatusLabel(t("statusPreparing"));
       } finally {
         pollInFlightRef.current = false;
         if (!cancelled && !redirectedRef.current && shouldContinuePolling) {
@@ -174,34 +176,34 @@ export function GenerateLoadingScreen({
   const stageCards = [
     {
       key: "cover",
-      label: "Cover",
+      label: t("coverLabel"),
       done: Boolean(generation?.cover_ready),
       active: !generation?.cover_ready,
       detail: generation?.cover_ready
-        ? "Real cover is ready"
+        ? t("coverDetailReady")
         : coverEta
-          ? `Estimated ${coverEta}`
-          : "Generating first",
+          ? t("coverDetailEstimated", { eta: coverEta })
+          : t("coverDetailGenerating"),
     },
     {
       key: "chapter",
-      label: "First chapter",
+      label: t("firstChapterLabel"),
       done: Boolean(generation?.preview_ready),
       active: Boolean(generation?.cover_ready) && !generation?.preview_ready,
       detail: generation?.preview_ready
-        ? "Readable pages are ready"
+        ? t("chapterDetailReady")
         : chapterEta
-          ? `Estimated ${chapterEta}`
-          : "Writing after cover",
+          ? t("chapterDetailEstimated", { eta: chapterEta })
+          : t("chapterDetailWriting"),
     },
     {
       key: "full",
-      label: "Full book",
+      label: t("fullBookLabel"),
       done: Boolean(generation?.product_ready),
       active: Boolean(generation?.preview_ready) && !generation?.product_ready,
       detail: generation?.product_ready
-        ? "Unlocked"
-        : "Continues in background",
+        ? t("fullDetailUnlocked")
+        : t("fullDetailBackground"),
     },
   ];
 
@@ -218,7 +220,7 @@ export function GenerateLoadingScreen({
 
           <div className="space-y-2">
             <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-              Preparing Your Live Preview
+              {t("preparingTitle")}
             </h2>
             <p className="text-base leading-7 text-muted-foreground md:text-lg">
               {statusLabel}
@@ -227,7 +229,7 @@ export function GenerateLoadingScreen({
 
           <div className="rounded-2xl border border-border/60 bg-muted/30 p-4 md:p-5">
             <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Cover Gate
+              {t("coverGateLabel")}
             </div>
             <div className="mt-2 grid gap-3 md:grid-cols-3">
               {stageCards.map((item) => (
@@ -255,7 +257,7 @@ export function GenerateLoadingScreen({
               />
             </div>
             <div className="mt-3 text-xs text-muted-foreground">
-              Redirects automatically in <span className="font-semibold text-foreground">{secondsLeft}s</span> if the cover is still pending.
+              {t("redirectsIn", { seconds: secondsLeft })}
             </div>
           </div>
 
@@ -265,18 +267,18 @@ export function GenerateLoadingScreen({
             className="h-12 w-full text-base font-semibold"
             onClick={navigateToPreview}
           >
-            Open Live Preview Now
+            {t("openPreviewNow")}
             <ArrowRight className="ml-2 size-4" />
           </Button>
 
           <p className="text-xs text-muted-foreground">
-            Generation continues in the background even if you close this page.
+            {t("backgroundGeneration")}
             {" "}
             <Link href={previewPath} className="font-medium text-foreground underline underline-offset-2">
-              Open manually
+              {t("openManually")}
             </Link>
             {" "}
-            if automatic redirect is blocked.
+            {t("ifRedirectBlocked")}
           </p>
         </div>
       </div>

@@ -3,18 +3,11 @@
 import { ArrowLeft, ArrowRight, BookOpen, Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FUNNEL_STEPS, type FunnelStep } from "@/lib/funnel-draft";
 import { cn } from "@/lib/utils";
-
-const STEP_LABELS: Record<FunnelStep, string> = {
-  topic: "Topic",
-  title: "Title",
-  outline: "Chapterler",
-  style: "Stil",
-  generate: "Generate",
-};
 
 export function FunnelShell({
   step,
@@ -37,6 +30,7 @@ export function FunnelShell({
   const embedded = mode === "embedded";
   const isLastStep = activeIndex === FUNNEL_STEPS.length - 1;
   const showBottomBar = step && !isLastStep;
+  const t = useTranslations("FunnelShell");
 
   return (
     <div className="text-foreground min-h-dvh bg-background">
@@ -50,7 +44,7 @@ export function FunnelShell({
               <span className="relative block h-6 w-[100px] overflow-hidden sm:h-7 sm:w-[120px]">
                 <Image
                   src="/logo.png"
-                  alt="Book Generateucu"
+                  alt={t("logoAlt")}
                   className="h-full w-full object-contain object-left dark:hidden"
                   fill
                   priority
@@ -58,7 +52,7 @@ export function FunnelShell({
                 />
                 <Image
                   src="/dark-logo.png"
-                  alt="Book Generateucu"
+                  alt={t("logoAlt")}
                   className="hidden h-full w-full object-contain object-left dark:block"
                   fill
                   priority
@@ -69,7 +63,7 @@ export function FunnelShell({
           ) : (
             <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
               <BookOpen className="size-4" />
-              <span>New Book</span>
+              <span>{t("newBook")}</span>
             </div>
           )}
 
@@ -116,7 +110,7 @@ export function FunnelShell({
                               : "text-muted-foreground/40",
                         )}
                       >
-                        {STEP_LABELS[item]}
+                        {t(`stepLabels.${item}`)}
                       </span>
                     </div>
 
@@ -160,7 +154,7 @@ export function FunnelShell({
         {summary && summary.length > 0 ? (
           <details className="mb-5 overflow-hidden rounded-xl border border-border/50 bg-muted/30 transition-all duration-300">
             <summary className="flex cursor-pointer items-center justify-between px-4 py-2.5 text-sm font-semibold text-foreground select-none transition-all duration-300 hover:bg-muted/50">
-              <span>📖 Book Summary</span>
+              <span>{t("bookSummary")}</span>
               <svg className="size-4 text-muted-foreground transition-transform duration-300 [[open]>&]:rotate-180" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

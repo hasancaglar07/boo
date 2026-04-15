@@ -313,8 +313,8 @@ topic_suggest() {
         language="English"
     fi
 
-    local system_prompt="You are a KDP strategist. Return valid JSON only."
-    local user_prompt="Generate commercially promising book ideas.
+    local system_prompt="You are a KDP strategist and conversion-focused title copywriter. Return valid JSON only."
+    local user_prompt="Generate commercially promising, SEO-aware book ideas.
 
 Primary niche: ${niche}
 Audience: ${audience}
@@ -332,9 +332,17 @@ Return JSON with this exact shape:
 Rules:
 - 8 topic suggestions
 - 6 title suggestions
-- subtitles must be concrete
+- focus on Amazon discoverability and click-through appeal
+- each title/subtitle pair must include at least one high-intent keyword from the niche (naturally, no keyword stuffing)
+- titles must be clear, specific, and emotionally compelling (avoid vague generic wording)
+- subtitles must be concrete and outcome-driven (benefit, transformation, or timeframe)
+- prioritize practical/non-fiction bestseller patterns for ${category}
+- avoid misleading hype, fake guarantees, or spammy clickbait
+- keep title length concise and marketable (target ~4-10 words)
 - descriptions max 2 sentences
+- description must briefly signal who the book is for and what concrete result it helps achieve
 - topics, titles, subtitles, and descriptions must all be in ${language}
+- if language is Turkish, use natural Turkish sales copy (no awkward literal translation)
 - output JSON only"
 
     local raw
@@ -400,7 +408,7 @@ style_suggest() {
     local depth="${6:-balanced}"
     local cover_direction="${7:-editorial}"
     local provider_order="${BOOK_WIZARD_TEXT_PROVIDER_ORDER:-claude-main glm-main vertex-main}"
-    local provider_timeout="${BOOK_WIZARD_STYLE_PROVIDER_TIMEOUT_SECONDS:-2}"
+    local provider_timeout="${BOOK_WIZARD_STYLE_PROVIDER_TIMEOUT_SECONDS:-8}"
     local max_retries="${BOOK_WIZARD_STYLE_MAX_RETRIES:-1}"
     local fast_failover="${BOOK_WIZARD_STYLE_FAST_FAILOVER:-1}"
 
@@ -991,6 +999,14 @@ appendices_generate() {
         bash "$ROOT_DIR/generate_appendices.sh" "$book_dir"
 }
 
+frontmatter_generate() {
+    local book_dir="$1"
+    local sections_csv="${2:-dedication,preface,introduction}"
+    local language="${3:-}"
+    ensure_book_layout "$book_dir"
+    bash "$ROOT_DIR/scripts/generate_frontmatter_sections.sh" "$book_dir" "$sections_csv" "$language"
+}
+
 references_generate() {
     local book_dir="$1"
     ensure_book_layout "$book_dir"
@@ -1013,6 +1029,7 @@ main() {
         chapter-extend) chapter_extend "$@" ;;
         cover-local) generate_local_cover "$@" ;;
         cover-script-run) run_cover_script "$@" ;;
+        frontmatter) frontmatter_generate "$@" ;;
         appendices) appendices_generate "$@" ;;
         references) references_generate "$@" ;;
         market-init) run_market_research "$1" init ;;
@@ -1040,6 +1057,7 @@ main() {
             echo "  $0 chapter-extend <book_dir> <chapter_num> [min_words] [max_words]"
             echo "  $0 cover-local <book_dir> <title> [subtitle] [author] [blurb]"
             echo "  $0 cover-script-run <book_dir> <generate|front|back> <service> <unused> <unused> <title> <author> <genre>"
+            echo "  $0 frontmatter <book_dir> [dedication,preface,introduction] [language]"
             echo "  $0 appendices <book_dir>"
             echo "  $0 references <book_dir>"
             echo "  $0 market-init <book_dir>"
